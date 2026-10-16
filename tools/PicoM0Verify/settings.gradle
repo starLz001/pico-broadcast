@@ -1,0 +1,12 @@
+pluginManagement {
+    repositories { google(); mavenCentral(); gradlePluginPortal() }
+}
+dependencyResolutionManagement {
+    repositories {
+        google()
+        mavenCentral()
+        maven { url 'https://artifacts-cn-beijing.volces.com/repository/picoxrtob' }
+    }
+}
+rootProject.name = "PicoM0Verify"
+include ':app'
