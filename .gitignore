@@ -54,6 +54,14 @@ Thumbs.db
 .env.local
 .env.*.local
 
+# Secrets & archives (v3 §六:只加严不放松)
+*.keystore
+*.key
+*.pem
+*.bak.*
+*.tar.gz
+*.zip
+
 # Build outputs
 dist/
 out/
