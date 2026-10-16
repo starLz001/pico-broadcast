@@ -1,0 +1,104 @@
+提升画面清晰度
+========================================
+画面清晰度是影响用户体验的重要因素之一。导致画面清晰度低的因素有许多，常见的为物体边缘严重的锯齿感、纹理与文字模糊闪烁。因此，可以从边缘锯齿感、图像与文字三个方面改善画面清晰度。
+*核心摘要
+本文提供三种提升画面清晰度的方法：
+*降低边缘锯齿感：开启四倍抗锯齿（4x MSAA）。
+*提升纹理清晰度：对所有纹理开启 Mipmap 与 Trilinear Filtering，并对墙面、地面等可能存在倾斜视角的纹理开启 Anisotropic Filtering。
+*提升文字清晰度：建议用 TextMeshPro 组件替代 Text 组件来进行文字渲染。
+具体使用说明见下文。
+*降低边缘锯齿感
+在渲染采样过程中，每个像素只会显示一种颜色，因此像素会对像素中心位置的颜色进行采样。然后，在低分辨率场景下，多边形的边缘并不能准确的被每个像素采样，这就会导致物体边缘存在锯齿，影响场景视觉效果和用户体验。
+多重采样抗锯齿（Multisampling Anti-Aliasing，MSAA） 功能会对锯齿边缘的画面进行多次采样，然后将其和周围像素的颜色进行混合，让画面过渡得更加自然，从而大大减轻锯齿效果。
+*抗锯齿效果预览
+以下为不同倍数 MSAA 的效果图。从左到右依次为：原图、2x MSAA、4x MSAA、8x MSAA。
+ 
+*设置抗锯齿倍数
+SDK 提供的默认抗锯齿倍数为 “4 倍 MSAA”。建议使用默认抗锯齿倍数，这样能在性能开销不是很大的情况下获得比较清晰的视觉效果并提升用户体验。当然，如果应用性能负载比较大，也建议至少开启 “2 倍 MSAA”。“2 倍 MSAA” 的性能开销要比 “4 倍 MSAA” 少得多，并且视觉效果要好于不开启 MSAA。抗锯齿倍数设置步骤可参考此文档。
+ 
+*原图 vs 4 倍 MSAA
+*提升纹理清晰度
+将一张纹理贴图放置在距离相机较远的位置上时，画面中纹理上的线条与文字可能会不停地抖动闪烁。这是由于显示纹理的分辨率不足，并且采样这张纹理的像素少于纹理本身的像素，最终导致混叠现象。可使用 Mipmap、Trilinear 以及 Anisotropic Filtering 技术来提升纹理清晰度。
+*使用多级渐远纹理（Mipmap）
+Mipmap 由一组分辨率逐渐降低的纹理序列组成，每一级纹理的宽度和高度都是上一级纹理宽度和高度的一半。 Mipmap 提升纹理清晰度的核心方法在于：根据待渲染物体在画面中显示的实际大小，选择最接近的纹理尺寸。当物体距摄像机较远时，使用分辨率较低的纹理（纹理质量较差，模糊感较强）；当物体距摄像机较近时，使用分辨率较高的纹理（纹理质量，模糊感弱）。Mipmap 效果如下图所示：
+ 
+*开启步骤
+按以下步骤为纹理生成 Mipmaps：
+*前往 Project 窗口 > Assets 目录，选中目标纹理。
+*Inspector 窗口中将展示纹理配置面板。
+*将纹理的 Texture Type 设置为 Sprite (2D and UI )。
+* 
+*展开 Advanced 配置项列表，然后勾选 Generate Mip Maps。
+* 
+*编辑器将为该纹理生成不同 Mip Level 的纹理序列，并在 Inspector 窗口底部展示。你可以移动右上方滑块来查看不同 Mip Level 的纹理。
+* 
+*注意事项
+需注意的是，启用 Mipmap 并不断改变摄像机与物体的距离时，画面中的物体有时候会突然变得模糊（如视频所示）。这是由物体切换不同的 Mip 等级的纹理而导致的。在 VR 场景中，这种现象能被用户很明显地感受到，会一定程度上的影响用户的使用体验。因此，使用 Mipmap 后，还需使用 Trilinear Filtering（三线性过滤） 技术来消除不同 Mip 等级的纹理过渡时出现的组合交叠现象。
+ 
+*使用三线性过滤（Trilinear Filtering）
+开启 Trilinear Filtering 后，渲染时会对两个相邻 Mip 等级的纹理进行双线性过滤采样，然后在两个 Mipmap 之间进行线性插值，得到最终的颜色，以减轻或消除不同组合等级纹理过渡时出现的组合交叠现象。因此，当纹理到摄像机的距离逐渐增加时，可以得到平滑的一个过渡。按以下步骤为纹理开启 Trilinear Filtering：
+*前往 Project 窗口 > Assets 目录，选中目标纹理。
+*Inspector 窗口中将展示纹理配置面板。
+*将该纹理的 Filter Mode 设置为 Trilinear。
+* 
+*使用各向异性过滤（Anisotropic Filtering）
+当一个物体的表面和相机之间有很大的夹角时，物体上的贴图纹理在屏幕上的对应填充区域就不是方形的。例如地板和墙面，在距离相机远的地方，填充区域的宽高是不对等的，此时使用方形的纹理贴图就不是很合适了，会导致模糊或者闪烁或者两者皆有。
+Anisotropic Filtering（各向异性过滤） 通过采样一个非方形纹理解决了这个问题。Anisotropic Filtering 会进行更多次数的纹理采样，在消除纹理模糊感的同时可以最大限度地保留倾斜视角下的纹理细节。因此，对大多数可以从倾斜角度浏览的物体来说，使用各向异性过滤可以带来巨大的画面质量提升。然而，与 Trilinear Filtering 相比，Anisotropic Filtering 的性能开销更高。建议仅为墙面、地面等有需要的纹理开启 Anisotropic Filtering 即可。
+ 
+*各向异性过滤关闭 vs 各向异性过滤开启
+
+你可以选中目标纹理，然后在 Inspector 窗口中为该纹理设置 Aniso Level。
+ 
+*提升文字清晰度
+在 Unity 编辑器里，有两款内置的文字组件，分别为 TextMeshPro 组件和 Text 组件。TMP 组件对文字的渲染基于有向距离场 (Signed Distance Field，SDF) 算法，在任意距离、缩放尺寸等情况下都能渲染出较为清晰的文字。Text 组件使用 TrueTypeFont 字体对文字进行渲染，有可能出现毛边、失真等情况。因此，更推荐使用 TMP 组件来渲染文字。
+ 
+*TMP 组件（左）与 Text 组件（右）文字渲染效果对比
+*使用 TextMeshPro 组件
+按以下步骤使用 TextMeshPro 组件进行文字渲染：
+*创建 Font Asset。
+*TextMeshPro 组件不支持直接使用 TrueTypeFont 字体，并且只默认自带一种英文字体。如果想要显示更多不同的字体，就需要手动创建 Font Asset。Font Asset 有动态加载和静态加载两种模式，具体说明如下：
+**
+*在 Hierarchy 窗口中，点击 + > UI > Text - TextMeshPro。将 TMP 组件添加至场景。
+*选中 Text (TMP)。
+*Inspector 窗口中将展示用于配置文字贴图的组件。
+*在 TextMeshPro - Text (UI) 面板上，完成以下配置：
+*在 Font Asset 处，选择字体。
+*在文本框内输入所要显示的文字。
+*(可选) 按需调整 Font Style 等配置。
+* 
+
+
+若不进行此配置，在场景中创建 Image 类 UI 后，将无法为 Image 配置 Source Image 参数。
+
+
+
+Font Asset 类型
+特点
+创建步骤
+动态
+根据当前显示的文本内容里用到的字符，动态 Font Asset 可以动态创建文字贴图。此外，与静态 Font Asset 相比，动态 Font Asset 的创建步骤更加简单。
+创建步骤如下：
+1. 在 Unity 编辑器中打开工程。
+2. 通过 Assets > Import New Assets 将所需字体的 .ttf 文件导入。
+3. 右击导入的 .ttf 文件，然后选择 Create > TextMeshPro > Font Asset，生成动态 Font Asset（如下图所示）。
+* 
+提示：文字贴图的默认大小为 1024x1024，可以根据显示的文字适当调整文字贴图的大小。步骤如下：
+1. 在 Asset 目录下，选中先前创建的动态 Font Asset。Inspector 窗口中将展示该 Font Asset 的配置项。
+2. 在 Generation Settings 页签下，通过修改 Atlas Width 和 Atlas Height 来分别修改文字贴图的宽和高。
+* 
+
+静态
+需要预先提供一个文字集，根据提供的文字集提前生成文字贴图。因此，提供的文字集里需包含所有需要显示的文字。
+创建步骤如下：
+1. 在 Unity 编辑器中打开工程。
+2. 通过 Assets > Import New Assets 将所需字体的 .ttf 文件导入。
+3. 下载所使用字体的常用字集，然后将其保存为 UTF-8 格式的 .txt 文件，并导入你的工程。
+4. 在编辑器上方工具栏中，选择 Window > TextMeshPro > Font Asset Creator。
+5. 在 Font Asset Creator 窗口中，完成以下配置：
+- 在 Source Font Flie 处选择字体文件。
+- 将 Character Set 设置为 Characters from File。
+- 将 Character Flie 设置为第三步中下载的常用字集。
+- 根据文字数量修改 Atlas Resolution。
+6. 点击 Generate Font Atlas，生成静态 Font Asset（如下图所示）。
+* 
+7. 点击 Save，将 Font Asset 保存至本地，后续可导入工程中使用。

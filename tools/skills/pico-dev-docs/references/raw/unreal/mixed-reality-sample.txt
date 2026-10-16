@@ -1,0 +1,141 @@
+混合现实示例
+========================================
+PICO 混合现实示例是面向开发者提供的技术示例项目，展示了 PICO Unreal Integration SDK 混合现实相关功能，包括视频透视、场景标定、空间网格、空间锚点。你可以在示例中体验锚点创建、发射小球等简单示例场景。此外，房间标定示例场景，你可以在 Unreal 编辑器中通过模拟数据体验混合现实功能，或打包单独的场景进行体验。
+*开发环境 
+*SDK 版本：3.2.0 及以上 
+*PICO 设备：PICO 4 系列和 PICO 4 Ultra 系列
+*PICO 设备系统版本：5.12 及以上
+*Unreal Engine 版本：5.4 及以上
+*工程配置 
+*
+*GitHub 仓库 
+你可以前往 PICO 开发者 GitHub 上的 MRSample-Unreal 仓库，克隆示例项目。该项目包括源代码脚本、艺术资产和其他资源。
+*主界面
+* 
+*
+*MR 应用场景示例
+*Maps 文件夹中包含三个示例场景：MRAnchorSample、MRMeshSample 和 MRSceneCapture。
+* 
+*锚点示例
+锚点示例主要包含了初始化、创建锚点、加载锚点，删除锚点等示例逻辑，所有示例逻辑均基于蓝图接口实现，具体位置位于 MRAnchorSample 关卡蓝图，如下图所示。
+* 
+*操作说明如下：
+*
+* 
+*实时网格示例
+实时网格示例主要包含了初始化，显示/隐藏 Mesh，开始暂停扫描等示例逻辑，所有示例逻辑均基于蓝图接口实现，具体位置位于 MRMeshSample 关卡蓝图，如下图所示。
+* 
+*操作说明如下：
+*
+* 
+* 
+
+*房间标定示例
+实时网格示例主要包含了离线模拟数据加载，运行时加载，单次加载以及获取已加载 Actor 语义标签等逻辑，所有示例逻辑均基于蓝图接口实现，具体位置位于 BP_SceneCapturesGenerator_Sample 关卡蓝图，如下图所示。
+* 
+将 BeginPlay 连接至 Preview 逻辑，在 Editor 中点击 Play 按钮即可进行离线模拟数据预览。
+* 
+将 BeginPlay 连接至 Runtime 逻辑，则可以打包 APK，安装至头戴运行。
+*操作说明如下：
+*
+* 
+离线预览时，在 Editor 中将根据模拟数据加载 BP_SceneCapturesGenerator_Sample 中标定语义所关联的 Actor，BP_SceneCapturesGenerator_Sample 相关部分详情参考《场景标定》。
+
+
+
+
+配置项
+
+说明
+
+立体渲染模式（Stereo Rendering Mode） 
+
+Multiview 
+
+抗锯齿倍数（MSAA） 
+
+4 倍 
+
+图形 API 
+
+Vulkan 
+
+
+
+选项
+
+说明
+
+Spatial Anchor 
+
+空间锚点示例
+
+Spatial Mesh
+
+空间网格示例
+
+SceneCapture
+
+房间标定示例
+
+
+
+按键
+
+说明
+
+A 
+
+加载已保存锚点
+
+B
+
+删除所有锚点
+
+Right Trigger
+
+创建锚点
+
+X
+
+回主界面
+
+
+
+按键
+
+说明
+
+A 
+
+隐藏/显示 mesh
+
+B
+
+停止/开始 扫描
+
+Right Trigger
+
+发射小球
+
+Left Trigger
+
+显示语义
+
+X
+
+回主界面
+
+
+
+按键
+
+说明
+
+Right Trigger
+
+发射小球
+
+X
+
+回主界面

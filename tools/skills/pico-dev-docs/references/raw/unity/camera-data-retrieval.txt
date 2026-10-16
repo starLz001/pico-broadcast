@@ -1,0 +1,237 @@
+相机图像数据（企业设备）
+========================================
+本文介绍如何从 PICO 设备获取相机数据。
+*使用限制
+*此功能仅能在 PICO 4 Ultra Enterprise 设备上使用。
+*申请权限
+获取相机数据需要申请相机权限，步骤如下：
+*在 Unity 编辑器中，前往 Edit > Project Settings > Player > Build，勾选 Custom Main Manifest 选框。
+* 
+*在 AndroidManifest.xml 文件中，添加以下内容。
+* 
+* 
+*动态申请会在调用 OpenCameraAsync 接口时发生，需要点击确认后才能获取到相机数据。
+*Bind TobService
+ 
+*设置启用 Global 数据
+ 
+*设置参数
+ 
+*如不传任何 map 值，则使用默认配置。
+*KEY_OUTPUT_CAMERA_RAW_DATA = "output-camera-raw-data";// 可以用来获取带畸变的图像。
+*代码示例：
+ 
+*void Configurefor4U(bool enableMvHevc, int videoFps)
+*enableMvHevc：是否录制 mvhevc，暂不支持，设置为 false；
+*videoFps：值大于 0 时生效。小于等于 0 是，使用默认帧率。建议取值范围：5-60fps，默认值为 60fps。
+*开启相机功能
+ 
+异步返回相机是否开启成功。开启成功后，执行用于获取相机数据等操作的接口。
+*代码示例：
+ 
+*图像模式
+ 
+*将相机图像数据渲染到指定的 Android Surface
+ 
+*开启后，将根据图像模式将内容渲染到指定的 Android Surface 上。
+*获取相机图像数据
+*步骤如下：
+*设置 buffer 及回调。
+* 
+*使用示例：
+* 
+*开启根据图像模式获取图像数据的功能。
+* 
+*floorlevel 下，转换引擎内的 local 与 global 坐标系
+ 
+转换后，pose 还是左手系。
+* 
+*使用示例：
+将 XR Origin 的 Tracking Origin Mode 设置为 Floor。
+* 
+以手势数据为例：
+ 
+*关闭并释放相机
+ 
+*获取内参和外参
+*使用 PICO 4 Ultra 设备的默认 FOV 获取外参和内参数据。
+* 
+*根据设置的宽、高和 FOV 计算，只获取内参数据，对应 RGBCameraParamsNew 结构体的 cx、cy、fx 和 fy 参数。
+ 
+*获取外参的原始矩阵。
+*left：返回左眼的外参数据（矩阵）
+*right：返回右眼的外参数据（矩阵）
+ 
+*获取 HeadPose 数据
+如果调用了 UseGlobalPose 接口，第二参数可传 true 或不传（默认返回 global 数据）。如果调用了 UseGlobalPose 且第二参数设置为 false，则返回 local 数据。
+ 
+*处理亮屏和灭屏
+灭屏后，因相机不受 Unity 生命周期的控制，会一直更新数据。直到休眠后，相机才会强制下电关闭。建议正常处理亮屏和灭屏状态。
+ 
+
+
+<uses-permission android:name="android.permission.CAMERA" /> 
+
+PXR_Enterprise.InitEnterpriseService();
+PXR_Enterprise.BindEnterpriseService(b =>
+{
+    Debug.Log($$"{tag}  Bind enterprise service success={b}");
+} );
+
+PXR_Enterprise.UseGlobalPose(true);
+
+void Configurefor4U(Dictionary<string, string> setting=null)
+
+Dictionary<string, string> cameraParams1 = new Dictionary<string, string>();
+// 设置为 true 后，输出相机的原生图像
+cameraParams1.Add(PXRCapture.KEY_OUTPUT_CAMERA_RAW_DATA, PXRCapture.VALUE_TRUE);
+PXR_Enterprise.Configurefor4U(cameraParams1);
+
+void OpenCameraAsyncfor4U(Action<bool> callback)
+public static void OpenCameraAsyncfor4U(Action<bool> callback,Dictionary<string, string> setting=null)
+
+Dictionary<string, string> cameraParams = new Dictionary<string, string>();
+cameraParams.Add(PXRCapture.KEY_MCTF, PXRCapture.VALUE_TRUE);
+cameraParams.Add(PXRCapture.KEY_EIS, PXRCapture.VALUE_FALSE);
+cameraParams.Add(PXRCapture.KEY_MFNR, PXRCapture.VALUE_TRUE);
+
+PXR_Enterprise.OpenCameraAsyncfor4U(ret =>
+{
+    Debug.Log($"{tag}  OpenCameraAsync ret=  {ret}");
+},cameraParams);
+
+public enum  PXRCaptureRenderMode{
+    PXRCapture_RenderMode_LEFT, // 左相机的数据
+    PXRCapture_RenderMode_RIGHT,// 右相机的数据
+    PXRCapture_RenderMode_3D,// 将左右相机的数据拼接成一张图
+    PXRCapture_RenderMode_Interlace, // 左右眼交叉输出，时间戳间隔相差 1
+}
+
+bool StartPreviewfor4U(IntPtr surfaceObj, PXRCaptureRenderMode mode)
+
+// 设置用于获取数据的 buffer 参数及回调信息
+bool SetCameraFrameBufferfor4U(int width, int height, ref IntPtr data, Action<Frame> imageAvailable)
+
+public struct Frame
+{
+    public UInt32 width;          // width
+    public UInt32 height;         // height
+    public UInt64 timestamp;      // start of exposure time:ns (BOOTTIME)
+    public UInt32 datasize;       // datasize
+    public IntPtr data;           // image data 
+    public UnityEngine.Pose pose; // The head Pose at the time of image production.（Right-handed coordinate system: X right, Y up, Z in）
+    public int status;            // sensor status(1:good 0:bad)
+}
+
+byte[] imgByte = new byte[width*height*4];
+IntPtr data=Marshal.UnsafeAddrOfPinnedArrayElement(imgByte,0);
+PXR_Enterprise.SetCameraFrameBufferfor4U(width,height,ref data, (Frame frame) =>
+{
+    texture.LoadRawTextureData(imgByte);
+    texture.Apply();
+    Debug.Log("onImageAvailable cameraFramePredictedDisplayTime = "+frame.timestamp);
+    Debug.Log("onImageAvailable size = "+frame.datasize);
+});
+
+bool StartGetImageDatafor4U(PXRCaptureRenderMode mode, int width, int height) 
+
+public enum ConvertCoordinateType{
+    kLocal2Global = 0,
+    kGlobal2Local = 1,
+}
+/**
+ *  转换 pose 坐标
+ *  type：转换类型
+ *  srcPose：原 pose
+ *  destPose：原转换后的 pose
+ * \return：0 表示成功，其他表示失败
+ */
+int ConvertPoseCoordinate(PXR_EnterprisePlugin.ConvertCoordinateType type,UnityEngine.Pose srcPose,ref UnityEngine.Pose destPose)
+
+一般相机坐标系采用右手系，而 Unity 使用的是左手系。因此，在统一到算法的全局坐标系（global）时，必须进行左右手坐标系的转换。
+
+if (PXR_HandTracking.GetJointLocations(handType, ref handJointLocations))
+{
+
+    for (int i = 0; i < handJoints.Count; ++i)
+    {
+    
+        Pose srcPose = new Pose();
+        Pose detPose = new Pose();
+        srcPose.position = handJointLocations.jointLocations[i].pose.Position.ToFloat3();
+        srcPose.rotation = handJointLocations.jointLocations[i].pose.Orientation.ToFloat4();
+        PXR_Enterprise.ConvertPoseCoordinate(PXR_EnterprisePlugin.ConvertCoordinateType.kLocal2Global,srcPose, ref detPose);
+    
+        handJointLocations.jointLocations[i].pose.Position.x=detPose.position.x;
+        handJointLocations.jointLocations[i].pose.Position.y=detPose.position.y;
+        handJointLocations.jointLocations[i].pose.Position.z=detPose.position.z;
+    
+        handJointLocations.jointLocations[i].pose.Orientation.x=detPose.rotation.x;
+        handJointLocations.jointLocations[i].pose.Orientation.y=detPose.rotation.y;
+        handJointLocations.jointLocations[i].pose.Orientation.z=detPose.rotation.z;
+        handJointLocations.jointLocations[i].pose.Orientation.w=detPose.rotation.w;
+    }
+}
+
+bool CloseCamerafor4U()
+
+public static RGBCameraParamsNew GetCameraParametersNewfor4U(int width, int height)
+
+public struct RGBCameraParamsNew
+{
+    // 内参数据
+    public double fx;
+    public double fy;
+    public double cx;
+    public double cy;
+
+    // 左眼的外参数据
+    public Vector3 l_pos;
+    public Quaternion l_rot;
+    // 右眼的外参数据
+    public Vector3 r_pos;
+    public Quaternion r_rot;
+}
+
+ double[] GetCameraIntrinsicsfor4U(int width, int height, double h_fov, double v_fov)
+
+public static bool GetCameraExtrinsicsfor4U(out Matrix4x4 left, out Matrix4x4 right)
+
+PXR_Enterprise.GetPredictedMainSensorState(time, false);
+
+private bool isRunning=false; // 在调用 StartGetImageData 后，将状态置为 true
+static bool  reopen = false;
+
+private void Update()
+{
+    if (reopen)
+    {
+        // 在主线程里执行重新打开功能
+        reopen = false;
+        PXR_Enterprise.StartGetImageDatafor4U(Mode, (int)frame.width, (int)frame.height);  
+    }
+}
+
+private void OnApplicationPause(bool pauseStatus)
+{
+    if (isRunning)
+    {
+        // 在已启动获取数据的功能后
+        if (pauseStatus)
+        {
+            // 如果灭屏，执行 close 功能，释放相机
+            PXR_Enterprise.CloseCamerafor4U();
+        }
+        else
+        {
+            // 再次灭屏或亮屏，重新打开相机
+            PXR_Enterprise.OpenCameraAsyncfor4U(ret =>
+            {
+                Debug.Log($$"{tag}  OpenCameraAsync ret=  {ret}");
+                // 修改重新打开的标志位
+                reopen = ret;
+            });
+        }
+    }
+    
+}

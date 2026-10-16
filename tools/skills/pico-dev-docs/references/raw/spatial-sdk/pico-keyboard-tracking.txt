@@ -1,0 +1,147 @@
+PICO 键盘追踪
+========================================
+PICO 键盘追踪功能可以用于追踪 PICO 官方物理键盘和触摸板设备的空间位置。你可以获取这些设备在三维空间中的实时位姿、类别和状态信息。
+*名词解释
+**
+*应用场景
+PICO 键盘追踪功能支持以下典型应用场景：
+*虚拟键盘交互：在虚拟空间中渲染一个与物理键盘位置匹配的虚拟键盘模型，从而实现虚实结合的输入体验。
+*手势交互增强：结合手部跟踪功能，识别用户在物理键盘上的按键输入及在触控板上的手势。
+*空间布局适配：根据键盘的实际位置自动调整应用 UI 元素的布局，例如将输入框悬浮在键盘附近。
+*使用限制
+*PICO 键盘追踪功能仅支持 PICO 官方推出的物理键盘、触摸板设备。第三方外设无法通过本接口进行跟踪。
+*跟踪性能受环境光照、设备可见度影响，使用时需要保持键盘在用户视野范围内，避免遮挡。
+*前提条件
+*添加 build 依赖项（推荐使用版本目录文件 libs.versions.toml）。
+*在 libs.versions.toml 的 [libraries] 部分添加以下内容：
+* 
+*在模块的 build 脚本文件 build.gradle.kts 的 dependencies {} 部分添加以下内容：
+* 
+*示例代码
+*下面的示例代码展示了一个完整的 PICO 键盘追踪接入流程。
+initKeyboardTracking() 主要分为三步：
+*调用 PICOKeyboardTrackingManager.subscribeAnchorUpdate 订阅锚点更新事件。回调里的 AnchorUpdate.Event 用来区分不同类型的锚点变化：
+*ADDED 表示系统识别到了新的键盘锚点，适合在这里创建与物理设备对应的虚拟模型。
+*UPDATED 表示已有锚点的位姿或状态发生变化，这时可以根据 isTracking 判断当前是否仍在稳定跟踪，如果为 true，就用最新位姿更新虚拟模型，如果为 false，通常需要先隐藏模型，避免继续显示错误位置。
+*REMOVED 表示该锚点已被移除，此时应同步销毁相关的虚拟对象或清理业务状态。
+*LOADED 表示当前已保存或已识别的锚点完成了初始加载，一般可作为"首批数据已就绪"的标记。
+*调用 PICOKeyboardTrackingManager.start() 启动键盘跟踪服务。
+*在协程中检查 PICOKeyboardTrackingManager.state 是否为 TrackingState.RUNNING。只有在跟踪服务已经进入运行状态时，才调用 loadAllAnchors() 拉取当前已识别的全部锚点。这里的返回结果更适合用来获取初始化阶段的快照，例如在页面首次进入时恢复当前已有的键盘状态。后续的实时变化仍应以订阅回调为主。
+releaseKeyboardTracking() 用于做资源清理。它先对订阅返回的 Cancellable 调用 cancel()，停止继续接收锚点更新，避免页面退出后回调仍然持有无效引用；然后再调用 PICOKeyboardTrackingManager.stop() 停止键盘跟踪服务，释放对应资源。
+* 
+*最佳实践
+*在需要键盘跟踪的页面启动时，调用 start()；在页面退出时，调用 stop() 以释放资源。
+*优先使用 subscribeAnchorUpdate 方法实时监听锚点变化，loadAllAnchors 仅用于获取初始状态快照。
+*为避免内存泄漏，当不再需要订阅时，务必对返回的 Cancellable 对象调用 cancel() 方法。
+*当 isTracking 属性为 false 时，建议你隐藏虚拟键盘模型，以防止其位姿漂移。
+*勿在回调函数中执行耗时操作，以避免阻塞主线程。建议你异步处理所有复杂逻辑。
+*API  参考
+PICOKeyboardAnchor 类和 PICOKeyboardTrackingManager类提供空间锚点相关的函数，详细说明参阅 API 参考。根据你所处的地理位置选择合适的文档链接：
+*中国大陆：https://developer-cn.picoxr.com/spatial-api/index.html
+*非中国大陆：https://developer.picoxr.com/spatial-api/index.html
+
+
+
+*术语
+
+*说明
+
+PICO 键盘锚点 (PICOKeyboardAnchor)
+
+一个空间数据实体，用于表示被系统跟踪的物理键盘或触摸板设备，其中包含设备的唯一标识、空间位姿、类别和跟踪状态等信息。
+
+追踪状态 (TrackingState)
+
+表示键盘跟踪服务的运行状态，包括以下几种：
+*RUNNING：运行中
+*STOPPED：已停止
+*PAUSED：已暂停
+*UNKNOWN：状态未知
+
+锚点更新事件 (AnchorUpdate.Event)
+
+表示键盘锚点的状态变更事件类型，包括以下几种：
+*ADDED：新增锚点
+*UPDATED：锚点更新
+*REMOVED：锚点移除
+*LOADED：锚点加载完成
+
+[libraries]
+// ...
+spatial-sense = { group = "com.pico.spatial.sense", name = "sense" }
+
+dependencies {
+    // ...
+    implementation(libs.spatial.sense)
+}
+
+import com.pico.spatial.core.lifecycle.Cancellable
+import com.pico.spatial.sense.base.AnchorUpdate
+import com.pico.spatial.sense.base.AnchorUpdateSubscriber
+import com.pico.spatial.sense.base.TrackingState
+import com.pico.spatial.sense.keyboard.PICOKeyboardAnchor
+import com.pico.spatial.sense.keyboard.PICOKeyboardTrackingManager
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
+
+class KeyboardTrackingExample {
+    private var anchorSubscription: Cancellable? = null
+    private val coroutineScope = CoroutineScope(Dispatchers.Main + Job())
+
+    fun initKeyboardTracking() {
+        // 1. 先订阅锚点更新事件（推荐在start之前订阅，避免丢失初始事件）
+        anchorSubscription = PICOKeyboardTrackingManager.subscribeAnchorUpdate { update ->
+            when (update.event) {
+                AnchorUpdate.Event.ADDED -> {
+                    val anchor = update.anchor
+                    println("新增键盘锚点: $${anchor.anchorUUID}, 类型: $${anchor.category}")
+                    // 此处添加锚点新增后的处理逻辑，如创建虚拟模型等
+                }
+                AnchorUpdate.Event.UPDATED -> {
+                    val anchor = update.anchor
+                    if (anchor.isTracking) {
+                        // 更新虚拟模型的位姿
+                        println("更新键盘位姿: 位置=$${anchor.transform.position}, 旋转=$${anchor.transform.rotation}")
+                    } else {
+                        // 跟踪丢失，隐藏虚拟模型
+                        println("键盘锚点 $${anchor.anchorUUID} 暂时丢失跟踪")
+                    }
+                }
+                AnchorUpdate.Event.REMOVED -> {
+                    val anchor = update.anchor
+                    println("移除键盘锚点: $${anchor.anchorUUID}")
+                    // 此处添加锚点移除后的处理逻辑，如销毁虚拟模型等
+                }
+                AnchorUpdate.Event.LOADED -> {
+                    // 锚点批量加载完成事件
+                    println("所有锚点初始加载完成")
+                }
+                else -> {}
+            }
+        }
+
+        // 2. 启动跟踪服务
+        PICOKeyboardTrackingManager.start()
+
+        // 3. 加载当前所有已识别的锚点（可选）
+        coroutineScope.launch {
+            if (PICOKeyboardTrackingManager.state == TrackingState.RUNNING) {
+                val anchors = PICOKeyboardTrackingManager.loadAllAnchors()
+                println("当前已加载锚点数量: $${anchors.size}")
+                anchors.forEach { anchor ->
+                    println("锚点 $${anchor.anchorUUID}, 类型: $${anchor.category}, 已就绪: $${anchor.isReady}")
+                }
+            }
+        }
+    }
+
+    fun releaseKeyboardTracking() {
+        // 取消订阅
+        anchorSubscription?.cancel()
+        anchorSubscription = null
+        // 停止跟踪服务
+        PICOKeyboardTrackingManager.stop()
+    }
+}

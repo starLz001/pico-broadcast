@@ -1,0 +1,65 @@
+新增支持 Unity OpenXR 插件
+========================================
+*自 3.3.0 版本起，PICO Unity Integration SDK 将支持 Unity OpenXR 插件。在项目内导入 PICO Unity Integration SDK 并启用 Unity OpenXR 插件后，你可以使用 Unity OpenXR 插件来为应用接入 XR 功能。
+*启用 Unity OpenXR 插件
+参考《完成项目配置》一文中的 “启用 Unity OpenXR 插件“ 部分。
+*变化 & 适配
+*若你之前使用 PICO Unity OpenXR SDK 为应用接入了以下功能，使用 PICO Unity Integration SDK 3.0.0 及更高版本后，你需要基于以下变化做适配。
+*
+*相关文档
+*若你需要使用 Unity OpenXR 插件来开发应用，在项目内导入 PICO Unity Integration SDK 3.3.0 及更高版本并启用 Unity OpenXR 插件后，直接参考 PICO Unity OpenXR SDK 开发指南为应用接入所需功能。
+
+
+
+
+
+
+前（PICO Unity OpenXR SDK 1.4.0 及更低版本）
+
+后（PICO Unity Integration SDK 3.3.0 及更高版本）
+
+场景渐变
+
+添加 PICOScreenFade。
+
+添加 PXR_ScreenFade。
+
+屏幕刷新率
+
+通过以下两个接口获取相关信息：
+*(已废弃) TryGetSupportedDisplayRefreshRates：获取当前设备支持的所有屏幕刷新率。
+*(已废弃) GetDisplayRefreshRateCount：获取当前设备支持的屏幕刷新率数量。
+
+直接通过 GetDisplayFrequenciesAvailable 获取当前设备支持的所有屏幕刷新率。
+
+*透视
+
+接入 Passthrough Layer Feature 需要添加 PICO Manager (Script) 组件。
+
+不需要。
+
+
+
+EnableSeeThroughManual 已废弃。
+
+使用 EnableVideoSeeThrough。
+
+合成层
+
+所有接口已废弃。
+
+直接参考《合成层》文档进行使用。
+
+枚举和结构体的命名空间
+
+相关结枚举或构体如下：
+*内容保护：SecureContentFlag
+*全身动捕：
+*BodyJointSet
+*BodyTrackingData
+*BodyTrackingDataInfo
+*BodyTrackingBoneLength
+*安全区：GeometryInstanceTransform
+*透视：PassThroughStyle 
+
+命名空间统一修改为 pxr ，并迁移到 PXR_Type.cs 文件，需要重新修改命名空间。

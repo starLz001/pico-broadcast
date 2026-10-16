@@ -1,0 +1,145 @@
+访问相机数据
+========================================
+Camera API 允许你在虚幻引擎中通过蓝图和 C++ 访问 PICO 设备的物理相机（例如透视彩色相机）。其接口主要通过蓝图函数库 UPICOCameraFunctionLibrary 提供，而相关的枚举、结构体和句柄类型则定义在 PICO_CameraTypes.h 文件中。
+Camera API 采用基于会话 (Session) 的生命周期，其典型工作流程如下：
+*枚举可用相机并选择一个 CameraID。
+*创建设备句柄。
+*基于设备和配置创建捕捉会话。
+*在会话中查询相机的内外参数。
+*开始捕捉并逐帧获取图像。
+*按顺序结束捕捉，并销毁会话和设备。
+在运行时，Camera API 通过两个核心句柄来管理对象：FPICOCameraDeviceHandle (相机设备) 和 FPICOCameraCaptureSessionHandle (捕捉会话)。要判断句柄是否有效，你可以在 C++ 中调用 IsValid() 方法，或在蓝图中检查异步节点的 bSuccess 输出引脚。
+*环境要求
+*PICO 设备型号：PICO 4 Ultra 或 Project Swan（PICO OS 6）
+*PICO 设备系统版本：5.15.0 及以上
+*前提条件
+*选择 Edit > Project Settings > Platforms > Android，找到 Advanced APK Packaging 并在 Extra Permissions 中添加 android.permission.CAMERA。
+ 
+*实现方法
+*本文以蓝图为例展示如何使用 Camera API 访问相机数据。
+*申请相机权限
+*主动调用 Request Android Permissions 蓝图接口，在 Permissions 中输入权限字段：android.permission.CAMERA 申请相机权限。
+* 
+*枚举可用相机的 Camera ID
+*使用 Enumerate Available Cameras PICO 枚举可用的 Camera ID（可传入 FPICOCameraPropertyFilter 进行朝向、位置和类型过滤）。
+* 
+*你可以根据 Camera ID 查询每个物理相机具备的能力属性及参数。
+* 
+*创建设备和捕捉会话
+*选择一个 Camera ID，调用 Create Camera Device Async PICO 异步创建设备，得到 FPICOCameraDeviceHandle。你可以根据FPICOCameraDeviceHandle 查询相机内外参数。
+*结合 Get Supported Resolutions PICO、Get Supported Image Formats PICO、Get Supported FPS PICO、Get Supported Transfer Types PICO、Get Supported Models PICO 等能力查询结果，构造 FPICOCameraCaptureConfig，然后调用 Create Capture Session Async PICO  创建捕捉会话，得到 FPICOCameraCaptureSessionHandle。
+* 
+*查询相机内外参
+*需要标定或对齐时，调用 Get Camera Intrinsics PICO 和 Get Camera Extrinsics PICO 查询相机内外参。
+* 
+*开启相机捕获
+*调用 Begin Camera Capture PICO 开启相机捕获。
+*在 Tick 中循环调用 Acquire Camera Image PICO 获取图像数据，再通过 Update Render Target With Image Data PICO  或 Create Texture From Image Data PICO 更新到材质或纹理中。
+* 
+*例如，你可以先创建一个 RenderTarget2D 和一个无光照材质，再将该材质应用到场景中的 Plane 模型上。开启相机捕获后，你便可以在每一帧获取相机图像，并用它来更新此 RenderTarget2D。
+* 
+*清理资源
+*使用完成后，按 End Camera Capture PICO → Destroy Capture Session PICO  → Destroy Camera Device PICO  的顺序清理资源。
+* 
+*蓝图节点与 C++ 静态函数对照表
+*下表展示了部分蓝图节点与对应的 C++ 静态函数。
+*
+
+
+
+
+蓝图
+
+C++
+
+说明
+
+Is Camera Image Supported PICO
+ 
+
+
+IsCameraImageSupported
+
+检查当前设备是否支持相机图像扩展，建议在进入 Camera API 工作流前先调用一次。
+
+Enumerate Available Cameras PICO
+ 
+
+
+EnumerateAvailableCameras
+
+根据可选的FPICOCameraPropertyFilter 枚举可用相机 ID。
+
+Get Supported Capability Type PICO
+*Get Supported Image Formats PICO
+*Get Supported FPS PICO
+*Get Supported Resolutions PICO
+*Get Supported Transfer Types PICO
+*Get Supported Models PICO
+ 
+
+
+GetSupportedCapabilityType
+*GetSupportedImageFormats
+*GetSupportedFPS
+*GetSupportedResolutions
+*GetSupportedTransferTypes
+*GetSupportedModels
+
+查询当前相机支持的分辨率、像素格式、帧率、数据传输方式和相机模型，用于构造FPICOCameraCaptureConfig。
+
+Create Camera Device Async PICO
+ 
+
+
+CreateCameraDeviceAsync
+
+异步创建设备句柄。
+
+Create Capture Session Async PICO
+ 
+
+
+CreateCaptureSessionAsync
+
+基于设备和配置异步创建捕捉会话。
+
+Begin Camera Capture PICO
+ 
+
+
+BeginCameraCapture
+
+开启相机捕获。
+
+End Camera Capture PICO
+ 
+
+
+EndCameraCapture
+
+停止相机捕获。
+
+Acquire Camera Image PICO
+ 
+
+
+AcquireCameraImage
+
+按时间戳获取最新图像帧。
+
+Update Render Target With Image Data PICO
+ 
+
+
+UpdateRenderTargetWithImageData
+
+将相机图像写入现有 RenderTarget2D。
+
+Create Texture From Image Data PICO
+ 
+
+
+CreateTextureFromImageData
+
+创建一次性纹理。

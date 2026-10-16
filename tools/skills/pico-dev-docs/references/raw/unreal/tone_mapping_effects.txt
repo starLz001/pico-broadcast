@@ -1,0 +1,160 @@
+色调映射特效
+========================================
+虚幻引擎 - PICO 分支支持应用以低耗能使用部分虚幻引擎提供的色调映射（Tone mapping）特效，包括颜色分级（Color Grading）、晕映（Vignette）效果、电影（Film）等。由于 PICO 分支是基于 Vulkan 子通道（Vulkan subpasses）而不是其它的渲染通道来渲染特效，从而降低了性能开销和耗时。
+*环境要求
+*虚幻引擎：仅支持 PICO 分支，包含 UE 4.27 和 UE 5 版本
+*图形接口：Vulkan
+*SDK 版本：使用 PICO 分支，无需再导入 PICO SDK
+*PICO 设备支持：PICO Neo3 和 PICO 4 系列
+*PICO 设备系统版本：5.8.0 及以上
+*支持色调映射特效类型
+你可以基于 PostProcessVolume 和关卡序列（Level Sequence）在你的应用中实现以下特效类型。
+*基于 PostProcessVolume 的特效
+PICO 支持以下基于 PostProcessVolume 的特效属性。了解更多，参考虚幻引擎官方文档后期处理效果。
+*图像效果：暗角（Image Effects：Vignette）
+暗角效果（Vignette） 基于图像创建一个无边框窗口，使图像的边缘渐渐变暗和淡化，以突出图像中心。你可通过 晕映强度（Vignette Intensity） 控制屏幕角落的变暗程度，较大的数值表示图像角落变暗程度大，0 表示没有暗角效果。
+* 
+*颜色分级（Color Grading）
+颜色分级 相关特效可控制图像对比度、饱和度等的属性，可实现场景的不同风格。
+* 
+*胶片（Film）
+胶片（或称电影）相关的属性更适用于电视和电影行业，确保图像在多种格式和显示中保持颜色一致。你可设置相关的值来模拟不同类型的电影。
+* 
+*基于关卡序列（Level Squence）的特效
+PICO 支持在关卡序列的时间轴（Timeline）中，添加 PostProcessVolume 的 Actor 到 Squencer，并对该轨道实现上述颜色分级（Color Grading）和电影（Film）的特效。
+PICO 也支持添加渐变轨道（Fade track）实现场景的渐入渐出。
+*启用色调映射功能
+色调映射功能可以由控制台变量 r.Mobile.TonemapSubpass 动态控制启停。开启此功能后，你可实现暗角效果和颜色分级特效类型。要使用电影色调映射（Filmic Tone mapping）功能实现 Film 特效类型，你需额外通过控制台变量r.Mobile.TonemapperFilm 开启。
+你可以通过蓝图或 C++ 代码在游戏逻辑和交互中动态启用色调映射和电影色调映射。通过蓝图在游戏关卡开始时启用色调映射和电影色调映射的示例如下：
+* 
+C++ 代码示例如下：
+ 
+如果你需要应用程序从一开始就启用色调映射和电影色调映射，可在 {项目文件夹}\Config\DefaultEngine.ini 文件中添加以下内容：
+ 
+*添加色调映射特效
+你可参考虚幻引擎官方文档后期处理效果通过在关卡中添加并定义一个 PostProcessVolume 的 Actor 类来使用色调映射功能为场景添加特效。
+* 
+使用特效时，确保：
+*在 后期处理体积设置（Post Process Volume Settings）选卡下，为该 PostProcessVolume 勾选 已启用（Enabled）选项。
+*场景中的摄像机（Camera）位于该 PostProcessVolume 边界内，或勾选 无限范围（无边界）（Infinite Extent (Unbound)）选项。
+PostProcessVolume 添加并定义完成后，你可以通过使用关卡序列添加关键帧，实现特效的动态变化。具体步骤如下：
+*在 UE 编辑器工具栏，点击过场动画（Cinematics）按钮，在下拉菜单中，点击 添加关卡序列（Add Level Sequence）。
+* 
+*引擎将弹出保存资产窗口，为序列命名，然后点击 保存（Save）。
+*  Sequencer 编辑器将在 UE 编辑器底部打开，并显示你新建的关卡序列。
+*在 Sequencer 编辑器中，点击 +轨道（+ Track）> Actor To Sequencer，选择并点击你之前在关卡添加的 PostProcessVolume，将该 Actor 添加至 Sequencer 编辑器中。
+* 
+*在添加的 PostProcessVolume 中，点击 +轨道（+ Track）> 设置（Settings），即可对该轨道添加特效。PICO 支持颜色分级（Color Grading）和胶片（Film）特效。
+* 
+*之后，你可在所需位置添加关键帧。下图为使用场景色调（Scene Color Tint）特效添加关键帧示例。
+* 
+*（可选）添加好关键帧后，你还可以通过曲线工具设置数值的轨迹变化曲线。如下图所示，点击 Sequencer 工具栏中的曲线编辑器按钮打开 Sequencer 曲线窗口后，你可通过拖动曲线的关键节点微调关键帧和切线。更多信息参考虚幻引擎官方文档 Curve Editor。
+* 
+*添加淡入和淡出效果
+你可通过添加淡入淡出轨道实现淡入和淡出效果。其中，Fade 值 1.0 是完全不透明的黑色，0.0 是完全透明。具体步骤可参考虚幻引擎官方文档 淡入淡出轨道。
+*为色调映射开启 Mobile HDR
+*通过 r.Mobile.TonemapSubpass 命令启用基于 Vulkan Subpass 的色调映射特效后，默认的色彩范围为 LDR。勾选 Mobile HDR 选项后，色彩范围将为变为 HDR，可以同时获得 Subpass 的性能收益和 HDR 的色彩范围。
+* 
+*预览色调映射效果
+PICO 分支支持通过 Android Vulkan 预览渲染在引擎编辑器中预览色调映射效果。你可在编辑器主工具栏点击 设置（Settings）> 预览渲染关卡（Preview Rendering Level）> Android Vulkan 启用 Vulkan 预览渲染。详情参考虚幻引擎官方文档 在编辑器中启用Vulkan预览渲染。
+*性能与优化
+在应用中合理添加色调映射特效可提升画面效果，但也带来一定性能消耗。PICO 建议你在使用色调映射功能时，同时开启二倍抗锯齿和高级 FFR （静态注视点渲染）功能，以实现更佳应用性能。了解如何开启抗锯齿功能，参考降低边缘锯齿感。了解如何开启 FFR 功能，参考注视点渲染。
+以下是运行在 PICO 4 设备上的某测试应用内的普通场景下，PxrMetric 日志输出的平均 FrmTime 数据（数据仅供参考）：
+ 
+以下为在该测试应用某个普通场景内开启色调映射功能后，同时开启二倍抗锯齿（2x MSAA）和 FFR 功能、和仅开启二倍抗锯齿的 FrmTime 对比数据，单位为毫秒（数据仅供参考）：
+*
+从以上参考数据中可看出，在该测试应用内，同时开启二倍抗锯齿和高级 FFR 功能时，开启色调映射功能仅增加约 1 毫秒的耗时；仅开启二倍抗锯齿功能时，开启色调映射功能的耗时会增加到 3 毫秒。因此，在使用色调映射功能时同时开启二倍抗锯齿和高级 FFR 功能可实现更佳应用性能。
+
+// 启用色调映射功能
+static const auto ToneMappingCVar = IConsoleManager::Get().FindConsoleVariable(TEXT("r.Mobile.TonemapSubpass"));
+if(ToneMappingCVar )
+{
+    ToneMappingCVar ->Set(1);
+}
+
+// 启用电影色调映射（Filmic Tonemapping）功能
+static const auto ToneMappingFilmCVar = IConsoleManager::Get().FindConsoleVariable(TEXT("r.Mobile.TonemapperFilm"));
+if(ToneMappingFilmCVar )
+{
+    ToneMappingFilmCVar ->Set(1);
+}
+
+[/Script/Engine.RendererSettings]
+r.Mobile.TonemapSubpass=1
+r.Mobile.Tonemapperfilm=1
+
+ I/PxrMetric(22175): FPS=72/72,MTP=56.82ms,AppSW=off,FrmEarly=0,FrmLate=6,FrmCpu=3.80ms,FrmGpu=9.23ms,FrmTime=14.88ms,VsyncDelay=2,GPU=70%/441Mhz,GPUTemp=75.2C,LayerCnt=1,Pkg=com.epicgames.PicoXR_Unreal,FrmId=474
+
+
+
+*引擎版本
+
+*二倍 MSAA+高级 FFR
+
+
+
+
+
+*仅二倍 MSAA
+
+
+
+
+
+UE 4.27 版本
+
+
+关
+
+开
+
+差值
+
+关
+
+开
+
+差值
+
+
+
+12.67
+
+13.83
+
+1.16
+
+16.02
+
+18.79
+
+2.77
+
+UE 5.1.1 版本
+
+
+关
+
+开
+
+差值
+
+关
+
+开
+
+差值
+
+
+
+10.30
+
+11.5
+
+1.2
+
+14.44
+
+17.73
+
+3.3

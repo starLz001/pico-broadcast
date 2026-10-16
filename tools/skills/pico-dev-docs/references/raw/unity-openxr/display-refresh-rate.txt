@@ -1,0 +1,65 @@
+屏幕刷新率
+========================================
+屏幕刷新率代表一体机屏幕每秒的刷新次数，与画面质量息息相关。
+*环境要求
+*PICO 设备型号：PICO Neo3 系列、PICO 4 系列、PICO 4 Ultra 系列
+*PICO 设备系统版本：5.7.0 及以上
+*注意事项
+*低屏幕刷新率容易导致掉帧、卡顿、撕裂、延迟等问题，影响用户的应用体验。
+*PICO 应用的默认刷新率为 72 Hz。你可以根据实际需求为应用配置更高的刷新率。例如，对于竞速类游戏，需要配置高刷新率以保证画面的流畅性和稳定性。
+*高屏幕刷新率可能会影响应用性能。因此，若你需要为应用配置高刷新率，需同时保证应用性能的稳定性。在应用调试阶段，你可以使用性能监控与分析工具监控应用性能，确保应用可以承受高屏幕刷新率。详情可参考性能监控与分析 。
+*高屏幕刷新率可能会影响设备寿命。
+*设置屏幕刷新率
+*在 Unity 编辑器内打开你的项目。
+*前往 Edit > Project Settings > XR Plugin-in Management > OpenXR。
+*在 OpenXR Feature Groups 区域，完成以下操作：
+*勾选 OpenXR Display Refresh Rate 选框。
+* 
+*点击 PICO Support 选框右侧的设置按钮。
+*你将看到 PICO Support 窗口。
+*在 Display Refresh Rates 处，选择所需的屏幕刷新率。其中，Default 选项表示 72 Hz。
+* 
+*相关接口
+*GetDisplayRefreshRate
+ 
+获取应用当前的屏幕刷新率。
+参数说明
+*
+*SetDisplayRefreshRate
+ 
+为应用设置屏幕刷新率。
+参数说明
+*
+
+DisplayRefreshRateFeature.GetDisplayRefreshRate(ref displayRefreshRate);
+
+
+
+名称
+
+说明
+
+displayRefreshRate
+
+返回应用的屏幕刷新率。
+
+DisplayRefreshRateFeature.SetDisplayRefreshRate(SystemDisplayFrequency DisplayFrequency);
+
+
+
+名称
+
+说明
+
+DisplayFrequency
+
+指定应用的屏幕刷新率。
+ 
+
+public enum SystemDisplayFrequency
+{
+    Default,
+    RefreshRate72=72,
+    RefreshRate90=90,
+    RefreshRate120=120,
+}

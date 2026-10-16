@@ -1,0 +1,45 @@
+配置平台服务
+========================================
+在使用平台服务之前，你需要在虚幻引擎中为你的 UE 项目配置配置平台服务能力。本文档介绍配置平台服务能力的具体步骤。
+*环境要求
+*PICO 设备：PICO Neo3 和 PICO 4系列
+*PICO 设备系统版本：4.7.2 及以上版本
+*前提条件
+请确保你已经：
+*在 PICO 开发者平台创建了开发者账号和应用。详情参考创建开发者账号和应用；
+*在 UE 项目中导入了 PICO Unreal Integration SDK 并启用相关插件。详情参考导入 PICO SDK。
+*在 UE 项目中配置平台服务
+*打开 UE 编辑器，在界面左上方，点击 编辑（Edit） > 插件（Plugins）。
+*在 已安装（Installed） > OnlineSubsystem 下，勾选 OnlineSubsystemPico。
+* 
+*在 内置（Built-In） > Online Platform 下，勾选 Online Subsystem 和 Online Subsystem Utils。
+* 
+*（可选）如果你使用的是 C++ 工程，在项目文件夹 Source 目录下的 .build.cs 文件中，添加以下模块：
+* 
+*在编辑器左上方，点击 编辑（Edit）> 项目设置（Project Settings）。
+*前往 插件（Plugins） > OnlinePico Settings。
+*在 平台（Platform）选卡下，勾选 bEnable 并填入在开发者平台创建应用时获得的 AppID。了解如何查看 AppID，参考创建开发者账号和应用。
+* 
+*前往 平台（Platform） > Android。
+*在 构建（Build） 选卡下，勾选 支持arm64。建议你使用 arm64 架构来打包应用。如果使用 armv7 打包应用且设备系统版本低于 4.8.0，在初始化 PICO 平台服务时，会造成应用闪退。
+* 
+*移动到 高级 APK 打包（Advanced APK Packaging） 选卡下，为项目添加以下安卓权限：
+* 
+*android.permission.INTERNET 联网权限
+*android.permission.RECORD_AUDIO 录音权限
+*android.permission.MODIFY_AUDIO_SETTINGS 修改声音设置权限
+*android.permission.WRITE_EXTERNAL_STORAGE SD 卡写入权限
+*android.permission.FOREGROUND_SERVICE 前台服务权限
+*android.permission.BLUETOOTH 蓝牙权限
+*android.permission.READ_PHONE_STATE 获取手机状态权限
+
+PublicDependencyModuleNames.AddRange(new string[]
+{
+            "Core",
+            "CoreUObject",
+            "Engine",
+            "InputCore",
+            "OnlineSubsystem",
+            "OnlineSubsystemPico",
+            "OnlineSubsystemUtils"
+});

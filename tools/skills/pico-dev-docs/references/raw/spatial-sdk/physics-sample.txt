@@ -1,0 +1,401 @@
+示例：为应用添加物理效果
+========================================
+*该示例演示如何在 Volumetric WindowContainer 中模拟多米诺骨牌的连锁碰撞效果：通过碰撞体、刚体、初速度与碰撞事件回调，把“推倒第一块骨牌 → 连锁倒下 → 碰撞反馈 → 一键重置”串成一个可运行的完整示例。
+ 
+*前提条件
+*参阅《准备开发环境》配置 PICO Spatial SDK 开发环境。
+*准备一台 PICO 设备或启动 PICO Emulator。
+*获取示例项目
+前往《PICO Spatial SDK 示例》下载 为应用添加物理效果 示例项目。
+*运行示例项目
+*把示例项目拉取到本地，然后用 Android Studio 打开示例项目。
+*连接 PICO 设备或启动 PICO Emulator。
+*运行 app 模块。
+运行示例后，你会看到：
+*一个在 Volumetric WindowContainer 中渲染的桌面与多米诺骨牌场景
+*一个控制按钮，按 START → PUSH_DOMINO → RESTART 触发不同阶段的物理逻辑
+*多米诺发生碰撞后材质/颜色变化（来自 CollisionEvents.Enter 回调）
+* 
+*按钮流程如下：
+*START：为桌面与多米诺配置 CollisionComponent（碰撞体）
+*PUSH_DOMINO：为多米诺添加 RigidBodyComponent 并设置初始速度，触发倒下与连续碰撞
+*RESTART：把多米诺重置回初始位置与朝向，并恢复材质
+阶段流程如下（按钮 → 组件 → 效果）：
+ 
+各阶段的“组件矩阵”如下（同一示例在不同阶段对实体增删组件）：
+*
+*示例项目结构说明
+核心代码在 app/src/main/java/com/pico/spatial/sample/physics/ 下，建议按下面顺序阅读：
+*Main.kt：默认容器声明（Volumetric）与 AssetBundle 预热
+*AndroidManifest.xml：WindowContainer 的 style/defaultSize 等 meta-data
+*data/AssetBundle.kt：AssetBundle.load("asset://editor-asset.bundle")
+*manager/PhysicsManager.kt：加载场景、配置碰撞/刚体、推倒第一块、重置、材质变更
+*manager/EventManager.kt：CollisionEvents.Enter 的 subscribe/unsubscribe 封装
+*ui/MainScreen.kt：UI 与 SpatialView 承载入口（含碰撞订阅）
+*ui/PhysicsViewModel.kt：按钮阶段状态机（START / TRIGGER / RESTART），驱动 PhysicsManager
+*ecs/Domino.kt：自定义 DominoComponent(index) 标记多米诺实体
+*基于物理组件实现多米诺连锁碰撞
+下面以示例项目为主线，分步骤说明如何在 Volumetric 容器内实现可交互的多米诺物理效果。
+*步骤一：声明空间容器并承载 3D 场景
+示例使用 Volumetric WindowContainer 作为默认空间容器。它由 AndroidManifest.xml 的 meta-data 指定：
+ 
+其中：
+*pico.spatial.windowcontainer.style = 2 表示 Volumetric
+*pico.spatial.windowcontainer.defaultsize 设置默认尺寸（单位为 dp，depth 仅对 Volumetric 有效）
+*pico.spatial.windowcontainer.worldscaletype = 2 表示窗口使用固定缩放（Fixed），近大远小，适合需要稳定物理观感的场景
+应用侧通过 DefaultWindowContainer {} 声明默认容器内容：
+ 
+MainScreen 用一个 SpatialView 承载 3D 场景，并通过 AttachmentPanel 把控制按钮“挂到空间里”（按钮实体在 initial 中通过 attachments.entity(...) 取出并设置位置）：
+ 
+*步骤二：加载 Spatial Editor 场景（AssetBundle）
+示例将 Spatial Editor 工程构建为 editor-asset.bundle，并通过 AssetBundle 在运行时加载：
+ 
+加载场景并挂到 rootEntity 下：
+ 
+PHYSICS_SCENE_NAME 在示例中为 PicoDominoes，对应 Spatial Editor 工程中的场景资源。
+*步骤三：设置碰撞体（CollisionComponent）
+在 PICO Spatial SDK 中，仅添加 CollisionComponent 的实体会参与碰撞检测，但它表现为静态碰撞体：可以阻挡其他物体，但自身不会因受力而运动。要让物体“动起来”，需要额外添加 RigidBodyComponent（下一节）。
+示例对两类物体配置碰撞：
+*桌面：静态碰撞体（只添加 CollisionComponent）
+*多米诺：静态碰撞体（先添加 CollisionComponent，触发时再添加 RigidBodyComponent）
+*为桌面添加碰撞
+示例从 ModelComponent 获取网格，并用 ShapeResource.createConvexMesh(mesh) 生成凸包形状作为碰撞体：
+ 
+*为多米诺添加碰撞
+多米诺的碰撞设置与桌面类似，区别在于使用不同的 PhysicsMaterialResource：
+ 
+*配置物理材质（PhysicsMaterialResource）
+示例为桌面与多米诺分别配置了摩擦与弹性参数：
+ 
+直观效果：
+*更高的摩擦让多米诺更不容易滑动
+*较小的 restitution 让碰撞更“钝”，避免像弹球一样反弹
+*步骤四：启用刚体（RigidBodyComponent）
+要让多米诺在重力作用下倒下，并在碰撞时产生响应（冲量/阻挡等），需要为多米诺添加 RigidBodyComponent 并设置 RigidBodyMode.DYNAMIC。
+示例在触发阶段为所有多米诺批量添加刚体：
+ 
+刚体参数示例：
+ 
+这里的关键点是：
+*仅有 CollisionComponent 不会运动；需要 RigidBodyComponent
+*rigidBodyMode = DYNAMIC 才会参与动力学求解并响应力与碰撞
+*massProperties 会影响碰撞后的运动表现（倾倒速度、稳定性等）
+*步骤五：触发连锁反应（PhysicsVelocityComponent）
+为了“推倒第一块骨牌”，示例对第一块多米诺设置一个瞬时线速度：
+ 
+PhysicsVelocityComponent 用于设置瞬时线速度。与持续施加的力（例如 PhysicsForceComponent）不同，它表示一次性的初始速度设置。
+*步骤六：使用碰撞事件反馈交互（CollisionEvents.Enter）
+示例订阅 CollisionEvents.Enter，当两个物体发生碰撞时回调，并用该回调把多米诺材质改色以提示碰撞发生。
+*订阅碰撞事件
+示例在 SpatialView 初始化时订阅事件：
+ 
+PhysicsViewModel 负责把 UI 的按钮阶段（START/TRIGGER/RESTART）转换为对 PhysicsManager 的调用，并在 TRIGGER 阶段用一个短暂的 hold 窗口等待模拟结果：
+ 
+订阅逻辑封装在 EventManager 中：
+ 
+*在回调中修改材质
+*示例只关心“多米诺与多米诺的碰撞”，通过自定义组件 DominoComponent(index) 标记实体。该组件继承自 Component()，并必须重写 clone() 方法，否则当实体被克隆时自定义字段无法随之复制：
+ 
+碰撞回调中通过该组件标识两块都是多米诺，并按索引切换颜色：
+ 
+*材质修改示例（PBR）：
+ 
+*步骤七：重置场景（位置/朝向/材质）
+示例在 RESTART 阶段把多米诺的 Transform 还原到初始化时保存的值，并把材质恢复为白色：
+ 
+*在 Spatial Editor 中修改场景与资源
+示例的 3D 资源位于 /editor-asset/src/main/res3d/Sample_physics/。你可以在 Android Studio 中找到 editor-asset 模块，打开对应的 ModelView 文件，然后点击 Open in Editor 在 Spatial Editor 中打开该项目。
+ 
+*你可以在 Spatial Editor 中调整：
+*多米诺的数量、摆放位置与间距
+*桌面/模型资源
+*材质与光照
+ 
+*延伸阅读
+*《添加碰撞和外部作用》
+*《物理模拟的流程》
+*《设置物理世界的参数》
+*《事件系统》
+
+
+
+
+*阶段
+
+*桌面（table）
+
+*多米诺（domino）
+
+*第一块多米诺（domino[0]）
+
+*碰撞反馈
+
+*START
+
+*CollisionComponent（静态碰撞体）
+
+*CollisionComponent（静态碰撞体）
+
+*无额外动作
+
+*未触发
+
+*PUSH_DOMINO
+
+*保持 CollisionComponent
+
+*CollisionComponent + RigidBodyComponent(DYNAMIC, gravity)
+
+*额外设置 PhysicsVelocityComponent（初速度）
+
+*CollisionEvents.Enter：碰撞后改材质/颜色
+
+*RESTART
+
+*保持 CollisionComponent
+
+*重置 Transform/材质；并清理动力学相关状态（如移除/关闭刚体、清零速度）
+
+*同左
+
+*恢复初始外观
+
+<!-- file: app/src/main/AndroidManifest.xml -->
+<meta-data android:name="pico.spatial.windowcontainer.style" android:value="2" />
+<meta-data android:name="pico.spatial.windowcontainer.defaultsize" android:value="2000x1440x800" />
+<meta-data android:name="pico.spatial.windowcontainer.resizetype" android:value="2" />
+<meta-data android:name="pico.spatial.windowcontainer.worldscaletype" android:value="2" />
+
+// file:app/src/main/java/com/pico/spatial/sample/physics/Main.kt
+fun mainApp(scope: SpatialAppScope) =
+    with(scope) {
+        DefaultWindowContainer { PicoTheme { MainScreen() } }
+        MainScope().launch { assetBundle.await() }
+    }
+
+// file:app/src/main/java/com/pico/spatial/sample/physics/ui/MainScreen.kt
+@Composable
+fun MainScreen(viewModel: PhysicsViewModel = viewModel()) {
+    val playPhase by remember { viewModel.playPhase }
+    val controlButtonDisabled by remember { viewModel.phaseHolding }
+    val rootEntity = remember { Entity() }
+    DisposableEffect(Unit) { onDispose { viewModel.unsubscribeAllCollisionEvents() } }
+
+    SpatialView(
+        modifier = Modifier.size(2000.dp, 1440.dp),
+        initial = { content, attachments ->
+            content.addEntity(rootEntity)
+            viewModel.loadScene(rootEntity)
+            attachments.entity(ATTACHMENT_ID_CONTROL_BUTTON)?.let {
+                it.components.get<TransformComponent>()?.setPosition(BUTTON_POSITION)
+                content.addEntity(it)
+            }
+            content.subscribeCollisionEvents(viewModel)
+        },
+        attachments = {
+            AttachmentPanel(id = ATTACHMENT_ID_CONTROL_BUTTON) {
+                ControlButton(
+                    semanticsText = "$${playPhase.name} button",
+                    text = stringResource(playPhase.value),
+                    notTrigger = playPhase != PlayPhase.TRIGGER,
+                    enabled = controlButtonDisabled.not(),
+                ) {
+                    viewModel.changeToNextState()
+                }
+            }
+        }
+    )
+}
+
+// file:app/src/main/java/com/pico/spatial/sample/physics/data/AssetBundle.kt
+val assetBundle =
+    CoroutineScope(Dispatchers.IO).async(start = CoroutineStart.LAZY) {
+        AssetBundle.load(BUNDLE_PATH)
+    }
+
+private const val BUNDLE_PATH = "asset://editor-asset.bundle"    
+
+// file:app/src/main/java/com/pico/spatial/sample/physics/manager/PhysicsManager.kt
+fun loadScene(rootEntity: Entity) {
+    coroutineScope.launch {
+        val model =
+            withContext(Dispatchers.IO) { assetBundle.await().loadModel(PHYSICS_SCENE_NAME) }
+        rootEntity.addChild(model)
+        rootEntity.components[TransformComponent::class.java]?.apply {
+            setPosition(INITIAL_POSITION)
+            setScaleVector(INITIAL_SCALE)
+        }
+        initialize(rootEntity)
+    }
+}
+
+// file:app/src/main/java/com/pico/spatial/sample/physics/manager/PhysicsManager.kt
+tableEntity?.let { table ->
+    if (tableMesh == null || tableShape == null) {
+        tableMesh = table.components[ModelComponent::class.java]?.mesh
+        tableMesh?.let { tableShape = ShapeResource.createConvexMesh(it) }
+    }
+    tableShape?.let { shape ->
+        table.components.set(
+            CollisionComponent(
+                listOf(shape),
+                tablePhysicsMaterial,
+                collisionResponseMode = CollisionResponseMode.COLLIDER_FULL,
+                collisionFilter = CollisionFilter.COLLISION_FILTER_DEFAULT,
+                collisionInfoDetailLevel = CollisionInfoDetailLevel.BRIEF
+            )
+        )
+    }
+}
+
+// file:app/src/main/java/com/pico/spatial/sample/physics/manager/PhysicsManager.kt
+for (domino in dominoEntities) {
+    if (dominoMesh == null || dominoShape == null) {
+        dominoMesh = domino.components[ModelComponent::class.java]?.mesh
+        dominoMesh?.let { dominoShape = ShapeResource.createConvexMesh(it) }
+    }
+    dominoShape?.let { shape ->
+        domino.components.set(
+            CollisionComponent(
+                listOf(shape),
+                dominoPhysicsMaterial,
+                collisionResponseMode = CollisionResponseMode.COLLIDER_FULL,
+                collisionFilter = CollisionFilter.COLLISION_FILTER_DEFAULT,
+                collisionInfoDetailLevel = CollisionInfoDetailLevel.BRIEF
+            )
+        )
+    }
+}
+
+// file:app/src/main/java/com/pico/spatial/sample/physics/manager/PhysicsManager.kt
+private val tablePhysicsMaterial =
+    PhysicsMaterialResource(staticFriction = 1f, dynamicFriction = 0.9f, restitution = 0f)
+
+private val dominoPhysicsMaterial =
+    PhysicsMaterialResource(staticFriction = 0.6f, dynamicFriction = 0.6f, restitution = 0.1f)
+
+// file:app/src/main/java/com/pico/spatial/sample/physics/manager/PhysicsManager.kt
+fun toggleRigidBody(enabled: Boolean) {
+    for (domino in dominoEntities) {
+        if (enabled) {
+            domino.components.set(createRigidBodyComponent())
+        } else {
+            domino.components.remove(RigidBodyComponent::class.java)
+        }
+    }
+}
+
+// file:app/src/main/java/com/pico/spatial/sample/physics/manager/PhysicsManager.kt
+private fun createRigidBodyComponent(): RigidBodyComponent {
+    return RigidBodyComponent().apply {
+        massProperties =
+            MassProperties(
+                mass = 0.04f,
+                inertia = Vector3(1f),
+                centerOfMass = Vector3(0f, 0f, 0.02f)
+            )
+        rigidBodyMode = RigidBodyMode.DYNAMIC
+        isAffectedByGravity = true
+    }
+}
+
+// file:app/src/main/java/com/pico/spatial/sample/physics/manager/PhysicsManager.kt
+fun triggerFallDown() {
+    dominoEntities
+        .firstOrNull()
+        ?.components
+        ?.set(
+            PhysicsVelocityComponent(
+                linearVelocity = INITIAL_VELOCITY,
+                angularVelocity = Vector3.ZERO
+            )
+        )
+}
+
+// file:app/src/main/java/com/pico/spatial/sample/physics/ui/MainScreen.kt
+private fun SpatialViewContent.subscribeCollisionEvents(viewModel: PhysicsViewModel) {
+    viewModel.subscribeCollisionEvent(this, CollisionEvents.Enter::class.java)
+}
+
+// file:app/src/main/java/com/pico/spatial/sample/physics/ui/PhysicsViewModel.kt
+fun changeToNextState() =
+    viewModelScope.launch {
+        playPhase.value =
+            when (playPhase.value) {
+                PlayPhase.START -> {
+                    physicsManager.setupCollision()
+                    PlayPhase.TRIGGER
+                }
+                PlayPhase.TRIGGER -> {
+                    phaseHolding.value = true
+                    physicsManager.toggleRigidBody(true)
+                    physicsManager.triggerFallDown()
+                    delay(SIMULATION_HOLD_TIME)
+                    physicsManager.toggleRigidBody(false)
+                    phaseHolding.value = false
+                    PlayPhase.RESTART
+                }
+                PlayPhase.RESTART -> {
+                    physicsManager.reset()
+                    PlayPhase.TRIGGER
+                }
+            }
+    }
+
+companion object {
+    const val SIMULATION_HOLD_TIME = 3000L // in milliseconds
+}
+
+// file:app/src/main/java/com/pico/spatial/sample/physics/manager/EventManager.kt
+subscription =
+    content.subscribe(
+        eventType = event,
+        subscriber = { collision -> collisionEnterCallback?.invoke(collision) }
+    )
+
+// file:app/src/main/java/com/pico/spatial/sample/physics/ecs/Domino.kt
+class DominoComponent(val index: Int = -1) : Component() {
+    // You need to override the clone method to make the custom component clonable
+    override fun clone(): DominoComponent {
+        return DominoComponent(index)
+    }
+}
+
+// file:app/src/main/java/com/pico/spatial/sample/physics/manager/PhysicsManager.kt
+val collisionEnterCallback: (CollisionEvents.Enter) -> Unit = { collision ->
+    val entityA = collision.entityA ?: error("One entity in collision is null")
+    val entityB = collision.entityB ?: error("The other entity in collision is null")
+
+    val dominoA = entityA.components[DominoComponent::class.java]
+    val dominoB = entityB.components[DominoComponent::class.java]
+
+    if (dominoA != null && dominoB != null) {
+        val index = dominoA.index
+        if (index in 1..dominoColors.size) {
+            changeMaterial(entityA, dominoColors[index - 1])
+        }
+    }
+}
+
+// file:app/src/main/java/com/pico/spatial/sample/physics/manager/PhysicsManager.kt
+fun changeMaterial(entity: Entity, color: Color4) {
+    val material =
+        entity.components[ModelComponent::class.java]?.materials?.firstOrNull()
+            as? PhysicallyBasedMaterial
+    material?.apply {
+        setBaseColor(color)
+        setEmissiveColor(Color4(0.1f, 0.1f, 0.1f, 0.05f))
+    }
+}
+
+// file:app/src/main/java/com/pico/spatial/sample/physics/manager/PhysicsManager.kt
+fun reset() {
+    for (i in dominoEntities.indices) {
+        val domino = dominoEntities[i]
+        domino.components[TransformComponent::class.java]?.apply {
+            setPosition(dominoInitPositions[i])
+            setEulerAngles(dominoInitRotations[i])
+        }
+        changeMaterial(domino, Color4.WHITE)
+    }
+}

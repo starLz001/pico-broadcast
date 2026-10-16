@@ -1,0 +1,217 @@
+平面检测
+========================================
+平面检测是增强现实（AR）和混合现实（MR）中关键的环境感知技术，用于帮助系统识别现实世界中的平面，从而使虚拟物体能够与真实环境精准交互和融合。
+*通过平面检测，MR 应用能够识别并追踪水平、垂直或倾斜的表面（如地板、桌面、墙壁和斜屋顶），确保虚拟物体被准确放置并稳定对齐于实际空间。
+ 
+*核心概念
+*
+*语义类别
+*平面检测支持的语义数据类型如下。每个平面锚点仅包含一个语义数据类型。
+**
+*前置条件
+*应用的的空间状态为 Full Space。
+*代码示例
+*以下代码实现了对平面锚点的动态管理：通过监听锚点的新增、更新和移除事件，系统自动创建、更新或销毁锚点所对应的虚拟模型 entity，并将它们的 transform 与现实空间中的锚点保持同步。
+ 
+通过调用 start 函数来开启平面锚点数据更新。
+* 
+ 
+*API 参考
+*PlaneTrackingManager 和 PlaneAnchor 类中提供了平面检测相关的属性和函数。详细说明参阅 API 参考。根据你所处的地理位置选择合适的文档链接：
+*中国大陆：https://developer-cn.picoxr.com/spatial-api/index.html
+*非中国大陆：https://developer.picoxr.com/spatial-api/index.html
+
+
+
+
+***
+
+ 
+
+ 
+
+ 
+
+
+
+概念
+
+描述
+
+平面锚点
+
+*平面锚点（Plane Anchor）是在扫描平面后，由系统生成的锚点。平面锚点包含 UUID 和平面模型的相关数据，用以描述在空间中识别到的平面模型。
+提示：不支持手动创建平面锚点。
+
+*PlaneTrackingManager
+
+*PlaneTrackingManager 负责管理和驱动平面锚点数据，在注册了 AnchorUpdate 事件的回调中返回平面锚点数据。
+
+
+
+语义数据类型
+
+描述
+
+UNKNOWN
+
+无法识别的未知类型
+
+FLOOR
+
+地板
+
+CEILING
+
+天花板
+
+WALL
+
+墙体
+
+DOOR
+
+门
+
+WINDOW
+
+窗户
+
+OPENING
+
+开放区域
+
+TABLE
+
+桌子
+
+SOFA
+
+沙发
+
+CHAIR
+
+椅子
+
+HUMAN
+
+人类
+
+BEAM
+
+房梁
+
+COLUMN
+
+柱子
+
+CURTAIN
+
+窗帘
+
+CABINET
+
+柜子
+
+BED
+
+床
+
+PLANT
+
+植物
+
+SCREEN
+
+屏幕
+
+VIRTUAL_WALL
+
+虚拟墙
+
+REFRIGERATOR
+
+冰箱
+
+WASHING_MACHINE
+
+洗衣机
+
+AIR_CONDITIONER
+
+空调
+
+LAMP
+
+灯具
+
+WALL_ART
+
+墙面装饰
+
+STAIRWAY
+
+楼梯
+
+PlaneTrackingManager.subscribeAnchorUpdate {
+    if (it.event == AnchorUpdate.Event.ADDED) {
+        // 在收到 Add 事件后，将平面锚点的 UUID 转化成 MeshResource
+        val mesh = MeshResource.loadFromMeshAnchor(it.anchor.anchorUUID)
+        val material =
+            UnlitMaterial.create().apply {
+                setBaseColor(Color4.BLACK)
+                setPolygonFillMode(PolygonFillMode.LINE)
+            }
+        // 构造 ModelEntity
+        val entity = ModelEntity(mesh, material)
+        // 根据 SpatialView 的 Root Entity 节点转换坐标系
+        val position =
+            MRSampleHelper.entity!!.convertPositionFrom(it.anchor.transform.position, null)
+        val rotation =
+            MRSampleHelper.entity!!.convertRotationFrom(
+                it.anchor.transform.rotation.toQuat(),
+                null
+            )
+        entity.components[TransformComponent::class.java]?.apply {
+            setPosition(position)
+            setQuaternion(rotation)
+        }
+        // 在 Root 节点上添加新创建的 Entity
+        MRSampleHelper.entity?.addChild(entity)
+        // 通过 UUID 管理新的 Entity
+        MRSampleHelper.entityMap[it.anchor.anchorUUID] = entity
+    }
+    if (it.event == AnchorUpdate.Event.REMOVED) {
+        // 收到平面锚点被移除的事件时，销毁该平面锚点的 UUID 所对应的 Entity
+        if (MRSampleHelper.entityMap.containsKey(it.anchor.anchorUUID)) {
+            MRSampleHelper.entityMap[it.anchor.anchorUUID]?.destroy()
+            MRSampleHelper.entityMap.remove(it.anchor.anchorUUID)
+        }
+    }
+    if (it.event == AnchorUpdate.Event.UPDATED) {
+        // 收到平面锚点的更新事件时，找到该平面锚点的 UUID 所对应的 Entity 并更新模型坐标数据
+        if (MRSampleHelper.entityMap.containsKey(it.anchor.anchorUUID)) {
+            val entity = MRSampleHelper.entityMap[it.anchor.anchorUUID]
+            val mesh = MeshResource.loadFromMeshAnchor(it.anchor.anchorUUID)
+            entity?.components?.get(ModelComponent::class.java)?.mesh = mesh
+            val position =
+                MRSampleHelper.entity!!.convertPositionFrom(
+                    it.anchor.transform.position,
+                    null
+                )
+            val rotation =
+                MRSampleHelper.entity!!.convertRotationFrom(
+                    it.anchor.transform.rotation.toQuat(),
+                    null
+                )
+            entity?.components?.get(TransformComponent::class.java)?.apply {
+                setPosition(position)
+                setQuaternion(rotation)
+            }
+        }
+    }
+}
+
+*需要订阅网格锚点的的 AnchorUpdate 事件，start 函数才会推送更新的数据。
+
+PlaneTrackingManager.start()

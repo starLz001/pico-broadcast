@@ -1,0 +1,142 @@
+眼动追踪
+========================================
+通过眼动追踪功能，可在应用中实时追踪用户的注视点。眼动追踪本质上是一种传感器技术，可将用户的眼部移动转换为数据流，包含瞳距、双目注视向量以及注视点，作为设备的输入。设备通过对数据流进行解码，向用户实时呈现其眼球的注视画面。本文档介绍如何为你的应用启用眼动追踪功能并提供调用蓝图接口示例。
+*环境要求
+以下为眼动追踪相关功能的环境要求。
+ 
+*
+*使用眼动追踪
+要在应用中使用眼动追踪功能，你需要在 UE 编辑器中启用该能力，并在应用中配置接口。
+*前提条件
+你已在项目中导入 PICO Unreal Integration SDK。详情参考详情参考 导入 PICO SDK。
+*在编辑器中为项目启用眼动追踪能力
+*在 Unreal 编辑器中创建一个项目或打开已有项目。
+*在编辑器左上角，点击 编辑（Edit）> 项目设置（Project Settings）> 插件（Plugins）> PICOXR Settings。
+*移动到 Feature 选项卡下，勾选 Enable Eye Tracking 和 Enable Eye Tracking Calibration。
+* 
+开启眼动追踪后，你可以通过蓝图节点获取用户正在注视的位置和方向等数据；开启眼动追踪校准后，你的应用在启动时将唤起 PICO 系统提供的校准视线追踪功能，进行有感校准。
+*查询当前设备是否支持眼动追踪
+只有搭载眼动追踪摄像头的 PICO 设备，包括 PICO Neo3 Pro Eye、PICO 4 Pro 和 PICO 4 Enterprise 才支持眼动追踪。你可使用 GetEyeTrackingSupported 接口查询用户的设备是否支持眼动追踪能力。目前，眼动追踪模式仅支持双眼追踪模式。
+* 
+*动态启停眼动追踪
+你可使用 StartEyeTracking 和 StopEyeTracking 接口动态开启和停止眼动追踪能力。
+* 
+*验证眼动追踪是否成功开启
+你可使用 GetEyeTrackingState 查询眼动追踪能力是否开启、当前眼动追踪模式等；目前，眼动追踪模式仅支持双眼追踪模式。
+* 
+如果追踪失败，将返回错误码提示，错误码枚举如下：
+ 
+*获取眼动追踪数据
+你可使用 GetEyeTrackingData 获取眼动追踪数据。目前仅支持将 Display Time 设置为 0 作为预测时间，即获取当前帧的眼动追踪数据。
+在输出的追踪数据中：
+*当 EyeType 为 Left 或 Right 时，仅有 Orientation 和 Openness 信息；
+*当 EyeType 为 Center 时，仅有 Orientation 和 Position 信息。更多参数详细说明查看 API 参考。
+* 
+*调用接口示例
+在编辑器中启用眼动追踪功能后，你可参考以下蓝图示例在应用中使用眼动追踪功能并获取追踪数据。
+ 
+* 
+你也可使用兼容虚幻引擎的眼动追踪接口。在获取眼动追踪数据时，以下示例中的 GazeOrigin 和 GazeDirection 参数返回的值与上图蓝图中 EyeType 为 Center 时的 Position 和 Orientation 反馈的数据相同。
+ 
+* 
+*可选：在设备端开启视线追踪
+若你需要在一体机上体验或调试 “眼动追踪” 功能，则需为设备开启 “眼动追踪”，步骤如下：
+*启动 VR 一体机。
+*前往 设置 > 实验室 > 视线追踪。
+*打开 视线追踪 开关。下方将出现 校准视线追踪 一栏。
+* 
+*点击 校准视线追踪 > 开始校准。
+* 
+*按照提示完成校准。
+*AndroidManifest 权限声明
+启用眼动追踪后，SDK 会自动在 AndroidManifest.xml 文件中写入相关权限声明：<meta-data android:name="picovr.software.eye_tracking" android:value="false/true" />
+<uses-permission android:name="com.picovr.permission.EYE_TRACKING" />。
+当你在应用中调用 StartEyeTracking  接口时，应用会向用户申请相关权限。你也可选择提前申请眼动追踪权限，避免游戏中途弹出申请权限弹窗，影响用户体验。ET权限字段为 com.picovr.permission.EYE_TRACKING。
+*接口列表
+以下为 SDK 2.3.0 及之后版本提供的眼动追踪接口，依赖 PICO 设备系统 5.7.0 或之后版本。要了解 API 详情，查阅眼动追踪相关 API。
+*
+
+注意
+眼动追踪相关接口在 SDK 2.3.0 版本进行了升级改造，推荐你升级 SDK 至 2.3.0 或以上版本、升级 PICO 设备系统至 5.7.0 或以上版本使用最新的眼动追踪接口。
+
+
+
+功能
+
+SDK 版本
+
+PICO 设备系统版本
+
+PICO 设备
+
+眼动追踪
+
+2.1.4 或以上
+
+5.4.0 或以上
+
+仅支持搭载眼动追踪摄像头的 PICO 设备，包括 PICO Neo3 Pro Eye、PICO 4 Pro 和 PICO 4 Enterprise
+
+眼动追踪校准
+
+2.1.5 或以上
+
+5.5.0 或以上
+
+
+
+
+UENUM(BlueprintType)
+enum class EPXRTrackingStateCode : uint8
+{
+    PXR_MT_SUCCESS                = 0,         // 追踪成功
+    PXR_MT_FAILURE                = (uint8)-1, // 追踪失败
+    PXR_MT_MODE_NONE              = (uint8)-2, // 未设置追踪模式
+    PXR_MT_DEVICE_NOT_SUPPORT     = (uint8)-3, // 设备不支持追踪
+    PXR_MT_SERVICE_NEED_START     = (uint8)-4, // 需要在 UE 编辑器中启动追踪服务
+    PXR_MT_ET_PERMISSION_DENIED   = (uint8)-5, // 未授予眼动追踪权限
+    PXR_MT_FT_PERMISSION_DENIED   = (uint8)-6, // 未授予脸部追踪权限
+    PXR_MT_MIC_PERMISSION_DENIED  = (uint8)-7, // 未授予麦克风权限
+    PXR_MT_SYSTEM_DENIED          = (uint8)-8, // 未授予系统权限
+    PXR_MT_UNKNOW_ERROR           = (uint8)-9  // 未知错误
+};
+
+注意
+以下接口返回的坐标数据为相对于追踪原点 (TrackingOrigin) 的数据，因此，如果你想在应用中使用眼动追踪功能驱动物体，你需要调用 SetRelativeLocation 设置物体的相对坐标。
+
+注意
+以下接口返回的坐标数据经过了一次 TrackingToWorld 计算，因此，如果你想在应用中使用眼动追踪功能驱动物体，你需要调用 SetWorldLocation 设置物体的世界坐标。
+
+
+
+接口
+
+描述
+
+GetEyeTrackingSupported
+
+查询当前设备是否支持眼动追踪。
+
+GetEyeTrackingState
+
+获取当前眼动追踪的状态。
+
+StartEyeTracking
+
+开启眼动追踪。
+
+StopEyeTracking
+
+关闭眼动追踪。
+
+GetEyeTrackingData
+
+获取眼动追踪数据。
+
+GetEyeOpenness
+
+获取用户的眼睑开合度。此接口仅支持 PICO 4 Enterprise 设备。
+
+GetEyePupilInfo
+
+获取双眼瞳孔的直径和位置数据。此接口仅支持 PICO 4 Enterprise 设备。

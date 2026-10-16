@@ -1,0 +1,32 @@
+升级 SDK
+========================================
+本文档介绍如何在你的 Spatial 项目中把 PICO Spatial SDK 的版本从 6.0.0 升级到 6.1.9。
+*更新 Spatial 项目配置
+按照以下步骤修改配置：
+*更新 PICO Spatial SDK 的 BOM 版本
+*在 gradle/libs.versions.toml 中，将 PICO Spatial SDK 的 BOM 版本（对应 "com.pico.spatial:bom"）更新为 "6.1.9"。
+* 
+* 
+*更新 Spatial Tools 的版本
+*如果你使用了 editor-asset 模块，则需要在 editor-asset 的模块级 build.gradle 文件中，更新 'com.pico.spatial.tools' 和 spatialToolsVersion 的版本。
+* 
+*迁移 Spatial ML Pipeline Zoo
+*根据 pyspatialml schema v2 更新 Pipeline Zoo 包。由于新版导入器已支持多个 pipeline、model 以及 tensor slicing，你不应再读取 PipelinePackageManifest.formatVersion。
+*创建 SpatialMLSession.InitInfo 时，你需要明确指定 SpatialMLSession.ContainerType。例如，当场景为 planar 或 volumetric 类型时，你必须为其选择对应的容器类型。
+*更新 SpatialPopup 的方法签名
+*SpatialPopup 的方法签名中新增了 disableMaterialBackground 参数。你需要检查你的代码，确保所有显式参数调用都已正确更新。
+
+[versions]
+spatialBom = "6.1.9"
+
+如果你未使用版本目录（version catalogs），请在模块级 build.gradle.kts 文件的 dependencies{} 代码块中更新 BOM 版本。
+
+plugins {
+    ...
+    id 'com.pico.spatial.tools' version '6.1.0'
+}
+
+spatial {
+    name = "editor-asset"
+*    spatialToolsVersion = 6.1
+}

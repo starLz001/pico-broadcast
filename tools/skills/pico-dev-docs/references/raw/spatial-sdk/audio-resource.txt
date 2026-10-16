@@ -1,0 +1,295 @@
+音频资源
+========================================
+在空间应用中，音频资源是实现沉浸式体验的重要组成部分，它不仅负责播放背景音乐、环境音效和交互音效，还能通过空间化定位增强用户的临场感。合理管理音频资源对应用性能和用户体验至关重要。
+*格式要求
+*在 PICO Spatial SDK 中，使用的音频文件必须符合指定的文件格式、编码格式和声道布局，以确保能够被正确加载和播放。
+*文件格式
+*支持的音频文件格式如下：
+**
+*编码格式
+*支持 PCM 编码，常用于引擎底层处理和开发调试。
+*声道布局
+*支持的声道布局如下：
+**
+*加载音频资源
+*PICO Spatial SDK 支持从指定的路径、URI 或 AssetBundle 加载音频文件。
+*从指定的路径加载
+*指定自定义的音频名称、音频文件的路径和加载方式，通过以下接口，从 /assets 目录或设备文件系统中加载音频文件（对应的加载类型分别为 LoadType.FROM_ASSETS 和 LoadType.FROM_STORAGE）： 
+* 
+*文件路径须满足以下要求：
+*当加载类型为 LoadType.FROM_ASSETS 时，你提供的路径必须以 asset:// 开头，用于指向 assets 目录中的音频文件。例如，要加载位于 /assets/audio/your_custom_audio.wav 的文件，你需要传入的路径为 asset://audio/your_custom_audio.wav。
+*如果加载类型为 LoadType.FROM_STORAGE，文件路径必须是文件在设备存储中的绝对路径。
+*代码示例如下：
+*从 /assets/audio/your_custom_audio.wav 文件中加载音频文件：
+* 
+通过文件的绝对路径，从设备存储中加载音频文件：
+ 
+*从指定的 URI 加载
+*指定自定义的名称、音频文件的 URI 和 context，通过以下接口，从指定 URI 中加载音频文件，支持的 URI 包括：file://，content:// 和 android.resource://。
+* 
+*示例代码如下：
+*通过 file:// URI ，从设备存储中加载音频文件：
+* 
+*通过 content:// URI 加载音频文件：
+* 
+*通过 android.resource:// URI 加载音频文件：
+* 
+*从 AssetBundle 加载 
+*关于如何直接使用 AssetBundle 实例加载 Spatial Editor 项目中的音频文件，参考《AssetBundle》。
+*使用音频资源
+*成功加载 AudioResource后，可通过 entity.prepareAudio(audioResource: AudioResource)方法对音频进行预处理（如解码或缓冲），以优化播放性能。预处理完成后，调用 entity.playAudio(audioResource: AudioResource)即可开始播放音频。
+上述方法均返回一个 AudioPlayerController实例，该实例提供了对音频播放的精细控制，包括播放（play）、暂停（pause）、恢复（resume）、跳转（seekTo）、设置循环（setLoop）等功能。
+需注意，AudioPlayerController继承自 Closable 接口，属于需要显式释放的资源。为避免内存泄漏或资源占用，在使用完毕后，建议显式调用 audioPlayerController.close()和 audioResource.close()来释放资源。
+*管理音频资源
+你可以使用 AudioResourceLibraryComponent 来批量管理多个音频资源。AudioResourceLibraryComponent 以字典形式管理音频资源，允许把名称作为 key，用来添加、移除、检索和清空音频资源。这些 key 可以在代码或时间轴操作中使用，以便后续的音频播放。AudioResourceLibraryComponent 中包含的函数如下：
+**
+*同时播放限制
+*最大同时播放数：39 个音频源。
+*超限行为：由于 Android 平台的限制，第 40 个及以后的音频源将不会被播放。
+*编辑器行为：在 Spatial Editor 中，如果选择的音频源超过 39 个，系统会动态切换，保证最多 39 个音频源同时播放。
+
+
+
+
+文件格式
+
+描述
+
+使用场景
+
+.wav / .wave
+
+常见无损音频文件
+
+高保真音效、素材存储
+
+.mp3
+
+有损压缩音频格式
+
+背景音乐、语音播放
+
+.aac
+
+高效压缩音频格式
+
+流媒体播放、实时通信
+
+.wma
+
+Windows Media Audio
+
+历史音频库兼容
+
+.amr
+
+常用于语音录音
+
+语音消息、低码率语音
+
+.ogg / .ogv
+
+开源音频容器格式
+
+游戏/应用中的开源音效
+
+.pcm
+
+原始 PCM 数据
+
+开发调试、定制音频处理
+
+.flac
+
+无损压缩音频
+
+高质量音效、音乐欣赏
+
+.opus
+
+高效低延迟音频编码
+
+实时语音、互动场景
+
+.mkv
+
+Matroska 容器，可含音视频
+
+影片播放、多媒体内容
+
+.webm
+
+Web 媒体格式
+
+流媒体：WebXR、在线视频流
+
+
+
+枚举值
+
+描述
+
+使用场景
+
+OutputLayout_Mono
+
+单声道布局
+
+简单语音提示、单点音源
+
+OutputLayout_Stereo
+
+双声道布局
+
+音乐播放、普通视频
+
+OutputLayout_Quad
+
+四声道布局
+
+环境音效、环绕空间音
+
+OutputLayout_QuadSide
+
+四声道（侧向）布局
+
+沉浸式环境模拟
+
+OutputLayout_5_1
+
+5.1 环绕声
+
+影院模式、沉浸式体验
+
+OutputLayout_6_1
+
+6.1 环绕声
+
+游戏中精准定位声效
+
+OutputLayout_7_1
+
+7.1 环绕声
+
+高端影院、VR 全景音
+
+OutputLayout_5_1_2
+
+5.1.2 空间声道布局（含高度声道）
+
+VR/AR 空间音效、三维定位
+
+fun load(name: String, path: String, loadType: LoadType = LoadType.FROM_ASSETS): AudioResource
+
+fun loadAudioFromAsset() {
+    val subFolderName = "audio"
+    val fileName = "your_custom_audio.wav"
+    val audioName = "YourCustomAudioName"
+    // 从 /assets 目录加载音频
+    val audioFromAssets =
+        AudioResource.load(
+            name = audioName,
+            path = "asset://$${subFolderName}/$${fileName}",
+            loadType = LoadType.FROM_ASSETS
+        )
+}
+
+fun loadAudioFromStorageViaAbsolutePath(context: Context) {
+    val subFolderName = "audio"
+    val fileName = "your_custom_audio.wav"
+    val audioName = "YourCustomAudioName"
+    // 将文件从 /assets 目录复制至设备的存储
+*    val temFile = File(context.filesDir, fileName)
+    context.assets.open("$${subFolderName}/$${fileName}").use { inputStream ->
+*        FileOutputStream(temFile).use { outputStream ->
+            inputStream.copyTo(outputStream)
+            outputStream.flush()
+        }
+    }
+    // 从文件的绝对路径加载音频
+    val audioFromFilePath =
+        AudioResource.load(
+            name = audioName,
+*            path = temFile.absolutePath,
+            loadType = LoadType.FROM_STORAGE
+        )
+}
+
+fun load(name: String, uri: Uri, context: Context): AudioResource
+
+fun loadAudioFromStorageViaFileUri(context: Context) {
+    val subFolderName = "audio"
+    val fileName = "your_custom_audio.wav"
+    val audioName = "YourCustomAudioName"
+    // 将文件从 /assets 目录复制至设备的存储
+*    val temFile = File(context.filesDir, fileName)
+    context.assets.open("$${subFolderName}/$${fileName}").use { inputStream ->
+*        FileOutputStream(temFile).use { outputStream ->
+            inputStream.copyTo(outputStream)
+            outputStream.flush()
+        }
+    }
+    // 从文件的 URI 加载音频
+*    val uri = Uri.fromFile(temFile)
+    val audioFromFileUri = AudioResource.load(name = audioName, uri = uri, context = context)
+}
+
+fun loadAudioFromContentUri(context: Context) {
+    val subFolderName = "audio"
+    val fileName = "your_custom_audio.wav"
+    val audioName = "YourCustomAudioName"
+    // 将文件从 /assets 目录复制至设备的存储
+*    val temFile = File(context.filesDir, fileName)
+    context.assets.open("$${subFolderName}/$${fileName}").use { inputStream ->
+*        FileOutputStream(temFile).use { outputStream ->
+            inputStream.copyTo(outputStream)
+            outputStream.flush()
+        }
+    }
+    // 从 content 的 URI 加载音频文件
+    val uri = Uri.parse("content://$${context.packageName}.youraudioprovider/$$fileName")
+    val audioFromContentUri = AudioResource.load(name = audioName, uri = uri, context = context)
+}
+
+fun loadAudioFromAndroidResourceUri(context: Context) {
+    val audioName = "YourCustomAudioName"
+    val resId = R.raw.your_custom_audio
+    // 从 AndroidResource 的 URI 加载音频文件
+    val uri = Uri.parse("android.resource://$${context.packageName}/$${resId}")
+    val audioFromAndroidResourceUri =
+        AudioResource.load(name = audioName, uri = uri, context = context)
+}
+
+
+
+函数
+
+描述
+
+add
+
+将指定名称的 AudioResource 添加到 AudioResourceLibraryComponent 中。
+
+remove
+
+将指定名称的 AudioResource 从 AudioResourceLibraryComponent 中移除。
+
+get
+
+从 AudioResourceLibraryComponent 中获取一个指定名称的 AudioResource。
+
+contains
+
+检查 AudioResourceLibraryComponent 是否包含指定名称的 AudioResource。
+
+getAllNames
+
+获取 AudioResourceLibraryComponent 中所有 AudioResource 的名称。
+
+getAllAudioResources
+
+获取 AudioResourceLibraryComponent 中的所有 AudioResource。
+
+clear
+
+清除 AudioResourceLibraryComponent 中的所有 AudioResource。

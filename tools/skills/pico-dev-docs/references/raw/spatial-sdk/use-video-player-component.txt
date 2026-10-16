@@ -1,0 +1,349 @@
+使用 VideoPlayerComponent
+========================================
+VideoPlayerComponent 是基于 SDK 内置播放器 CypressMediaPlayer 实现的高阶视频播放组件。它屏蔽了视频解码、送帧渲染等底层复杂流程。你只需创建一个 CypressMediaPlayer 并传递给 VideoPlayerComponent，即可完成视频渲染链路的构建。
+*关于 CypressMediaPlayer
+*CypressMediaPlayer 是 PICO Spatial SDK 内置的视频播放组件，提供了基础的播放控制和视频文件加载功能。当你创建该播放器并将其传递给 VideoPlayerComponent 后，VideoPlayerComponent 会自动处理整个视频渲染流程，因此你无需再手动更新视频纹理。你可以直接通过 CypressMediaPlayer 控制视频的播放、暂停、停止及播放速度调节等操作。
+*功能
+*CypressMediaPlayer 支持的功能如下：
+*prepareAsync()：异步准备 CypressMediaPlayer。
+*prepare(): 同步 prepare 方法。
+*play()：开始播放。
+*stop()：停止播放。
+*pause()：暂停播放。
+*resume()：恢复播放。
+*isPlaying()：检查是否正在播放。
+*setLoop()：设置循环播放模式。
+*setPlaybackSpeed()：设置播放速度。
+*getPlaybackSpeed()：获取播放速度。
+*setVolume()：设置音量。
+*getVolume()：获取音量。
+*getCurrentPosition()：获取当前的播放位置。
+*getDuration()：获取视频的总时长。
+*setDataSource()：设置数据源。
+*registerCypressMediaPlayerCallback()：注册 CypressMediaPlayer 的回调。
+*unregisterCypressMediaPlayerCallback()：反注册 CypressMediaPlayer 的回调。
+*reset()：重置播放器。动态切换播放列表时，需要使用该功能。
+*getVideoWidth()：获取视频的宽。
+*getVideoHeight()：获取视频的高。
+*编码格式
+*CypressMediaPlayer 支持的编码格式如下：
+*avc(h264) 
+*hevc(h265) 
+*av1 
+*vp9 
+*vp8 
+*h263 
+*mpeg4
+*文件格式
+*CypressMediaPlayer 支持文件格式如下：
+*MPEG-4：包括 .mp4、.mov、.m4a、.3gp 和 .mj2 
+*Matroska：包括 .mkv 和 .webm 
+*.ts 
+*.m2ts 
+*.flv 
+*.asf 
+*.wmv 
+*.vob 
+*.avi 
+*.mpg 
+*.m2p 
+*.mpeg
+*使用流程
+*在应用内接入 VideoPlayerComponent，从而控制视频的播放。
+*流程图
+ 
+*第一步：创建 CypressMediaPlayer 实例
+*创建一个 CypressMediaPlayer 实例，用于设置视频播放相关参数，包括循环模式、音量等。
+*代码示例如下：
+ 
+*第二步：创建 VideoPlayerComponent 并将其添加到 Entity 上
+*依据给定的 CypressMediaPlayer、MeshResource 和 VideoMaterial，创建 VideoPlayerComponent，然后将 VideoPlayerComponent 添加到 Entity 上。
+*MeshResource：用于表示承载视频画面的 3D 物体的几何形状，例如球体、半球体、柱状体、3D 面片等。
+*VideoMaterial：用于承载视频画面。
+*代码示例如下：
+ 
+*第三步：控制视频播放
+*使用创建的 CypressMediaPlayer 实例控制视频播放。
+ 
+*第四步：释放 CypressMediaPlayer 实例
+*不需要使用 CypressMediaPlayer 实例时，将其释放，避免资源泄漏。
+ 
+*进阶设置
+*动态更新 DataSource
+*DataSource 可以实现视频的动态切换。当需要切换视频时，需要先调用 reset() 方法重置播放器，然后调用 setDataSource() 方法设置新的 DataSource。
+ 
+*设置视频显示模式（DisplayMode）
+*DisplayMode 用于设置 VideoPlayerComponent 在播放包含双目视差信息的 3D 视频时的显示模式。
+ 
+PICO Spatial SDK 提供的显示模式如下：
+**
+你可以使用 setDisplayMode 函数来设置 VideoPlayerComponent 的显示模式：
+ 
+*API 参考
+*VideoPlayerComponent 和 CypressMediaPlayer 类提供了视频播放相关的属性和函数，详情参阅 API 参考。根据你所处的地理位置选择合适的文档链接：
+*中国大陆：https://developer-cn.picoxr.com/spatial-api/index.html
+*非中国大陆：https://developer.picoxr.com/spatial-api/index.html
+
+
+class CypressMediaPlayerHelper(ctx: Context, videoPath: String, isAssetPath: Boolean) {
+
+    private var context: Context? = null
+    private var videoPath: String = ""
+    private var assetPath: String = ""
+    private var cypressMediaPlayer: CypressMediaPlayer? = null
+
+    private val callBack =
+        object : CypressMediaPlayerCallback {
+            override fun onPrepared() {
+                cypressMediaPlayer?.apply {
+                    play()
+                    Log.i(TAG, "onPrepared Event")
+                }
+            }
+            override fun onStarted() {
+                Log.i(TAG, "onStarted Event")
+            }
+            override fun onCompleted() {
+                cypressMediaPlayer?.apply { seekTo(0) }
+                Log.i(TAG, "onCompleted Event")
+            }
+            override fun onSeekToCompleted() {
+                Log.i(TAG, "onSeekToCompleted Event")
+            }
+            override fun onPaused() {
+                Log.i(TAG, "onPaused Event")
+            }
+            override fun onStopped() {
+                Log.i(TAG, "onStopped Event")
+            }
+            override fun onVideoSizeChanged(width: Int, height: Int) {
+                Log.i(TAG, "onVideoSizeChanged Event")
+            }
+            override fun onError(error: CypressMediaPlayerErrorCode) {
+                Log.i(TAG, "onError code $${error.code}")
+            }
+        }
+            
+
+    init {
+        this.context = ctx
+        cypressMediaPlayer = CypressMediaPlayer()
+        cypressMediaPlayer!!.registerCypressMediaPlayerCallback(callBack)
+        if (isAssetPath) {
+            this.assetPath = videoPath
+            val afd = this.context!!.assets.openFd(this.assetPath)
+            cypressMediaPlayer?.setDataSource(afd)
+            afd.close()
+        } else {
+            this.videoPath = videoPath
+            val ret = cypressMediaPlayer!!.setDataSource(this.videoPath)
+            Log.i(TAG, "assetPath: $$ret")
+        }
+        Log.i(TAG, "assetPath: $$assetPath")
+        Log.i(TAG, "videoPath: $${this.videoPath}")
+        Log.i(TAG, "isAssetPath: $$isAssetPath")
+    }
+
+    /** prepareAsync */
+    fun start() {
+        cypressMediaPlayer?.apply {
+            cypressMediaPlayer!!.prepareAsync()
+            Log.i(TAG, "prepareAsync pressed")
+        }
+    }
+
+    /** play */
+    fun play() {
+        cypressMediaPlayer?.apply { play() }
+    }
+
+    /** pause */
+    fun pause() {
+        cypressMediaPlayer?.apply { pause() }
+    }
+
+    /** stop */
+    fun stop() {
+        cypressMediaPlayer?.apply { stop() }
+    }
+
+    /** isPlaying */
+    fun isPlaying(): Boolean {
+        cypressMediaPlayer?.apply {
+            return isPlaying()
+        }
+        return false
+    }
+
+    /** resume */
+    fun resume(): Boolean {
+        cypressMediaPlayer?.apply {
+            return resume()
+        }
+        return false
+    }
+
+    /** setLoop */
+    fun setLoop(loop: Boolean): Boolean {
+        cypressMediaPlayer?.apply {
+            return setLoop(loop)
+        }
+        return false
+    }
+
+    /** setVolume */
+    fun setVolume(volume: Float): Boolean {
+        cypressMediaPlayer?.apply {
+            return setVolume(volume)
+        }
+        return false
+    }
+    
+    /** get the video frame's width */
+    fun getVideoWidth(): Int {
+        cypressMediaPlayer?.apply {
+            return getVideoWidth()
+         }
+         return 0
+    }
+    
+    /** get the video frame's height */
+    fun getVideoHeight(): Int {
+        cypressMediaPlayer?.apply {
+             return getVideoHeight()
+        }
+        return 0
+    }
+    
+    fun reset(){
+        cypressMediaPlayer?.apply {
+             reset()
+        }
+    }
+    
+    
+    /** exit */
+    fun exit() {
+        cypressMediaPlayer?.apply {
+            close()
+        }
+        if (File(this.videoPath).exists()) {
+            File(this.videoPath).delete()
+        }
+        cypressMediaPlayer = null
+    }
+
+    /** Companion */
+    companion object {
+        /** TAG */
+        private const val TAG = "CypressMediaPlayerHelper"
+    }
+}
+
+val player = CypressMediaPlayerHelper(context, "your_assets_video_path", true)
+
+// 获取 entity 的 mesh
+val entity = Entity()
+// 假设视频的比例是 16:9
+val mesh = MeshResource.createVideoPanel(1.6f, 0.9f, 0.1f)
+if (mesh.valid) {
+
+    // 创建 VideoMaterial
+    val videoMat =
+        VideoMaterial(
+            BlendingMode.OPAQUE,
+            VideoDimensionMode.SIDE_BY_SIDE,
+            MaterialCullingMode.BACK
+        )
+    // 创建 VideoPlayerComponent    
+    val videoPlayerComponent = VideoPlayerComponent(player,mesh, videoMat)
+    
+    // 将 VideoPlayerComponent 添加到 entity 上
+    entity.components.set(videoPlayerComponent)
+   }
+
+//启动播放
+player.start()
+
+//暂停播放
+player.pause()
+
+//设置循环
+player.setLoop(true)
+
+//设置音量
+player.setVolume(0.5)
+
+......
+
+//退出并销毁播放器
+player.exit()
+
+player.exit()
+
+// 动态更新 DataSource 的步骤如下
+player?.stop() // 暂停当前正在播放的视频
+player?.reset() // 重置播放器
+player?.setDataSource("Video/1080p60fps-av1.mp4", true) // 更新 DataSource
+player?.prepare() // 准备播放
+player?.play() // 开始播放
+
+该属性仅对 3D 视频生效。
+
+
+
+模式
+
+描述
+
+适用场景
+
+NONE（默认）
+
+视频的初始显示状态。视频的显示方式由视频材质的 VideoDimensionMode 属性决定。
+
+由播放器根据视频本身的 3D 封装格式自动决定显示效果。
+
+MONO
+
+以平面方式显示视频，不产生立体效果。
+
+播放 3D 视频但不需要立体视觉时，可将立体视频降级为平面显示。
+
+STEREO
+
+以立体视图显示视频，并呈现明显的立体效果。
+
+对视觉沉浸感要求较高的 3D 视频，如影视播放、虚拟影院或交互式体验。
+
+Button(
+    onClick = {
+        entity?.apply {
+            if (selectName == R.string.mv_hevc) {
+            
+                // 确保 Entity 上存在 VideoPlayerComponent
+                if (entity.components.has(VideoPlayerComponent::class.java)) {
+                
+                    // 获取 VideoPlayerComponent
+                    val videoPlayerComponent = entity.components[VideoPlayerComponent::class.java]!!
+                    
+                    // 在单目（MONO）与立体（STEREO）显示模式之间切换
+                    if (displayMode == "MONO") {
+                        videoPlayerComponent.setDisplayMode(DisplayMode.MONO)
+                        displayMode = "STEREO"
+                    } else {
+                        videoPlayerComponent.setDisplayMode(DisplayMode.STEREO)
+                        displayMode = "MONO"
+                    }
+                }
+            }
+        }
+    },
+    size = IconButtonDefaults.iconButtonSize(200.dp, 36.dp),
+    modifier =
+        Modifier.width(200.dp).height(36.dp).background(color = Color.Transparent),
+) {
+    
+    // 显示当前视频的显示模式
+    Text(text = displayMode, color = Color.White, fontSize = 25.sp)
+}

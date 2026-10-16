@@ -1,0 +1,9 @@
+如何压缩游戏包的大小？
+========================================
+你可以按照以下步骤来压缩游戏包的大小：
+*在编辑器左上角，点击 编辑（Edit） > 项目设置（Project Settings） > 项目（Project） > 打包（Packaging）。
+*勾选 创建压缩烘焙包（Created compressed cooked package）。
+* 
+*取消勾选未使用的插件。
+*删除 内容浏览器（Content Browser） 中没有用到的资源。
+

@@ -1,0 +1,61 @@
+克隆实体
+========================================
+通过克隆，你可以快速生成实体的副本，从而简化内容的创建与管理。
+*CloneOptions 说明
+*CloneOptions 类提供以下用于控制克隆行为的属性：
+*
+*注意事项
+*副本会与原始实体共享相同的名称，但 ID 不同。
+*副本会与原始实体的生命周期相互独立，互不影响。
+*副本不会自动加入当前的实体树，其父节点为空。
+*原始实体的运行时状态（例如动画、物理状态等）不会被复制。
+*克隆的耗时取决于被克隆的实体或实体树的复杂度。建议在合适的时机执行克隆操作，以避免影响运行性能。
+*克隆未携带自定义组件的实体
+*通过 clone() 方法，你可以直接创建一个与原始实体具有相同 Entity-Component 数据结构的副本。
+ 
+*克隆携带了自定义组件的实体
+*如果实体上包含开发者自定义的组件，必须为自定义组件重写 clone() 方法，否则组件实例将无法被正确复制。
+ 
+*API 参考
+*CloneOptions 和 Entity 类提供了实体克隆相关的属性和函数，详情参阅 API 参考。根据你所处的地理位置选择合适的文档链接：
+*中国大陆：https://developer-cn.picoxr.com/spatial-api/index.html
+*非中国大陆：https://developer.picoxr.com/spatial-api/index.html
+
+
+
+
+属性
+
+描述
+
+recursive
+
+是否克隆当前实体所在的整个实体树：
+*true：克隆整个实体树。
+*false：仅克隆当前实体。
+
+shouldShareMaterialInstance
+
+是否共享材质实例：
+*true：副本将与原实体共用同一材质实例，对任一方的材质实例的修改都会影响另一方。
+*false：为副本创建独立的材质实例。
+
+val entity = Entity()
+val cloneEntity = entity.clone()
+
+class CustomComponent: Component() {
+     var value: Float = 0f
+     // 重写 clone 方法，实现组件的克隆逻辑
+     override fun clone(): Component {
+         return CustomComponent().apply { value = this@CustomComponent.value }
+     }
+}
+
+// 创建一个实体实例
+val entity = Entity()
+
+// 为该实体挂载 CustomComponent
+entity.components.set(CustomComponent().apply { value = 3f })
+
+// 调用 clone() 方法克隆实体
+val cloneEntity = entity.clone()

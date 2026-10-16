@@ -1,0 +1,212 @@
+手势追踪
+========================================
+手势追踪功能将用户的手部动作作为 PICO 设备的输入，提升应用的互动性。
+*环境要求
+*PICO 设备型号：PICO Neo3 系列、PICO 4 系列、PICO 4 Ultra 系列
+*PICO 设备系统版本：5.13.0 及以上
+*Unity 编辑器版本：2021.2 及以上
+*支持的 Unity 扩展
+ 
+*
+*启用 PICO 的手势追踪功能
+*第一步：安装 XR Hands 套件
+*在 Unity 编辑器内打开你的项目。
+*参考 Unity 的官方操作指引，安装 XR Hands 套件。
+*前往 Window > Package Manager > Unity Registry（或 In Project）。
+*选中 XR Hands。
+*展开 XR Hands 部分的示例面板，然后点击 Import，导入 HandVisualizer 示例。
+* 
+*第二步：开启手势追踪能力
+*前往 Edit > Project Settings > XR Plug-in Management > OpenXR。
+*在 OpenXR Feature Groups 区域，完成以下操作：
+*勾选 Hand Tracking Subsystem 选框。
+*点击 PICO Support 选框右侧的设置按钮。
+* 
+*你将看到 PICO Support 窗口。
+*在 PICO Support 窗口中：
+*勾选 Hand Tracking 选框。
+*选择 Hand Tracking Support 模式，选项如下：
+*Controller And Hands：手柄交互和手势交互自动切换。用户放下手柄后，若设备识别到手势，则切换为手势交互；用户拿起手柄后，则切换为手柄交互。
+*Hands Only：仅手势交互。
+* 
+*第三步：添加手部模型
+*删除 XR Origin 下的 Left Controller 和 Right Controller 对象。
+*在 Project 窗口中，前往 Assets > Samples > XR Hands > 1.3.0 (取决于下载的 XR Hands 套件版本) > Hand Visualizer > Prefabs。
+*将 Left Hand Tracking 和 Right Hand Tracking 预制体拖至 XR Origin > Camera Offset 下，与 Main Camera 对象同级。
+* 
+*第四步：体验手势追踪效果
+前往 File > Build Settings，打包当前场景并在 PICO 设备上运行，体验手势追踪效果。
+*使用 Hand Interaction Profile 实现手势交互
+Hand Interaction Profile 拓展支持丰富的手势交互。参考以下步骤使用该拓展。
+* 
+*第一步：启用 PICO 的手势追踪功能
+参考上文 “启用 PICO 的手势追踪功能” 部分，完成此步骤。
+*第二步：添加 Hand Interaction Profile 
+*前往 Edit > Project Settings > XR Plug-in Management > OpenXR，然后在 Enabled Interaction Profiles 中添加 Hand Interaction Profile。
+* 
+*第三步：导入 XR Interaction Toolkit 的示例工程
+在 Package Manager 窗口中，导入 XR Interaction Toolkit 插件提供的 Starter Assets 和 Hands Interaction Demo 示例工程。
+* 
+*第四步：配置默认输入动作
+ 
+*在 Project 窗口中，展开 Assets > Samples > XR Interaction Toolkit > {version_number} > Starter Assets 目录，然后打开 XRI Default Input Actions。
+* 
+*在 XRI Default Input Actions 窗口中，配置以下 Action Maps：XRI LeftHand、XRI LeftHand Interaction、XRI RightHand 和 XRI RightHand Interaction。
+* 
+*在 Action Maps 列表中，选中所需配置的 Action Map。
+*在中间的 Actions 列表中，点击需配置的 Action 右侧的 + > Add Binding。
+*在右侧的 Binding Properties 面板的 Path 参数处，为 Action 绑定 OpenXR 的输入动作。
+*XRI LeftHand 需绑定的输入动作如下：
+**
+*XRI RightHand 需绑定的输入动作如下：
+**
+*XRI LeftHand Interaction 需绑定的输入动作如下：
+**
+*XRI RightHand Interaction 需绑定的输入动作如下：
+**
+*第五步：检查项目配置
+*在 Project Validation 面板中，查看项目中是否存在问题，若有则点击 Fix All 按钮一键修复。
+ 
+*第六步：运行 HandsDemoScene
+*在 Project 窗口中，展开 Assets > Samples > XR Interaction Toolkit > {version_number} > Hands Interaction Demo 目录。
+*打开 HandsDemoScene。
+* 
+*打包当前场景并在你的 PICO 设备上运行，体验 Hand Interaction Profile 提供的手势交互效果。
+*高频手势追踪（60Hz）
+高频手势追踪支持以 60Hz 追踪用户的手部动作，以捕捉更快速的手部移动，从而提升手势追踪的准确性，带给用户更加自然流畅的交互体验。
+通常情况下，普通手势追踪模式已经可以达到追踪准确性和速度之间的平衡。高频追踪模式会带来更大的性能消耗。若你的应用类型（健身应用、音乐舞蹈类应用等）需要追踪更加快速的手部移动，则可以选择开启高频追踪模式。开启前，建议先测试普通的手势追踪模式可否达到预期追踪效果。
+在 PICO Support 窗口中勾选 Hand Tracking 选框后，你可以选择是否勾选  High Frequency Tracking (60Hz) 选框以启用高频手势追踪。
+* 
+* 
+*启用后，SDK 会自动在应用的 AndoridManifest.xml 文件中写入以下元数据：
+ 
+*已知问题
+*在 PICO 设备系统版本 5.13.0 中，手指捏合后触发的射线无法与任何物体进行交互，该问题将在后续版本中解决。
+
+
+以下拓展仅 PICO 4 Ultra 系列设备支持。
+
+
+
+名称
+
+说明
+
+Hand Interaction Profile
+
+支持丰富的手势交互。若你的应用需要实现 XR Interaction Toolkit 的手势交互体验，则需要添加 Hand Interaction Profile 拓展。更多信息参考此文档。
+* 
+
+Hand Interaction Poses
+
+用于实现手势交互，但提供的交互体验不及 Hand Interaction Profile 拓展丰富。该拓展的详细说明参考此文档。
+
+Palm Poses
+
+提供了一个标准姿势标识符，无论手部位置是通过直接跟踪，还是根据物理控制器的位置和方向推断，该标识符都能可靠地将视觉内容与用户的物理手进行锚定。详细说明参考此文档。
+
+仅支持 PICO 4 Ultra 系列设备。
+
+XR Interaction Toolkit 3.0 及更高版本中已自动配置默认输入动作，无需操作此步骤。
+
+
+
+Action
+
+需绑定的输入动作
+
+Position
+
+devicePose/Position [LeftHand Hand Interaction (OpenXR)]
+
+Rotation
+
+devicePose/Rotation [LeftHand Hand Interaction (OpenXR)]
+
+Aim Position
+
+pointer/Position [LeftHand Hand Interaction (OpenXR)]
+
+Aim Rotation
+
+pointer/Rotation [LeftHand Hand Interaction (OpenXR)]
+
+
+
+Action
+
+需绑定的输入动作
+
+Position
+
+devicePose/Position [RightHand Hand Interaction (OpenXR)]
+
+Rotation
+
+devicePose/Rotation [RightHand Hand Interaction (OpenXR)]
+
+Aim Position
+
+pointer/Position [RightHand Hand Interaction (OpenXR)]
+
+Aim Rotation
+
+pointer/Rotation [RightHand Hand Interaction (OpenXR)]
+
+
+
+Action
+
+需绑定的输入动作
+
+Select
+
+*pinchReady [LeftHand Hand Interaction (OpenXR)]
+*graspFirm [LeftHand Hand Interaction (OpenXR)]
+*pinchTouched [LeftHand Hand Interaction (OpenXR)]
+
+Select Value
+
+*pinchValue [LeftHand Hand Interaction (OpenXR)]
+*graspValue [LeftHand Hand Interaction (OpenXR)]
+
+UI Press
+
+*pinchReady [LeftHand Hand Interaction (OpenXR)]
+*pointerActivated [LeftHand Hand Interaction (OpenXR)]
+
+UI Press Value
+
+*pinchValue [LeftHand Hand Interaction (OpenXR)]
+*pointerActivateValue [LeftHand Hand Interaction (OpenXR)]
+
+
+
+Action
+
+需绑定的输入动作
+
+Select
+
+*pinchReady [RightHand Hand Interaction (OpenXR)]
+*graspFirm [RightHand Hand Interaction (OpenXR)]
+*pinchTouched [RightHand Hand Interaction (OpenXR)]
+
+Select Value
+
+*pinchValue [RightHand Hand Interaction (OpenXR)]
+*graspValue [RightHand Hand Interaction (OpenXR)]
+
+UI Press
+
+*pinchReady [RightHand Hand Interaction (OpenXR)]
+*pointerActivated [RightHand Hand Interaction (OpenXR)]
+
+UI Press Value
+
+*pinchValue [RightHand Hand Interaction (OpenXR)]
+*pointerActivateValue [RightHand Hand Interaction (OpenXR)]
+
+高频追踪模式启用后，无法在运行时关闭。
+
+<meta-data android:name="Hand_Tracking_HighFrequency" android:value="1" />

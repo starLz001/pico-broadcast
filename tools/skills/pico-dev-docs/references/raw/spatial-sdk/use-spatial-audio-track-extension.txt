@@ -1,0 +1,169 @@
+使用 SpatialAudioTrackExtension
+========================================
+在空间应用开发中，第三方播放器（例如 ExoPlayer 或 Media Player）集成空间音频往往面临接入成本高、音视频同步逻辑复杂等痛点。开发者通常需要深入底层修改播放引擎或手动维护复杂的 3D 位姿同步逻辑。
+*为了解决这些痛点，PICO Spatial SDK 提供了 SpatialAudioTrackExtension。SpatialAudioTrackExtension扩展了 Android 原生 AudioTrack 接口。对于基于 Android 原生 AudioTrack 的第三方播放器，你可在不变更原有播放逻辑的情况下，实现音频与 3D 实体或应用容器的关联。
+ 
+*开发流程
+*步骤一：配置 SpatialAudioTrackExtension
+*在使用 SpatialAudioTrackExtension 前，你需要先创建一个 SpatialAudioTrackExtension 实例，再调用其 spatialAudioTrackExtensionConfig() 方法完成配置。spatialAudioTrackExtensionConfig() 的参数如下：
+*
+ 
+*步骤二：通过 SpatialAudioTrackExtension 把 AudioTrack 关联到实体或容器
+你可以在以下两个时机通过 SpatialAudioTrackExtension 把 AudioTrack 关联到实体或容器：
+*使用 AudioTrack.Builder 在 AudioTrack 创建阶段完成关联。详情参见  。
+*关联已有的 AudioTrack 实例。详情参见  。
+*方法一：在 AudioTrack 创建阶段把 AudioTrack 关联到实体或容器
+你可以使用 AudioTrack.Builder 在 AudioTrack 创建阶段完成关联。可调用以下方法把 AudioTrack 关联到实体或空间容器：
+*attachToEntityWithBuilder()：把 AudioTrack 关联到实体。当音频需要跟随场景中某个特定 3D 对象的位置时使用（例如视频面板实体）。
+* 
+*attachToContainerWithBuilder()：把 AudioTrack 关联到空间容器。当音频只需跟随窗口 / 容器的位置时使用（例如固定的背景音乐）。
+ 
+*方法二：把已有的 AudioTrack 关联到实体或容器
+如果第三方播放器已生成 AudioTrack 实例，你可以使用以下方法把 AudioTrack 关联到实体或容器：
+*attachToEntityWithAudioTrack()：把 AudioTrack 关联到实体。当音频需要跟随场景中某个特定 3D 对象的位置时使用（例如视频面板实体）。
+* 
+*attachToContainerWithAudioTrack()：把 AudioTrack 关联到空间容器。当音频只需跟随窗口或容器的位置时使用（例如固定的背景音乐）。
+ 
+*示例代码
+*本节根据「关联时机 × 关联对象」给出 4 种完整的代码示例。你可以根据自己的场景直接复制使用。
+*
+*场景一：在 AudioTrack 创建阶段关联到实体
+适用于自定义播放器，且需要让音频跟随场景中某个实体的位置。
+ 
+*场景二：把已有的 AudioTrack 关联到实体
+适用于第三方播放器（例如 ExoPlayer 或 Media Player）已经生成 AudioTrack 实例的情况，将其与场景中的实体关联。
+ 
+*场景三：在 AudioTrack 创建阶段关联到容器
+适用于音频只需跟随窗口 / 空间容器位置的场景，例如固定的背景音乐。
+ 
+*场景四：把已有的 AudioTrack 关联到容器
+适用于第三方播放器已经生成 AudioTrack 实例，且只需跟随空间容器位置的场景。
+ 
+*开发注意事项
+*空间音效开关：可调用 enableSpatialAudio(enable, audioTrack) 在运行时动态开启或关闭空间音效。
+*API 参考
+*SpatialAudioTrackExtension 类提供相关的属性和函数。详细说明参阅 API 参考。根据你所处的地理位置选择合适的文档链接：
+*中国大陆：https://developer-cn.picoxr.com/spatial-api/index.html
+*非中国大陆：https://developer.picoxr.com/spatial-api/index.html
+
+
+
+参数
+
+描述
+
+*mode
+
+空间音频模式。
+*SpatialAudioMode.OBJECT：完整的 3D 位置音频，同时具备位置和朝向信息。每个音源都有自己的 3D 位置，并可进行空间化渲染。适用场景：在 3D 空间中具有明确位置的音源，例如视频面板中的角色对白或特定场景的音效。
+*SpatialAudioMode.AMBIENT：考虑听者朝向的环境音频。音频会根据听者头部朝向进行混合，但不包含位置信息。适用场景：背景环境音（如风声、雨声），需要在用户转头时产生方向感，但不要求精确定位。
+*SpatialAudioMode.CHANNEL：传统的基于声道的音频（立体声、5.1 声道等）。不进行空间化处理，音频按原始方式从扬声器播放。适用场景：无需空间化效果的普通 2D 音频内容，或在空间化不可用时作为回退方案。
+
+*isAmbisonic
+
+是否开启 Ambisonic。该参数仅在 mode 被设置为 SpatialAudioMode.AMBIENT 时有效。你需要根据音频资源的类型来设置 SpatialAudioMode。如果为 Ambisonic 音频选择了错误的模式（例如 SpatialAudioMode.OBJECT），音频渲染效果将不符合预期。
+*true：开启 Ambisonic。
+*false（默认）：不开启 Ambisonic。
+
+*builder
+
+传入 AudioTrack.Builder 实例，SDK 会基于该 builder 完成空间音频相关配置。
+
+val builder = AudioTrack.Builder()
+val extension = SpatialAudioTrackExtension()
+// 配置空间音频参数
+extension.spatialAudioTrackExtensionConfig(
+    mode = SpatialAudioMode.OBJECT,
+    isAmbisonic = false,
+    builder = builder
+)
+
+实体必须已经添加到了 SpatialView 的 content 中，否则会关联失败。
+
+// 把 AudioTrack 关联到实体
+extension.attachToEntityWithBuilder(targetEntity, builder)
+
+实体必须已经添加到了 SpatialView 的 content 中，否则会关联失败。
+
+// 把 AudioTrack 关联到实体
+extension.attachToEntityWithAudioTrack(targetEntity, audioTrack)
+
+
+
+*场景
+
+*关联时机
+
+*关联对象
+
+*适用情况
+
+ 
+
+*创建阶段（Builder）
+
+*实体
+
+*自定义播放器，且音频需跟随场景中特定 3D 对象。
+
+ 
+
+*已有实例
+
+*实体
+
+*第三方播放器（如 ExoPlayer）已生成 AudioTrack，需跟随实体。
+
+ 
+
+*创建阶段（Builder）
+
+*空间容器
+
+*窗口级背景音乐等只需跟随容器位置的场景。
+
+ 
+
+*已有实例
+
+*空间容器
+
+*第三方播放器已生成 AudioTrack，需跟随容器。
+
+val extension = SpatialAudioTrackExtension()
+extension.spatialAudioTrackExtensionConfig(
+    mode = SpatialAudioMode.OBJECT,
+    isAmbisonic = false,
+    builder = audioTrackBuilder
+)
+// 实体必须已经添加到了 SpatialView 的 content 中，否则会关联失败。
+extension.attachToEntityWithBuilder(targetEntity, audioTrackBuilder)
+val audioTrack = audioTrackBuilder.build()
+
+val extension = SpatialAudioTrackExtension()
+*extension.spatialAudioTrackExtensionConfig(
+*    mode = SpatialAudioMode.OBJECT,
+*    isAmbisonic = false,
+*    builder = audioTrackBuilder
+*)
+*val audioTrack = audioTrackBuilder.build() // 由第三方框架创建
+// 实体必须已经添加到了 SpatialView 的 content 中，否则会关联失败。
+*extension.attachToEntityWithAudioTrack(targetEntity, audioTrack)
+
+val extension = SpatialAudioTrackExtension()
+extension.spatialAudioTrackExtensionConfig(
+    mode = SpatialAudioMode.AMBIENT,
+    isAmbisonic = false,
+    builder = audioTrackBuilder
+)
+extension.attachToContainerWithBuilder(context, audioTrackBuilder)
+val audioTrack = audioTrackBuilder.build()
+
+val extension = SpatialAudioTrackExtension()
+*extension.spatialAudioTrackExtensionConfig(
+*    mode = SpatialAudioMode.AMBIENT,
+*    isAmbisonic = false,
+*    builder = audioTrackBuilder
+*)
+*val audioTrack = audioTrackBuilder.build()
+*extension.attachToContainerWithAudioTrack(context, audioTrack)

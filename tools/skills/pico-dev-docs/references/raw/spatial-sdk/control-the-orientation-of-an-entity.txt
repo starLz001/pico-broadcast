@@ -1,0 +1,145 @@
+控制实体的朝向
+========================================
+使用 LookAtComponent 可以控制实体的朝向，例如：让角色或 UI 面板始终面向用户。
+*设置实体的朝向的目标
+*要让一个实体朝向特定目标，只需为该实体挂载 LookAtComponent，然后指定一个目标。默认情况下，实体的 +Z 轴始终朝向该目标。
+*朝向用户（HMD）
+*通过 setViewerAsTarget()，将用户的 HMD 设置为目标后，无论如何运动，当前实体将始终朝向 HMD。
+* 
+*朝向另一个实体
+*通过 setEntityAsTarget(targetEntity)，将场景中的另一个实体设置为目标后，无论如何运动，当前实体将始终朝向另一个实体。
+* 
+*清除朝向目标
+通过 clearTarget() 清除目标后，实体的朝向将不再变化，即始终保持初始的朝向。
+ 
+*设置 Y 轴对齐
+*通过 alignLocalUpToWorldUp 属性，可以控制实体的本地 Y 轴是否与所在容器的坐标的 Y 轴对齐，即是否让两个 Y 轴保持平行。
+*true：对齐，即让两个 Y 轴保持平行。
+*false：不对齐，允许实体自由旋转。
+* 
+*设置实体所朝向目标的面
+*默认情况下，实体的 +Z 轴（POSITIVE_Z）始终朝向所设置的目标。你可以通过 lookAtForwardDirection 修改实体朝向目标的面，例如让实体的 -Z 轴朝向目标：
+ 
+*获取目标的类型
+*通过 getLookAtTargetType() 查询当前的目标类型。
+**
+ 
+*获取实体朝向目标的面
+*通过 lookAtForwardDirection 属性的 get 方法获取实体所朝向目标的面。
+**
+ 
+*API 参考
+LookAtComponent 类提供了用于管理实体朝向的相关函数和属性，详情参阅 API 参考。根据你所处的地理位置选择合适的文档链接：
+*中国大陆：https://developer-cn.picoxr.com/spatial-api/index.html
+*非中国大陆：https://developer.picoxr.com/spatial-api/index.html
+
+
+Entity().apply { 
+    components[LookAtComponent::class.java] = LookAtComponent().apply { 
+        setViewerAsTarget()
+    }
+}
+
+// 将一个直径为 0.04 米的红色圆球作为目标，当前实体的 +Z 轴始终朝向该红色圆球
+val targetEntity = remember { LookAtTargetEntity(Color.red, 0.04f) }
+Entity().apply { 
+    components[LookAtComponent::class.java] = LookAtComponent().apply { 
+        setEntityAsTarget(targetEntity)
+    }
+}
+
+// 将一个直径为 0.04 米的红色圆球作为目标，当前实体的 +Z 轴始终朝向该红色圆球
+val targetEntity = remember { LookAtTargetEntity(Color.red, 0.04f) }
+val lookAtEntity = Entity().apply { 
+    components[LookAtComponent::class.java] = LookAtComponent().apply { 
+        setEntityAsTarget(targetEntity)
+    }
+}
+
+// 清除红色圆球这个目标
+lookAtEntity.components[LookAtComponent::class.java]?.apply { 
+    clearTarget()  
+}
+
+// 将一个直径为 0.04 米的红色圆球作为目标，当前实体的 +Z 轴始终朝向该红色圆球
+val targetEntity = remember { LookAtTargetEntity(Color.red, 0.04f) }
+val lookAtEntity = Entity().apply { 
+    components[LookAtComponent::class.java] = LookAtComponent().apply { 
+        setEntityAsTarget(targetEntity)
+    }
+}
+lookAtEntity.components[LookAtComponent::class.java]?.apply { 
+    // 启用 Y 轴对齐
+    alignLocalUpToWorldUp = true
+
+    // 关闭 Y 轴对齐
+    alignLocalUpToWorldUp = false
+}
+
+// 将一个直径为 0.04 米的红色圆球作为目标，当前实体的 +Z 轴始终朝向该红色圆球
+val targetEntity = remember { LookAtTargetEntity(Color.red, 0.04f) }
+val lookAtEntity = Entity().apply { 
+    components[LookAtComponent::class.java] = LookAtComponent().apply { 
+        setEntityAsTarget(targetEntity)
+    }
+}
+lookAtEntity.components[LookAtComponent::class.java]?.apply { 
+    // 让当前实体的 -Z 轴朝向红色圆球
+    lookAtForwardDirection = LookAtForwardDirection.NEGATIVE_Z
+}
+
+
+
+枚举值
+
+描述
+
+LookAtTargetType.NONE
+
+无目标（默认）。
+
+LookAtTargetType.ENTITY
+
+目标为另一个实体。
+
+LookAtTargetType.VIEWER
+
+目标为用户（HMD）。
+
+// 将一个直径为 0.04 米的红色圆球作为目标，当前实体的 +Z 轴始终朝向该红色圆球
+val targetEntity = remember { LookAtTargetEntity(Color.red, 0.04f) }
+val lookAtEntity = Entity().apply { 
+    components[LookAtComponent::class.java] = LookAtComponent().apply { 
+        setEntityAsTarget(targetEntity)
+    }
+}
+lookAtEntity.components[LookAtComponent::class.java]?.apply { 
+    // 获取当前实体所朝向的目标的类型
+    val type = getLookAtTargetType()
+}
+
+
+
+枚举值
+
+描述
+
+LookAtForwardDirection.POSITIVE_Z
+
+实体的正 Z 面朝向目标（默认）。
+
+LookAtForwardDirection.NEGATIVE_Z
+
+实体的负 Z 面朝向目标。
+
+// 将一个直径为 0.04 米的红色圆球作为目标，当前实体的 +Z 轴始终朝向该红色圆球
+val targetEntity = remember { LookAtTargetEntity(Color.red, 0.04f) }
+val lookAtEntity = Entity().apply { 
+    components[LookAtComponent::class.java] = LookAtComponent().apply { 
+        setEntityAsTarget(targetEntity)
+    }
+}
+lookAtEntity.components[LookAtComponent::class.java]?.apply { 
+    // 获取当前实体朝向目标红色圆球的面
+    val direction = lookAtForwardDirection
+}

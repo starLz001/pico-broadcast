@@ -1,0 +1,206 @@
+云存档
+========================================
+云存档服务可用来备份和恢复用户设备上的应用数据，例如用户在应用内的身份、自定义设置、偏好设置、游戏进度等。你可以在 PICO 开发者平台为应用开启/关闭云存档服务。
+*环境要求
+*SDK 版本：2.0.5 及以上
+*PICO 设备型号：PICO Neo3 和 PICO 4 系列
+*PICO 设备系统版本：
+**
+*重要提示
+*“云存档” 功能仅用于简单文件的备份和恢复，并不涉及数据检索逻辑。
+*仅当用户使用新设备、重置设备或重装应用后，才可以恢复备份数据。
+*云存档流程
+同一个 PICO 帐号支持在不同设备上被同一用户使用。因此，云存档分为两种情况：同一设备上的云存档和不同设备上的云存档。
+*同一设备
+若 PICO 帐号仅在单个设备上被使用，云存档流程如下：
+ 
+*不同设备
+若同一 PICO 帐号在不同设备上被使用，云存档流程如下：
+ 
+*效果展示
+此部分比较未开启和开启 “云存档” 功能下的数据存储和恢复情况。
+*文件名为 “ABCD”。
+*应用包名为 “com.bytedance.newonline”。
+*文件存储位置为 “/data/data/com.bytedance.newonline/shared_prefs”。是应用包名。
+*
+*功能说明
+*主动数据备份
+PICO SDK v2.4.0 及之后版本提供 StartNewBackup 接口支持应用主动备份数据。当用户在游戏内有关键进展时（如闯关成功），你可以调用该接口及时保存用户的进度数据。
+*被动数据备份
+对于符合备份条件的设备和应用，应用数据将被备份至云端。备份过程中，必须保持头戴设备的网络连接，否则将会备份失败。备份失败后，将不会重试，直到下次备份时机触发后，再次备份。
+*相关条件
+数据备份的触发条件和限制条件如下：
+*
+*备份目录
+系统将备份以下目录中的数据。
+* 
+*
+若想使用 自定义目录 ，需注意以下事项：
+*你可以在以上指定目录下创建子目录，以自定义自己的备份目录。若自定义目录非以上指定目录下的子目录，将无法进行数据备份和恢复；
+*由于备份数据有大小限制，因此不建议将 DLC 相关的文件放入云存档的目录下，避免因超出大小限制而导致数据备份失败，同时也避免对不必要的数据进行备份和恢复。
+*更新备份
+备份数据支持更新，相关说明如下：
+*云端仅存储最新备份数据，备份完成后，会将原备份数据删除；
+*对于单个应用，若一个 PICO 帐号在多台设备上拥有该应用的数据时，保存最后一个执行数据备份的设备中的数据；
+*仅在应用数据发生更改时才会进行数据备份和上传。
+*数据恢复
+对于有备份数据的应用，若满足以下条件之一，将触发数据恢复：
+*用户从 PICO 商店再次下载该应用并在同一设备上首次启动
+*用户在另一台设备上下载该应用并首次启动
+注意事项如下：
+*若你或用户中的任意一方关闭云存档服务，备份数据将无法恢复。
+*数据恢复发生在应用启动时，采用异步执行的方式进行，对应用的运行基本没有影响；
+*数据恢复进度通过弹窗进行提示，恢复成功之后弹窗自动消失，恢复失败会弹窗提示失败；
+*数控恢复过程中，必须保持头戴设备的网络连接，否则将会恢复失败；
+*若数据恢复失败，用户可在弹窗上点击重试，如果点击取消则放弃恢复，然后重新启动应用。
+*数据删除
+*用户注销账号后，服务端将自动删除该用户的所有云端数据备份。
+*完整性校验
+为保证备份数据的安全性，须对数据进行加密以及完整性校验。对于备份到云端的数据，会先进行加密并计算摘要。当恢复应用数据时，会先从云端拉取之前备份的数据，然后进行解密以及摘要校验，只有解密成功并且通过摘要校验的数据才能被恢复。
+*使用流程
+*第一步：开启云存档服务
+你需前往 PICO 开发者平台为应用开启云存档服务。步骤如下：
+*登录 PICO 开发者平台。
+*在左侧导航栏中，点击 我的应用。
+*你将前往 我的应用 页。
+*点击目标应用，进入其 概览 页。
+*在左侧导航栏中，点击 平台服务。
+*你将前往 PPS 开发平台。
+*在左侧导航栏中，点击 云存档。
+*你将进入云存档服务管理面板。
+*点击 启用服务。
+* 
+*平台将为你的应用开启云存档服务。
+*第二步：实现云存档服务
+*调用云存档服务接口，在应用内实现该服务。接口列表和说明参阅 API 参考。
+*以下为代码示例：
+ 
+
+
+
+中国大陆用户
+
+非中国大陆用户
+
+4.7.4 及以上。
+
+4.7.1.7 及以上。
+
+
+
+
+
+*未开启 “云存档”
+
+*开启 “云存档”
+
+保存数据
+
+保存后，目录下出现 “ABCD” 文件。
+* 
+
+保存后，目录下出现 “ABCD” 文件。
+* 
+
+恢复数据
+
+
+删除应用并重装后，目录下无 “ABCD” 文件。
+* 
+
+删除应用并重装后，用户第一次打开应用时，会弹窗提示用户是否恢复云存档数据。
+* 
+若用户选择恢复数据，进入应用后，界面显示你在代码中设置的提示消息。
+* 
+同时，相应文件将被添加至本地目录。
+* 
+
+
+
+触发条件
+限制条件
+同时满足以下所有条件时，触发数据备份：
+*已在 PICO 开发者平台和用户的 VR 一体机上开启云存档服务。
+*距离上次成功备份已超过 24 小时。
+*备份目录中的文件内容发生变化。
+*应用已关闭。
+
+数据备份的限制条件如下：
+*用户在每个应用下的总备份数据大小 不得超过 100MiB，若超出限制，将备份失败。
+*备份数据与用户的 PICO 帐号关联，一个用户在一个应用中仅拥有一份备份数据。
+
+文件类型无限制，文件大小不得超过 100MB.
+
+
+
+目录
+相关 API
+/data/data/{packagename}/files
+android.content.Context#getFilesDir
+/data/data/{packagename}/databases
+android.content.Context#getDatabasePath
+/data/data/{packagename}/shared_prefs
+android.content.Context#getDataDir
+/storage/emulated/0/Android/data/{packagename}/files
+android.content.Context#getExternalFilesDir
+using System;
+using UnityEngine;
+using UnityEngine.UI;
+
+namespace Pico.Platform.Samples.Game
+{
+    public class CloudStorageSample : MonoBehaviour
+    {
+        public Text showText; // 用于向用户展示信息的 Text 组件
+        public Text debugText; // 用于展示调试信息的 Text 组件
+        // 调用接口，完成一次数据备份
+        public void StartNewBackup()
+        {
+            string debugMsg= "";
+            debugMsg += "\nStartNewBackup Start";
+
+            CloudStorageService.StartNewBackup().OnComplete(msg =>
+            {
+                if (msg.IsError)
+                {
+                    debugMsg += "\nStartNewBackup IsError, ErrorMessage:" + msg.Error.Message + " ErrorCode:" + msg.Error.Code;
+                }
+                else
+                {
+                    debugMsg = "\nStartNewBackup Successfully";
+                }
+
+                Debug.Log(debugMsg);
+                debugText.text = debugMsg;
+            });
+
+            Debug.Log(debugMsg);
+            debugText.text = debugMsg;
+        }
+        // 在 PlayerPrefs 里存储一个 String 类型的值
+        public void SetString(string KeyName, string Value)
+        {
+            PlayerPrefs.SetString(KeyName, Value);
+        }
+
+        // 从 PlayerPrefs 中获取一个 String 值
+        public string GetString(string KeyName)
+        {
+            return PlayerPrefs.GetString(KeyName);
+        }
+        // 将数据存储至 PlayerPrefs
+        public void savedata()
+        {
+            SetString("test", "ABCD");
+        }
+
+        private void Update()
+        {
+            // 从 PlayerPrefs 处获取先前保存的 String 值
+            string showMsg = GetString("test");
+            // 在 showText UI 元素上展示得到的 String 值，或在未获取到数据时展示相关消息
+            // 提示：此处提供的示例文字可修改
+            showText.text = "获取到保存数据："+ (string.IsNullOrEmpty(showMsg) ? "无数据" : showMsg);
+        }
+    }
+}

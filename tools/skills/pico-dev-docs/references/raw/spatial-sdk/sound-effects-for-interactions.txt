@@ -1,0 +1,107 @@
+交互音效
+========================================
+交互音效用于在关键交互行为（例如点击、确认、完成操作）发生时，快速触发即时音效反馈。
+*使用场景
+*增强操作确认感：通过听觉信号确认操作已触发，降低对误操作的疑虑。
+*改善可用性：在用户视线不集中、界面元素不显著或视觉反馈容易被遮挡的场景中，声音可以辅助用户感知操作结果。
+*内置音效
+*SpatialSoundEffect 定义了 PICO OS 6 中预置的空间音效枚举。其中，操作类音效（Op*）用于用户的直接交互行为，状态类音效（State*）用于表达状态变化或结果反馈。
+**
+*获取音效播放器
+*SpatialUI 使用 CompositionLocalProvider 在 Compose 上下文中注入音效播放器。
+在任意 @Composable 中，可以通过 LocalAudioEffectPlayer.current 获取当前播放器实例。
+ 
+*播放内置音效
+*在 @Composable 中，可通过 LocalAudioEffectPlayer.current 获取音效播放器实例，并在用户交互的回调中调用 playSystem() 播放系统内置音效。
+通常建议在 clickable、Button(onClick) 等由用户真实触发的回调中使用，例如：点击时播放 SpatialSoundEffect.OpClick，操作成功反馈时播放 SpatialSoundEffect.StateSuccess。
+ 
+不建议在组合阶段或非用户触发的逻辑中直接播放音效，以避免重复或意外触发。
+*覆盖 SpatialUI 组件的默认音效
+*在某些情况下，你可能希望替换 SpatialUI 组件的默认音效反馈。此时，可以在该组件的交互回调中显式播放指定音效。
+ 
+*API 参考
+SpatialAudioEffectPlayer 类提供了交互音效相关的接口和枚举。详情参阅 API 参考。根据你所处的地理位置选择合适的文档链接：
+*中国大陆：https://developer-cn.picoxr.com/spatial-api/index.html
+*非中国大陆：https://developer.picoxr.com/spatial-api/index.html
+
+
+
+
+参数名称
+
+描述
+
+OpClick
+
+操作：点击。
+
+OpDragBegin
+
+操作：拖拽开始。
+
+OpDragEnd
+
+操作：拖拽结束。
+
+OpDragScale
+
+操作：拖拽缩放。
+
+StateSelected
+
+状态：选中。
+
+StateUnselected
+
+状态：未选中。
+
+StateOn
+
+状态：开启。
+
+StateOff
+
+状态：关闭。
+
+OpClose
+
+*操作：关闭。
+
+StateSuccess
+
+状态：成功。
+
+StateFailure
+
+状态：失败。
+
+@Composable
+fun GetAudioEffectPlayer(){
+    val audioEffectPlayer = LocalAudioEffectPlayer.current 
+    Box(modifier = Modifier.clickable {
+        audioEffectPlayer.playSystem(SpatialSoundEffect.OpClick)
+    })
+}
+
+@Composable
+fun SimplePlayAudioCase() {
+    // 获取音效播放器
+    val audioEffectPlayer = LocalAudioEffectPlayer.current
+    Box(
+        modifier =
+            Modifier.size(100.dp).clickable {
+                // 播放系统内置音效
+                audioEffectPlayer.playSystem(SpatialSoundEffect.OpDragScale)
+            }
+    )
+}
+
+@Composable
+fun OverrideButtonAudioEffect(){
+    val audioEffectPlayer = LocalAudioEffectPlayer.current
+    Button(onClick = {
+        audioEffectPlayer.playSystem(SpatialSoundEffect.StateSuccess)
+    }) { 
+        Text("覆盖默认音效")
+    }
+}

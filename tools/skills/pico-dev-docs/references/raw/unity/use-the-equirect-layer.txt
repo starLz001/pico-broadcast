@@ -1,0 +1,14 @@
+Equirect 层使用说明
+========================================
+Equirect 层为球体纹理，通常用于显示 180/360 全景图像和视频。配置步骤如下：
+*为场景添加 XR Origin 和 3D 对象，并分别为它们添加 PXR_Manager 和 PXR_Over Lay 脚本。
+*在 PXR_Over Lay 面板处，进行以下参数配置：
+*选择 Type。
+*将 Shape 设置为 Equirect。
+*按需设置 Depth。
+*按需选择 Texture Type。
+*将 Texture 指定为 360 全景纹理。
+*按需配置 Texture Rects，Layer Blend，和 Override Color Scale 参数。参数说明参考 使用 Quad 层。
+*将场景打包安装至设备上运行。效果如下：
+* 
+

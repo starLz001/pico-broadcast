@@ -1,0 +1,110 @@
+创建并运行 Spatial 项目
+========================================
+本文介绍如何在 Android Studio 中创建并运行 Spatial 项目。
+*前提条件
+*你已经安装了 Android Studio 和 PICO Spatial Plugin。详情参阅《第一步：准备开发环境》。
+*第一步：创建 Spatial 项目
+*打开 Android Studio。你可以点击主界面上的 New Spatial Project 按钮，或从顶部菜单栏选择 File > New > New Spatial Project...。
+* 
+*在New Project 窗口，选择 Planar Window Container 类型的模板（你也可以选择其他类型），然后点击 Next 按钮。
+* 
+*设置项目的名称、包名、存储位置、PICO OS 6 的最低版本，然后点击 Finish 按钮。
+* 
+* 
+*你将进入该项目的编辑窗口。
+* 
+* 
+*第二步：检查 SDK 版本号
+*打开文件 gradle/libs.versions.toml，检查 [versions] 部分的 SDK 版本号。推荐使用当前最新版本：6.1.9。
+* 
+*第三步：检查 NDK 配置（仅 Windows）
+*如果你使用的是 Windows 操作系统，需打开模块级的 build.gradle.kts 文件，然后在 android {} 的 defaultConfig {} 部分检查以下 NDK 配置：
+ 
+*第四步：运行与查看
+你可以在 PICO Emulator 或 PICO OS 6 设备上运行该项目并查看效果。
+*PICO Emulator
+*如果你手边没有可用的 PICO OS 6 设备，你可以使用 PICO Emulator 运行项目并查看效果。
+*创建一个新的虚拟设备：
+*点击 Android Studio 右侧边栏中的 Device Manager。
+*选择 Create PICO Emulator 以新建一个 PICO Emulator。
+* 
+*点击 PICO Emulator 右侧的 启动 按钮，启动该模拟器。
+* 
+*启动完成后，你将看到以下 PICO Emulator 窗口：
+* 
+*点击 Android Studio 顶部工具栏里的 运行 按钮。
+*Android Studio 会打开 PICO Emulator，构建对应模块的 .apk 文件并将其安装至 PICO Emulator。PICO Emulator 会自动运行该模块并展示其中的场景。
+* 
+*PICO Emulator 中会展示以下场景：
+* 
+*在 PICO Emulator 中，你可以通过键盘和鼠标控制视角：
+*W / S / A / D：控制视角向前、后、左、右移动。
+*Q / E：控制视角向上或向下移动。
+*按住鼠标右键：旋转视角。
+*滚动鼠标滚轮：向前或向后移动视角。
+*你也可以使用右下角的操作按钮切换交互模式（左手柄、右手柄、眼手）、平面移动模式（垂直平面移动/水平平面移动）、摄像机模式（垂直平面移动、水平平面移动、倾斜、旋转），并对摄像机进行复位。
+*更多关于 PICO Emulator 的界面操作说明，参考 PICO Spatial Toolkit 指南《用户界面指引》。
+*PICO 设备
+*如果你拥有一台 PICO OS 6 的设备，Android Studio 会自动识别已连接的 PICO 设备，并在 Running devices 列表中展示。如需在设备上运行项目，请执行以下步骤：
+*在 Running devices 列表中，选择需要运行该项目的设备。以下图为例：“Pico xx” 为 PICO 设备。
+*选择需要运行的模块（如 app）。
+*点击 运行 按钮。
+ 
+*Android Studio 会构建对应模块的 .apk 文件并安装至所选设备。设备会自动运行该模块并展示其中的场景。
+*Spatial 项目编译与运行的版本兼容性说明
+*项目编译的版本兼容性
+*项目编译时，PICO Spatial Plugin 会校验 Spatial Editor 的版本是否与当前使用的 PICO Spatial SDK 兼容，并以 PICO Spatial SDK 的版本为基准进行对齐。
+为确保项目能够成功编译，PICO Spatial SDK 与 PICO Spatial Editor 的 major.minor 版本必须相同。例如：
+*PICO Spatial SDK 6.1.9 支持 Spatial Editor 6.1.x。
+*PICO Spatial SDK 6.1.9 不支持 Spatial Editor 6.0.x。
+*PICO Spatial SDK 6.0.0 不支持 Spatial Editor 6.1.x。
+*项目运行的版本兼容性
+*PICO Spatial Plugin 还会基于当前 PICO Spatial SDK 的版本执行运行环境（PICO 设备或 PICO Emulator）的兼容性检查，并按照“运行环境版本 ≥ PICO Spatial SDK 版本”的规则给出兼容性提示。
+*较新版本的运行环境可兼容历史版本 SDK 所构建的应用及其资源格式，但使用高版本 SDK 构建的 APK 无法运行在低版本运行环境上。兼容规则如下：
+*使用低版本 SDK 构建的 APK，可运行在版本大于或等于该 SDK 版本的运行环境上（PICO 设备或 PICO Emulator）。 
+*使用高版本 SDK 构建的 APK，无法运行在低于该 SDK 版本的运行环境上。 
+*实验性 API 不在兼容性保证范围内。
+*例如：
+*
+*当应用试图在不兼容的 PICO OS 6 版本上启动时，PICO 设备或 PICO Emulator 会禁止其运行，并提示所需的最低运行环境版本。
+*接下来你可以
+*阅读《从模板开始搭建空间应用》系列教程，从一个 Planar Window Container 模板项目出发，遵循“平面窗口 → 立体窗口 → 沉浸式场景”的学习路径，逐步将传统的 2D/2.5D 应用扩展为空间应用，整合 3D 内容、空间交互与动画效果。
+
+你在创建 Spatial 项目时，使用的 PICO OS 6 的 major.minor 版本必须与 PICO Spatial Plugin 的 major.minor 版本相同。例如：
+*PICO Spatial Plugin 6.1.x 支持 PICO OS 6 v6.1 对应的 Spatial 项目。
+*PICO Spatial Plugin 6.1.x 不支持 PICO OS 6 v6.0 对应的 Spatial 项目。
+*PICO Spatial Plugin 6.0.x 不支持 PICO OS 6 v6.1 对应的 Spatial 项目。
+
+不建议修改新建项目中的默认配置，否则可能会导致运行异常。
+
+[versions]
+// ...
+bom = "6.1.9"
+
+android {
+    // ...
+    defaultConfig {
+        // ...
+        ndk { abiFilters.add("arm64-v8a") }
+    }
+}
+
+
+
+*PICO OS 6 版本
+
+SDK 6.0.0
+
+SDK 6.1.9
+
+v6.0
+
+兼容
+
+不兼容
+
+v6.1
+
+兼容
+
+兼容

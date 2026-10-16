@@ -1,0 +1,923 @@
+房间&匹配
+========================================
+房间&匹配模块提供了联网游戏、在线匹配、房间管理、房间内用户互动等能力，主要包括房间功能、匹配功能、和消息收发功能。
+*应用场景
+房间&匹配模块主要有以下应用场景：
+*实时对战
+*玩家匹配后，可加入同一房间，进行实时游戏对战。
+*实时交流
+*支持消息收发功能。同一房间内玩家可互相发送和接收消息，进行实时交流。
+*基本概念
+*
+*功能说明
+*房间
+PICO 提供的房间默认有以下设置： 
+*房间所有权转让：房主离开房间后，房间的所有权将自动转移给在房间中停留时间最长的用户。 
+*销毁房间：当所有人都离开房间时，房间会被销毁。 
+*房间内接收或发送消息：玩家可向房间内其他玩家发送消息，接收来自房间内其他玩家的消息。 
+你可调用房间相关接口创建房间、设置房间名称、设置房间密码、获取房间信息、修改房间数据、转移房主、离开房间等。
+*房间类型
+房间功能提供四种房间类型：私人房间、命名房间、系统房间 和 匹配房间。各类型具体说明如下：
+**
+*功能及接口
+*
+*创建房间参数说明
+*你可调用 UE 框架的 FOnlineSessionPico::CreateSession 接口允许玩家创建私人房间或匹配房间。创建私人房间和匹配房间需设置的参数不同，具体说明参考下文。
+*私人房间
+要创建私人房间，参考以下参数说明：
+*
+*匹配房间
+要创建匹配房间，参考以下参数说明：
+*
+以下为该接口的蓝图，图中参数与上文中的参数一一对应：
+ 
+ 
+*房间内消息通知
+房间功能支持在游戏循环中添加监听器以获取通知。对于 UE 框架，你可调用 OnRoomNotificationUpdateHandle 监听房间相关信息的变化，从而执行 OnRoomNotificationUpdate 来更新房间数据。通过调用 GetNamedSession，你可获取所需的房间的信息。示例代码如下： 
+ 
+对于非 UE 框架，你可调用 FRoomUpdateNotify 监听房间相关信息的变化，调用 GetCurrent 或 Get 接口获取所需房间信息。示例代码如下：
+ 
+*匹配
+匹配功能提供加入匹配、浏览符合匹配条件的房间、创建匹配房间、通知比赛开始等能力。
+*匹配流程
+一个基本的匹配流程如下：
+*开发者创建一个或多个匹配池，并为匹配池配置匹配条件。
+*开发者将匹配池与应用关联。
+*收到玩家的匹配请求后，系统将玩家加入匹配池，并将其他满足相同条件的玩家加入到同一个匹配池。
+*匹配成功后，系统通知相关玩家。
+*被匹配的玩家进入同一房间，开始游戏。
+ 
+*匹配模式
+*你可通过匹配池配置来实现三种匹配模式：基本匹配、高级匹配、浏览匹配。具体说明和配置参考下文 ”创建匹配池“ 部分。
+*功能及接口
+*
+*消息收发相关
+消息收发功能支持以下能力，消息内容与格式由开发者自行定义：
+*自定义房间内消息收发
+*同房间内玩家互发消息
+*广播消息给同房间内所有玩家
+*注意事项
+*初始化结果处理机制
+若开发者在游戏模块未进行初始化或初始化完成后发生错误时，使用房间&匹配模块，插件会进行一些默认处理。处理过程如下：
+*判断 InitSuccess 返回值。
+*插件内部会维护一个“是否可使用该模块的状态” - InitSuccess，InitSuccess是一个 bool 类型的变量：
+*当 InitSuccess = true 时，表示“初始化状态为成功且网络状态正常”，此时开发者可以进行游戏模块各项接口的调用；
+*否则，调用接口将报错，错误信息为“Error: InitSuccess is false”。
+* 
+*处理初始化失败结果。
+*若初始化失败，插件内部会重新尝试初始化直至初始化成功。由于初始化需要先获取 token，获取 token 失败也算作初始化失败，获取 token 的失败将不会再尝试重新初始化，需重新启动 demo 才会重新尝试；或者开发者可以使用派生类指针自定义这里的处理。
+*若初始化成功，用户可能会遭遇网络断连与重连，此时 Connection 的状态为 Lost，InitState 为 false，开始进行自动重连；当再次收到 Connction 状态为 Resume 时，将恢复 InitState 为 true。
+*其他状况处理。
+*当用户被服务器踢下线或当前使用账号被其他设备登录而被迫下线时：
+*插件首先将 InitState 设置为 false，重置房间状态和匹配状态。
+*如果开发者设置了自定义的回调函数，将执行用户的自定义回调函数；如果开发者使用接口清除设置的回调函数，则弹出提示窗，选择 OK 则重新初始化（将另一个登录该账号的设备顶号），选择 Cancel 将不做任何处理，如下图所示：
+* 
+*若 Connection 为其他错误，插件首先将 InitState 设置为 false，重置房间状态和匹配状态，然后尝试重新初始化。处理逻辑如下：
+* 
+*应用程序长时间在后台运行将导致消息丢失
+当应用程序切换至后台运行时，popMessage 接口会被暂停使用，导致服务器无法收到应用程序的心跳。若心跳断连过久，会导致应用程序和服务器之间的连接断开。当重新将应用程序切换到前台后，程序会进行重连，断连期间的消息会丢失。
+*Notifications 的默认处理
+Notifications 是服务器主动推送给客户端的一些消息，目的是为了修正客户端的一些不正确状态。下表列出了 Notifications 的类型，以及他们各自对应的处理方式。
+*
+*启用匹配服务
+*前提条件
+你已在开发者管理平台完成了平台服务的配置。详细步骤，参考配置平台服务。
+*启用匹配服务
+你需要前往 PICO 开发者平台为应用开启匹配服务。若你的应用同时在中国大陆和非中国大陆地区的 PICO 商店上线，你可以为它在其中一个区域或同时在两个区域开启匹配服务。步骤如下：
+*登录 PICO 开发者平台。
+*在左侧导航栏中，选择 我的应用。
+*点击目标应用，进入其 概览 页。
+*在左侧导航栏中，点击 平台服务。
+*你将前往 PPS 开发平台。
+*在左侧导航栏中，点击 匹配服务。
+*你将进入匹配服务管理面板。
+* 
+*选择开通服务的区域：中国大陆 或 非中国大陆。
+*点击 启用服务，然后在弹窗中点击 确定。
+*平台将为应用开启匹配服务。开通后，需要为应用创建匹配池并进行必要配置。
+*创建匹配池
+开启匹配服务后，你可以为应用创建一个或多个匹配池，并按需配置匹配池参数，为匹配池添加匹配查询（Query）和自定义数据。若你的应用于中国区和非中国区 PICO 商店皆上线，你可以为它在其中一个区域或同时在两个区域创建匹配池。
+*创建匹配池步骤
+*你可以在 PICO 开发者平台为应用创建匹配池。步骤如下：
+*选择创建匹配池的区域：中国大陆 或 非中国大陆。
+*点击 新增匹配池。
+* 
+*你将进入匹配池配置面板。
+* 
+*配置匹配池。
+*字段说明如下：
+**
+*你可通过匹配池配置来实现三种匹配模式：基本匹配、高级匹配、浏览匹配。各模式具体配置和说明如下：
+**
+*点击 保存。
+*平台将为应用添加该匹配池。你可以继续为匹配池添加自定义数据。
+*添加自定义数据
+* 
+自定义数据可用来配置匹配查询（Query）。创建匹配池后，你可以为添加自定义数据，步骤如下：
+*返回匹配池列表。
+*点击 Queries 列处的数字（新建匹配池为 0）。
+* 
+*你将进入该匹配池的 Query 和自定义数据管理面板。
+*点击 + 自定义数据。
+*你将进入自定义数据配置面板。
+* 
+*配置自定义数据。字段说明如下：
+**
+*平台将为匹配池添加自定义数据。你将返回该匹配池的 Query 和自定义数据管理面板，然后可以继续为该匹配池添加查询。
+*添加匹配查询（Query）
+* 
+匹配查询由一个或多个能做出条件判定的表达式组成。匹配服务将待匹配的候选人数据填充至每个表达式，并用这些表达式来计算并判定潜在匹配度。按以下步骤添加匹配查询：
+*点击 + 新增Query。
+*你将进入 Query 配置面板。
+* 
+*配置 Query 参数。参数说明如下：
+**
+*点击 保存。
+*平台将为匹配池添加查询。至此，平台侧匹配池创建和配置完成。
+*初始化房间&匹配服务
+使用房间&匹配模块之前，你需要初始化房间&匹配服务。游戏服务的初始化将在 PICO 插件初始化完成后立刻执行。PICO 插件初始化过程如下：
+*调用FOnlineSubsystemPico::Init 接口进行初始化操作。
+* 
+*在以上示例中，GameSessionInterface->Initialize() 为游戏模块初始化。
+*确认初始化结果。
+*如果初始化结果为 ppfPlatformGameInitialize_Success，则表示游戏模块初始化成功，ConnectedState 为 true；
+*否则，ConnectedState 为 false，同时自动进行反初始化和重新初始化，直至初始化成功为止。
+*使用示例
+2.1.3 版本之前，我们将 PICO Integration SDK 集成到 UE4 现有的框架下。
+2.1.3 版本及之后，我们对 Native 接口进行了新的封装，并同时支持 C++ 调用和蓝图调用。
+ 
+*UE 框架
+*蓝图调用
+*创建并加入私有房间
+*创建并加入
+* 
+*启动 Session（修改 Session 状态）
+* 
+*加入某个匹配池并开始匹配
+* 
+*获取 PicoOnlineSessionSettings 和 PicoOnlineSessionSearch 。
+* 
+* 
+*C++ 调用
+房间&匹配的 C++ 调用示例位于 PlatformSample\UIInteraction\Source\UIInteractionDemo\Private\PicoGameInstance.cpp 中。
+*接口类获取
+*输入 PICO 关键字 “FName(TEXT("Pico"))” 以获取实例化之后的 Subsytem 类，并获取 Game 接口：
+* 
+*Request 函数调用示例
+* 
+*非 UE 框架
+*蓝图调用方式
+*创建并加入私有房间
+* 
+*加入某个匹配池并开始匹配
+* 
+*获取 RoomOptions 和 MatchmakingOptions。
+* 
+* 
+*C++ 调用方式
+*创建并加入私有房间
+* 
+*加入某个匹配池并开始匹配
+* 
+*获取 RoomOptions 和 MatchmakingOptions 。
+* 
+*Demo
+*前置条件
+确保你 PICO 设备的 PUI（ROM）版本为 4.8.0 及以上。
+*使用说明
+你可以前往 PICO GitHub 获取对应引擎版本的房间&匹配 Demo。房间&匹配 Demo 位于 Content\Maps\GameMaps\Game_PicoGameInstance_Demo 中。Demo 的图形化界面如下：
+ 
+
+接口测试步骤如下：
+*选择具体的接口，如 Create Session。
+* 
+*Params 部分将列出你需要为该接口配置的参数。
+*根据输入框提示配置参数。
+*配置完成后，点击 Execute。
+*右侧 Execute Log 将显示执行结果。
+*API 参考
+房间&匹配相关 API 详情，可参考 API 文档。
+
+
+
+
+概念
+
+说明
+
+匹配池
+
+由开发者创建，用于匹配玩家。开发者可为匹配池配置匹配条件，使匹配结果更符合预期。
+
+房间
+
+支持由玩家或系统创建。匹配上的玩家将加入同一房间进行游戏。
+
+
+
+类型
+
+说明
+
+私人房间（private room） 
+
+私人房间由玩家创建。 
+
+命名房间 (named room)
+
+命名房间由玩家创建，并设置房间名称。
+
+系统房间（moderated room） 
+
+系统房间由游戏服务器创建，全员可见。 
+
+匹配房间（matchmaking room） 
+
+匹配房间由系统创建。创建后，随机选择房间中的一位玩家成为房主。 
+
+
+
+功能
+
+UE 框架接口
+
+非 UE 框架接口
+
+获取指定房间的信息并展示给玩家
+
+调用 FOnlineSessionPico::FindSessionById 接口，并指定 SessionId。 
+
+ 调用 UOnlinePicoRoomFunction::Get 接口，并指定 RoomID。 
+
+允许玩家创建私人房间或匹配房间，同时成为房间的所有者
+
+调用 FOnlineSessionPico::CreateSession。参考下文创建房间参数说明。
+
+UOnlinePicoRoomFunction::CreateAndJoinPrivate2
+
+
+允许玩家创建房间并设置房间名称，或加入有名称的房间
+
+无
+
+UOnlinePicoRoomFunction::JoinOrCreateNamedRoom
+
+允许玩家获取当前应用中指定名称的房间
+
+无
+
+UOnlinePicoRoomFunction::GetNamedRooms
+
+允许房主踢人
+
+无
+
+UOnlinePicoRoomFunction::KickUser
+
+更新房间元数据
+
+FOnlineSessionPico::UpdateSession
+
+UOnlinePicoRoomFunction::UpdateDataStore
+
+更新房间加入策略
+
+无
+
+UOnlinePicoRoomFunction::UpdatePrivateRoomJoinPolicy
+
+锁定房间的会员资格
+
+无
+
+UOnlinePicoRoomFunction::UpdateMembershipLockStatus
+
+设置或更改房间描述
+
+无
+
+UOnlinePicoRoomFunction::SetDescription
+
+允许玩家离开房间
+
+FOnlineSessionPico::DestroySession
+
+UOnlinePicoRoomFunction::Leave
+
+允许房主手动转移房间所有权
+
+无
+
+UOnlinePicoRoomFunction::UpdateOwner
+
+
+
+参数
+
+子参数
+
+说明
+
+HostingPlayerNum
+
+无
+
+指定创建房间或加入房间的玩家的索引。
+
+SessionName
+
+无
+
+指定房间名称。
+
+NewSessionSettings
+
+
+NumPublicConnections
+
+设置房间内最大玩家数量即 maxUsers 的值，最大为 100。
+
+
+
+NumPrivateConnections
+
+需设置为 0，PICO 不支持私有连接。
+
+
+
+bShouldAdvertise
+bAllowJoinViaPresenceFriendsOnly
+bAllowInvites
+bAllowJoinViaPresence
+
+这几个选项的组合将设置玩家加入房间的方式，即JoinPolicy，组合情况如下：
+*如果想设置JoinPolicy为ppfRoom_JoinPolicyInvitedUsers，即仅允许玩家通过接受邀请方式加入房间，则需要：
+*bShouldAdvertise 设置为false
+*如果想设置JoinPolicy为ppfRoom_JoinPolicyFriendsOfMembers，即仅允许玩家好友加入房间，则需要：
+*bShouldAdvertise 设置为true 
+*bAllowJoinViaPresenceFriendsOnly 设置为true
+*如果想设置JoinPolicy为ppfRoom_JoinPolicyEveryone，即设置房间公开给所有人，则需要：
+*bShouldAdvertise 设置为true 
+*bAllowJoinViaPresenceFriendsOnly 设置为false
+*bAllowInvites设置为false 或 bAllowJoinViaPresence设置为true
+
+
+
+Settings（在蓝图中显示为 Keys 和 Values）
+
+用于设置 DataStore。要创建私有房间，请勿设置 Key 为 PICOPOOL，如设置该字段，该房间将被认定为匹配房间。
+注意，以下 Key 为 SDK 专用，设置 DataStore 时需避开以下字符串：
+*PICOSESSIONBUILDUNIQUEID
+*PICOMODERATEDROOMSONLY
+*GETMODERATEDROOMSPAGEINDEX
+*GETMODERATEDROOMSPAGESIZE
+
+
+
+bUsesPresence
+
+仅 HasPresenceSession 接口会按该字段进行筛选，无其他用途。
+
+
+
+BuildUniqueId
+
+用于设置为Settings中 Key 值为 PICOSESSIONBUILDUNIQUEID 的 Value，仅做设置，无其他用途。
+
+
+
+参数
+
+子参数
+
+说明
+
+HostingPlayerNum
+
+无
+
+指定创建房间或加入房间的玩家的索引。
+
+SessionName
+
+无
+
+指定房间名称。
+
+NewSessionSettings
+
+
+NumPublicConnections
+
+设置房间内最大玩家数量即 maxUsers 的值，最大为 100。
+
+
+
+NumPrivateConnections
+
+需设置为 0，PICO 不支持私有连接。
+
+
+
+bShouldAdvertise
+bAllowJoinViaPresenceFriendsOnly
+bAllowInvites
+bAllowJoinViaPresence
+
+玩家加入房间的方式。在匹配房间中，加入房间方式为 ppfRoom_JoinPolicyEveryone，即所有人可加入房间。你无需额外设置。
+
+
+
+
+Settings（在蓝图中显示为 Keys 和 Values）
+
+用于设置 DataStore。要创建匹配房间，必须设置键值对：Key 为 PICOPOOL，Value 为你在 PICO 开发者平台所创建的匹配池的 Key。
+注意，以下 Key 为 SDK 专用，设置 DataStore 时需避开以下字符串：
+*PICOSESSIONBUILDUNIQUEID
+*PICOMODERATEDROOMSONLY
+*GETMODERATEDROOMSPAGEINDEX
+*GETMODERATEDROOMSPAGESIZE
+
+
+
+bUsesPresence
+
+仅 HasPresenceSession 接口会按该字段进行筛选，无其他用途。
+
+
+
+BuildUniqueId
+
+用于设置为 Settings 中 Key 值为 PICOSESSIONBUILDUNIQUEID 的Value，仅做设置，无其他用途。
+
+FNamedOnlineSession* FOnlineSessionPico::GetNamedSession(FName SessionName)
+{
+        if (Sessions.Contains(SessionName))
+        {
+                return Sessions[SessionName].Get();
+        }
+        return nullptr;
+}
+
+TSharedPtr<FPicoRoomInterface> Interface;
+Interface = PicoSubsystem->GetPicoRoomInterface();
+Interface->RoomUpdateNotify.AddUObject(this, &MyClass::MyFunction);
+
+*匹配结果由 匹配值（matchmaking value，match_val） 决定，范围为 0 至 1。值越高，匹配度越高。系统会参考玩家之间的技能水平和其他相关数据来确定匹配值。当匹配值超过预设的最小匹配阈值（matchbias）时，认为可以匹配。玩家在匹配池中的等待时间越长，最小匹配阈值越低，越容易被匹配。
+*对于十分复杂的匹配场景，除了系统自动匹配外，开发者可以调用 CreateSession 允许玩家创建私人房间或匹配房间，和调用 FindSessions 浏览已创建的房间。
+
+
+
+功能
+
+UE 框架方法
+
+非 UE 框架方法
+
+创建并配置匹配池
+
+在 dashboard 上创建并配置匹配池，用于玩家匹配。 
+
+
+
+允许玩家加入匹配
+
+FOnlineSessionPico::StartMatchmaking。
+
+UOnlinePicoMatchmakingFunction::Enqueue2 或 FPicoMatchmakingInterface::Enqueue2。
+玩家可设置 MatchmakingOptions 中的 EnqueueQueryKey 和 EnqueueDataSettings 字段以及选定的查询（query）来提升匹配准确度。
+
+允许玩家在任意时刻退出匹配
+
+FOnlineSessionPico::CancelMatchmaking。
+
+UOnlinePicoMatchmakingFunction::Cancel 或 FPicoMatchmakingInterface::Cancel。
+
+将玩家加入匹配房间
+
+匹配成功时，玩家会收到来自服务器的 Notification_Matchmaking_MatchFound 通知。你可从通知中提取房间号，然后调用 FOnlineSessionPico::JoinSession 接口将玩家加入房间。 
+
+匹配成功时，玩家会收到来自服务器的 FMatchmakingMatchFoundNotify 通知。你可从通知中提取房间号，然后调用 UOnlinePicoMatchmakingFunction 或 FPicoMatchmakingInterface 中的 Join2 接口将玩家加入房间。 
+
+有两种消息将影响 InitSuccess：
+*初始化消息 ppfMessage_PlatformGameInitializeAsynchronous；
+*网络的 Notification 消息 ppfMessage_Notification_Game_ConnectionEvent。
+
+void FOnlineSessionPico::OnNetNotificationConnection(ppfMessageHandle Message, bool bIsError)
+{
+#if PLATFORM_ANDROID
+        if (bIsError)
+        {
+                auto Error = ppf_Message_GetError(Message);
+                auto ErrorMessage = ppf_Error_GetMessage(Error);
+                UE_LOG_ONLINE(Display, TEXT("PPF_GAME FOnlineSessionPico::OnNetNotificationConnection error ErrorMessage: %s"), *FString(ErrorMessage));
+                GameConnectionCallback.Broadcast(-1, false);
+                return;
+        }
+        auto ConnectionResult = ppf_Message_GetGameConnectionEvent(Message);
+        UE_LOG_ONLINE(Display, TEXT("PPF_GAME FOnlineSessionPico::OnNetNotificationConnection ConnectionResult: %s"), *FString(ConnectionResultNames[ConnectionResult]));
+        if (ConnectionResult == ppfPlatformGameConnectionEvent_Resumed)
+        {
+                SetInitState(true);
+                GameConnectionCallback.Broadcast((int)ConnectionResult, true);
+                return;
+        }
+        if (!IsInitSuccess())
+        {
+                return;
+        }
+        if (ConnectionResult == ppfPlatformGameConnectionEvent_Lost)
+        {
+                SetInitState(false);
+                GameConnectionCallback.Broadcast((int)ConnectionResult, false);
+        }
+        else if (ConnectionResult == ppfPlatformGameConnectionEvent_KickedByRelogin
+                || ConnectionResult == ppfPlatformGameConnectionEvent_KickedByGameServer)
+        {
+                if (GameConnectionCallback.IsBound())
+                {
+                        SetInitState(false);
+                        GameConnectionCallback.Broadcast((int)ConnectionResult, false);
+                }
+                else
+                {
+                        SetInitState(false);
+                        if (InProgressMatchmakingSearch.IsValid() && InProgressMatchmakingSearch->SearchState == EOnlineAsyncTaskState::InProgress)
+                        { // in matchmaking
+                                OnForcedCancelMatchmaking();
+                        }
+                        else
+                        { // in room
+                                OnForcedLeaveRoom();
+                        }
+                        Uninitialize();
+                        EAppReturnType::Type ReturnType = FMessageDialog::Open(EAppMsgType::OkCancel, FText::FromString(TEXT("You are Kicked! Click Ok to reinitialize or click Cancel to do nothing. Or you can set the GameConnectionCallback to customize the handling of this message!")));
+                        if (ReturnType == EAppReturnType::Type::Ok)
+                        {
+                                UE_LOG_ONLINE(Display, TEXT("PPF_GAME FOnlineSessionPico::OnNetNotificationConnection click ok button."));
+                                Initialize();
+                        }
+                        else
+                        {
+                                UE_LOG_ONLINE(Display, TEXT("PPF_GAME FOnlineSessionPico::OnNetNotificationConnection click cancel button."));
+                        }
+                }
+        }
+        else
+        {
+                SetInitState(false);
+                if (InProgressMatchmakingSearch.IsValid() && InProgressMatchmakingSearch->SearchState == EOnlineAsyncTaskState::InProgress)
+                { // in matchmaking
+                        OnForcedCancelMatchmaking();
+                }
+                else
+                { // in room
+                        OnForcedLeaveRoom();
+                }
+                GameConnectionCallback.Broadcast((int)ConnectionResult, false);
+                Uninitialize();
+                Initialize();
+        }
+#endif
+}
+
+
+
+消息类型
+
+对应处理
+
+ppfMessage_Notification_Game_StateReset
+
+如果玩家在房间中，客户端收到此消息意味着玩家已离开房间，重置房间状态；
+如果玩家在匹配中，客户端收到此消息意味着玩家已离开匹配，重置匹配状态。
+
+ppfMessage_Matchmaking_Cancel2
+
+如果玩家在匹配中，客户端收到此消息意味着玩家已离开匹配，重置匹配状态。
+
+ppfMessage_Room_Leave
+ppfMessage_Room_KickUser
+
+如果玩家在房间中，客户端收到此消息意味着玩家已离开房间，重置房间状态。
+
+ppfMessage_Room_Join2
+ppfMessage_Room_SetDescription
+ppfMessage_Room_UpdateDataStore
+
+更新本地房间信息。
+
+
+
+字段
+
+
+
+说明
+
+名称
+
+
+
+匹配池名称。
+
+Key
+
+
+
+匹配池的唯一标识。
+
+匹配用户数
+
+
+
+包括：
+*最少用户数
+*推荐最少用户数
+*推荐最多用户数
+*最多用户数
+若人数在 推荐最少用户数 和 推荐最多用户数 之间，立刻匹配成功；若人数不在推荐区间内，但在 最少用户数 与 最多用户数 之间时，则等待一定时间；若等待过后仍无法达到期望人数，则匹配成功。
+
+是否管理房间
+*选择 是 后，可配置右侧四个字段
+
+
+谁能创建房间
+
+
+设置可以创建房间的对象。选项如下，支持多选：
+*用户：允许用户创建私人房间
+*匹配服务：允许匹配服务创建匹配房间
+你至少需选择一个选项，否则将无法创建任何房间来进行玩家间匹配。如果同时勾选两个选项，则同一个匹配池中同时存在私人房间和匹配房间。在这种情况下，发送匹配请求的用户有可能会随机加入其他玩家创建的私人房间或匹配服务创建的匹配房间。
+
+
+
+是否允许非匹配用户加入匹配房间
+
+是否允许非匹配服务匹配的用户加入房间，即是否允许玩家主动浏览可加入房间，并选择加入。
+若开启，则其他用户也可以加入房间，例如，房间成员可邀请好友加入。
+若关闭，则只有通过匹配服务成功匹配的用户才可加入房间。
+
+
+
+是否允许匹配服务多次匹配到这个房间
+
+匹配完成后，是否允许继续匹配其它玩家中途加入房间。
+若开启，匹配服务可能多次匹配到同一房间，比如将匹配成功的用户有序放入同一房间。
+若关闭，则一旦有用户匹配成功，相应的房间将被移出匹配队列。
+
+
+
+房主自动转移
+
+若开启，则当房主离开或断线时，加入该房间时间最长的用户将自动成为新房主。
+若关闭，则房主离开后，该房间房主为空。
+
+匹配度阈值
+
+
+
+
+可匹配成功的最小匹配度，取值范围为 0 至 1，1 表示完美匹配。匹配度大于等于阈值才能匹配成功。
+提示：若两个用户之间的匹配度阈值未达到 1，则通过该值计算需等待的时间。等待时长的计算公式为：(1-匹配值)/(1-匹配度阈值) * rampdown。因此，匹配值越接近 1，等待时间越短；匹配值越接近匹配度阈值，等待时间越长，最多等待 rampdown 时长。
+
+匹配保留时间（单位：秒）
+
+
+
+表示用户被匹配到一个房间后，为其保留多少时间进入房间，超时后释放该位置。
+
+建议冷却时间（单位：秒）
+
+
+
+表示用户被匹配到一个房间却因超时被释放位置，冷却多少时间后才可再次加入匹配。
+
+
+
+模式
+
+匹配池配置
+
+说明
+
+基本匹配
+
+*一般设置：rampdown、人数等
+*datasetting：可用于 query 的字段设置
+*query：创建使用 datasetting 的表达式，设置各表达式的重要程度
+*是否管理房间 = 否
+
+
+基本匹配模式下，所有玩家在同一匹配池中进行匹配，匹配完成时创建房间，后续不会再匹配其他玩家进入房间，也不允许其他玩家中途加入。所有玩家离开后，房间销毁。
+开发者工作
+*提供给玩家 '自动搜索匹配' 的入口与选项，包括可用匹配池，可用表达式，相关条件字段设置。
+*可通过调用 Join2 接口来允许玩家在收到匹配成功通知时进入房间。
+*可通过调用 UpdateDataStore 接口来允许玩家设置和读取房间逻辑相关数据（例如：游戏关卡，游戏当前进度等）。
+玩家体验
+*基本匹配模式下，玩家无法创建房间，只能通过系统自动匹配进入房间。
+*允许玩家选择比赛类型（即：功能内部逻辑中的匹配池）。
+*允许玩家设置搜索选项，进行自动搜索匹配（即：功能内部逻辑中的表达式选择和 datasetting 字段设置），例如：要求与自己等级相近的玩家一起玩某特定副本。
+
+高级匹配
+
+特别设置:
+*是否管理房间 = 是
+*谁能创建房间 = 用户 / 匹配服务 / 用户 & 匹配服务
+*是否允许非匹配用户加入匹配房间 = 关闭
+*是否允许匹配服务多次匹配到这个房间：根据是否允许玩家中途加入来设置
+
+
+高级匹配模式允许玩家直接自行创建房间，并等待其他符合条件的玩家通过系统匹配加入。可以通过匹配池高级配置来满足更丰富的匹配需求场景。
+开发者工作
+*为玩家提供 '自动搜索匹配' 选项。玩家在匹配成功时进入房间。
+*在允许玩家创建房间的情况下，为玩家提供创建房间相关选项，包括可用匹配池以及条件字段设置。
+*可通过调用 SendPacket 或 SendPacketToCurrentRoom 接口来允许房主发送自定义开战消息通知所有玩家开战（支持按需锁定成员列表）。
+玩家体验
+*玩家可设置搜索条件，进行自动搜索匹配。
+*在允许玩家创建房间的情况下，玩家可设置房间创建选项，创建匹配房间。
+*根据 是否允许匹配服务多次匹配到这个房间 的值，玩家有可能加入游戏正在进行中的房间。
+
+浏览模式
+
+特别设置:
+*是否管理房间 = 是
+*谁能创建房间 = 用户 / 用户 & 匹配服务
+*是否允许非匹配用户加入匹配房间 = 开启
+*是否允许匹配服务多次匹配到这个房间：根据是否允许玩家中途加入来设置
+
+
+浏览模式适用于玩家创建房间以及主动选择加入其他玩家创建的房间的场景。该模式下的房间都由玩家自行创建，并且系统不执行自动匹配加入，只返回符合条件的房间列表，供玩家选择加入。
+开发者工作
+*必须提供玩家创建房间选项，内容为可用匹配池以及条件字段设置。
+*收到玩家的房间列表请求时，向服务器查询，并将结果展示给玩家。
+*可通过调用 SendPacket 或 SendPacketToCurrentRoom 接口来允许房主发送自定义开战消息通知所有玩家开战（支持按需锁定成员列表）。
+玩家体验
+*玩家可设置创建选项，创建房间。
+*允许玩家设置浏览选项，请求满足此选项要求的房间列表，并选择列表中的房间加入。
+*玩家请求加入房间时，向服务器发送加入房间请求。
+
+你需要自行在代码中配置用于匹配的参数和取值，然后将维护的参数以自定义数据的形式添加至 PICO 开发者平台。
+
+
+
+字段
+
+说明
+
+Data Key
+
+自定义数据的唯一标识，例如：Level。
+
+数据类型
+
+包括：
+*浮点型
+*整形
+*十六进制
+
+默认值
+
+自定义数据的默认值。该默认值为兜底取值。
+例如，你在代码中配置的参数（对应 Data Key）为  Level，取值 0 表示 20 级，取值 1 表示 30 级，且你在开发者平台为 Level 数据配置的默认值为 0。当一个无任何历史数据的新用户加入匹配时值，系统默认为其赋值 0，即默认其等级为 20 级。
+
+只有添加自定义数据后，才可以添加匹配查询。
+
+
+
+参数
+
+说明
+
+Query Key
+
+匹配查询的唯一标识。
+
+表达式权重
+
+表达式的重要性等级，包括：必要、高、中、低，重要性等级依次递减。重要性越高，计算双方匹配度时的权重因子越小，其中 必要 = 0、高 = 0.55、中 = 0.75、低 = 0.9。
+若双方条件无法满足 必要 表达式，则必定匹配失败。若双方条件满足 必要 表达式，但无法满足其余等级的表达式，则匹配结果根据所有表达式因子的乘积是否大于匹配度阈值决定。
+
+表达式
+
+表达式用于计算用户之间的匹配值。同一查询可由多个表达式构成，你可以给每个表达式设置权重。系统将按权重组合这些表达式的结果，得到最终的匹配值。
+每个表达式的结果为布尔值：true 或 false：
+*若结果为 true，该表达式产生因子 1。
+*若结果为 false，该表达式产生一个小于 1 的因子（expression_val）。表达式的重要程度越高，则结果为 false 时产生的因子值越小。最终匹配值为所有所有表达式因子的乘积，即：最终匹配值 = expression_val_1 * expression_val_2 * ...* expression_val_n。
+若 A 和 B 参与匹配，系统会分别以 A 指定的表达式和 B 指定的表达式计算出 匹配值 A 和 匹配值 B。其中，较小的匹配值将作为最终的匹配值。若匹配值大于匹配度阈值，则立刻匹配，否则需等待一定时间。
+
+bool FOnlineSubsystemPico::Init()
+{
+        if (bPicoInit)
+        {
+                return bPicoInit;
+        }
+        bPicoInit = false;
+#if PLATFORM_WINDOWS
+        bPicoInit = InitWithWindowsPlatform();
+#elif PLATFORM_ANDROID
+        bPicoInit = InitWithAndroidPlatform();
+#endif
+        if (bPicoInit)
+        {
+                MessageTaskManager = MakeUnique<FOnlineMessageTaskManagerPico>();
+                check(MessageTaskManager);
+
+                IdentityInterface = MakeShareable(new FOnlineIdentityPico(*this));
+                FriendsInterface = MakeShareable(new FOnlineFriendsPico(*this));
+                RtcPicoUserInterface = MakeShareable(new FRTCPicoUserInterface(*this));
+                GameSessionInterface = MakeShareable(new FOnlineSessionPico(*this));
+                GameSessionInterface->Initialize();
+#if WITH_EDITOR
+        StartTicker();
+#endif
+    }
+    else
+    {
+        FOnlineSubsystemImpl::Shutdown();
+    }
+        return bPicoInit;
+}
+
+*如果你即将开发一款全新的应用，推荐使用非 UE 框架。
+*开发过程中，推荐使用同一套框架。
+
+if (IOnlineSubsystem* Subsystem = IOnlineSubsystem::Get(FName(TEXT("Pico"))))
+{
+    PicoSubsystem = static_cast<FOnlineSubsystemPico*>(Subsystem);
+    if (PicoSubsystem)
+    {
+        GameInterface = PicoSubsystem->GetGameSessionInterface();
+    }
+}
+
+void UPicoGameInstance::CreateSession(const FString& Keys, const FString& Values, bool bShouldAdvertise, bool bAllowJoinViaPresenceFriendsOnly, bool bAllowInvites, bool bAllowJoinViaPresence, int NumPublicConnections) {
+    if (!GameInterface.IsValid()) {
+        return;
+    }
+    
+    if (!OnCreateSessionCompleteDelegate.IsBound()) {
+        OnCreateSessionCompleteDelegate = FOnCreateSessionCompleteDelegate::CreateUObject(
+            this, &UPicoGameInstance::OnCreateSessionComplete);
+        GameInterface->AddOnCreateSessionCompleteDelegate_Handle(
+            OnCreateSessionCompleteDelegate);
+    }
+
+    TSharedPtr<class FOnlineSessionSettings> SessionSettings = MakeShareable(new FOnlineSessionSettings());
+    SessionSettings->NumPublicConnections = NumPublicConnections;
+    SessionSettings->bShouldAdvertise = bShouldAdvertise;
+    SessionSettings->bAllowJoinViaPresenceFriendsOnly = bAllowJoinViaPresenceFriendsOnly;
+    SessionSettings->bAllowInvites = bAllowInvites;
+    SessionSettings->bAllowJoinViaPresence = bAllowJoinViaPresence;
+    TArray<FString> KeyArr, ValueArr;
+    Keys.ParseIntoArray(KeyArr, TEXT(","), true);
+    Values.ParseIntoArray(ValueArr, TEXT(","), true);
+    if (ValueArr.Num() != KeyArr.Num())
+    {
+        UE_LOG_ONLINE(Error, TEXT("PPF_GAME UPicoGameInstance::CreateSession keys count != values count"));
+        return;
+    }
+    for (int i = 0; i < KeyArr.Num(); i++)
+    {
+        SessionSettings->Set(FName(KeyArr[i]), ValueArr[i], EOnlineDataAdvertisementType::ViaOnlineService);
+    }
+    GameInterface->CreateSession(/* Hosting Player Num/ 0, TEXT("Game"), SessionSettings);
+}
+
+TSharedPtr<FPicoRoomInterface> Interface;
+Interface = PicoSubsystem->GetPicoRoomInterface();
+FRoomCreateAndJoinPrivate2 Delegate;
+Delegate.BindUFunction(this, "TestDelegate");
+FPicoRoomOptions Options;
+Interface->CreateAndJoinPrivate2(ERoomJoinPolicy::JoinPolicyEveryone, 2, Options, Delegate);
+
+TSharedPtr<FPicoMatchmakingInterface> Interface;
+Interface = PicoSubsystem->GetPicoMatchmakingInterface();
+FMatchmakingEnqueue2 Delegate;
+Delegate.BindUFunction(this, "TestDelegate");
+FPicoMatchmakingOptions Options;
+Options.bEnqueueIsDebug = true;
+Options.DataStoreKey = FString("key");
+Options.DataStoreValue = FString("value");
+Options.RoomJoinPolicy = ERoomJoinPolicy::JoinPolicyEveryone;
+Options.EnqueueDataSettingsFloat.Add(FString("dataSettingsKey1"), 1.5);
+Options.RoomMaxUsers = 2;
+Interface->Enqueue2(FString("poolName"), Options, Delegate);
+
+FPicoRoomOptions Options;
+Options.MaxUserResults = 5;
+Options.DataStoreKey = FString("key");
+Options.DataStoreValue = FString("value");
+Options.bExcludeRecentlyMet = true;
+Options.bTurnOffUpdates = false;
+Options.Ordering = EUserOrdering::PresenceAlphabetical;
+
+FPicoMatchmakingOptions Options;
+Options.bEnqueueIsDebug = true;
+Options.DataStoreKey = FString("key");
+Options.DataStoreValue = FString("value");
+Options.RoomJoinPolicy = ERoomJoinPolicy::JoinPolicyEveryone;
+Options.EnqueueDataSettingsFloat.Add(FString("dataSettingsKey1"), 1.5);
+Options.RoomMaxUsers = 2;
+
+部分接口具有特定使用条件。例如，开发者需处于某一房间中，才能获取当前房间的信息。

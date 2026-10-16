@@ -1,0 +1,583 @@
+空间锚点
+========================================
+空间锚点技术可以将虚拟环境中的位置与真实世界中的位置进行锚定。放置锚点并存储后，用户再次走到放置锚点的位置时，系统可以找回该锚点并返回给应用。
+本文介绍如何在应用内实现空间锚点服务。开发者可以了解空间锚点服务的开发环境要求，如何开启功能，以及如何管理空间锚点的生命周期。
+* 
+*环境考量
+综合考虑以下环境因素，有助于在应用内提供更好的空间锚点体验。
+*在使用空间锚点技术时，需特别注意环境要求。其中，诸如白墙、重复图案等环境因素可能会影响锚点精度。为确保空间锚点的精准度和稳定性，在实际应用场景中，应尽量避免或减少此类环境因素的干扰。
+*光照的强度和方向会影响传感器的检测精度。强光或阴暗的环境可能会导致跟踪失败。最佳的光照条件是均匀且适度的环境光。
+*空间内的障碍物、复杂的几何形状等会影响定位和跟踪的精度。开阔、结构简单的空间通常更利于空间锚点的使用。
+*用户的移动速度和移动方式会影响跟踪的稳定性。缓慢、平稳的移动有利于保持良好的定位精度。
+*基本概念
+*
+*环境要求
+*PICO 设备型号：PICO 4 Ultra 或 Project Swan（PICO OS 6）
+*PICO 设备系统版本：5.11.0 及以上
+*前提条件
+*已为应用开启视频透视能力。详细说明请参考《视频透视》。 
+*你需要主动调用 Request Android Permissions 蓝图接口，在 Permissions 中输入权限字段：com.picovr.permission.SPATIAL_DATA 申请相关权限。
+* 
+*为 Unreal 项目启用空间锚点服务
+参考以下步骤在 UE 编辑器中为你的项目启用空间锚点服务：
+*在 UE 编辑器中创建一个项目或打开已有项目。 
+*在编辑器左上角，点击 编辑（Edit） > 项目设置（Project Settings） > 插件（Plugins） > PICO OpenXR。 
+*移动到 Mixed Reality 选项卡下，确认此时已经勾选 Enable Video Seethrough 选项后，勾选 Enable Spatial Anchor 选项。
+* 
+你已为项目启用空间锚点服务。
+*开始空间锚点服务
+开发者可以通过 LaunchSpatialAnchorServicePICOAsync 接口，开启空间锚点服务。该接口为异步接口，在启动成功则会执行 OnSuccess，失败则会执行 OnFailure，Result 在 OnSuccess 时会输出 Success，而 OnFailure 时则会输出失败的错误码。
+* 
+*空间锚点数据更新回调
+将 CustomEvent 绑定到 AnchorDataUpdatedDelegate 后，开发者可以获取空间锚点数据更新回调，建议与加载锚点接口（LoadSpatialAnchorPICOAsync）配合使用，当在场景中发现新的锚点时会触发此回调。
+* 
+ 
+*空间锚点服务状态变化回调
+将 CustomEvent 绑定到 SpatialAnchorServiceStateUpdatedDelegate 后，开发者可以获取空间锚点服务状态更新的回调。
+* 
+*获取空间锚点服务状态
+除了通过 SpatialAnchorServiceStateUpdatedDelegate 可以获取到空间锚点服务状态外，开发者也可以通过 GetSpatialAnchorServiceStatePICO 接口主动获取状态值。
+* 
+空间锚点服务状态包括：
+*Initialized：已初始化，ProjectSetting 中勾选空间锚点功能后，应用启动过程中会完成初始化。
+*Running：运行中，启动空间锚点服务成功后为此状态。
+*Stopped：停止，关闭空间锚点服务成功后为此状态。
+*关闭空间锚点服务
+开发者可以通过同步接口 CloseSpatialAnchorServicePICO 关闭空间锚点服务。调用后会停止空间锚点服务，无法再获取新的数据。
+* 
+*管理空间锚点
+锚点以 Actor 为依托才能在 Unreal 场景中存在，因此在应用中锚点需与 Actor 建立强关联。每个 Actor 对应一个锚点，反之亦然。无论是新创建的空 Actor 还是场景中已有的 Actor，一旦与锚点绑定后，都会为 Actor 添加一个锚点组件引用（AnchorComponent），负责每帧更新 Actor 的姿态。
+*创建空间锚点
+调用 CreateSpatialAnchorPICOAsync 接口，在应用的内存中创建锚点。该接口为异步接口，创建锚点后只存在于内存中，退出应用后该锚点便会被销毁。
+* 
+*开发者需要在 BoundActor 中选择当前锚点要绑定的 Actor，InSpatialAnchorTransform 为正在创建锚点所在虚幻世界空间中的变换 。通过调用本接口，开发者可以得到执行结果的状态码获知创建是否成功，并且获得 Actor 所绑定的锚点组件（AnchorComponent）。
+*持久化锚点
+*通过PersistSpatialAnchorPICOAsync 这个异步接口，开发者可以在 BoundActor 中选择需要持久化的锚点当前所绑定的 Actor，并在 PersistLocation 选项中勾选 PersistLocation_Local，将空间锚点持久化至设备的本地存储。
+* 
+*加载锚点
+通过异步接口 LoadSpatialAnchorPICOAsync，开发者可以在 PersistLocation 中勾选 PersistLocation_Local，并在 UUIDFilter 中添加要加载锚点的 UUID ，加载指定的空间锚点。
+* 
+ 
+*获取锚点姿态
+调用 GetAnchorPoseByActorPICO 接口可以通过锚点所绑定的 Actor 获取锚点当前的变换数据，或调用 GetAnchorPoseByComponentPICO 接口可以通过 Actor 所绑定的 AnchorComponent 获取锚点当前的变换数据。两者皆为同步接口。
+* 
+*通过锚点加载结果生成 Actor
+通过同步接口 SpawnActorFromLoadResultPICO，可以通过锚点加载结果，按照设置的 Actor Class 类型生成 Actor 实例的引用。
+* 
+*检查绑定的锚点是否有效
+*通过同步接口 IsAnchorValidForActorPICO 或 IsAnchorValidForComponentPICO, 可以检查当前 Actor 或AnchorComponent 绑定的锚点是否有效。通过选定锚点所绑定的 Actor，根据返回值确认该锚点是否有效。若返回值为 false 显示锚点无效，原因可能是当前 Actor 或 AnchorComponent 未成功绑定锚点，需要重新使用当前 Actor 调用创建锚点接口（CreateSpatialAnchorPICOAsync），完成锚点创建流程，并且确保本 Actor 作为 BoundActor 传入创建锚点异步接口。
+* 
+*UUID
+每个锚点对应一个全局唯一的 UUID、单次进程内唯一的 Handle 和 Actor，UUID 作为持久化后的唯一标识，用于去持久化或者从设备本地存储加载锚点。接下来将介绍和 UUID 相关的接口。
+*获取锚点 UUID
+通过同步接口 GetAnchorEntityUuidPICO 可以通过锚点绑定的 Actor 获取对应 UUID。
+* 
+*字符串与 UUID 转换
+字符串的数据形式能够方便开发者对数据后续进行上传、存储等操作。目前支持 UUID 与字符串的相互转换，开发者能够将创建的锚点 UUID 集合以字符串形式存储在应用的本地存储中。在应用运行时，可以读取这些字符串并将其转换回 UUID，随后即可从本地存储加载相应的锚点。具体转换示例如下：
+*UUID 转为字符串：在创建 UUID 后，开发者可以通过调用 Make PICOSpatialUUID 将 UUID 转为字符串。
+* 
+*字符串转为 UUID：开发者也可以通过 FromStringToUUIDPICO，将字符串转为 UUID。
+* 
+*销毁锚点
+调用 DestroyAnchorByActorPICO 接口或 DestroyAnchorByComponentPICO，开发者可以通过输入锚点所绑定的 Actor 或通过 Actor 所绑定的 AnchorComponent 将锚点从设备内存中删除。两者皆为同步接口，只销毁在内存中的锚点，与本地存储设备上的数据无关。
+* 
+*去持久化锚点
+*通过异步接口 UnpersistSpatialAnchorPICOAsync，开发者可以在 BoundActor 中选择需要去持久化的锚点当前所绑定的 Actor，并在 PersistLocation 选项中勾选 PersistLocation_Local，将空间锚点从本地存储中删除。
+* 
+调用销毁锚点接口时，应用内存中的锚点数据将会被删除，此时当你调用 UnpersistSpatialAnchorPICOAsync 来删除具体的锚点时，系统将无法找到该锚点，也就无法完成去持久化。因此建议开发者先调用 UnpersistSpatialAnchorPICOAsync 对锚点进行去持久化，成功之后再调用销毁锚点相关接口来删除内存中的锚点数据。
+*API 参考 
+本部分罗列管理空间锚点和获取空间锚点信息的所有接口，以及接口的参数和返回值说明等信息。
+*
+*LaunchSpatialAnchorServicePICO_Async
+ 
+开启空间锚点服务。
+返回值
+*Result： 成功时返回 0，失败时返回其他值。失败原因请参考 EPICOResult 枚举。目前，返回的错误消息结果是唯一的，你暂时无法识别错误原因。
+*GetSpatialAnchorServiceStatePICO
+ 
+主动获取空间锚点服务状态值。
+返回值
+空间锚点服务状态：
+*Initialized：在 ProjectSettings 中勾选了 Spatial Anchor 特性后，在应用启动过程中将完成初始化。
+*Running： 服务成功启动后为此状态。
+*Stopped： Spatial Anchor 服务成功关闭后将为此状态。
+*CloseSpatialAnchorServicePICO
+ 
+关闭空间锚点服务。
+返回值
+Bool：
+*true - 成功
+*false - 失败
+*CreateSpatialAnchorPICO_Async
+ 
+在应用的内存中创建锚点。
+参数
+*
+返回值
+*Result： 成功时返回 0，失败时返回其他值。失败原因请参考 EPICOResult 枚举。目前，返回的错误消息结果是唯一的，你暂时无法识别错误原因。
+*AnchorComponent： 与一个 Actor 关联。在每个 Actor Tick 期间，每个组件都会更新锚点实体相对于 Actor 的姿态。
+*GetAnchorPoseByActorPICO
+ 
+通过 Actor 获取锚点当前的变换数据。
+参数
+*
+返回值
+Bool：
+*true - 成功
+*false - 失败
+*GetAnchorPoseByComponentPICO
+ 
+通过 Component 获取锚点当前的变换数据。
+参数
+*
+返回值
+Bool：
+*true - 成功
+*false - 失败
+*PersistSpatialAnchorPICO_Async
+ 
+将锚点进行存储。
+参数
+*
+返回值
+*Result：  成功时返回 0，失败时返回其他值。失败原因请参考 EPICOResult 枚举。目前，返回的错误消息结果是唯一的，你暂时无法识别错误原因。
+*AnchorComponent：与一个Actor关联。在每个 Actor Tick 期间，每个组件都会更新锚点实体相对于 Actor 的姿态。
+*LoadSpatialAnchorPICO_Async
+ 
+根据条件从磁盘或者云端加载锚点。
+参数
+*
+返回值
+*Result：  成功时返回 0，失败时返回其他值。失败原因请参考 EPICOResult 枚举。目前，返回的错误消息结果是唯一的，你暂时无法识别错误原因。
+*AnchorComponent：与一个 Actor 关联。在每个 Actor Tick 期间，每个组件都会更新锚点实体相对于 Actor 的姿态。
+*SpawnActorFromLoadResultPICO
+ 
+根据加载锚点的结果，生成 Actor 实例的引用。
+参数
+*
+返回值
+Actor 生成的实例，在生成失败时，输出 nullptr。
+*IsAnchorValidForActorPICO
+ 
+检查当前 Actor 绑定的锚点是否有效。
+参数
+*
+返回值
+Bool：
+*true - 有效
+*false -无效
+*IsAnchorValidForComponentPICO
+ 
+检查当前 Component 绑定的锚点是否有效。
+参数
+*
+返回值
+Bool：
+*true - 有效
+*false -无效
+*GetAnchorEntityUuidPICO
+ 
+通过锚点绑定的 Actor 获取对应 UUID。
+参数
+*
+返回值
+Bool：
+*true - 成功
+*false - 失败
+*FromAnchorToStringPICO
+ 
+实现从锚点到字符串的转换。
+参数
+*
+返回值
+AnchorHandle 的字符串。
+*FromStringToUUIDPICO
+ 
+实现字符串转为 UUID。
+参数
+*
+返回值
+UUID.
+*FromUUIDToStringPICO
+ 
+实现 UUID 到字符串的转换。
+参数
+*
+返回值
+UUID 的字符串。
+*DestroyAnchorByActorPICO
+ 
+通过 Actor 将锚点从设备内存中删除。
+参数
+*
+返回值
+Bool：
+*true - 成功
+*false - 失败
+*DestroyAnchorByComponentPICO
+ 
+通过 Component 将锚点从设备内存中删除。
+参数
+*
+返回值
+Bool：
+*true - 成功
+*false - 失败
+*UnpersistSpatialAnchorPICO_Async
+ 
+*通过 Component 将锚点从设备内存中删除。
+参数
+*
+返回值
+*Result： 成功时返回 0，失败时返回其他值。失败原因请参考 EPICOResult 枚举。目前，返回的错误消息结果是唯一的，你暂时无法识别错误原因。
+*AnchorComponent： 与一个 Actor 关联。在每个 Actor Tick 期间，每个组件都会更新锚点实体相对于 Actor 的姿态。
+
+
+
+名称
+
+说明
+
+UUID 
+
+通用唯一识别码，为锚点的唯一标识，在创建锚点时分配，可用于加载指定锚点。
+
+Handle 
+
+用于指定应用内存或设备本地内存中的某个锚点。在销毁、存储、删除锚点，以及获取锚点的 UUID 和实时位置时，需要通过 Handle 指定锚点。Handle 不是永久不变的，应用重启后 Handle 就会发生变更。
+
+锚点组件（AnchorComponent）
+
+当前与空间锚点相关的组件只有锚点组件，锚点组件中存储了锚点相关的 Handle，在调用创建锚点接口后将会自动附加到对应的 Actor。
+
+提示：
+*每次 LoadSpaialAnchorPICOAsync 获取到的都是全量的锚点数据，因此开发者需要与之前已存在的锚点对比增量使用。
+
+提示：
+添加加载空间锚点条件时，UUID 若缺省则会加载所有锚点。
+
+**
+
+ 
+
+ 
+
+**
+
+ 
+
+ 
+
+**
+
+ 
+
+ 
+
+
+
+
+接口
+
+说明
+
+LaunchSpatialAnchorServicePICOAsync
+
+开启空间锚点服务。
+
+GetSpatialAnchorServiceStatePICO
+
+主动获取状态值。
+
+CloseSpatialAnchorServicePICO
+
+关闭空间锚点服务。
+
+CreateSpatialAnchorPICOAsync
+
+在应用的内存中创建锚点。
+
+GetAnchorPoseByActorPICO
+
+通过 Actor 获取锚点当前的变换数据。
+
+GetAnchorPoseByComponentPICO
+
+通过 Component 获取锚点当前的变换数据。
+
+PersistSpatialAnchorPICOAsync
+
+将锚点进行存储。
+
+LoadSpatialAnchorPICOAsync
+
+根据条件从磁盘或者云端加载锚点。
+
+SpawnActorFromLoadResultPICO
+
+根据加载锚点的结果，生成 Actor 实例的引用。
+
+IsAnchorValidForActorPICO
+
+检查当前 Actor 绑定的锚点是否有效。
+
+IsAnchorValidForComponentPICO
+
+检查当前 Component 绑定的锚点是否有效。
+
+GetAnchorEntityUuidPICO
+
+通过锚点绑定的 Actor 获取对应 UUID。
+
+FromAnchorToStringPICO
+
+实现从锚点到字符串的转换。
+
+FromUUIDtoStringPICO
+
+实现 UUID 到字符串的转换。
+
+FromStringToUUIDPICO
+
+实现字符串转为 UUID。
+
+DestroyAnchorByActorPICO
+
+通过 Actor 将锚点从设备内存中删除。
+
+DestroyAnchorByComponentPICO
+
+通过 Component 将锚点从设备内存中删除。
+
+UnpersistSpatialAnchorPICOAsync
+
+将锚点从设备本地存储中删除。
+
+static ULaunchSpatialAnchorServicePICO_AsyncAction* LaunchSpatialAnchorServicePICO_Async();
+
+static EMRStatePICO GetSpatialAnchorServiceStatePICO();
+
+static bool CloseSpatialAnchorServicePICO();
+
+static UCreateSpatialAnchorPICO_AsyncAction* CreateSpatialAnchorPICO_Async(AActor* BoundActor, const FTransform& InSpatialAnchorTransform);
+
+
+
+参数
+
+描述
+
+BoundActor
+
+设置锚点实体的 Actor。
+
+InSpatialAnchorTransform
+
+设置锚点实例的位置、旋转和平移比例。
+
+static bool GetAnchorPoseByActorPICO(AActor* BoundActor, FTransform& OutTransform);
+
+
+
+参数
+
+描述
+
+BoundActor
+
+指定你想要获取其锚点实体姿态信息的 Actor。
+
+OutTransform
+
+*Location： 锚点实例的位置。
+*Rotation： 锚点实例的旋转。
+*Scale： 锚点实例的比例，默认值为 1。
+
+static bool GetAnchorPoseByComponentPICO(UAnchorComponentPICO* AnchorComponent, FTransform& OutTransform);
+
+
+
+参数
+
+描述
+
+AnchorComponent
+
+指定你想要获取其锚点实体姿态信息的 Component。
+
+OutTransform
+
+*Location： 锚点实例的位置。
+*Rotation： 锚点实例的旋转。
+*Scale： 锚点实例的比例，默认值为 1。
+
+*static UPersistSpatialAnchorPICO_AsyncAction* PersistSpatialAnchorPICO_Async(AActor* BoundActor, EPersistLocationPICO PersistLocation = EPersistLocationPICO：：PersistLocation_Local);
+
+
+
+参数
+
+描述
+
+BoundActor
+
+指定你想要获取其锚点实体姿态信息的 Actor。
+
+PersistLocation
+
+锚点可存储的位置
+*Persist Location Local： 本地存储。
+*Persist Location Shared： PICO 云端。
+
+static URequestSpatialAnchorsPICO_AsyncAction* LoadSpatialAnchorPICO_Async(const FAnchorLoadInfoPICO& LoadInfo);
+
+
+
+参数
+
+描述
+
+LoadInfo
+
+明确锚点的加载路径
+锚点可存储的位置
+*Persist Location Local： 本地存储。
+*Persist Location Shared： PICO 云端。
+
+static AActor* SpawnActorFromLoadResultPICO(UObject* WorldContext, const FAnchorLoadResultPICO& LoadResult, UClass* ActorClass);
+
+
+
+参数
+
+描述
+
+WorldContext
+
+Actor 生成实例的场景。
+
+LoadResult
+
+包含生成信息的锚点加载结果，包括锚点的句柄、UUID 和位置。
+
+ActorClass
+
+将要生成的 Actor 的类。
+
+static bool IsAnchorValidForActorPICO(AActor* BoundActor);
+
+
+
+参数
+
+描述
+
+BoundActor
+
+指定你想要获取其锚点实体姿态信息的 Actor。
+
+static bool IsAnchorValidForComponentPICO(UAnchorComponentPICO* AnchorComponent);
+
+
+
+参数
+
+描述
+
+AnchorComponent
+
+指定你想要获取其锚点实体姿态信息的 Component。
+
+static bool GetAnchorEntityUuidPICO(AActor* BoundActor, FSpatialUUIDPICO& OutAnchorUUID);
+
+
+
+参数
+
+描述
+
+BoundActor
+
+需要获取 UUID 的锚点实例所对应的 Actor。
+
+OutAnchorUUID
+
+返回锚点实例的 UUID。
+
+static FString FromAnchorToStringPICO(const FSpatialHandlePICO& AnchorHandle);
+
+
+
+参数
+
+描述
+
+AnchorHandle
+
+你需要转化的锚点的 AnchorHandle。
+
+static FSpatialUUIDPICO FromStringToUUIDPICO(const FString& AnchorUUIDString);
+
+
+
+参数
+
+描述
+
+AnchorUUIDString
+
+你需要转化的锚点 UUID 的字符串。
+
+static FString FromUUIDToStringPICO(const FSpatialUUIDPICO& AnchorUUID);
+
+
+
+参数
+
+描述
+
+AnchorUUID
+
+你需要转化的锚点的 UUID 。
+
+static bool DestroyAnchorByActorPICO(AActor* BoundActor);
+
+
+
+参数
+
+描述
+
+BoundActor
+
+你想要删除的锚点对应的 Actor。
+
+static bool DestroyAnchorByComponentPICO(UAnchorComponentPICO* AnchorComponent);
+
+
+
+参数
+
+描述
+
+AnchorComponent
+
+你想要删除的锚点对应的 Component。
+
+static UUnpersistSpatialAnchorPICO_AsyncAction* UnpersistSpatialAnchorPICO_Async(AActor* BoundActor, EPersistLocationPICO PersistLocation = EPersistLocationPICO::PersistLocation_Local);
+
+
+
+参数
+
+描述
+
+BoundActor
+
+你要删除的锚点所绑定的 Actor。
+
+PersistLocation
+
+锚点可存储的位置
+*Persist Location Local： 本地存储。
+*Persist Location Shared： 暂不支持。

@@ -1,0 +1,113 @@
+项目配置验证
+========================================
+项目配置验证（Project Validation）功能可以展示你安装的 XR 包所要求的配置规则。对于未正确配置的配置规则，你可以通过该功能实现一键自动修复。
+*配置规则状态
+检查 XR 包后，系统会为配置规则匹配状态并展示。
+*
+*配置规则列表
+*配置规则分为三类：Required（必要配置）、Recommended（推荐配置）、Optioan（可选配置）。
+*Required 配置：
+*minSdkVersion 是否大于 AndroidApiLevel29。若不是，则报错。
+*Target Architectures 为 ARM64 时，是否选择了 IL2CPP。若不是，则报错。
+*当前打开的场景中是否只有一个为 “MainCamera” 的 Tag。若不是，则报错。
+*当前打开的场景中是否只有一个 Audio Listener。若不是，则报错。
+*项目的目标构建平台是否为 Android。若不是，则报错。
+*是否在 Plug-in Providers 列表中勾选 PICO。若未勾选，则报错。
+*是否将 Scripting Backend 设置为 IL2CPP，并将 Target Architectures 设置为 ARM64。若不是，则报错。
+*Graphics API 是否设置为 Vulkan 或 OpenGLES3.0 中的任何一个。若不是，则报错。
+*同时使用 Unity2022 和 Vulkan 时，是否勾选了Development Build 选框。若勾选，则报错。
+*是否同时使用 Unity2022.1.14、URP、Linear 颜色空间、MSAAx4 和 OpenGLES。若是，则报错。
+*当前打开的场景是否添加了 PXR_Manager (Script) 组件。若不是，则报错。
+*使用眼动追踪注视点渲染（ETFR）时，Graphics API 列表中的第一个是否为 OpenGLES3.0。若不是，则报错。
+*配置面部追踪功能时，是否已勾选 unsafe code 选项。若未勾选，则报错。
+*使用 URP 时，是否勾选了 HDR 选项。若勾选，则报错。
+*使用 URP 时，是否同时设置了 Scriptable Render Pileline Settings 和 Render Pileline Asset。若未设置，则报错。
+*使用混合现实功能时，是否将 Scripting Backend 设置为 IL2CPP 并将 Target Architectures 设置为 ARM64。若不是，则报错。
+*当前场景中是否只存在一个 XR Origin。若不是，则报错。
+*Project Keystore 的 keystoreName 和 keystorePass 是否为空。若为空，则报错。
+*Project Key 的 keyaliasName 和 keyaliasPass 是否为空。若为空，则报错。
+*Default Orientation 是否设置为 LandscapeLeft。若不是，则报错。
+*Application Entry Point 是否设置为 Activity。若不是，则报错。
+*是否将 Write Permission 参数设置为 External( SDCard)，且 Android API 版本是否大于 32。
+*当前使用的 Unity 版本是否被当前使用的 SDK 版本支持。
+*开启 URP 后，当前场景的 Main Camera 是否设置了视频透视，且 Main Camera 的后处理（Post Processing）开关是否被打开。若是，则报错。
+*项目内是否在使用 URP 的同时开启了静态注视点渲染。若是，则报错。
+*若开启了应用空间扭曲（Application SpaceWarp，AppSW），检查当前的 Unity 版本是否为 2021 LTS 及以上。若不是，则报错。
+*若开启了延迟锁定（Late Latching），检查当前的 Unity 版本是否为 2021.3.19f 及以上且 2022 以下。
+*是否同时使用了延迟锁定和合成层（Overlay/Underlay）。若是，则报错。
+*当前场景中的合成层数量是否超过最大支持数量 7 个。若超过，则报错。
+*当前项目内是否同时使用了超分辨率（Super Resolution）和下采样（Subsampling）。若是，则报错。
+*当前项目内是否同时使用了锐化（Sharpening）和下采样。若是，则报错。
+*若当前项目配置为 Unity6 + URP + OpenGLES + Multipass，检查 MSAA 是否关闭（Disabled）。若未关闭，则报错。
+*若当前项目同时使用 Vulkan 和 MRC，检查 Color Space 是否为 Linear。若不是，则报错。
+*Recommended 配置：
+*targetSdkVersion 是否设置为 Auto。若不是，则报错。
+*Install Location 是否设置为 Auto。若不是，则报错。
+*Physics.defaultContactOffset 是否大于等于 0.01f。若不是，则报错。
+*Physics.sleepThreshold 是否大于等于 0.005f。若不是，则报错。
+*Physics.defaultSolverIterations 是否小于等于 8。若不是，则报错。
+*QualitySettings.pixelLightCount 是否小于等于 1。若不是，则报错。
+*QualitySettings.globalTextureMipmapLimit =是否等于 0。若不是，则报错。
+*QualitySettings.anisotropicFiltering 是否为 AnisotropicFiltering.Enable。若不是，则报错。
+*androidBuildSubtarget 是否设置为 ETC2 或 ASTC。若不是，则报错。
+*Color Space 是否设置为 Linear。若不是，则报错。
+*是否勾选 Graphics Jobs 选项。若勾选，则报错。
+*是否启用多线程。若未启用，则报错。
+*是否启用 Use 32-bit Display Buffer 选项。若未启用，则报错。
+*RenderingPath 是否设置为 Forward。若不是，则报错。
+*Stereo Rendering Mode 是否设置为 Multiview。若不是，则报错。
+*IntermediateTextureMode 是否设置为 Auto。若不是，则报错。
+*使用 URP 时，是否禁用 ScreenSpaceAmbientOcclusion。若未禁用，则报错。
+*使用静态注视点渲染（FFR）和眼动追踪注视点渲染（ETFR）时，是否开启下采样（Subsampling）。若未开启，则报错。
+*是否勾选了 Use Recommended MSAA 选框。若未勾选，则报错。
+*是否同时使用了应用空间扭曲（AppSW）和内容保护。若是，则报错。
+*当前场景中，原点跟踪模式（Tracking Origin Mode）是否设置为 NotSpecified。若是，则报错。
+*URP 包是否已下载，但未进行配置和使用。若是，则报错。
+*当前场景中的合成层数量是否超过建议数量 4 个。若超过，则报错。
+*使用 Unity6 时，检查当前项目是否勾选了 Run In Background 选项。若未勾选，则报错。
+*PXR_Manager (Script) 面板上是否勾选了 MRC 选框。若未勾选，则报错。
+*当前 Display Refresh Rates 是否被设置为 Default。若不是，则报错。
+*使用 Vulkan 时，Optimize Buffer Discards 选项是否勾选。若未勾选，则报错。
+*Optional 配置：
+*是否已禁用 Lightmapping.realtimeGI。若未禁用，则报错。
+*是否已启用 GPU Skinning。若未启用，则报错。
+*开启眼动追或者眼动追踪注视点渲染能力时，是否勾选 Eye Tracking Calibration 选项。若未勾选，则报错。
+*前提条件
+项目中 SDK 的版本为 3.0.0 及以上。你可以前往 PICO 开发者官网下载最新版本的 SDK。
+*使用步骤
+*在 Unity 编辑器内打开你的项目。
+*前往 Edit > Project Settings > XR Plug-in Management > Project Validation。
+*你将看到 Project Validation 面板，面板上默认展示所有未被正确配置的配置规则。
+* 
+* 
+*点击 Fix All 按钮，修复所有配置问题，或点击 Fix 按钮，修复指定配置问题。
+* 
+
+*
+
+
+
+
+
+状态图标
+
+说明
+
+* 
+
+该配置规则已被正确配置，或该规则不适用。
+
+* 
+
+推荐配置规则。该配置规则未被正确配置，但不影响项目的正常构建。你可以根据项目的实际配置忽略这些规则。
+
+* 
+
+必要配置规则。该配置规则未被正确配置，且会影响项目的正常构建。你必须修复这类配置项。
+
+提示
+*Selected Profiles 参数保持默认设置（Turn Off）即可。
+*若需展示已被正确配置或不适用的配置规则，勾选 Show all 选框。
+
+提示
+对于未正确配置的必要配置规则，若你不希望它影响项目的正常构建，你可以勾选 Ignore build errors 选框，忽略该规则。但该规则相关的 XR 功能可能无法正常使用。

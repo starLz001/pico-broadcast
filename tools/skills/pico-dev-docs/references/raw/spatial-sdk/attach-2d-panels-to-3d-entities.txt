@@ -1,0 +1,261 @@
+将 2D 面板挂载至 3D 实体
+========================================
+在 ECS 架构下，除了将 3D 实体展示在 2D 布局中，有时还需要将 2D 面板直接挂载到 3D 实体上进行展示。通过 AttachmentPanelComponent，你可以将 2D 面板作为 3D 实体的子节点或组件，使其具备空间属性并可统一管理。
+*前置条件
+2D 面板一般通过 SpatialUI 编写，因此需要确保项目内已添加 SpatialUI 相关的依赖。详情参考《依赖配置》。
+*基础用法：将 2D 面板挂载至 3D 实体
+*以下是一个典型场景：在 Stage 内渲染 3D 模型，同时在模型附近挂载一块 2D 面板来展示一行文字，让 2D 面板随着 3D 实体一起移动、缩放和旋转。实现方式主要有两种：将 2D 面板封装为 AttachmentPanelComponent 并挂载到实体组件上，或使用 SpatialView 的 attachments 相关接口创建面板实体并作为子节点挂载。
+ 
+*方式一：使用 AttachmentPanelComponent
+*使用 AttachmentPanelComponent 将 2D 面板挂载到 3D 实体：
+*用 attachmentPanelComponent(...) { ... } 构建 2D 面板，与普通 Compose 2D 界面的写法一致。
+*通过 attachmentSize() 定义面板尺寸。
+*将返回的 components.set(attachment) 挂载至目标 3D 实体上，使其跟随该实体。
+*代码示例如下：
+* 
+*方式二：使用 SpatialView 的 attachments 接口
+*使用 SpatialView 的 attachments 相关接口创建面板实体并将其挂载至目标 3D 实体：
+*在 SpatialView(attachments = { ... }) 中用 AttachmentPanel() 定义 2D 面板。
+*在渲染回调中，通过 attachment.entity() 取到对应的面板实体，并使用 addChild() 方法将其挂载至目标 3D 实体。
+*代码示例如下：
+ 
+*进阶用法
+*在 Stage 内组织 2D 内容入口
+*在 Stage 中，可以将主 2D 界面入口和主 3D 内容统一组织到同一个容器实体下。这样可以用一个实体统一控制 2D 和 3D 内容的位置、缩放和层级关系，也更便于后续整体移动或替换内容。
+*代码示例如下：
+ 
+*用系统驱动 2D 面板的动态刷新
+*将 2D 面板的内容与系统驱动的状态更新进行联动，使 2D 面板能够随 ECS 状态实时更新。核心逻辑如下：
+*在 @Composable 中通过 DisposableEffect 注册/注销系统；
+*在 3D 实体上同时挂载 AttachmentPanelComponent（负责渲染 2D UI）和自定义组件（负责保存状态）；
+*在自定义 System.update() 中按时间步更新状态，并通过 attachmentPanelComponent.content { ... } 将最新状态写回面板内容，实现 “逻辑在系统、展示在面板” 的分工。
+*代码示例如下：
+* 
+*设置对齐方式
+*将 2D 面板挂载到某个 3D 实体时，你可以使用 AttachmentPanelComponent 的 alignment 属性让 3D 实体与面板的某个位置对齐。目前支持 9 个位置：面板的四个角、面板的四条边的中点，以及面板的中心。
+*通过调整对齐方式，你可以控制面板出现时 3D 实体相对面板的位置关系，避免遮挡或让视觉布局更符合预期。
+*以下代码示例展示如何将 3D 实体对齐到面板的左上角：
+* 
+* 
+*注意事项
+*AttachmentPanelComponent 的 content 变更后，并不会自动更新已创建的视图。要使变更生效，需要重新设置 Composable 的 content。
+*通常不需要显式设置 2D 面板尺寸。面板默认会根据内容的尺寸自动适配。
+*当 2D 面板尺寸需要与内容尺寸不一致时，应使用 requiredSize 明确指定内容的尺寸。
+*默认情况下，2D 面板的中心点与目标 3D 实体的原点重合。
+
+
+@Composable
+fun SimpleAttachmentPanelComponent() {
+    // 使用 attachmentPanelComponent 构建一个可挂载到 3D 实体的 2D 面板组件，并设置面板尺寸
+    val attachment = attachmentPanelComponent(size = panelSize(200.dp, 200.dp)) {
+        // 面板内部的 2D UI 内容：写法与普通 Compose 界面一致
+        Column(
+*            modifier = Modifier.fillMaxSize(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Text(
+                text = "Hi, I'm PICO bot",
+                color = Color.White,
+                fontSize = 64.sp,
+                modifier = Modifier.background(Color.Blue),
+            )
+        }
+    }
+    SpatialView(
+        modifier = Modifier.fillMaxSize()
+    ) { content, _ ->
+        // 加载 3D 实体（放到 IO 线程，避免阻塞主线程）
+        val entity = withContext(Dispatchers.IO) {
+            Entity.load("asset://model/pico_robot_static.usdz")
+        }.also {
+            // 配置 3D 实体的变换（位置/缩放）
+            it.components.get<TransformComponent>()?.apply {
+                position = Vector3(0f, 1f, -1f)
+                scaleBy(0.5f)
+            }
+            // 将 2D 面板组件挂到 3D 实体上，使其跟随该实体
+            it.components.set(attachment)
+        }
+        // 将 3D 实体加入场景中，完成渲染
+        content.addEntity(entity)
+    }
+}
+
+@Composable
+fun SimpleSpatialViewAttachment() {
+    SpatialView(
+        modifier = Modifier.fillMaxSize(),
+        // 在 attachments 中声明 2D 面板内容，并分配一个唯一 id
+        attachments = {
+            AttachmentPanel(1) {
+                Text(
+                    text = "Hi, I'm PICO bot",
+                    color = Color.White,
+                    fontSize = 64.sp,
+                    modifier = Modifier.background(Color.Blue),
+                )
+            }
+        }
+    ) { content, attachment ->
+        // 加载 3D 模型（放到 IO 线程，避免阻塞主线程）
+        val entity = withContext(Dispatchers.IO) {
+            Entity.load("asset://model/pico_robot_static.usdz")
+        }.also {
+            // 配置 3D 实体的变换（位置/缩放）
+            it.components.get<TransformComponent>()?.apply {
+                position = Vector3(0f, 1f, -1f)
+                scaleBy(0.5f)
+            }
+            // 通过 id 获取 attachments 中对应的面板实体，并挂载到 3D 实体下实现跟随
+            attachment.entity(1)?.let { attachment ->
+                it.addChild(attachment)
+            }
+        }
+        // 将实体加入场景中，完成渲染
+        content.addEntity(entity)
+    }
+}
+
+Stage(StageName) {
+    val viewModel = AmountsOfPanelsViewModel.instance()
+    // 主 2D 内容入口：构建一个可挂载到 3D 实体的面板组件
+    // 假设 StageMainPanel 是你构建 Stage 内主要 2D 内容的 Composable 方法
+    val stageMainPanel = StageMainPanel()
+    // 在 SpatialView 中向场景添加实体
+    SpatialView { content, _ ->
+        content.addEntity(
+            Entity().apply {
+                // 设置容器实体的空间位置，2D 和 3D 内容会一起跟随该变换
+                position(Vector3(0.5f, 1.5f, -1.0f))
+                // 将主 2D 面板挂载到该实体上
+                components.set(stageMainPanel)
+                // 主 3D 内容：作为子节点挂到同一容器实体下
+                addChild(viewModel.panelZygote)
+            }
+        )
+    }
+}
+
+@Composable
+fun SystemUpdateAttachmentPanelComponent() {
+    // 在 Compose 生命周期内注册/注销系统，确保进入页面时生效、退出页面时释放
+    DisposableEffect(Unit) {
+        registerSystem<TrafficLightSystem>()
+        onDispose { unregisterSystem<TrafficLightSystem>() }
+    }
+    // 构建 2D 面板组件（后续由系统动态更新其内容）
+    val attachmentPanelComponent = attachmentPanelComponent { Text("Traffic Light") }
+    // 创建场景，并向场景添加一个同时具备“面板渲染能力”和“业务状态”的实体
+    SpatialView { content, _ ->
+        content.addEntity(
+            Entity().apply {
+                // 挂载面板组件：用于显示 2D UI
+                components.set(attachmentPanelComponent)
+                // 挂载状态组件：用于保存红绿灯状态与倒计时
+                components.set(TrafficLightComponent())
+            }
+        )
+    }
+}
+
+class TrafficLightComponent : Component() {
+    // 当前是否为绿灯
+    var greenLight = true
+    // 当前倒计时（单位：秒）
+    var countdownTime = 10
+
+    // 推进一次逻辑：倒计时 -1，到 0 切换红绿灯并重置时长
+    fun tick() {
+        countdownTime--
+        if (countdownTime <= 0) {
+            greenLight = !greenLight
+            countdownTime = if (greenLight) 10 else 5
+        }
+    }
+
+    override fun toString(): String {
+        return "TrafficLightComponent(greenLight=$$greenLight, countdownTime=$$countdownTime)"
+    }
+}
+
+class TrafficLightSystem : System() {
+    // 累积时间，用于将每帧更新转换为 “每 1 秒更新一次”
+    var timeInterval = 0f
+
+    override fun update(context: SceneUpdateContext) {
+        // 累加帧间隔时间（deltaTime 为每帧耗时，单位：秒）
+        timeInterval += context.deltaTime
+        // 满 1 秒执行一次状态推进与 UI 刷新
+        if (timeInterval >= 1) {
+            timeInterval = 0f
+            // 查询所有挂载了 TrafficLightComponent 的实体
+            context.scene
+                .queryEntity(EntityQueryCondition.hasComponent(TrafficLightComponent::class.java))
+                .forEach {
+                    // 读取并更新状态组件
+                    val trafficLightComponent =
+                        it.components.get<TrafficLightComponent>() ?: return@forEach
+                    trafficLightComponent.tick()
+                    // 将最新状态写回面板内容（倒计时 + 背景色）
+                    it.components.get<AttachmentPanelComponent>()?.content {
+                        Text(
+                            text = "$${trafficLightComponent.countdownTime}",
+                            fontSize = 64.sp,
+                            color = Color.White,
+                            modifier =
+                                Modifier.background(
+                                    if (trafficLightComponent.greenLight) Color.Green else Color.Red
+                                ),
+                        )
+                    }
+                }
+        }
+        // 交给基类继续处理系统更新链路
+        super.update(context)
+    }
+}
+
+@Composable
+fun SimplePanelComponentWithAlignment() {
+    // 构建可挂载到 3D 实体的 2D 面板组件，并指定面板尺寸与对齐位置
+    val attachment = attachmentPanelComponent(
+        size = panelSize(1f, 0.5f),
+        // 指定对齐方式：让挂载该面板的实体对齐到面板的左上角
+        alignment = AttachmentPanelComponent.Alignment.TOP_LEFT,
+    ) {
+        // 面板内部的 2D UI 内容（普通 Compose 写法）
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .clip(shape = RoundedCornerShape(16.dp))
+                .background(Color.Cyan),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Text(
+                text = "Hi, I'm PICO bot",
+                color = Color.White,
+                fontSize = 64.sp,
+            )
+        }
+    }
+    SpatialView(
+        modifier = Modifier.fillMaxSize()
+    ) { content, _ ->
+        // 加载 3D 模型（放到 IO 线程，避免阻塞主线程）
+        val entity = withContext(Dispatchers.IO) {
+            Entity.load("asset://model/pico_robot_static.usdz")
+        }.also {
+            // 配置 3D 实体的变换（位置/缩放）
+            it.components.get<TransformComponent>()?.apply {
+                position = Vector3(0f, 1f, -1f)
+                scaleBy(0.5f)
+            }
+            // 将面板组件挂到 3D 实体上，`alignment` 属性将决定实体与面板的对齐方式
+            it.components.set(attachment)
+        }
+        // 将 3D 实体加入场景，完成渲染
+        content.addEntity(entity)
+    }
+}

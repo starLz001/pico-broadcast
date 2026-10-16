@@ -1,0 +1,186 @@
+Blend Shape 动画
+========================================
+*本文介绍如何在 PICO Spatial SDK 中控制 Blend Shape 的权重，从而实现 Blend Shape 动画。
+*什么是 Blend Shape
+*Blend Shape（也称作 Morph Target）是一种基于顶点级别的几何变形技术。该技术要求所有形态变体必须保持拓扑一致性，即顶点数量、索引顺序及连接关系完全相同。Blend Shape 通过在基础网格与一个或多个目标形态之间执行线性插值来实现几何变形。通过组合多个权重参数，你可以实现复杂的复合表情。例如，你可以将“无表情”作为基础形状，并将“微笑”、“眨眼”和“张嘴”等设为目标形状。
+*Blend Shape 动画与骨骼动画的区别
+*骨骼动画：通过骨骼变换驱动蒙皮网格，适合大幅度运动，如行走、跑动、挥手等。
+*Blend Shape 动画：直接修改顶点位置，跳过骨骼与蒙皮计算；适合局部、精细形变（表情、肌肉）与关节处纠正。
+骨骼动画与 Blend Shape 动画在实际项目中通常叠加使用：骨骼动画用于驱动主体动作，Blend Shape 动画用于丰富表情并修正局部细节。
+*控制 Blend Shape 的权重
+*在 PICO Spatial SDK 中，你可以使用 BlendShapeControllerComponent 组件读取与设置模型网格的 Blend Shape 权重，构建精细动画（表情、肌肉、局部修正等）。BlendShapeControllerComponent 组件提供按索引或名称的独立控制，并支持将多个 Blend Shape 组成子集（Subset）以便分组与批量操作，便于状态管理与复用。
+*步骤一：使用 DCC 工具创建 Blend Shape
+*你可以在 Maya、Blender 等数字内容创作（DCC）工具中创建和调整 Blend Shape，并直接在工具内通过改变权重来预览和验证其视觉效果。
+ 
+*步骤二：检查模型是否包含 Blend Shape 数据
+*要使用 BlendShapeControllerComponent组件，你必须确保目标实体所引用的模型资源（MeshResource）已经包含了 Blend Shape 数据。如果模型资源不包含 Blend Shape 数据，BlendShapeControllerComponent组件将无法生效。
+*你可以通过 MeshResource 类的函数检查模型是否支持 Blend Shape。
+ 
+*步骤三：把 BlendShapeControllerComponent 组件添加到实体
+*确认模型包含 Blend Shape 数据后，你就可以把BlendShapeControllerComponent组件添加到实体。
+ 
+*步骤四：控制 Blend Shape 的权重
+*把BlendShapeControllerComponent 组件添加到实体后，你就可以使用 BlendShapeControllerComponent组件的函数控制实体中 Blend Shape 的权重。
+你可以按名称/索引控制 Blend Shape 权重，也可以按子集（Subset）对 Blend Shape 权重进行分组控制。子集中 Blend Shape 的顺序与创建子集时 Blend Shape 的顺序一致，便于成组读取与设置。
+* 
+*按名称或索引控制 Blend Shape 的权重
+*获取单个 Blend Shape 的权重。
+ 
+*设置单个 Blend Shape 权重。
+ 
+*批量获取所有 Blend Shape 的权重。
+ 
+*批量设置所有 Blend Shape 的权重。
+ 
+*按子集分组控制 Blend Shape 的权重
+你可以将多个 Blend Shape 聚合为命名集合，便于批量控制 Blend Shape 的权重。子集适用于复杂表情控制，例如 “高兴”需要同时驱动嘴角上扬与眼睛微眯，把这些 Blend Shape 打包为一个 smile 子集可以简化控制逻辑。
+*通过 Blend Shape 索引或名称创建子集。
+ 
+*通过 Blend Shape 名称移除子集。
+ 
+*获取子集中所有 Blend Shape 的权重。
+ 
+*设置子集中所有 Blend Shape 的权重。
+ 
+*通过 TweenAnimation 对实体的 Blend Shape 权重进行动画处理
+*除了直接调用 BlendShapeControllerComponent 的 setBlendShapeWeights() 方法外，你还可以通过补间动画 (TweenAnimation) 让 Blend Shape 权重在一段时间内平滑过渡，适用于表情切换、肌肉舒张等连续变形场景。详情参阅《补间动画》。
+通过补间动画对 Blend Shape 权重进行动画处理的步骤如下：
+*通过 AnimationBindTarget 创建绑定目标，决定动画作用于哪些权重。
+*通过 TweenAnimation.createTweenAnimation() 定义起止权重、时长与重复策略。
+*通过 AnimationResource.generateWithTweenAnimation() 生成资源，再调用 Entity.playAnimation() 播放。
+PICO Spatial SDK 为 Blend Shape 动画提供以下两种绑定目标：
+*AnimationBindTarget.bindBlendShapeWeights()：作用于模型的全部 Blend Shape 权重。
+*AnimationBindTarget.bindBlendShapeSubsetWeights(subsetName)：作用于指定子集中的 Blend Shape 权重。
+* 
+*全量 BlendShape 动画
+*对模型中全部 Blend Shape 的权重进行动画。下面的示例将所有权重从 0.0f 平滑变化到 1.0f，并按反向往返方式重复播放 10 次：
+ 
+*实现 BlendShape 子集动画
+*当只需要驱动一组特定 Blend Shape 时（例如表情子集 smile），使用子集绑定目标可以避免维护完整权重数组。下面的示例将名为 smile 的子集从默认权重过渡到目标权重：
+ 
+*其他操作
+*在 PICO Spatial Editor 中管理 Blend Shape 数据
+对于 USD 资源，你可在 PICO Spatial Editor (Spatial Editor) 的 Blend Shape Info 模块中实时查看并修改 Blend Shape 的数据。资源被打包到 PICO Spatial SDK 后，你在 Spatial Editor 中的修改就会生效。
+* 
+*注意事项
+*当你使用 PICO Spatial SDK 动态修改 ModelComponent 的网格时（例如，更换角色头部、切换 LOD 或替换为其他蒙皮网格），原有的 Blend Shape 结构通常会发生改变。这会导致 BlendShapeControllerComponent 组件中缓存的映射信息与新的网格不再匹配，从而使 Blend Shape 控制失效。
+为了确保组件与新网格之间保持一致和有效，你必须遵循以下流程：
+*重新创建组件：更换网格后，你必须先从实体中移除旧的 BlendShapeControllerComponent组件，然后再为该实体添加一个全新的 BlendShapeControllerComponent组件。
+*重建子集：由于网格已经改变，任何先前创建的子集都将失效。在驱动它们之前，你需要基于新的网格重新构建这些子集。
+*常见问题
+*如何知道一个实体有哪些 Blend Shape 可以控制？
+获取实体的 MeshResource 后，调用 getBlendShapeNames()，返回可用 Blend Shape 名称列表；若为空则表示模型不支持 Blend Shape。
+*如果我对不存在的 Blend Shape 名称或索引进行读写操作会发生什么？
+空间应用不会崩溃。写操作会返回 false 表示失败；读操作会返回 null（单个）或空列表（子集）。
+* 
+*子集有什么用？我什么时候应该使用子集？
+子集用于分组管理 Blend Shape。当一个逻辑“状态”（如完整表情）需要同时驱动多个 Blend Shape 时，以统一名称批量读写能简化逻辑并提升可读性。
+*API 参考
+BlendShapeControllerComponent 类提供了 Blend Shape 动画相关的属性和函数，详情参阅 API 参考。根据你所处的地理位置选择合适的文档链接：
+*中国大陆：https://developer-cn.picoxr.com/spatial-api/index.html
+*非中国大陆：https://developer.picoxr.com/spatial-api/index.html
+
+
+确保你从 DCC 工具中导出的资源保留了所有   通道，以便在 PICO Spatial SDK 中能够通过与 DCC 工具中相同的名称来访问资源中的 Blend Shape。
+
+// 假设你已经有了一个加载了模型的实体
+val modelEntity: Entity = ...
+
+// 1. 从实体获取 ModelComponent
+val modelComponent = modelEntity.components[ModelComponent::class.java]
+if (modelComponent == null) {
+    println("实体上没有 ModelComponent，无法继续。")
+    return
+}
+
+// 2. 从 ModelComponent 获取 MeshResource
+val meshResource = modelComponent.mesh
+
+// 3. 从 MeshResource 获取 Blend Shape 名称列表
+val blendShapeNames = meshResource.getBlendShapeNames()
+
+if (blendShapeNames.isNullOrEmpty()) {
+    println("此模型不包含 BlendShape 数据，无法使用 BlendShapeControllerComponent。")
+} else {
+    println("此模型支持 BlendShape，包含：$${blendShapeNames.size}个目标，名称如：$${blendShapeNames.take(5)}...")
+    // 接下来可以为该实体添加和使用 BlendShapeControllerComponent
+}
+
+val controller = entity.components[BlendShapeControllerComponent::class.java]!!
+
+权重为浮点数，表示目标形状对基础形状的影响程度。常用范围为 [0.0f, 1.0f]。0.0f 表示保持基础形状，1.0f 表示完全变为目标形状。部分情况下，权重可被设置为 [0.0f, 1.0f] 范围外的值以实现夸张或卡通化效果。但为了保证 Blend Shape 在不同设备/版本上的表现一致，建议将权重控制在 [0.0f, 1.0f] 范围内。
+
+// 通过索引获取 Blend Shape 的权重
+val weight = controller.getBlendShapeWeight(index)
+
+// 通过名称获取 Blend Shape 的权重
+val weight = controller.getBlendShapeWeight(name)
+
+// 通过索引设置 Blend Shape 的权重
+controller.setBlendShapeWeight(index, weight)
+
+// 通过名称设置 Blend Shape 的权重
+controller.setBlendShapeWeight(blendShapeName, weight)
+
+// 返回一个包含所有 Blend Shape 的权重的列表，顺序与 getBlendShapeNames() 一致
+val weights = controller.getBlendShapeWeights()
+
+// 传入一个包含所有权重的列表，列表大小必须与模型 Blend Shape 的总数一致
+controller.setBlendShapeWeights(weights)
+
+// 通过 Blend Shape 索引列表创建子集
+controller.createBlendShapeSubsetByIndices("subset_smile", listOf(0,1))
+
+// 通过 Blend Shape 名称列表创建子集
+controller.createBlendShapeSubsetByNames("subset_smile",listOf("blendShape_mouth_up", "blendShape_eye_squint"))
+
+controller.removeBlendShapeSubset("subset_smile")
+
+// 返回一个列表，包含该子集中所有 Blend Shape 的权重
+// 列表顺序必须与创建子集时提供的索引/名称顺序一致
+controller.getBlendShapeWeights("subset_smile")
+
+// 批量设置该子集中所有 Blend Shape 的权重
+// weights 列表的大小必须与子集中的 Blend Shape 数量一致
+controller.setBlendShapeWeights("subset_smile", listOf(0.2f,0.3f))
+
+在创建 TweenAnimation 时，确保权重数组的长度必须与模型的全部 Blend Shape 数量或子集中 Blend Shape 数量一致，否则动画无法正确应用。
+
+import com.pico.spatial.core.ecs.animation.AnimationBindTarget
+import com.pico.spatial.core.ecs.animation.TweenAnimation
+import com.pico.spatial.core.ecs.animation.RepeatMode
+
+// 1. 创建绑定目标：全量 BlendShape 权重
+val bindTarget = AnimationBindTarget.bindBlendShapeWeights()
+
+// 2. 定义权重变化（例如：从 0% 变化到 100%）
+val fromWeights = floatArrayOf(0.0f, 0.0f)
+val toWeights = floatArrayOf(100.0f, 100.0f)
+
+// 3. 创建补间动画
+val animation = TweenAnimation.createTweenAnimation(
+    name = "FullBlendShapeAnim",
+    bindTarget = bindTarget,
+    from = fromWeights,
+    to = toWeights,
+    duration = 1.0f,
+    repeatMode = RepeatMode.REVERSE,
+    repeatCount = 10
+)
+
+// 4. 应用并播放动画（需结合 Entity 和 AnimationResource）
+// val animationResource = AnimationResource.generateWithTweenAnimation(animation)
+// entity.playAnimation(animationResource)
+
+// 1. 创建绑定目标：指定子集（如 "Face"）
+val subsetBindTarget = AnimationBindTarget.bindBlendShapeSubsetWeights("Face")
+
+// 2. 创建补间动画
+val faceAnimation = TweenAnimation.createTweenAnimation(
+    name = "SmileAnim",
+    bindTarget = subsetBindTarget,
+    to = floatArrayOf(100.0f), // 假设该子集包含一个权重
+    duration = 0.5f
+)
+
+Blend Shape 名称是大小写敏感的。

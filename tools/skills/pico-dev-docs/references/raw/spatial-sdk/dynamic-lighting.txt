@@ -1,0 +1,113 @@
+动态光照
+========================================
+动态光照和投影是实现真实感视觉体验的关键技术。
+*基本概念
+*动态光照指光源可以随时间、场景或用户交互变化的照明系统。这种光照会实时影响物体的明暗、阴影和高光，从而增强场景的真实感和沉浸感。
+*支持的光源类型
+*
+*下文介绍三种不同光源的在空间应用中的使用。在所有的例子中，场景内默认摆放一个红色立方体。此外，使用一个独立的 Entity 充当光源（即 lightEntity），在它身上加载不同的光源组件，从而影响场景中的红色立方体的显示效果。
+*使用限制
+光照系统存在如下限制：
+**
+*添加点光源
+通过为 Entity 添加 PointLightComponent 来添加点光源。预期效果如下：
+* 
+*代码示例如下：
+* 
+*添加平行光
+通过为 Entity 添加 DirectionalLightComponent 来添加平行光。预期效果如下：
+* 
+*以下是代码示例。其中 castsShadowEnabled 表示物体是否需要投射阴影，设置为 true 表示需要投射阴影。
+ 
+*添加聚光灯
+通过为 Entity 添加 SpotLightComponent 来添加聚光灯。预期效果如下：
+* 
+*代码示例如下：
+ 
+*改变光照的位置和朝向
+光照的位置和朝向会跟随所在的 Entity 的中心，默认朝向 (0, 0, -1) 方向。如需调整，修改 Entity 的 TransformComponent 即可。
+*改变位置
+若想让一个点光源位于立方体的正上方 0.4 米（如下图所示），可以通过移动 lightEntity 来实现。
+* 
+*代码示例如下：
+ 
+*改变方向
+*若想让一个聚光灯从立方体的右前方 45° 角照向它（如下图所示），可以通过调整 lightEntity 的旋转来实现。
+* 
+*代码示例如下：
+ 
+*API 参考
+PointLightComponent、DirectionalLightComponent 和 SpotLightComponent 类提供了动态光照相关的属性和函数，详情参阅 API 参考。根据你所处的地理位置选择合适的文档链接：
+*中国大陆：https://developer-cn.picoxr.com/spatial-api/index.html
+*非中国大陆：https://developer.picoxr.com/spatial-api/index.html
+
+
+
+
+名称
+
+描述
+
+点光源
+
+从一点向四面八方均匀发光的光源，可用于模拟现实中像灯泡、蜡烛、手电筒灯珠、天花板上的顶灯等体积极小的光源。
+*提示：点光源暂不支持投影。
+
+平行光
+
+从固定方向照射、强度均匀、光线彼此平行的光源，它没有位置，只有方向。用于模拟来自无限远处的均匀光照，例如太阳光。
+
+聚光灯
+
+从一个点发出，沿某个方向照射，光线在一个锥形范围内逐渐衰减的定向光源。用于模拟现实生活中手电筒、舞台灯等从一点发出，沿特定方向并在一定角度范围内发散的锥形光束。
+
+
+
+光源类型
+
+数量上限
+
+超限行为
+
+点光源 & 聚光灯
+
+*两者的总数不超过 256。
+
+*超过限制的光源不参与光照计算。
+
+平行光
+
+不超过 128。
+
+超过限制的方向光不参与光照计算。
+
+val lightEntity = Entity()
+// 属性设置：白色，衰减半径为 1.6 米。
+val pointLightComponent = PointLightComponent(Color4.WHITE, 2000f, 1.6f)
+
+lightEntity.components.set(pointLightComponent)
+
+val lightEntity = Entity()
+// 属性设置：白色，会产生投影
+val directionalLightComponent = DirectionalLightComponent(Color4.WHITE, 2000f, castsShadowEnabled = true)
+lightEntity.components.set(directionalLightComponent)
+
+val lightEntity = Entity()
+// 属性设置：白色，会产生投影，角度为 30 度，衰减半径为 5 米
+val spotLightComponent = SpotLightComponent(
+        Color4.WHITE,
+        20000f,
+        5f,
+        30f,
+        45f,
+        true,
+    )
+lightEntity.components.set(spotLightComponent)
+
+lightEntity.components[TransformComponent::class.java]?.apply {
+    setPosition(Vector3(0f, 0.4f, 0f))
+}
+
+lightEntity.components[TransformComponent::class.java]?.apply {
+    setQuaternion(EulerAngles(-45f, 45f, 0f).toQuat())
+}

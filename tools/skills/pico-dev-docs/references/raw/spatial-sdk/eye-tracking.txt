@@ -1,0 +1,125 @@
+视线追踪
+========================================
+通过视线追踪功能，可在应用中实时获取用户当前的视线位置与视线方向。
+*推荐阅读
+*建议阅读《DataProvider 使用说明》一文，了解如何使用 DataProvider 获取追踪数据、判断数据的可用性以及 DataProvider 的状态。
+*使用限制
+*仅当应用的模式为 Full Space 时，才可以获取视线追踪数据。
+*实现视线追踪
+*申请权限
+使用视线追踪功能前，必须先申请权限。只有在用户明确授权后，应用才能访问视线位置与方向数据。
+视线追踪权限为 com.picovr.permission.EYE_TRACKING。该权限属于运行时权限，需要在应用运行过程中动态申请。关于运行时权限的完整申请与处理流程，参考 Android Developers 官方文档。
+代码示例：
+* 
+*使用视线数据
+*创建 EyeTrackingProvider 实例。 
+* 
+*调用 start() 启动 EyeTrackingProvider，并在不再需要时调用 stop()。 
+* 
+*使用 dataFlow 获取视线追踪数据。 
+* 
+* 
+*读取视线的位置和方向数据，然后转换数据的坐标系。 
+* 
+*Demo
+在用户当前视线方向前方 0.2 米处绘制一个蓝色小球，并使其随视线实时移动与旋转。
+* 
+
+if (
+    ContextCompat.checkSelfPermission(activity!!, "com.picovr.permission.EYE_TRACKING") !=
+        PackageManager.PERMISSION_GRANTED
+) {
+    ActivityCompat.requestPermissions(
+        activity,
+        arrayOf("com.picovr.permission.EYE_TRACKING"),
+        YOUR_REQUEST_CODE,
+    )
+}
+
+@Composable
+fun EyeTrackingSample() {
+    val eyeTrackingProvider = remember { EyeTrackingProvider() }
+    // ...
+}
+
+@Composable
+fun EyeTrackingSample() {
+    // ...
+    DisposableEffect(EyeTrackingProvider) {
+        eyeTrackingProvider.start()
+        onDispose { eyeTrackingProvider.stop() }
+    }
+    // ...
+}
+
+你可以根据具体场景选择不同的获取方式。此处，在 Composable 函数中，可以使用 dataFlow 获取数据；在 ECS 中，可以通过 latestData 获取最新数据。
+
+@Composable
+fun EyeTrackingSample() {
+    // ...
+    val EyeTrackingData by
+        eyeTrackingProvider.dataFlow.collectAsState(
+            initial = EyeTrackingData(EyePose(Vector3.ZERO, Quat.identity()), 0L))
+    // ...
+}
+
+@Composable
+fun EyeTrackingSample() {
+    // ...
+    val position =
+        rootEntity.convertPositionFrom(eyeTrackingData.eyePose.position, null)
+    val rotation =
+        rootEntity.convertRotationFrom(eyeTrackingData.eyePose.rotation, null)
+    // ...
+}
+
+@Composable
+fun EyeTrackingSample() {
+    // 创建视线追踪 Provider，并订阅视线数据
+    val eyeTrackingProvider = remember { EyeTrackingProvider() }
+    val eyeTrackingData by
+        eyeTrackingProvider.dataFlow.collectAsState(
+            EyeTrackingData(EyePose(Vector3.ZERO, Quat.identity()), 0L)
+        )
+    // 启动视线追踪，在组件销毁时停止
+    DisposableEffect(Unit) {
+        eyeTrackingProvider.start()
+        onDispose {
+            eyeTrackingProvider.stop()
+        }
+    }
+    // 创建一个蓝色小球（用于可视化视线方向）
+    val mesh = remember { MeshResource.createSphere(0.01f) }
+    val material = remember { UnlitMaterial.create().apply { setBaseColor(Color4.BLUE) } }
+    val rootEntity = remember { Entity() }
+    val eyeModel = remember {
+        Entity().apply {
+            val ball =
+                Entity().apply {
+                    components.set(ModelComponent(mesh, material))
+                    // 将小球放在局部前方 0.2m 处
+                    components.get<TransformComponent>()?.apply {
+                        setPosition(Vector3(0f, 0f, -0.2f))
+                    }
+                }
+            addChild(ball)
+            rootEntity.addChild(this)
+        }
+    }
+    SpatialView(
+        update = { _, _ ->
+            eyeModel.components.get<TransformComponent>()?.apply {
+                // 将视线位姿转换到场景坐标系
+                val position =
+                    rootEntity.convertPositionFrom(eyeTrackingData.eyePose.position, null)
+                val rotation =
+                    rootEntity.convertRotationFrom(eyeTrackingData.eyePose.rotation, null)
+                // 更新模型位姿，使小球始终位于视线前方 0.2m
+                setPosition(position)
+                setQuaternion(rotation)
+            }
+        }
+    ) { content, _ ->
+        content.addEntity(rootEntity)
+    }
+}

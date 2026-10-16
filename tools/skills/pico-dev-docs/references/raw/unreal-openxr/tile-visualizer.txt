@@ -1,0 +1,51 @@
+Tile 可视化工具
+========================================
+Tile 可视化工具（Tile Visualizer）可以让你在虚幻引擎中可视化屏幕上每个 Tile 的分辨率。你可以使用该工具调试注视点渲染功能。本文档介绍如何使用 Tile 可视化工具。
+*环境要求
+*PICO 设备：PICO Neo3、PICO 4、PICO 4 Pro、PICO 4 Enterprise、PICO G3、PICO 4 Ultra 或 Project Swan（PICO OS 6）
+*前提条件
+你已在引擎中安装并启用了 PICO Unreal OpenXR 插件。详情参考 PICO Unreal OpenXR 快速开始。
+*操作步骤
+*在 UE 编辑器中创建一个项目或打开已有项目。
+*在编辑器左下角，单击 Content Drawer。
+*在 PICO For OpenXR Content 文件夹中，打开 TileVisualizer 文件夹。文件夹中有两个蓝图，描述如下：
+**
+* 
+*将 BP_TileVisualizerComponent 附加到玩家 VRPawn 的相机上：
+* 
+*将 WBP_TileVisualizerLegend 附加到玩家的 VRPawn 上以显示图例：
+*在 Event Graph 中输入 “create widget” 创建一个 Widget 节点。
+* 
+*在该节点内，选择并点击 WBP_TileVisualizerLegend。
+* 
+*将该 Widget 添加到视口中：
+* 
+现在你可以使用 Tile 可视化工具调试注视点渲染功能。
+*应用示例
+以下是将 Tile 可视化工具应用于 FFR 功能的示例：
+ 
+*                          没有开启 FFR
+ 
+*                            中级 FFR 效果
+ 
+*                         低级 FFR 效果
+ 
+*                 高级 / 超高级 FFR 效果
+*WBP_TileVisualizerLegend 图例
+*下图为 WBP_TileVisualizerLegend 图例。其中，每个颜色对应一个数字，不同数字表示不同的分辨率。
+* 
+
+
+
+
+蓝图名称
+
+描述
+
+BP_TileVisualizerComponent
+
+在虚幻引擎中，该组件是一个倒置的球体网格，使用透明材质，可根据屏幕分辨率变换颜色。
+
+WBP_TileVisualizerLegend
+
+该组件帮助你了解每种颜色对应的不同分辨率。

@@ -1,0 +1,69 @@
+创建 UE 项目
+========================================
+在开发 PICO 应用之前，你需要先在 UE 中新建项目并配置。以下是详细步骤。
+*新建项目
+*根据你使用的 UE 版本，参考以下步骤新建一个项目。了解更多，参考虚幻引擎官方文档新建项目。
+*前往 Options > Target Platforms。
+* 
+*勾选 Android，然后点击 Apply，完成 Android 配置。
+* 
+*新建项目：
+* 
+*（可选）将蓝图项目转换为 C++ 项目
+*使用 VR 模板新建的 Unreal 项目为蓝图项目。如果你想将该项目转换为 C++ 项目，参考以下步骤：
+* 
+*配置 Android SDK
+项目创建好后，你需要参考以下步骤配置 Android SDK 以确保项目可以打包为 APK。
+*在编辑器左上角，点击 编辑（Edit） > 项目设置（Project Settings）。
+*点击左侧面板 平台 > Android SDK，在 SDKConfig 选卡下，填写配置项：
+*Location of Android SDK：填写之前保存的 Android SDK 路径。
+*Location of Android NDK：根据 UE 版本要求，填入先前配置的 Android 的 NDK 路径。
+*Location of JAVA：填写 Android Studio 目录下的 JRE 路径。如果你之前安装了 JDK，也可填写 JDK 路径。
+*SDK API Level：填写 matchndk。
+*NDK API Level：填写 android-29。
+ 
+
+**
+
+*打开 UE5 编辑器。 
+*在 虚幻项目浏览器 中，选择左侧的 游戏（GAMES）。
+*在游戏类别下，选择适合你的应用的项目。PICO 建议你选择 虚拟现实（Virtual Reality）模板项目。该模板预先配置了创建 VR 项目所需的设置，让你可以更快速地体验虚拟现实的效果。
+* 
+*若你选择空白（Blank）项目，确保将 目标平台（Target Platform）设为 移动端（Mobile），质量预设（Quality Preset）设为 可扩展（Scalable）。
+* 
+*选择一个 项目位置（Project Location） 并输入 项目名称（Project Name），注意项目存储路径和名称不可包含中文字符。
+*点击 创建（Create）。新建工程可能需要花几分钟进行加载。加载完毕后，你将进入到编辑器中并看到如下画面。
+* 
+
+*打开 UE4 编辑器。
+*在 选择或创建新项目（Select Template Category） 页面，选择 游戏（Games） > 下一步（Next）。
+* 
+*在选择模板（Select Template）窗口，选择适合你的应用的项目。PICO 建议你选择 虚拟现实（Virtual Reality）模板项目。该模板预先配置了创建 VR 项目所需的设置，让你可以更快速地体验虚拟现实的效果。点击 下一步（Next）。
+* 
+*若你选择空白（Blank）项目，确保将 目标平台（Target Platform）设为 移动端（Mobile），质量级别（Quality Preset）设为 可缩放的3D或2D（Scalable 3D or 2D）。
+* 
+*在 项目设置（Project Settings）页面，选择 不带初学者内容（No Starter Content）。 
+* 
+*输入项目名称并选择项目的存储路径，注意项目存储路径和名称不可包含中文字符。
+*完成设置后，点击 创建项目（Create Project）。
+*项目加载完成后，编辑器会自动打开该项目。你将看到如下 VR 模板场景。
+* 
+
+**
+
+*建议你将基于 UE5 创建的蓝图项目转换为 C++ 项目以避免已知问题：为何 UE5 项目在 PICO 设备中显示为 2D 模式。
+*在编辑器左上角，点击 工具（Tools） > 新建 C++ 类（New C++ Class）。 
+* 
+*在 添加 C++ 类（Add C++ Class） 弹窗中，直接点击 下一步（Next）> 创建类（Create Class）。 
+* 
+*你已将该项目转换为 C++ 项目。
+
+*在编辑器左上角，点击 文件（File） > 新建 C++ 类（New C++ Class）。
+* 
+*在 添加C++类（Add C++ Class） 弹窗中，直接点击 下一步（Next）> 创建类（Create Class）。
+* 
+*你已将该项目转换为 C++ 项目。
+
+使用 VR 模板新建的 Unreal 项目为蓝图项目。如果蓝图项目编译失败，建议将其转换为 C++ 工程。详情参阅  。
+
+使用 VR 模板新建的 Unreal 项目为蓝图项目。如果蓝图项目编译失败，建议将其转换为 C++ 工程。详情参阅  。

@@ -1,0 +1,309 @@
+空间音频概览
+========================================
+与传统的立体声技术相比，空间音频能够提供更为广阔和沉浸的声学体验。传统立体声仅能在左右两个方向上制造声音的差异，而空间音频的渲染方式则能够将声音扩展至用户四周的环境，涵盖水平方向以及上下方的声源位置，更加贴近现实。例如，当用户逐渐靠近一个声源时，音量会随着距离缩短而变大，产生与真实世界一致的听觉反馈。
+空间音频的核心原理在于对人类听觉系统的模拟。它利用声波在空间中的传播和反射规律、多声道播放与头部追踪系统，基于 HRTF（Head-Related Transfer Function）的人耳声学特性建模，实现声音在三维空间中的重建。这些技术使得用户不仅能感知声音的方位，还能体会到其远近、朝向和其他空间信息，从而获得真实而立体的沉浸式听觉体验。
+* 
+*空间音频种类
+*在实际应用中，空间音频大体可以分为三类：Channel Audio、Ambient Audio 和 Object Audio。这三类音频类型通过各自的特点，在不同的应用场景中互为补充。Channel Audio 提供稳定和原始的音效呈现，Ambient Audio 强化方向感和氛围营造，而 Object Audio 则赋予用户真实的空间感和交互体验。合理组合这些音频类型，可以在同一应用中实现沉浸的听觉效果。
+*Channel Audio
+*Channel Audio 将音频信号的各个通道直接映射到播放设备的输出，不经过空间化或混响处理。在这种模式下，声音与用户的空间位置或朝向无关。例如，无论用户如何转动头部，左声道的声音始终从左侧传来，右声道的声音始终从右侧传来。这种方式更接近传统的立体声渲染。
+*Ambient Audio
+*Ambient Audio 能够根据声源与听者的相对朝向进行调整，但并不体现距离的变化。用户在声源朝向的范围内能够听到声音，而在范围之外则完全听不到。然而，即使用户靠近或远离声源，音量也不会发生显著变化。Ambient Audio 通常适用于对空间方向有一定要求但不需要强调远近关系的场景，例如虚拟环境中的背景声或氛围营造。
+*Object Audio
+*Object Audio 能够完整地模拟现实世界中声源的属性，包括位置、方向和距离。系统会自动感知声源的空间坐标和朝向，并根据用户与声源之间的相对关系实时调整音频的输出效果。这样，用户不仅能分辨声音是从前方、后方、左侧或右侧传来，还能清晰感知声源的远近。例如，当声源逐渐接近时，用户会感受到音量增强以及空间定位的变化。Object Audio 广泛应用于游戏、虚拟现实和沉浸式体验中，是实现逼真交互的重要基础。
+*开发流程
+*空间音频的通用开发流程如下：
+ 
+*创建 Entity 实例。
+*加载音频文件：
+*调用 AudioResource.load(filepath) 函数，以加载音频文件作为 audioResource。
+*添加空间音频组件：
+*创建空间音频组件并设置参数。
+*调用 entity.components.set() 函数，将该空间音频组件添加到 Entity 实例。
+*获取播放控制器：
+*调用 entity.prepareAudio(audioResource) 函数，获取与 audioResource 关联的 audioPlayerController。
+*控制音频的播放：
+*使用 audioPlayerController.play()、audioPlayerController.pause() 、 audioPlayerController.setLoop()、audioPlayerController.stop() 等函数，控制音频的播放。你也可以使用实体的相关方法，控制音频的播放。
+*音频管理
+*音频组件
+*你可以通过为实体关联相应的音频组件来添加空间音频：
+*Channel Audio：关联 ChannelAudioComponent 组件。详情参阅《使用 ChannelAudioComponent》。
+*Ambient Audio：关联 AmbientAudioComponent 组件。详情参阅《使用 AmbientAudioComponent》。
+*Object Audio：关联 ObjectAudioComponent 组件。详情参阅《使用 ObjectAudioComponent》。
+你可以使用 AudioResourceLibraryComponent 组件来批量管理多个音频资源。AudioResourceLibraryComponent 以字典形式管理音频资源，允许把名称作为 key，用来添加、移除、检索和清空音频资源。详情参阅《音频资源》。
+*你可以使用AudioMixerGroupsComponent组件管理音频混合组资源（AudioMixerGroupResource）。详情参阅《音频混合组》。
+*音频资源、音频组资源和音频混合组资源
+在空间应用中，AudioResource（音频资源）是实现沉浸式体验的重要组成部分，它不仅负责播放背景音乐、环境音效和交互音效，还能通过空间化定位增强用户的临场感。详情参阅《音频资源》。
+*AudioGroupResource（音频组资源）代表一个音频资源的集合。当你播放一个 AudioGroupResource 时，系统会根据你设置的播放模式（AudioGroupResourcePlayMode），从集合中选择一个音频进行播放。详情参阅《音频组资源》。
+*AudioMixerGroupResource（音频混合组资源）用于同时控制所有具有相同 mixerGroupId 的 AudioResource 的播放速度和音量。详情参阅《音频混合组》。
+*音频事件
+*音频事件（AudioEvents）用于在音频播放的特定时间点触发自定义逻辑。你可以通过订阅目标事件并定义回调函数来实现音频事件。音频播放过程中，当检测到事件被触发时，系统会自动执行你注册的回调。详情参阅《使用音频事件》。
+*音量控制
+你可以单独控制音频播放控制器（AudioPlayerController）、音频组件（ObjectAudioComponent、AmbientAudioComponent 或 ChannelAudioComponent）或音频混合组资源（AudioMixerGroupResource）的音量。
+*音频播放控制器： 通过AudioPlayerController.setVolume() 设置音量。
+*音频组件：通过ObjectAudioComponent.volume、AmbientAudioComponent.volume 或 ChannelAudioComponent.volume 设置音量。
+*音频混合组资源：通过AudioMixerGroupResource.setVolume() 设置音量，这会影响一个音频混合组内全部音频文件的最终播放音量。
+*空间应用的最终输出音量计算方法如下：
+*空间应用最终的输出音量 = 
+*AudioPlayerController 音量 
+*× 音频组件音量（ObjectAudioComponent/AmbientAudioComponent/ChannelAudioComponent） 
+*× AudioMixerGroupResource 音量
+* 
+*选择合适的音频 API
+在 PICO Spatial SDK 开发中，你可以根据实际场景使用 Android 原生音频 API 或 PICO Spatial SDK 提供的 Spatial Audio API。
+*使用 Android 原生音频 API 的场景
+当满足以下条件时，使用 Android 原生 API（MediaPlayer、SoundPool、AudioTrack）：
+*音频不需要任何空间处理（无头部追踪、无 3D 定位）。
+*不需要 SDK 的音量/混音管理体系。
+*追求最简单、最轻量的集成方式。
+典型场景包括系统通知提示音、简单 UI 点击音效（短音效推荐 SoundPool）、不需要响应头部转动的背景音乐、应用中非空间化（2D）部分的音频播放。
+*使用 Spatial Audio API 的场景
+当音频需要与 3D 环境或用户头部朝向交互时，使用 Spatial Audio API。
+*ChannelAudioComponent：音频关联到 Entity 但不需要空间化处理时使用，适用于需要纳入 SDK 音量控制和混音组管理体系的场景，例如绑定到特定场景 Entity、通过 AudioMixerGroupResource 统一管理的背景音乐，或需要与其他空间音频源协调音量控制的音频。详情参阅《使用 ChannelAudioComponent》。
+*AmbientAudioComponent：音频需要响应用户头部朝向变化、但不需要响应距离变化时使用，例如转头时方向感跟随变化的环境音效（风声、雨声、人群噪声）、沉浸式场景中的环境背景音，以及 Ambisonics 音频内容（一阶或二阶 ACN_SN3D）。详情参阅《使用 AmbientAudioComponent》。
+*ObjectAudioComponent：音频需要模拟真实世界声源，具备完整的 3D 定位、距离衰减和指向性时使用，例如用户走近时音量增大的 NPC 角色说话、场景中放置的虚拟音箱或乐器、从特定位置发出声音的可交互物体。ObjectAudioComponent 仅支持单声道音频，多声道音频会被自动 downmix 为单声道。详情参阅《使用 ObjectAudioComponent》。
+*SpatialAudioTrackExtension：已有第三方播放器（ExoPlayer、MediaPlayer 或任何基于 Android AudioTrack 的播放器），希望在不修改播放逻辑的前提下添加空间化时使用。详情参阅《使用 SpatialAudioTrackExtension》。其模式如下：
+**
+*从 Android Audio API 迁移到 Spatial Audio API
+如果你已有基于 Android AudioTrack 的播放器，希望添加空间化，最小改动如下。无需修改播放逻辑、缓冲区管理或解码管线。
+ 
+*更多信息
+*场景示例与推荐的 API
+**
+*Android 原生 API 与 Spatial Audio API 的功能对比
+*
+*音频 API 常见使用误区
+*使用音频 API 时，建议避免以下误区：
+*对非定位音频使用 ObjectAudioComponent：浪费性能，应使用 ChannelAudioComponent 或 Android 原生 API。
+*超出实例数限制：每个应用最多支持 40 个 Object/Ambient 类型的 AudioPlayerController 实例，需要合理规划并及时释放。
+*向 ObjectAudioComponent 传入多声道音频：Object Audio 仅支持单声道，多声道应使用 AmbientAudioComponent。
+*为了添加空间化而重写播放器：应使用 SpatialAudioTrackExtension 以最小改动添加空间音频。
+*注意事项
+*调用 entity.prepareAudio() 或 entity.playAudio() 之前，需要先为实体添加空间音频组件。
+*同一个实体上只能添加一种音频组件，不可以同时添加 ObjectAudioComponent，AmbientAudioComponent，ChannelAudioComponent。
+*每个 AudioResource 对应一个 AudioPlayerController 实例。
+*单个应用内，合计最多可创建 40 个 Object Audio 与 Ambient Audio 的 AudioPlayerController，以及 40 个 Channel Audio 的 AudioPlayerController。超出该数量上限会导致创建失败，因此在使用时需要合理规划 AudioPlayerController 的数量。
+*系统层面， 合计最多支持 256 个 Object Audio 与 Ambient Audio 的 AudioPlayerController，以及 256 个 Channel Audio 的 AudioPlayerController。
+*针对 ExoPlayer、MediaPlayer 等第三方播放器接入空间音频成本高、音视频同步复杂的痛点，PICO Spatial SDK 引入 SpatialAudioTrackExtension。你无需替换原有 AudioTrack 播放逻辑，即可为音频流附加空间化与 3D 对象定位效果。详情参阅 《使用 SpatialAudioTrackExtension》。
+
+如果你没有使用音频混合组，那么 AudioMixerGroupResource 音量默认为 1。
+
+
+
+*模式
+
+*行为
+
+*适用场景
+
+*SpatialAudioMode.OBJECT
+
+*完整 3D 定位音频
+
+*音频跟随场景中特定 Entity
+
+*SpatialAudioMode.AMBIENT
+
+*基于朝向的混音，支持头部追踪
+
+*响应头部转动的背景音频
+
+*SpatialAudioMode.CHANNEL
+
+*传统声道输出，无空间处理
+
+*不需要空间化时的回退方案
+
+// 改造前：标准 AudioTrack
+val builder = AudioTrack.Builder()
+    .setAudioAttributes(audioAttributes)
+    .setAudioFormat(audioFormat)
+    .setBufferSizeInBytes(bufferSize)
+val audioTrack = builder.build()
+
+// 改造后：仅需添加 3 行代码
+val builder = AudioTrack.Builder()
+    .setAudioAttributes(audioAttributes)
+    .setAudioFormat(audioFormat)
+    .setBufferSizeInBytes(bufferSize)
+
+val extension = SpatialAudioTrackExtension()                          // 1. 创建扩展
+extension.spatialAudioTrackExtensionConfig(                           // 2. 配置模式
+    mode = SpatialAudioMode.OBJECT,
+    isAmbisonic = false,
+    builder = builder
+)
+extension.attachToEntityWithBuilder(targetEntity, builder)            // 3. 绑定到 Entity
+
+val audioTrack = builder.build()
+// 其余播放代码保持不变。
+
+
+
+*场景
+
+*推荐 API
+
+*原因
+
+*按钮点击音效
+
+*Android SoundPool 或 ChannelAudioComponent
+
+*无空间化需求。SoundPool 对短音效延迟更低。
+
+*视频面板播放电影，音频跟随面板位置
+
+*SpatialAudioTrackExtension（mode=OBJECT）
+
+*ExoPlayer 负责解码，音频需要跟随 Entity 位置。
+
+*森林环境音，转头时方向感变化
+
+*AmbientAudioComponent
+
+*需要方向感，不需要距离衰减。
+
+*NPC 角色说话，走近时声音变大
+
+*ObjectAudioComponent
+
+*需要完整 3D 定位和距离衰减。
+
+*系统通知提示音
+
+*Android MediaPlayer 或 SoundPool
+
+*系统级音效，无需 ECS 集成。
+
+*全应用背景音乐
+
+*Android MediaPlayer 或 ChannelAudioComponent
+
+*简单场景用 Android API；需要 SDK 混音控制时用 ChannelAudioComponent。
+
+*360° 全景视频的 Ambisonics 音轨
+
+*AmbientAudioComponent + AmbisonicsType.ACN_SN3D_1
+
+*Ambisonics 解码 + 头部追踪，实现沉浸式全景音频。
+
+*多个音频源需要协调音量控制
+
+*ChannelAudioComponent + AudioMixerGroupResource
+
+*混音组提供统一的音量和播放速度控制。
+
+
+
+*能力
+
+*Android 原生 API
+
+*ChannelAudioComponent
+
+*AmbientAudioComponent
+
+*ObjectAudioComponent
+
+*SpatialAudioTrackExtension
+
+*头部追踪
+
+*否
+
+*否
+
+*是
+
+*是
+
+*取决于模式
+
+*3D 定位
+
+*否
+
+*否
+
+*否
+
+*是
+
+*仅 OBJECT 模式
+
+*距离衰减
+
+*否
+
+*否
+
+*否
+
+*是
+
+*仅 OBJECT 模式
+
+*HRTF 渲染
+
+*否
+
+*否
+
+*是
+
+*是
+
+*OBJECT/AMBIENT 模式
+
+*需要绑定 Entity
+
+*否
+
+*是
+
+*是
+
+*是
+
+*是（Entity 或 Container）
+
+*实例数上限
+
+*Android 系统限制
+
+*每个应用最多 40 个实例
+*系统级别最多 256 个实例
+
+*每个应用最多 40 个实例
+*系统级别最多 256 个实例
+
+*每个应用最多 40 个实例
+*系统级别最多 256 个实例
+
+*每个应用最多 40 个实例
+*系统级别最多 256 个实例
+
+*Ambisonics 支持
+
+*否
+
+*否
+
+*是
+
+*否
+
+*仅 AMBIENT 模式
+
+*性能开销
+
+*最低
+
+*低
+
+*中
+
+*高
+
+*取决于模式

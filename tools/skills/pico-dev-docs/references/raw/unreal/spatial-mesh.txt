@@ -1,0 +1,213 @@
+空间网格
+========================================
+空间网格功能可以实时动态扫描现实场景，然后将场景中的内容转换成空间网格。
+*什么是空间网格？
+空间网格技术是一种三维空间捕捉和重建方法，它能够精确地捕捉空间表面的信息，并将其转化为数字模型。当应用启用网格扫描功能时，系统会在用户视线所及之处，逐步构建起一个由三角形组成的网格结构。这个过程不仅捕捉了空间的几何形状，还为每个部分提供了丰富的附加信息。
+在生成的空间网格数据中，除了基本的几何结构外，还包括以下几个关键要素：
+*网格包围盒：这是对网格几何体的简化表示，用于快速确定网格在空间中的位置和范围，有助于优化渲染和碰撞检测等操作。
+*语义信息：空间网格不仅包含几何数据，还集成了关于表面材质、纹理和可能的功能用途等语义信息，为进一步的应用提供了基础。
+* 
+空间网格主要用于在混合现实体验中提供应用对现实环境的理解。将物理世界重构为空间网格后，可以更好地实现虚拟物体与现实物体之间的交互。例如，撞向现实墙面的虚拟小球能够被弹回。此外，结合深度感知技术，可以实现虚拟物体和现实物体之间的遮挡关系。
+你可以通过 SDK 实时获取空间网格的顶点、索引、语义等信息，并且可以根据应用的需求设置不同的 LOD 属性来获取不同粗细程度的网格。此外，你也可以使用 SDK 内置的网格绘制组件实现网格的可视化显示。
+*技术原理
+创建空间网格 Provider 后，PICO 设备将对当前场景进行扫描。用户在场景中移动时，算法会实时感知用户视野前方的深度和语义信息，并将这些信息融合到空间网格中。如果视野范围内的扫描区域发生变化，空间网格会相应地更新，以保持与真实环境状态的一致性。
+目前，实时读取网格时，仅加载以头戴为中心半径约 5 米范围内的网格的信息。应用层如需记录更大范围的网格的信息，需要存储相应数据。
+*使用建议
+建议针对应用场景合理使用空间网格功能，以降低系统开销。应用如果需要使用一个空间的完整网格信息，建议首先引导用户看向空间各处，使得该空间能够被完全扫描。生成相应的空间网格数据后，再继续体验应用的其余内容。
+如果创建空间网格后不需要实时更新网格信息，建议存储当前网格数据并继续使用，同时关闭空间网格 Provider，节省资源开销，并且可以考虑使用较低的细节层次（Level of Details，LOD）来减少网格数量。
+*环境要求
+*PICO 设备型号：PICO 4 Ultra 系列（若要在 PICO 4 系列设备上使用该功能，需使用 3.1.0 及更早版本的 SDK）
+*PICO 设备系统版本：5.11.0 及以上
+*为 Unreal 项目启用空间网格扫描功能
+参考以下步骤，在 Unreal 编辑器内为项目开启空间网格扫描能力：
+*在 UE 编辑器中创建一个项目或打开已有项目。 
+*在 项目设置 面板中 PICOXR settings 的 Mixed Reality 选项卡里，勾选 Enable Spatial Mesh 选框。Enable Semantics Align With Triangle （语义对齐三角面）和 Enable Semantics Align With Vertex（语义对齐顶点）可以按需勾选，若两者都不勾选，则为没有语义。
+* 
+*根据实际需求，设置 Spatial Mesh Lod 参数。该参数默认值为 Low，修改该设置会影响空间网格的密度。
+*LOD 影响空间网格的数量和精度：等级越低，单位表面积上的三角形数量越少，相应的精度也会下降。
+**
+*现在你已为项目启用空间网格扫描功能。
+*开启空间网格功能
+你可以通过调用 PXR_LaunchSpatialMeshScanningAsync 接口，开启空间网格扫描功能。功能开启后，系统会对物理环境进行实时扫描。该接口为异步接口，在启动成功则会执行 OnSuccess，失败则会执行 OnFailure，Result在 OnSuccess时会输出 Success，而 OnFailure 时则会输出失败的错误码。
+ 
+* 
+*使用空间网格绘制 Actor
+PICO SDK 中内置了一个空间网格可视化的 “PICO XR SpatialMesh Actor”，可以提供基础空间网格实时绘制能力，你可以在引擎的 Place Actors 搜索栏中搜素关键字 “Mesh” 找到该 Actor。
+* 
+*使用空间网格绘制 Actor 进行绘制
+在使用 Actor 进行空间网格绘制前，开发者首先需要调用蓝图接口 PXR_LaunchSpatialMeshScanning_Async，开启空间网格扫描，然后将 PICO XR Spatial Mesh Actor 放入场景中即可。
+* 
+相关设置介绍：
+*在 PXR MR Spatial Mesh 中勾选 DrawOnBeginPlay 后，可以在 Beginplay 后即开启绘制空间网格；
+*在 SpatialMeshMaterial 中可以设置材质。设置 PICO SDK > Materials 下的 Mat_WireframeMaterial 材质，即可实现下图中的网格绘制效果；
+*Collision Type 可以控制碰撞检测的类型；
+*Spatial Mesh Visible 可以设置显示或隐藏空间网格；
+*Semantic to Colors 可以设置语义对应颜色。
+* 
+下图为使用默认材质的绘制效果的示例：
+ 
+ 
+此外，你还可以通过射线检测，获取到当前所追踪到的空间网格语义，具体可以参考以下蓝图：
+* 
+*动态开启和暂停绘制
+如果不勾选 DrawOnBeginPlay 选项，你还可以通过调用 StartDraw 和 PauseDraw 两个蓝图接口来实现动态开始和暂停绘制。具体示例如下：
+* 
+* 
+*设置空间网格是否可见
+调用 SetMeshVisibility 接口可以设置显示或隐藏当前空间网格。具体示例如下：
+ 
+*清空 Actor 所绘制的空间网格
+调用 ClearMesh 接口可以清空所有由 Actor 绘制的空间网格。具体示例如下：
+ 
+ 
+*设置空间网格语义所匹配的颜色
+*调用 SetSemanticToColors 接口可以动态设置空间网格语义所匹配的颜色。具体示例如下：
+ 
+*获取空间网格数据
+在完成空间网格扫描之后，你可以通过调用 PXR_RequestSpatialMeshInfosAsync 接口，获取空间网格数据。该接口为异步接口，启动成功则会执行 OnSuccess，失败则会执行 OnFailure，Result 在 OnSuccess 时会输出 Success，而 OnFailure 时则会输出失败的错误码，MeshInfos 为包含空间网格信息的数据集合。
+* 
+在使用该接口时，你需要注意的是：
+*因为空间网格数据不会每帧更新，所以建议监听 MeshDataUpdatedDelegate，只在空间网格数据发生了更新时调用 PXR_RequestSpatialMeshInfosAsync 获取数据。具体示例如下：
+* 
+*每次请求返回的为最新的全量空间网格数据，你可以通过 EPICOSpatialMeshState 枚举来标识空间网格的状态，建议通过空间网格的状态进行增删改。空间网格状态是与上次更新相比较的连续状态，例如第一次请求数据时所有空间网格的状态均为 Added，第二次请求数据则会与第一次对比，新增的空间网格为 Added，不变的为 Stable，需更新的为 Updated，已移除的为 Removed。
+* 
+*不建议与 SDK 内置的空间网格绘制 Actor 同时使用，因为空间网格绘制 Actor 会消费掉每次 MeshDataUpdate 后的网格数据。如何使用 Actor 请参考使用空间网格绘制Actor。
+*重置空间网格数据状态（可选接口）
+空间网格状态是与上次更新相比较的连续状态，例如第一次请求数据时所有空间网格的状态均为 Added，第二次请求数据则会与第一次对比，新增的空间网格为 Added，不变的为 Stable，需更新的为 Updated，已移除的为 Removed。调用 PXR_ResetSpatialMeshInfosState 接口后， 会重置该连续状态，使得下次请求到的空间网格数据均为 Added 状态。具体示例如下：
+* 
+*关闭空间网格扫描
+你可以选择通过 PXR_CloseSpatialMeshScanning 接口，关闭空间网格扫描功能。该接口为同步接口，调用后会停止空间网格扫描，之后无法再获取新的数据。具体示例如下：
+* 
+*网格数据更新回调
+你可以通过将 CustomEvent 绑定到 MeshDataUpdatedDelegate 来获取网格数据的更新回调，建议与获取空间网格数据接口 PXR_RequestSpatialMeshInfosAsync 配合使用。具体示例参考下图：
+* 
+*空间网格功能状态变化回调
+你可以通过绑定 CustomEvent 到 MeshScanningStateUpdatedDelegate， 获取空间网格扫描状态更新的回调。具体示例如下：
+* 
+*获取空间网格功能状态
+除了通过空间网格功能状态变化回调接口 MeshScanningStateUpdatedDelegate 获取网格扫描状态外，你也可以通过 PXR_GetSpatialMeshScanningState 接口主动获取状态值。具体示例参考下图：
+* 
+空间网格状态包括：
+*Initialized：已初始化，ProjectSetting 中勾选空间网格功能后，应用启动过程中会完成初始化。
+*Running：运行中，启动空间网格成功后为此状态。
+*Stopped：停止，关闭空间网格成功后为此状态。
+*获取空间网格 LOD
+你可以通过 PXR_GetSpatialMeshLodSetting 接口来获取当前空间网格的 LOD 级别数据。具体 LOD 参数级别与网格密度对应关系，请参考为 Unreal 项目启用空间网格扫描功能中的枚举。
+* 
+*切换空间网格 LOD
+你可以通过 PXR_ChangeSpatialMeshLodSetting 接口关闭当前空间网格扫描，并切换到指定的 LOD 级别。
+ 
+* 
+*设置空间网格的颜色
+*你可以通过 SetSemanticToColors 接口来为不同语义的空间网格设置颜色。
+ 
+*接口列表 
+下表罗列管理空间网格和获取空间网格信息的所有接口。关于接口的参数和返回值说明等信息，前往 API 参考。 
+*
+
+
+***
+
+ 
+
+ 
+
+ 
+
+
+
+LOD 等级
+
+网格密度
+
+High
+
+平均每平米 250 个三角网格。
+
+Medium
+
+平均每平米 125 个三角网格。
+
+Low
+
+平均每平米 80 个三角网格。
+
+提示
+由于该功能启用后会占用一部分系统资源，因此建议仅在必要时使用该功能。
+
+提示
+OpenGLES 不支持 Wireframe 模式。
+
+提示
+*在封闭空间中，建议完整扫描整个空间后关闭空间网格扫描，以节省性能；
+*如果只需要空间网格生成的碰撞体，可以在确认扫描完成后，调用 SetMeshVisibility 接口隐藏所有网格，节省大量 GPU 资源。
+
+提示
+*如果空间网格绘制 Actor 正在启用中，建议先调用 ClearMesh 清除之前已绘制的空间网格，再调用该接口。
+*成功调用该接口后，你需要再次调用 PXR_LaunchSpatialMeshScanningAsync 接口重启空间网格功能。
+
+
+
+功能
+
+描述
+
+PXR_LaunchSpatialMeshScanningAsync
+
+启用空间网格功能。
+
+PXRSpatialMeshActor1:StartDraw
+
+动态开启空间网格绘制 Actor 绘制。
+
+PXRSpatialMeshActor1:PauseDraw
+
+动态暂停空间网格绘制 Actor 绘制。
+
+PXRSpatialMeshActor1:SetMeshVisibility
+
+设置当前空间网格的显示与隐藏。
+
+PXRSpatialMeshActor1:ClearMesh
+
+清空所有由 Actor 所绘制的空间网格。
+
+PXR_RequestSpatialMeshInfosAsync
+
+获取空间网格数据。
+
+MeshDataUpdatedDelegate
+
+网格数据更新回调。
+
+PXR_ResetSpatialMeshInfosState
+
+重置空间网格数据状态（可选接口）。
+
+PXR_CloseSpatialMeshScanning
+
+关闭空间网格扫描。
+
+MeshDataUpdatedDelegate 
+
+获取网格数据的更新回调。
+
+MeshScanningStateUpdatedDelegate
+
+获取空间网格扫描状态的更新回调。
+
+PXR_GetSpatialMeshScanningState
+
+主动获取空间网格功能状态。
+
+PXR_GetSpatialMeshLodSetting
+
+获取当前空间网格的 LOD 级别数据。
+
+PXR_ChangeSpatialMeshLodSetting
+
+切换空间网格 LOD。
+
+SetSemanticToColors
+
+为不同语义的空间网格设置颜色。

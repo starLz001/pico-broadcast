@@ -1,0 +1,65 @@
+DataProvider 使用说明
+========================================
+你可以通过 TrackingPack 获取头显、手柄、手部的追踪数据，以及接入来自 PICO 体感追踪器的追踪数据。
+TrackingPack 中的核心接口均实现自 DataProvider，你可以通过它的子类来访问各类追踪数据。
+*DataProvider 使用流程
+*在获取到一个 DataProvider 实例并调用 start() 方法后，即可开始接收追踪数据。当不再需要时，调用 stop() 方法即可停止提供数据。流程图如下：
+ 
+*获取追踪数据
+你可以通过多种方式获取最新的追踪数据。由于通过 DataProvider 获取的追踪数据均在当前 Stage 的坐标系下，如果需要在 ECS 中使用这些数据，还需要转换数据的坐标系。
+*获取追踪数据，方式如下：
+*通过 latestData 获取：
+* 
+*通过监听获取数据更新的回调来获取：
+* 
+*通过 dataFlow 获取追踪数据的 Flow：
+* 
+*将追踪数据从当前 Stage 的坐标系转换到 Entity 的坐标系。详情参考《坐标空间转换》。
+*判断数据的可用性
+你可以通过 supportState 字段判断当前数据是否可用，以及不可用的原因。
+ 
+*判断 DataProvider 的状态
+*你可以通过 state 字段判断 DataProvider 当前的状态。
+ 
+*同时，你还可以通过 start() 的返回值来判断 DataProvider 启动后的状态。
+ 
+*支持的追踪类型
+*HMD 追踪
+*手柄追踪
+*手部追踪
+*全身动捕
+*独立追踪
+
+val latestData = trackingDataProvider.latestData
+
+trackingDataProvider.addListener {
+    val latestData = it
+}
+
+val dataFlow = trackingDataProvider.dataFlow
+dataFlow.collect {
+    val latestData = it
+}
+
+val supportState = trackingDataProvider.supportState
+when (supportState) {
+    NONE -> // 正常情况不会返回，无需处理
+    SUPPORTED -> // 当前可以获取到数据
+    DEVICE_NOT_SUPPORTED -> // 当前不支持此数据，比如设备未连接等
+    NOT_IN_FULL_SPACE -> // 当前应用不处于 Full Space 状态
+    WITHOUT_PERMISSION -> // 用户没有授权该数据
+}
+
+val state = trackingDataProvider.state
+when (state) {
+    CREATED -> // DataProvider 被创建后，还未开始运行
+    STARTED -> // DataProvider 正在运行
+    STOPPED -> // DataProvider 已经停止运行
+    PENDING -> // DataProvider 已被启动，但当前数据不可用，可以通过 supportState 来判断原因，在数据可用后会自动转成 STARTED 状态
+}
+
+val result = trackingDataProvider.start()
+when (result) {
+    SUCCESS -> // 启动完成，正常运行
+    PENDING -> // 启动完成，但当前数据不可用，可以通过 supportState 来判断原因
+}

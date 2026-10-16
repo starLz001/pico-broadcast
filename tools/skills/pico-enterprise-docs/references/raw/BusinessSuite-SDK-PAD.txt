@@ -1,0 +1,1190 @@
+* 说明
+*目的
+本文档用于说明PICO企业应用套件安卓端SDK的使用方法。
+*范围
+本文档面向利用PICO企业应用套件开发行业软件的客户
+*术语或缩略语
+**
+*使用说明
+*概述
+*企业应用套件SDK提供了一系列简单实用的API,方便行业用户开发安卓APP,实现对VR头戴(以下简称头戴)的监视和控制；
+*软件清单
+*软件下载
+使用PICO 企业套件 SDK 需保证Android Pad端和VR端已安装企业应用套件，可以从Pico企业官网获取最新软件安装包
+https://business.picoxr.com/cn/doc/Business-Suite-Download
+*软件设置
+*打开Pad端的企业套件，完成用户登录；
+*允许企业套件的权限申请，首次完成登录会自动弹出权限申请弹窗，点击允许即可，或者打开系统设置中的权限管理手动打开权限；
+*配置连接方式，支持公网模式、局域网模式、快捷模式，默认是快捷模式，可在设置页面进行配置；
+*打开服务模式：新建一个文件key-setting.txt并放置在Pad的/sdcard/pre_resource/目录下（需手动创建该目录），文件内容如下：
+ 
+*快速集成
+*第一步：导入依赖库
+*配置Maven仓库地址
+* 
+*引入依赖库
+* 
+*第二步：配置权限
+*在AndroidManifest.xml添加如下内容：
+ 
+*动态申请 com.picoxr.permission.BROADCASTING 权限，该权限属于动态权限，使用SDK前需先判断是否已经授予了该权限，没有则需要手动申请下：
+ 
+*第三步：初始化
+调用init方法完成初始化
+ 
+*第三步：调用接口
+ 
+初始化成功后调用getServiceBinder()方法获取IBroadcastingService实例，之后几乎所有操作都是通过调用该实例的接口来完成：
+ 
+*接口说明
+ 
+*初始化相关接口
+本章节涉及接口都是PbsBroadcastingHelper的成员方法，调用需加上 PbsBroadcastingHelper.getInstance()。
+*初始化
+ 
+*服务绑定成功才可以调用其他接口，可以通过BindCallBack回调知道服务是否绑定成功；
+*与VR设备的交互都是由事件回调EventListener统一处理，包含VR设备的上线\离线、获取VR设备的信息、接收VR设备发送的信息等等；
+示例
+ 
+*释放
+通常情况下不需要调用该接口，服务和应用的生命周期保持一致即可；调用release接口后，下次使用需重新调用初始化接口。
+ 
+*设备发现
+设备上线\离线通过EventListener回调通知：
+*
+*设备锁定
+ 
+*锁定设备
+*
+示例
+只有一个控制端
+ 
+*解除锁定
+*
+*设备受控
+ 
+*设备受控
+ 
+*解除受控
+ 
+*设备控制
+*VR设备关机
+ 
+*VR设备重启
+ 
+*获取VR设备电量
+*
+*调节VR设备音量
+ 
+*返回到home页
+ 
+*查询VR设备当前前台应用
+*
+*查询VR设备型号
+*
+*查询VR设备手柄电量
+*
+*VR设备屏幕状态设置和查询
+*设置屏幕状态
+ 
+*查询屏幕状态
+*
+*校准VR设备视角
+ 
+*VR设备别名设置和查询
+*设置别名
+ 
+*查询别名
+*
+*自定义home键功能
+ 
+示例
+ 
+*设备查找
+调用该接口设备会自动播放音乐，方便快速找到设备
+*查找设备
+ 
+*停止查找
+ 
+*快捷入口显示和隐藏
+ 
+*json格式设备控制指令
+除上述提供的一系列控制VR设备的接口外，额外提供了使用json串的通用设备控制指令接口，详细见json格式支持的指令列表
+*发送控制指令
+ 
+*指令回调
+通过EventListener回调返回
+ 
+示例
+ 
+*收发自定义消息
+*发送消息
+ 
+*接收消息
+通过EventListener回调接收消息
+ 
+*VR设备画面监控
+*开始画面监控
+*
+*停止画面监控
+ 
+*更新画面监控Surface
+只有在VR设备已经开启画面监控下调用该接口才有意义，否则无效；
+ 
+*设置监控是否静音
+只有在VR设备已经开启画面监控下调用该接口才有意义，否则无效；
+ 
+*设置监控画面质量
+只有在VR设备已经开启画面监控下调用该接口才有意义，否则无效；
+ 
+*设备播控
+*播控视频
+*开始播放视频
+ 
+*停止播放视频
+ 
+*暂停播放视频
+ 
+*继续播放视频
+ 
+*视频播放进度跳转
+ 
+*视频进度回调
+同 json格式设备控制指令 中 指令回调 是一个：
+*
+*播控应用
+*打开应用
+ 
+示例
+ 
+*退出应用
+ 
+*播控图片
+*播放图片
+ 
+*停止播放图片
+ 
+*json格式支持的指令列表
+可以直接调用JsonParamUtils类提供的方法生成参数
+*
+*类定义
+*EventListener
+事件回调接口，SDK初始化的时候设置。
+ 
+*BindCallBack
+绑定回调
+ 
+*MonitorQualityEnum
+画面监控质量枚举类
+ 
+*VideoTypeEnum
+视频类型枚举
+ 
+*图片类型说明
+ 
+
+
+术语
+解释
+企业应用套件SDK
+一种用来满足企业应用定制化需求的应用程序接口
+/** 
+* 双斜杠及之后的文字都属于说明，真实配置的时候不需要 
+*/
+isServiceMode=1 // 1：开启服务模式，0：退出服务模式
+maven {
+    url 'https://artifacts-cn-beijing.volces.com/repository/picoxrtob'
+}
+implementation 'com.picoxr.tobservice:business-suite:1.0.0' 
+<manifest>
+
+    ...
+    <queries>
+         <package android:name="com.picoxr.pbsbroadcasting" />
+    </queries>
+
+    <uses-permission android:name="com.picoxr.permission.BROADCASTING"/>
+    …
+
+</manifest>
+String PERMISSION_BROADCASTING = "com.picoxr.permission.BROADCASTING";
+int result = ContextCompat.checkSelfPermission(this,PERMISSION_BROADCASTING);
+if (result != PackageManager.PERMISSION_GRANTED) {
+    ActivityCompat.requestPermissions(this,new String[]{PERMISSION_BROADCASTING},1);
+}
+PbsBroadcastingHelper.getInstance().init(context, new PbsBroadcastingHelper.BindCallBack() {
+    @Override
+    public void bindCallBack(Boolean status) {
+        //绑定结果回调，绑定成功之后才能调用接口
+        if (status){
+            BroadcastingUtil.getInstance().log("Bind service success");
+        }else {
+            BroadcastingUtil.getInstance().log("Bind service failed");
+        }
+    }
+}, new EventListener() {
+    ...
+});
+必须在初始化成功后才可以调用其他接口
+//控制设备
+PbsBroadcastingHelper.getInstance().getServiceBinder().startControlDevice(String devUid);
+如无特殊说明以下接口都是IBroadcastingService的成员方法，实际调用需加上PbsBroadcastingHelper.getInstance().getServiceBinder()。
+/**
+* 初始化
+* @param appContext
+* @param callback 服务绑定结果回调，绑定成功后才可以调用其他接口
+* @param eventListener 事件回调,包含服务断连、头盔的上线\离线、接收头盔发送的消息等
+*/
+void init(Context appContext, BindCallBack callBack, EventListener eventListener)
+PbsBroadcastingHelper.getInstance().init(appContext, new PbsBroadcastingHelper.BindCallBack() {
+    @Override
+    public void bindCallBack(Boolean status) {
+        //绑定结果回调，绑定成功之后才能调用接口
+        if (status){
+            Log.i(TAG,"bind service ok");
+        }else {
+            Log.i(TAG,"bind service failed");
+        }
+    }
+}, new EventListener() {
+    ...
+});
+/**
+* 释放
+* @param devUid VR设备UID
+*/
+int release();
+*设备上线
+ 
+*设备离线
+ 
+向VR头戴发送任何指令之前，必须先锁定设备；如果只有一个控制端，可以在事件回调的onServerConnect()和onDeviceOnline(String devUid)中调用锁定设备接口，反之则需要根据业务场景分别调用锁定设备和解除锁定设备接口。
+接口
+ 
+回调
+通过EventListener回调返回
+ 
+private ArrayList<String> onlineDevices = new ArrayList<>();
+private EventListener eventListener = new EventListener(){
+    @Override
+    public void onServerConnect() {
+        Log.i(TAG, "onServerConnect");
+        //服务连接或重连成功，遍历锁定在线设备
+        for (String devUid : mDeviceIds){
+            try {
+                PbsBroadcastingHelper.getInstance().getServiceBinder().lockDevice(devUid);
+            } catch (RemoteException e) {
+                Log.e(TAG,"lockDevice error",e);
+            }            
+        }
+    }
+    
+    @Override
+    public void onServerDisconnect() {
+        Log.i(TAG, "onServerDisconnect");
+    }
+    
+    @Override
+    public void onDeviceOnline(String devUid) {
+        Log.i(TAG, "onDeviceOnline: "+devUid);
+        if (!onlineDevices.contains(devUid)) {
+            onlineDevices.add(devUid);
+            //设备上线锁定设备
+            try {
+                PbsBroadcastingHelper.getInstance().getServiceBinder().lockDevice(devUid);
+            } catch (RemoteException e) {
+                Log.e(TAG,"lockDevice error",e);
+            }
+        }
+    }
+    
+    @Override
+    public void onDeviceOffline(String devUid) {
+        Log.i(TAG, "onVRDeviceOffline: "+ devUid);
+        if (onlineDevices.contains(devUid)) {
+            onlineDevices.remove(devUid);
+        }
+    }
+    
+    ...
+}
+接口
+ 
+回调
+通过EventListener回调返回
+ 
+对头戴进行视频、图片、应用等资源播控前必须先发送受控指令
+/**
+* 设备受控
+* @param devUid VR设备UID
+*/
+int startControlDevice(String devUid);
+/**
+* 解除受控
+* @param devUid VR设备UID
+*/
+int stopControlDevice(String devUid);
+/**
+* VR设备关机
+* @param devUid VR设备UID
+*/
+int shutdownDevice(String devUid);
+/**
+* VR设备重启
+* @param devUid VR设备UID
+*/
+int rebootDevice(String devUid);
+*接口
+ 
+*回调
+通过EventListener回调返回
+ 
+/**
+* 调节VR设备音量
+* @param devUid VR设备UID
+* @param volume 音量：0-100
+*/
+int setDeviceVolume(String devUid,int volume);
+/**
+* 返回到home页
+* @param devUid VR设备UID
+*/
+int gotoHome(String devUid);
+*接口
+*
+ 
+*回调
+通过EventListener回调返回
+ 
+*接口
+*
+ 
+*回调
+通过EventListener回调返回
+ 
+*接口
+*
+ 
+*回调
+通过EventListener回调返回
+ 
+/**
+* 设置VR设备屏幕亮灭状态
+* @param devUid VR设备UID
+* @param state true:亮屏,false:灭屏
+*/
+int setScreenState(String devUid, boolean state);
+接口
+ 
+回调
+通过EventListener回调返回
+ 
+/**
+* 校准VR设备视角
+* @param devUid VR设备UID
+*/
+int recenterView(String devUid);
+/**
+* 设置设备别名
+* @param devUid VR设备UID
+* @param alias 范围 1-999字符串
+*/
+int setDeviceAlias(String devUid, String alias);
+接口
+ 
+回调
+通过EventListener回调返回
+ 
+/**
+* 自定义Home键功能
+* 支持分别设置非受控和受控模式下home键功能
+* 按键类型：0-单击, 1-双击, 2-长按
+* 按键功能: 0-返回主界面, 1-默认，2-无效
+* @param devUid
+* @param functionJson 设置项json串，可通过HomeKeyFunctions类生成
+*/
+int setDeviceHomeKeyFunction(String devUid, String functionJson);
+//根据需要设置对应按键类型，不需要设置所有按钮类型
+HomeKeyFunctions homeKeyFunctions = new HomeKeyFunctions();
+homeKeyFunctions.clickInFreeMode = 0; //非受控模式下home键单击功能
+homeKeyFunctions.doubleClickInFreeMode = 1; //非受控模式下home键双击功能
+homeKeyFunctions.longPressedInFreeMode = 2; //非受控模式下home键长按功能
+homeKeyFunctions.clickInControllerMode = 0; //受控模式下home键单击功能
+homeKeyFunctions.doubleClickInControllerMode = 1; //受控模式下home键双击功能
+homeKeyFunctions.longPressedInControllerMode = 2; //受控模式下home键长按功能
+
+PbsBroadcastingHelper.getInstance().setDeviceHomeKeyFunction(devUid,homeKeyFunctions.toString());
+/**
+* 查找设备
+* @param devUid VR设备UID
+*/
+int findDevice(String devUid);
+/**
+* 停止查找设备
+* @param devUid VR设备UID
+*/
+int stopFindDevice(String devUid);
+/**
+* 设置快捷入口显示\隐藏
+* @param devUid VR设备UID
+* @param visible true-显示，false-隐藏
+*/
+int setQuickBarVisible(String devUid, boolean visible);
+/**
+* 通过json格式发送设备控制指令
+* @param devUid VR设备UID
+* @param jsonParam 控制指令，json字符串，形如{"functionName":"IPDValue","value":"60"}
+*     可直接调用JsonParamUtils类的方法去生成参数
+*/
+int controlDeviceByJson(String devUid, String jsonParam);
+/**
+ * json格式设备控制指令回调
+ * @param devUid VR设备UID
+ * @param functionName 功能
+ * @param jsonResult 结果，json字符串
+ */
+void onControlDeviceByJson(String devUid, String functionName, String jsonResult);
+//示例一：调整瞳距
+String setIpdCmd = "{\"functionName\": \"IPDValue\",\"value\": 60}";
+PbsBroadcastingHelper.getInstance().controlDeviceByJson(mDevUid,setIpdCmd);
+
+
+//示例二：获取CPU温度
+private EventListener eventListener = new EventListener(){
+    ...
+    
+    @Override
+    void onControlDeviceByJson(String devUid, String functionName, String content) {
+        if ("DeviceTemperature|CPU".equals(functionName)) {
+            //获取到CPU温度
+            try {
+                JSONObject json = new JSONObject(content);
+                int temperature = json.getInt("value");
+                Log.i(TAG,"The cpu temperature of " + devUid + " is " + temperature);
+            } catch (JSONException e) {
+                Log.e(TAG,"get cpu temperature error",e);
+            }
+        }    
+    }
+    
+    ...
+}
+String getCPUTempCmd = "{\"functionName\": \"DeviceTemperature\",\"value\": \"CPU\"}";
+PbsBroadcastingHelper.getInstance().controlDeviceByJson(mDevUid,getCPUTempCmd);
+/**
+* 发送自定义消息
+* @param devUid VR设备UID 
+* @param msg 自定义消息二进制数组
+*/
+int sendBinaryMessage(String devUid,byte[] msg);
+/**
+ * 接收自定义消息
+ * @param devUid VR设备UID
+ * @param msg 自定义消息二进制数组
+ */
+void onReceiveMessage(String devUid, byte[] msg);
+接口
+ 
+回调
+通过EventListener回调告知开始监控
+ 
+/**
+* 停止画面监控
+* @param devUid VR设备UID
+*/
+int monitorCancel(String devUid);
+/**
+* 更新画面监控surface
+* @param devUid VR设备UID
+* @param surface 监控画面容器
+*/
+int updateMonitorSurface(String devUid, in Surface surface);
+/**
+* 设置监控是否静音
+* @param devUid VR设备UID
+* @param mute 是否静音
+*/
+int setMonitorMute(String devUid, boolean mute);
+/**
+* 设置监控画面质量
+* @param devUid VR设备UID
+* @param quality 画质
+*/
+int setMonitorQuailty(String devUid, in MonitorQualityEnum quality);
+/**
+* @param devUid VR设备UID
+* @param videoUrl 视频地址
+*            示例：在线视频http://39.134.115.163:8080/PLTV/88888910/224/3221225642/index.m3u8
+                   本地视频/sdcard/pre_resource/LauncherConfig/video/1.mp4 
+* @param videoTypeEnum 视频类型，详见类VideoTypeEnum
+*/
+int videoPlay(String devUid,String videoUrl,in VideoTypeEnum videoTypeEnum);
+/**
+* @param devUid VR设备UID
+*/
+int videoStop(String devUid);
+/**
+* @param devUid VR设备UID
+*/
+int videoPause(String devUid);
+/**
+* @param devUid VR设备UID
+*/
+int VideoContinue(String devUid);
+/**
+* 视频播放进度跳转
+* @param devUid VR设备UID
+* @param seektime 视频进度，单位：毫秒
+*/
+int videoSeekto(String devUid,String seektime);
+回调事件
+functionName
+参数
+示例
+ 播放视频的进度的回调 
+回传频率：1S
+
+SyncVideoProgress
+
+value: json object
+videoName 视频名称
+progress 播放时长
+
+ 
+ 视频播放结束的回调 
+
+SyncVideoEnd
+
+value: string 视频名称
+
+ 
+/**
+* 播控应用
+* @param devUid VR设备UID
+* @param packageName 包名
+* @param intengJson 指定activity页面json串，
+*  形如{ "activity": "com.picoxr.test/com.picoxr.test.TestActivity", "extra": { "arg1": "value1" } }
+*/
+int openApp(String devUid, String packageName, String intentJson);
+//通过包名打开应用
+PbsBroadcastingHelper.getInstance().openApp(mDevUid,"com.picoxr.test","");
+
+//打开指定应用指定页面
+JSONObject json = new JSONObject();
+json.put("activity","com.picoxr.test/com.picoxr.test.TestActivity");
+JSONObject extras = new JSONObject();
+json.put("extra",extras)
+extras.put("arg1","value1");
+extras.put("arg2","value2");
+PbsBroadcastingHelper.getInstance().openApp(mDevUid,"com.picoxr.test",json.toString());
+/**
+* 停止播控应用
+* @param devUid VR设备UID
+* @param packageName 包名
+*/
+int exitApp(String devUid, String packageName);
+/**
+* 播控图片
+* @param devUid VR设备UID
+* @param picPath 图片路径
+* @param picType 图片类型(见图片类型说明)
+*/
+int startPlayPicture(String devUid,String picPath, String picType);
+/**
+* @param devUid VR设备UID
+*/
+int stopPlayPicture(String devUid);
+指令列表
+*发送
+
+
+*回调
+
+
+
+functionName
+参数
+示例
+functionName
+参数
+示例
+瞳距调节
+
+IPDValue
+value:瞳距 
+瞳距范围62-72
+超出无效
+
+ 
+——
+
+
+开启/关闭自动瞳距调节
+
+AutoIPD
+
+value:bool
+true 开启
+false 关闭
+ 
+
+——
+
+
+启动/禁用Power功能
+
+SingleClickPowerKey
+
+value:bool
+true 启用
+false 禁用
+ 
+
+——
+
+
+
+获取温度
+
+DeviceTemperature
+value:string
+CPU：CPU温度
+GPU: GPU温度
+BATTERY:设备电池温度
+SKIN:设备表面温度
+
+ 
+
+DeviceTemperature|[type]
+type值：
+ CPU：CPU温度
+ GPU: GPU温度
+ BATTERY:设备电池温度
+ SKIN:设备表面温度
+value:int类型
+单位：摄氏度
+ 
+
+设定地面高度
+
+FloorHeight
+
+FloorHeight:float 单位 米
+
+ 
+——
+
+
+获取cpu利用率
+
+CPUUsage
+
+无
+
+ 
+CPUUsage
+
+value:float类型
+cpu利用率
+
+ 
+获取设备信息
+
+DeviceInfo
+
+value:string
+电量查看：ELECTRIC_QUANTITY
+PUI版本号查看：PUI_VERSION
+设备型号查看：EQUIPMENT_MODEL
+设备SN查看：EQUIPMENT_SN
+客户SN查看：ELECTRIC_QUANTITY_CUSTOMER_SN
+ 设备内部存储空间查看：
+INTERNAL_STORAGE_SPACE_OF_THE_DEVICE
+设备蓝牙状态查看：DEVICE_BLUETOOTH_STATUS
+ 已连接蓝牙名称查看：BLUETOOTH_NAME_CONNECTED
+ 蓝牙MAC地址查看：BLUETOOTH_MAC_ADDRESS
+设备WiFi状态查看：DEVICE_WIFI_STATUS
+已连接WiFi名称查看：WIFI_NAME_CONNECTED
+WLAN MAC地址查看：WLAN_MAC_ADDRESS
+设备IP查看：DEVICE_IP
+设备是否充电：CHARGING_STATUS
+ 
+
+DeviceInfo|[type]
+type取值参考控制端参数中的value取值
+value:String类型
+相关设备信息
+ 
+播放视频
+
+PlayVideo
+（1）path
+String类型：视频文件地址
+（2）format
+String类型：视频格式，可选2D/3D_LR/3D_TB/180/180_LR/180_TB/360/360_LR/360_TB/Youtube/Youtube3D
+（3）isLoop
+boolean类型：true设置为循环播放，false为非循环播放
+（4）startTime、endTime
+long类型：isLoop为true时，可以设置循环播放的起始时间和结束时间，单位为毫秒。
+（5）uiDefaultHide
+boolean类型：true表示VR端默认隐藏进度条，false表示默认显示进度条。
+默认为false，即默认显示进度条
+ 
+
+——
+
+
+关闭/打开定位追踪
+
+PositionTrackingSwitch
+value: bool
+true 打开
+false 关闭 
+ 
+——
+
+
+打开/关闭快速安全区
+
+QuickSafeAreaSwitch
+
+value: bool
+true 打开
+false 关闭
+
+ 
+——
+
+
+设置快速安全区的大小
+
+QuickSafeAreaSet
+
+value: json object
+radius 安全区半径（米）
+ 
+
+ 
+——
+
+
+护眼模式接口开关
+
+EyeProtectModeSwitch
+
+value: bool
+true 打开
+false 关闭 
+
+ 
+
+——
+
+
+ 播放视频的进度的回调 
+回传频率：1S
+
+——
+
+
+SyncVideoProgress
+
+value: json object
+videoName 视频名称
+progress 播放时长
+
+ 
+ 视频播放结束的回调 
+
+——
+
+
+SyncVideoEnd
+
+value: string
+"xxx" 视频名称
+
+ 
+public interface EventListener {
+    default void onEventWithOriginData(int type, Bundle originData){}
+    /**
+     * 服务已连接
+     */
+    void onServerConnect();
+
+    /**
+     * 服务已断开
+     */
+    void onServerDisconnect();
+
+    /**
+     * 设备上线
+     * @param devUid VR设备UID
+     */
+    void onDeviceOnline(String devUid);
+
+    /**
+     * 设备离线
+     * @param devUid VR设备UID
+     */
+    void onDeviceOffline(String devUid);
+
+    /**
+     * 电量信息
+     * @param devUid VR设备UID
+     * @param batteryStatus 0：未充电，1：充电中
+     * @param batteryLevel 电量：0-100
+     */
+    void onDeviceBattery(String devUid, int batteryStatus, int batteryLevel);
+
+    /**
+     * Psensor信息
+     * @param devUid VR设备UID
+     * @param value 0：远离，1：靠近
+     */
+    void onDevicePsensor(String devUid, int value);
+
+    /**
+     * 关机回调
+     * @param devUid VR设备UID
+     */
+    void onDeviceShutdown(String devUid);
+
+    /**
+     * 重启回调
+     * @param devUid VR设备UID
+     */
+    void onDeviceResume(String devUid);
+
+    /**
+     * 画面监控执行结果回调
+     * @param devUid VR设备UID
+     * @param status 客户端返回监控开始命令的执行结果，
+     *              true：画面监控开始，false：画面监控失败
+     * @param url 监控url链接，rtmp格式，仅快捷模式下有值
+     */
+    void onMonitorStart(String devUid, boolean status, String url);
+
+    /**
+     * 锁定设备执行结果回调
+     * @param devUid VR设备UID
+     * @param result 设备锁定回调
+     */
+    void onLockDevice(String devUid, boolean result);
+
+    /**
+     * 解除锁定执行结果回调
+     * @param devUid VR设备UID
+     * @param result 设备解锁结果
+     */
+    void onUnlockDevice(String devUid, boolean result);
+
+    /**
+     * 接收自定义消息
+     * @param devUid VR设备UID
+     * @param msg 自定义消息二进制数组
+     */
+    void onReceiveMessage(String devUid, byte[] msg);
+
+    /**
+     * json格式设备控制指令回调
+     * @param devUid VR设备UID
+     * @param functionName 功能
+     * @param jsonResult 结果，json字符串
+     */
+    void onControlDeviceByJson(String devUid, String functionName, String jsonResult);
+
+    /**
+     *
+     * @param devUid VR设备UID
+     * @param packageName 当前前台应用包名
+     */
+    void onGetCurrentApp(String devUid, String packageName);
+
+    /**
+     * 手柄电量回调
+     * @param devUid VR设备UID
+     * @param controllerId 手柄id
+     * @param status 手柄连接状态
+     * @param battery 电量值
+     */
+    void onGetControllerBattery(String devUid,int controllerId,int status,int battery);
+
+    /**
+     * VR设备型号回调
+     * @param devUid VR设备UID
+     * @param model VR设备型号
+     */
+    void onGetDeviceModel(String devUid, String model);
+
+    /**
+     * 设备屏幕状态回调
+     * @param devUid VR设备UID
+     * @param status 0=熄屏；1=亮屏
+     */
+    void onGetScreenState(String devUid, int status);
+
+    /**
+     * 设备别名回调
+     * @param devUid VR设备UID
+     * @param alias 设备别名
+     */
+    void onGetDeviceAlias(String devUid, String alias);
+    
+    /**
+     * 设备屏幕状态变更回调
+     * @param devUid VR设备UID
+     * @param status 0=熄屏；1=亮屏
+     */
+    void onScreenStateChanged(String devUid, int status);
+}
+public interface BindCallBack{
+    /*
+    * 服务绑定回调
+    * @param status 是否绑定成功,只有成功后才可以调用其他接口
+    */
+    void bindCallBack(boolean status);
+}
+enum MonitorQualityEnum{
+    QUALITY_360P,
+    QUALITY_720P,
+    QUALITY_1080P,
+    QUALITY_2K;
+}
+enum VideoTypeEnum{
+    VIDEO_TYPE_2D,//2D
+    VIDEO_TYPE_3D_LR,//3D左右
+    VIDEO_TYPE_360,//360全景
+    VIDEO_TYPE_360_TB,//360上下
+    VIDEO_TYPE_360_LR,//360左右
+    VIDEO_TYPE_3D_TB,//3D上下
+    VIDEO_TYPE_180,//180鱼眼
+    VIDEO_TYPE_180_TB,//180鱼眼上下
+    VIDEO_TYPE_180_LR,//180鱼眼左右
+    VIDEO_TYPE_YOUTUBE,//Youtube
+    VIDEO_TYPE_YOUTUBE3D;//Youtube3D
+}
+public class PbsConstant {
+   
+    ...
+    
+    public static final String PIC_TYPE_360 = "0";  //360模式,需图片内容支持
+    public static final String PIC_TYPE_2D = "1";  //普通2D模式
+    public static final String PIC_TYPE_360_LR = "2";  //360左右3D模式,需图片格式支持
+    public static final String PIC_TYPE_360_TB = "3"; //360上下3D模式,需图片格式支持
+
+    @Retention(RetentionPolicy.SOURCE)
+    @StringDef({PIC_TYPE_2D,
+            PIC_TYPE_360,
+            PIC_TYPE_360_LR,
+            PIC_TYPE_360_TB})
+    public @interface PIC_TYPE {}
+    
+    ...
+}
+/**
+ * 设备上线
+ * @param devUid VR设备UID
+ */
+void onDeviceOnline(String devUid);
+/**
+ * 设备离线
+ * @param devUid VR设备UID
+ */
+void onDeviceOffline(String devUid);
+/**
+* 锁定设备
+* @param devUid VR设备UID
+*/
+int lockDevice(String devUid);
+/**
+ * 锁定设备执行结果回调
+ * @param devUid VR设备UID
+ * @param result 设备锁定回调
+ */
+void onLockDevice(String devUid, boolean result);
+/**
+* 解除锁定
+* @param devUid VR设备UID
+*/
+int unlockDevice(String devUid);
+/**
+ * 解除设备锁定执行结果回调
+ * @param devUid VR设备UID
+ * @param result 设备解锁回调
+ */
+void onUnlockDevice(String devUid, boolean result);
+/**
+* 获取VR设备电量
+* @param devUid VR设备UID
+*/
+int getBattery(String devUid);
+/**
+ * VR设备电量信息
+ * @param devUid VR设备UID
+ * @param batteryStatus 0：未充电，1：充电中
+ * @param batteryLevel 电量：0-100
+ */
+void onDeviceBattery(String devUid, int batteryStatus, int batteryLevel);
+/**
+* 查询VR设备当前前台应用
+* @param devUid VR设备UID
+*/
+int getCurrentApp(String devUid);
+/**
+ * VR设备当前前台应用
+ * @param devUid VR设备UID
+ * @param packageName 当前前台应用包名
+ */
+void onGetCurrentApp(String devUid, String packageName);
+/**
+ * 查询VR设备型号
+ * @param devUid VR设备UID
+ */
+int getDeviceModel(String devUid);
+/**
+ * VR设备型号回调
+ * @param devUid VR设备UID
+ * @param model VR设备型号
+ */
+void onGetDeviceModel(String devUid, String model);
+/**
+* 查询头戴手柄电量
+* @param devUid VR设备UID
+* @param controllerId 0:左手柄，1:右手柄
+*/
+int getControllerBattery(String devUid, int controllerId);
+/**
+ * 手柄电量回调
+ * @param devUid VR设备UID
+ * @param controllerId 手柄id
+ * @param status 手柄连接状态
+ * @param battery 电量值
+ */
+void onGetControllerBattery(String devUid,int controllerId,int status,int battery);
+/**
+ * 查询VR设备屏幕亮灭状态
+ * @param devUid VR设备UID
+ */
+int getScreenState(String devUid);
+/**
+ * 设备屏幕状态回调
+ * @param devUid VR设备UID
+ * @param status 0=熄屏；1=亮屏
+ */
+void onGetScreenState(String devUid, int status);
+/**
+* 查询设备别名
+* @param devUid VR设备UID
+*/
+int getDeviceAlias(String devUid);
+/**
+ * 设备别名回调
+ * @param devUid VR设备UID
+ * @param alias 设备别名
+ */
+void onGetDeviceAlias(String devUid, String alias);
+/**
+* 开启画面监控
+* @param devUid VR设备UID
+* @param quality 监控质量
+* @param surface 监控画面容器：公网模式和局域网模式下surface必传，快捷模式下surface可选；
+* 快捷模式下没有传surface，可通过回调拿到监控画面的rtmp地址自行播放。
+* @param isMute 是否静音
+*/
+int monitorStart(String devUid,in MonitorQualityEnum quality, in Surface surface, boolean isMute);
+/**
+ * 画面监控执行结果回调
+ * @param devUid VR设备UID
+ * @param status 返回监控开始命令的执行结果：true- 成功，false - 失败
+ * @param url 监控url链接，rtmp格式，仅快捷模式下有值
+ */
+void onMonitorStart(String devUid, boolean status, String url);
+{
+  "functionName": "SyncVideoProgress"
+  "value": {
+    "videoName ": "xxx"
+    "progress": 160
+  }
+}
+{
+  "functionName": "SyncVideoEnd"
+  "value": "xxxx"
+}
+{
+    "functionName": "IPDValue",
+    "value": 67
+}
+{
+    "functionName": "AutoIPD",
+    "value": true
+}
+{
+    "functionName": "SingleClickPowerKey",
+    "value": false
+}
+{
+    "functionName": "DeviceTemperature",
+    "value": "CPU"
+}
+{
+    "functionName": "DeviceTemperature|CPU",
+    "value": 72
+}
+{
+    "functionName": "FloorHeight",
+    "value": 1.7
+}
+{
+    "functionName": "CPUUsage"
+}
+{
+    "functionName": "CPUUsage",
+    "value": 0.2747
+}
+{
+    "functionName": "DeviceInfo",
+    "value": "PUI_VERSION"
+}
+{
+    "functionName": "DeviceInfo|PUI_VERSION",
+    "value": "5.8.0"
+}
+{
+    "functionName": "PlayVideo",
+    "path": "/sdcard/pre_resource/1.mp4",
+    "format": "2D",
+    "isLoop": true,
+    "startTime": 0,
+    "endTime": 5000，
+    "uiDefaultHide": true
+}
+{
+  "functionName": "PositionTrackingSwitch"
+  "value": true
+}
+{
+  "functionName": "QuickSafeAreaSwitch"
+  "value": true
+}
+{
+  "functionName": "QuickSafeAreaSet"
+  "value": {
+    "radius ": 10
+  }
+}
+{
+  "functionName": "EyeProtectModeSwitch"
+  "value": true
+}
+{
+  "functionName": "SyncVideoProgress"
+  "value": {
+    "videoName ": "xxx"
+    "progress": 160
+  }
+}
+{
+  "functionName": "SyncVideoEnd"
+  "value": "xxxx"
+}

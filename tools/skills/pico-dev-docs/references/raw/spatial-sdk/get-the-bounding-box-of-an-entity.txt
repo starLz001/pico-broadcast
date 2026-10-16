@@ -1,0 +1,190 @@
+获取实体的包围盒
+========================================
+包围盒是一种用于表示物体在三维空间中所占范围的几何体。它通常是一个长方体，用来近似描述实体的空间边界。本文介绍如何获取实体的包围盒。
+*前置条件
+包围盒的计算依赖于实体在场景中的完整层级与空间状态。因此，获取某个实体的包围盒前，确保该实体已被添加至一个实体树，包括：
+*将实体添加到 SpatialViewContent 后，再获取包围盒。
+*将实体添加为某个已添加到 SpatialViewContent 的实体的子节点后，再获取包围盒。
+*获取实体的包围盒
+通过 getVisualBounds 函数获取实体的包围盒。getVisualBounds() 会根据当前实体及其层级结构，计算出在指定参考空间下的包围盒范围。返回结果为一个 BoundingBox 对象，包含以下属性：
+*
+*代码示例如下：
+ 
+*实体的尺寸变化与包围盒更新
+当实体的 scale 值变化时，其包围盒会随之实时更新。包围盒的尺寸与实体的世界变换（World Transform）直接相关，因此缩放、旋转或位移都会影响最终的包围盒范围。
+以下代码加载了一个模型实体（pico_robot_static.usdz），并通过滑块动态调整其缩放比例。界面底部实时显示当前的包围盒尺寸，因此可以直观地看到包围盒随缩放比例的同步变化。
+* 
+ 
+*通过 VisualBounds 准确布局 3D 内容
+当在 SpatialView 中放置多个模型时，如果事先不了解各自的包围盒范围，模型之间可能会出现重叠的情况。例如，下图展示了将两个模型的间距设置为 0.1 米时的效果。它们在视觉上部分重叠。
+* 
+为了获得更合理的间距，可以先获取模型的包围盒，并基于其尺寸计算精确的相对位置。例如，使用 boundingBox.halfExtent.x * 2 作为模型之间的间距，可以确保两个模型刚好并排放置。
+ 
+*以下代码展示如何通过包围盒动态调整两个实体的相对位置。点击 “Relayout 3D” 按钮后，会根据第一个实体的包围盒尺寸计算新的间距，从而避免两个实体重叠。
+* 
+ 
+*API 参考
+*更多关于 getVisualBounds 函数和 BoundingBox 类的信息，参阅 API 参考。根据你所处的地理位置选择合适的文档链接：
+*中国大陆：https://developer-cn.picoxr.com/spatial-api/index.html
+*非中国大陆：https://developer.picoxr.com/spatial-api/index.html
+*常见问题
+*为什么对实体进行缩放后，它的包围盒尺寸没有变化？
+*这取决于获取包围盒时传入的 relativeTo 参数的取值。
+*当 relativeTo 传入实体本身时，无论该实体自身如何缩放，或者它的父节点如何缩放，返回的 halfExtent 大小都不会变化。这是合理的，因为此时得到的是本地空间下的值，而本地空间的尺寸本身是不随缩放变化的。
+无论 relativeTo 传入什么值，都可以使用以下公式来验证返回结果是否正确：当前返回的大小 × relativeTo 的对象相对于容器的大小 = 直接将 relativeTo 传为 null（即相对容器）时得到的结果。
+*当然，这一验证法则仅用于验证缩放与大小之间的关系，前提是实体没有发生旋转，否则该等式不成立。
+*为什么实体在视觉上未对齐？
+通常是因为模型原本的坐标原点与其包围盒的中心点不重合。建议检查模型资源在制作时的原点设置。
+*为什么旋转实体后，其 visualBounds 的大小发生了变化？
+visualBounds 计算的是基于特定坐标系的轴对齐包围盒。当实体旋转时，为了保持包围盒边缘与坐标轴平行并完全包裹物体，包围盒的大小（长宽高）通常会重新计算并发生变化。
+ 
+
+
+
+
+属性
+
+类型
+
+描述
+
+boundingSphereRadius
+
+Float
+
+包围盒外接球的半径，用于加速碰撞检测或裁剪计算。精度误差：0.00001F。
+
+center
+
+Vector3
+
+包围盒的中心点，常用于在旋转、缩放、碰撞检测中确定物体的“参考点”或中心位置。精度误差：0.00001F。
+
+halfExtent
+
+Vector3
+
+包围盒在 X、Y 和 Z 轴上的边长的一半（即长、宽、高的一半），便于快速计算包围盒体积、碰撞检测边界、包围盒可视化绘制等。精度误差：0.00001F。
+
+max
+
+Vector3
+
+包围盒的最大坐标顶点，用于确定包围盒在空间中的终点，与 min 一起决定包围盒的体积与大小范围。精度误差：0.00001F。
+
+min
+
+Vector3
+
+包围盒的最小坐标顶点，用于确定包围盒在空间中的起点，与 max 一起决定包围盒的体积与大小范围。精度误差：0.00001F。
+
+size
+
+Vector3
+
+包围盒在 X、Y 和 Z 三个方向的总尺寸，以向量形式表示，可直接用于判断物体的空间占用、缩放比例或物理尺寸等。精度误差：0.00001F。
+
+SpatialView { content, _ ->
+    // 创建一个新的实体（空节点），作为场景中的父级实体
+    val entity = Entity()
+    // 将该实体添加到 SpatialView 的场景内容中
+    content.addEntity(entity)
+    // 获取该实体的包围盒
+    entity.getVisualBounds(null)
+    // 创建一个子实体
+    val child = Entity()
+    // 将子实体挂载到父实体下，形成父子层级关系
+    entity.addChild(child)
+    // 获取子实体的包围盒
+    child.getVisualBounds(null)
+}
+
+@Composable
+fun ScaledVisualBoundsDemo() {
+    // 当前缩放比例，初始值为 0.3
+    var scale by remember { mutableFloatStateOf(0.3f) }
+    // 加载一个静态模型实体，并在初始化时缩放到 0.3 倍
+    val picoRobot = remember {
+        Entity.load("asset://model/pico_robot_static.usdz").also {
+            it.components.get<TransformComponent>()?.scaleBy(0.3f)
+        }
+    }
+    
+    // 布局容器：垂直居中显示场景、滑块与文字
+    Column(
+        modifier = Modifier.fillMaxSize().backgroundMaterial(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
+    ) {
+        SpatialView(modifier = Modifier.size(300.dp, 400.dp)) { content, _ ->
+            content.addEntity(picoRobot)
+        }
+        // 显示当前缩放比例的提示
+        Text("Slide to change entity scale to $$scale")
+        // 使用滑块动态调整缩放比例
+        SegmentSlider(
+            initialStep = 3,
+            segmentCount = 4,
+            onStepChange = {
+                scale = it / 10f
+                // 更新实体的缩放向量
+                picoRobot.components.get<TransformComponent>()?.scaleVector =
+                    Vector3(scale, scale, scale)
+            }
+        )
+        // 实时显示当前包围盒的半尺寸（halfExtent）
+        // halfExtent 表示包围盒中心到边界的距离，用于描述包围盒大小
+        Text("Current visual bounds = $${picoRobot.getVisualBounds(null).halfExtent}")
+    }
+}
+
+@Composable
+fun VisualBoundsDemo() {
+    // 加载第一个模型实体，并缩放到 0.3 倍
+    val picoRobot = remember {
+        Entity.load("asset://model/pico_robot_static.usdz").also {
+            it.components.get<TransformComponent>()?.scaleBy(0.3f)
+        }
+    }    
+    // 克隆该实体，两者使用相同的材质实例
+    val picoRobot1 = remember {
+        picoRobot.clone(
+            cloneOptions = Entity.CloneOptions(recursive = true, shouldShareMaterialInstance = true)
+        )
+    }   
+    // 用于缓存第一个实体的包围盒在 X 方向的半尺寸
+    var halfExtentX = 0f    
+    // 控制布局切换：在经验值间距与包围盒间距之间切换
+    var toggleRelayout3D = true
+    // UI 布局容器：包含 3D 视图与操作按钮
+    Column(
+        modifier = Modifier.fillMaxSize().backgroundMaterial(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
+    ) {
+        SpatialView(modifier = Modifier.size(300.dp, 400.dp)) { content, _ ->
+            content.addEntity(picoRobot)
+            picoRobot1?.let { content.addEntity(it) }
+        }
+        
+        // 按钮：点击后重新计算两个实体的相对位置
+        Button(
+            onClick = {
+                // 若尚未计算包围盒的半尺寸，则获取一次
+                if (halfExtentX == 0f) {
+*                    val helmetVisualBounds = picoRobot.getVisualBounds(null)
+*                    halfExtentX = helmetVisualBounds.halfExtent.x
+                }
+                // 更新第二个实体的位置
+                picoRobot1?.components?.set(TransformComponent().apply {
+                   // 当 toggleRelayout3D 为 true 时，使用包围盒宽度计算间距；否则使用固定经验值 0.1m
+                    position = Vector3(if (toggleRelayout3D) halfExtentX * 2 else 0.1f, 0f, 0f)
+                    scaleBy(0.3f)
+                })
+                toggleRelayout3D = !toggleRelayout3D
+            }
+        ) {
+            Text(text = "Relayout 3D")
+        }
+    }
+}

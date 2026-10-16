@@ -1,0 +1,111 @@
+使用 ObjectAudioComponent
+========================================
+如果需要模拟真实世界中声源的方向、位置和距离，可以使用 ObjectAudioComponent。该组件能够感知声源在空间中的位置和朝向，并根据这些信息动态调整音频输出，使听者能够感知声音的方向、距离和空间位置。
+将该组件添加到声源实体后，当声源或听者的位置、方向发生变化时，音量、声场和音效会随之调整。例如，近处的声音会更大，远处的声音更轻，声音从不同方向传来。
+*使用场景
+Object Audio 适用于对空间感和互动性要求较高的场景。典型使用场景如下：
+* VR 游戏：玩家能够感知敌人脚步声从后方传来，或分辨远处水流声的细微变化。 
+* 沉浸式影视：声音与画面空间保持一致，提升临场感。
+* 虚拟演出：实现舞台声源与观众位置在空间层面的匹配。
+* 教育与训练：通过真实的空间音效增强学习或训练的沉浸感。
+*核心概念
+*音量
+*音量用于控制声源的输出强度，并可分为总音量（Volume）和回响音量（Reverb Volume）。
+*
+*距离衰减
+*距离衰减（Distance Attenuation）描述声音随声源与听众之间距离增加而减弱的现象。通过距离衰减，远处的声音听起来更轻、近处的声音更响。距离衰减通常基于物理模型计算，如线性衰减、指数衰减或自定义曲线，以适应不同场景需求。
+*PICO Spatial SDK 提供两种距离衰减模式，你可以通过 DistanceAttenuationMode 进行设置。
+**
+*声源指向性
+*在现实中，声源在不同方向的传播强度存在差异。声源指向性（Directivity）描述了声源向不同方向发射声波的能量分布。声源指向性通常使用极坐标（Polar Pattern）表示，坐标原点位于声源位置，0 度方向与声源正方向一致，极径表示该方向的声波强度。
+ObjectAudioComponent 中，声源指向性主要由两个参数控制：pattern 和 sharpness。通过合理设置这两个参数，可以在虚拟环境中模拟不同声源的发声特性，例如麦克风拾音模式、扬声器辐射方向或环境中乐器的空间感，使声音的空间表现更加真实和自然。
+*
+*以下为 pattern 和 sharpness 的速查表。其中，pattern 对应图中的 alpha，sharpness 对应图中的 order。
+ 
+*空间音频开发流程
+*关于空间音频的通用使用流程，参考《空间音频概览》中的 “空间音频使用流程” 小节。
+*使用 Object Audio
+*以下代码演示了如何在空间音频系统中，创建一个实体，加载音频文件，并通过播放器控制器对该音频进行播放、暂停和停止的操作。
+* 
+*API 参考
+*ObjectAudioComponent 类提供 Object Audio 相关的属性和函数。详细说明参阅 API 参考。根据你所处的地理位置选择合适的文档链接：
+*中国大陆：https://developer-cn.picoxr.com/spatial-api/index.html
+*非中国大陆：https://developer.picoxr.com/spatial-api/index.html
+*
+
+
+
+
+音量类型
+
+说明
+
+总音量
+
+总音量表示音频输出的整体响度，用于控制声源发出的最终音量。无论声音是否经过空间化处理，总音量都会影响听众听到的整体响度水平。你可以通过调整总音量来平衡不同声源之间的相对响度，确保关键音效不会被其他声音掩盖。
+
+回响音量
+
+回响音量用于控制声音在环境中反射和混响的强度。回响音量越高，声音在空间中扩散的效果越明显，听众越能感受到声源所在环境的空间特性，例如房间大小、材质和回声效果。合理设置回响音量可以显著增强真实感和空间感。
+
+
+
+距离衰减模式
+
+描述
+
+*FIXED
+
+音频音量保持恒定。无论听者离声源多远，音量始终相同。
+
+INVERSE_SQUARED（默认）
+
+音频音量按距离的平方反比减小。也就是说，随着听者与声源距离的增加，音量会更快速地衰减，模拟了现实世界中声音传播的自然规律。
+
+
+
+参数
+
+描述
+
+directivity.pattern
+
+声源指向性的类型，定义声源声能在各方向的分布形态，常见类型包括全向形、心形、超心形、八字形等。不同 pattern 对声音的辐射方向和覆盖范围有显著影响。例如，全向形模式中，声源在所有方向均匀发声；心形模式中，声源在正方向声音最强，背向声音最弱。下图展示了当 sharpness 值为 1 时，pattern 值对 Polar Pattern 的影响。
+* 
+
+directivity.sharpness
+
+声源指向性的锐度，控制声源指向性的集中程度，即声音能量在主辐射方向的集中度。sharpness 越高，声源的声音越集中于正方向，侧向和背向声能越弱；sharpness 越低，声音分布越宽广，更接近全向。下图展示了当 pattern 值为 0.5 时，sharpness 值对 Polar Pattern 的影响。
+* 
+
+// 创建实体
+val entity = Entity()
+
+// 加载音频文件
+val audioResource =
+    AudioResource.load(
+        "your_custom_name",
+        "asset://your_object_audio_file.wav",
+        LoadType.FROM_ASSETS
+    )
+
+// 将 ObjectAudioComponent 添加至实体
+val objectAudioComponent =
+    ObjectAudioComponent(
+        volume = 1.0f,
+        Directivity(pattern = 0.235f, sharpness = 0.675f),
+        distanceAttenuationMode = DistanceAttenuationMode.FIXED,
+        reverbVolume = 0.5f
+    )
+entity.components.set(objectAudioComponent)
+
+// 获取音频播放器控制器（任选一个方式）
+// 方式一：
+val audioPlayerController = entity.prepareAudio(audioResource)
+// 方式二：
+val audioPlayerController = entity.playAudio(audioResource)
+
+// 控制音频播放，包括开始播放、暂停播放、停止播放
+audioPlayerController.play()
+audioPlayerController.pause()
+audioPlayerController.stop()

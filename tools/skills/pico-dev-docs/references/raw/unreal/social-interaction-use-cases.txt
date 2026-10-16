@@ -1,0 +1,409 @@
+社交互动-场景教学
+========================================
+本文档介绍 PICO 提供的社交互动服务中具体的场景及其代码示例。你可以根据你的场景需求，参考代码示例和 API 文档，在你的应用中开发更多丰富的场景。
+*设置/清空 Presence 信息
+Presence 用来描述玩家的位置和状态信息。玩家的 Presence 可显示在好友列表中，他的好友可以快速定位该玩家。若玩家的 Presence 数据超过 4 个小时未设置或更新，该玩家的 Presence 状态将失效。
+*当玩家进入某个 Destination 或者开启一局游戏时，调用 PresenceSet 接口设置所有的 Presence 信息，代码示例如下：
+* 
+*当玩家退出游戏或者不想让别人看到自己的状态时，你需要清空 Presence 状态。 
+* 
+*查看好友的位置和 Presence 信息
+玩家可以查看好友的位置和 Presence 信息。代码示例如下：
+ 
+*查看自己的 Presence 信息
+当玩家的 Presence 的 IsJoinable 字段为 false 时，Presence 状态不可加入，此时别人看不到该玩家的 Presence 信息。若此时该玩家邀请他人，会因为 Presence 状态错误导致邀请失败。因此，玩家有时需要查看自己的 Presence 信息。
+你可以通过玩家的用户 ID，调用 GetUserInfo 来获取玩家自身的 Presence。示例如下：
+ 
+*邀请好友
+“邀请好友” 和 “加入好友” 是多人社交互动中的成对行为，也是最基础和重要的社交互动体验。Destination、Deeplink 和 Presence 共同实现了应用内的 “邀请/加入好友”能力。目前，PICO VR 支持的邀请方式为好友间发送邀请消息卡片。
+具体流程为，玩家 A 向玩家 B 发送邀请后，系统会将玩家 A 的 Presence 信息抽取出来然后存储在邀请消息中；玩家 B 点击邀请信息后，相关应用会被启动；紧接着，你需要将邀请消息里的信息抽取出来作为 Launch Details（例如 Destination、Lobby Session、Match Session 等信息），然后解析 Launch Details，将玩家 B 传送至目标位置。
+目标位置。
+* 
+应用的启动方式包括冷启动（后台不存在该应用进程）和热启动（应用从后台切换至前台）。 不论是应用热启动还是冷启动，你都可以通过 PicoPresenceInterface 中的JoinIntentReceivedCallback 绑定函数来处理启动变化：
+ 
+*使用系统邀请面板
+玩家需要在邀请面板上向指定好友发送邀请，你可以直接复用 “好友” App 的邀请面板（下图所示）和交互逻辑，该方式更加便捷。邀请面板中会展示玩家的全部好友，玩家可从中选择好友进行邀请。
+* 
+*邀请好友加入应用内的某个位置
+* 
+*邀请好友加入私人房间
+* 
+*邀请好友加入挑战
+* 
+*使用自定义邀请面板
+若不使用系统邀请面板，则需要自定义邀请流程，同时需自行设计并实现相关 UI 界面和交互逻辑，适用于对邀请定制化程度较高的场景。
+*邀请好友加入应用内的某个位置，在邀请好友之前需要获取到所有需要邀请用户的 ID 作为输入。
+* 
+*邀请好友加入私人房间，在邀请好友之前需要获取到好友的 InviteToken。
+* 
+*邀请好友加入挑战，在邀请好友之前需要获取到所有需要邀请用户的 ID 作为输入。
+* 
+*跳转至其他应用
+PICO 系统支持应用间跳转，即在某个应用中启动并前往另一个应用。为实现该能力，你需要调用 LaunchOtherApp或 LaunchOtherAppByAppId 接口。代码示例如下：
+ 
+*跳转至 PICO 应用商店
+若你希望用户及时把应用更新到最新版本，以便进行新功能推广和 Bug 修复等，则可将用户引导到应用商店中的应用详情页，用户可以手动选择是否升级应用。
+ 
+*分享内容至 “抖音”
+*该功能仅适用于中国大陆地区。
+记录应用内的精彩时刻，分享至社交媒体，是玩家间的常见社交行为。PICO SDK 提供内容分享相关接口，接入后，用户可将应用内的截屏或视频分享至 “抖音” App。
+ 
+*完整代码示例
+本文档中所有代码请参考以下文件。文件包含以上所有场景涉及到的功能的调用，包括函数的声明定义、delegate 的使用等。
+ 
+ 
+
+
+// 使用邀请功能时，IsJoinable 字段必须设置为 true
+void UPicoSocialGameInstanceSubsystem::PicoSetPresence(const FString& ApiName, const FString& LobbySessionId, const FString& MatchSessionId, bool bIsJoinable, const FString& Extra)
+{
+    if (!PicoPresenceInterface)
+    {
+        return;
+    }
+    PresenceSetDelegate.Unbind();
+    PresenceSetDelegate.BindUObject(this, &UPicoSocialGameInstanceSubsystem::OnPresenceSetComplete);
+    PicoPresenceInterface->PresenceSet(ApiName, LobbySessionId, MatchSessionId, bIsJoinable, Extra, PresenceSetDelegate);
+}
+
+void UPicoSocialGameInstanceSubsystem::OnPresenceSetComplete(bool bIsSuccessed, const FString& ErrorMessage)
+{
+    if (!bIsSuccessed)
+    {
+        UE_LOG(LogTemp, Log, TEXT("Error Message: %s"), *ErrorMessage);
+    }
+    // 此处你可添加自定义逻辑
+    UE_LOG(LogTemp, Log, TEXT("OnPresenceSetComplete successed"));
+}
+
+// 使用 PresenceClear() 清空玩家 Presence 状态
+void UPicoSocialGameInstanceSubsystem::PicoClearPresence()
+{
+    if (!PicoPresenceInterface)
+    {
+        return;
+    }
+    PresenceClearDelegate.Unbind();
+    PresenceClearDelegate.BindUObject(this, &UPicoSocialGameInstanceSubsystem::OnPicoClearPresenceComplete);
+    PicoPresenceInterface->PresenceClear(PresenceClearDelegate);
+}
+
+void UPicoSocialGameInstanceSubsystem::OnPicoClearPresenceComplete(bool bIsSuccessed, const FString& ErrorMessage)
+{
+    if (!bIsSuccessed)
+    {
+        UE_LOG(LogTemp, Log, TEXT("Error Message: %s"), *ErrorMessage);
+    }
+    // 此处你可添加自定义逻辑
+    UE_LOG(LogTemp, Log, TEXT("OnPicoClearPresenceComplete successed"));
+}
+
+void UPicoSocialGameInstanceSubsystem::PicoGetUserFriends()
+{
+    if (!PicoUserInterface)
+    {   
+        return;
+    }
+    GetLoggedInUserFriendsDelegate.Clear();
+    GetLoggedInUserFriendsDelegate.BindDynamic(this, &UPicoSocialGameInstanceSubsystem::OnGetUserFriendsComplete);
+    PicoUserInterface->GetUserFriends(GetLoggedInUserFriendsDelegate);
+}
+
+void UPicoSocialGameInstanceSubsystem::OnGetUserFriendsComplete(bool bIsError, const FString& ErrorMessage, UPico_UserArray* UserArray)
+{
+    if (bIsError)
+    {
+        UE_LOG(LogTemp, Log, TEXT("Error Message: %s"), *ErrorMessage);
+    }
+    // 此处你可添加自定义逻辑
+    UE_LOG(LogTemp, Log, TEXT("OnPresenceSetComplete successed"));
+    if (UserArray->GetSize() > 0)
+    {
+        for (auto i = 0; i < UserArray->GetSize(); i++)
+        {
+            UserArray->GetElement(i)->GetPresence();
+        }
+    }
+}
+
+void UPicoSocialGameInstanceSubsystem::PicoGetUserInfo(const FString& UserID)
+{
+    if (!PicoUserInterface)
+    {
+        return;
+    }
+    GetUserInfoDelegate.Clear();
+    GetUserInfoDelegate.BindDynamic(this, &UPicoSocialGameInstanceSubsystem::OnPicoGetUserInfoComplete);
+    PicoUserInterface->GetUserInfo(UserID, GetUserInfoDelegate);
+}
+
+void UPicoSocialGameInstanceSubsystem::OnPicoGetUserInfoComplete(bool bIsError, const FString& ErrorMessage, UPico_User* User)
+{
+    if (bIsError)
+    {
+        UE_LOG(LogTemp, Log, TEXT("Error Message: %s"), *ErrorMessage);
+    }
+    // 此处你可添加自定义逻辑
+    UE_LOG(LogTemp, Log, TEXT("OnPicoGetUserInfoComplete successed"));
+    User->GetPresence();
+}
+
+ void UPicoSocialGameInstanceSubsystem::Initialize(FSubsystemCollectionBase& Collection)
+ { 
+    Super::Initialize(Collection);
+    if (IOnlineSubsystem* Subsystem = IOnlineSubsystem::Get())
+    {
+        FOnlineSubsystemPico* PicoSubsystem = static_cast<FOnlineSubsystemPico*>(Subsystem);
+        if (PicoSubsystem && PicoSubsystem->Init())
+        {
+            PicoPresenceInterface = PicoSubsystem->GetPicoPresenceInterface();
+            if (PicoPresenceInterface)
+            {
+                PicoPresenceInterface->JoinIntentReceivedCallback.AddUObject(this, &UPicoSocialGameInstanceSubsystem::OnJoinIntentChanged);
+            }
+        }
+    }
+}
+void UPicoSocialGameInstanceSubsystem::OnJoinIntentChanged(const FString& DeeplinkMessage, const FString& DestinationApiName, const FString& LobbySessionId, const FString& MatchSessionId, const FString& Extra)
+{
+    // 此处你可添加自定义逻辑
+    UE_LOG(LogTemp, Log, TEXT("DeeplinkMessage: %s, DestinationApiName: %s, LobbySessionId: %s, MatchSessionId: %s, Extra: %s.!"), *DeeplinkMessage, *DestinationApiName, *LobbySessionId, *MatchSessionId, *Extra);
+}
+
+void UPicoSocialGameInstanceSubsystem::LaunchPicoInvitePanel()
+{
+    if (!PicoPresenceInterface)
+    {
+        return;
+    }
+    LaunchInvitePanelDelegate.Unbind();
+    LaunchInvitePanelDelegate.BindUObject(this, &UPicoSocialGameInstanceSubsystem::OnLaunchInvitePanelComplete);
+    PicoPresenceInterface->LaunchInvitePanel(LaunchInvitePanelDelegate);
+
+}
+
+void UPicoSocialGameInstanceSubsystem::OnLaunchInvitePanelComplete(bool bIsSuccessed, const FString& ErrorMessage)
+{
+    if (!bIsSuccessed)
+    {
+        UE_LOG(LogTemp, Log, TEXT("Error Message: %s"), *ErrorMessage);
+    }
+    // 此处你可添加自定义逻辑
+    UE_LOG(LogTemp, Log, TEXT("OnLaunchInvitePanelComplete successed"));
+}
+    
+
+void UPicoSocialGameInstanceSubsystem::PicoRoomLaunchInvitableUserFlow(const FString& RoomId)
+{
+    if (!PicoRoomInterface)
+    {
+        return;
+    }
+    LaunchInvitableUserFlowDelegate.Clear();
+    LaunchInvitableUserFlowDelegate.BindDynamic(this, &UPicoSocialGameInstanceSubsystem::OnPicoRoomLaunchInvitableUserFlow);
+    PicoRoomInterface->LaunchInvitableUserFlow(RoomId, LaunchInvitableUserFlowDelegate);
+}
+
+void UPicoSocialGameInstanceSubsystem::OnPicoRoomLaunchInvitableUserFlow(bool bIsError, int ErrorCode, const FString& ErrorMessage)
+{
+    if (bIsError)
+    {
+        UE_LOG(LogTemp, Log, TEXT("Error Message: %s"), *ErrorMessage);
+    }
+    // 此处你可添加自定义逻辑
+    UE_LOG(LogTemp, Log, TEXT("OnPicoRoomLaunchInvitableUserFlow successed"));
+}
+
+void UPicoSocialGameInstanceSubsystem::PicoLaunchChallengeInvite(const FString& ChallengeID)
+{
+    if (!PicoChallengesInterface)
+    {
+        return;
+    }
+    ChallengeLaunchInvitableUserFlowDelegate.Clear();
+    ChallengeLaunchInvitableUserFlowDelegate.BindDynamic(this, &UPicoSocialGameInstanceSubsystem::OnPicoLaunchChallengeInviteComplete);
+    PicoChallengesInterface->LaunchInvitableUserFlow(ChallengeID, ChallengeLaunchInvitableUserFlowDelegate);
+}
+
+void UPicoSocialGameInstanceSubsystem::OnPicoLaunchChallengeInviteComplete(bool bIsError, int ErrorCode, const FString& ErrorMessage)
+{
+    if (bIsError)
+    {
+        UE_LOG(LogTemp, Log, TEXT("Error Message: %s"), *ErrorMessage);
+    }
+    // 此处你可添加自定义逻辑
+    UE_LOG(LogTemp, Log, TEXT("OnPicoLaunchChallengeInviteComplete successed"));
+}
+
+void UPicoSocialGameInstanceSubsystem::PresenceInviteUsers(TArray<FString> UserIdArray)
+{
+    if (!PicoPresenceInterface)
+    {
+        return;
+    }
+    PresenceSendInviteDelegate.Unbind();
+    PresenceSendInviteDelegate.BindUObject(this, &UPicoSocialGameInstanceSubsystem::OnPresenceSendInvitesComplete);
+    PicoPresenceInterface->PresenceSendInvites(UserIdArray, PresenceSendInviteDelegate);
+}
+
+void UPicoSocialGameInstanceSubsystem::OnPresenceSendInvitesComplete(bool bIsSuccessed, const FString& ErrorMessage)
+{
+    if (!bIsSuccessed)
+    {
+        UE_LOG(LogTemp, Log, TEXT("Error Message: %s"), *ErrorMessage);
+    }
+    // 此处你可添加自定义逻辑
+    UE_LOG(LogTemp, Log, TEXT("OnPresenceSendInvitesComplete successed"));
+}
+
+void UPicoSocialGameInstanceSubsystem::PicoInviteUserJoinPriviteRoom(UPico_User* User, UPico_Room* PrivateRoom)
+{
+    if (!PicoRoomInterface)
+    {
+        return;
+    }
+    InviteUserDelegate.Clear();
+    InviteUserDelegate.BindDynamic(this, &UPicoSocialGameInstanceSubsystem::OnPicoInviteUserJoinPriviteRoomComplete);
+    PicoRoomInterface->InviteUser(PrivateRoom->GetRoomID(), User->GetInviteToken(), InviteUserDelegate);
+}
+
+void UPicoSocialGameInstanceSubsystem::OnPicoInviteUserJoinPriviteRoomComplete(bool bIsError, int ErrorCode, const FString& ErrorMessage, UPico_Room* Room)
+{
+    if (bIsError)
+    {
+        UE_LOG(LogTemp, Log, TEXT("Error Message: %s"), *ErrorMessage);
+    }
+    // 此处你可添加自定义逻辑
+    UE_LOG(LogTemp, Log, TEXT("OnPicoInviteUserJoinPriviteRoomComplete successed"));
+}
+
+void UPicoSocialGameInstanceSubsystem::ChallengeInvite(const FString& ChallengeID, const TArray<FString>& UserIDs)
+{
+    if (!PicoChallengesInterface)
+    {
+        return;
+    }
+    ChallengeInviteDelegate.Clear();
+    ChallengeInviteDelegate.BindDynamic(this, &UPicoSocialGameInstanceSubsystem::OnChallengeInviteComplete);
+    PicoChallengesInterface->Invite(ChallengeID, UserIDs, ChallengeInviteDelegate);
+}
+
+void UPicoSocialGameInstanceSubsystem::OnChallengeInviteComplete(bool bIsError, const FString& ErrorMessage, UPico_Challenge* Challenge)
+{
+    if (bIsError)
+    {
+        UE_LOG(LogTemp, Log, TEXT("Error Message: %s"), *ErrorMessage);
+    }
+    // 此处你可添加自定义逻辑
+    UE_LOG(LogTemp, Log, TEXT("OnChallengeInviteComplete successed"));
+}
+
+// 通过包名跳转至目标应用
+void UPicoSocialGameInstanceSubsystem::LaunchOtherApp(const FString& PackageName, const FString& Message)
+{
+    if (!PicoApplicationInterface)
+    {
+        return;
+    }
+    LaunchOtherAppDelegate.Unbind();
+    LaunchOtherAppDelegate.BindUObject(this, &UPicoSocialGameInstanceSubsystem::OnLaunchOtherAppComlete);
+    PicoApplicationInterface->LaunchOtherApp(PackageName, Message, LaunchOtherAppDelegate);
+}
+
+void UPicoSocialGameInstanceSubsystem::OnLaunchOtherAppComlete(const FString& Info, bool bIsSuccessed, const FString& ErrorMessage)
+{
+    if (!bIsSuccessed)
+    {
+        UE_LOG(LogTemp, Log, TEXT("Error Message: %s"), *ErrorMessage);
+    }
+    // 此处你可添加自定义逻辑
+    UE_LOG(LogTemp, Log, TEXT("OnLaunchOtherAppComlete successed"));
+}
+// 根据应用 ID，跳转至目标应用
+void UPicoSocialGameInstanceSubsystem::LaunchOtherAppByAppId(const FString& AppId, const FString& Message)
+{
+    if (!PicoApplicationInterface)
+    {
+        return;
+    }
+    LaunchOtherAppByAppIdDelegate.Unbind();
+    LaunchOtherAppByAppIdDelegate.BindUObject(this, &UPicoSocialGameInstanceSubsystem::OnLaunchOtherAppByAppIdComlete);
+    PicoApplicationInterface->LaunchOtherAppByAppId(AppId, Message, LaunchOtherAppByAppIdDelegate);
+}
+
+void UPicoSocialGameInstanceSubsystem::OnLaunchOtherAppByAppIdComlete(const FString& Info, bool bIsSuccessed, const FString& ErrorMessage)
+{
+    if (!bIsSuccessed)
+    {
+        UE_LOG(LogTemp, Log, TEXT("Error Message: %s"), *ErrorMessage);
+    }
+    // 此处你可添加自定义逻辑
+    // 如果启动应用成功，则返回空字符串
+    // 如果启动应用失败，则返回一个错误描述信息
+    UE_LOG(LogTemp, Log, TEXT("OnLaunchOtherAppByAppIdComlete successed"));
+}
+
+// 获取当前应用的当前版本信息和最新版本信息，包括版本号和版本名称。你可以比较当前版本信息和最新版本信息，从而决定是否要调用 LaunchStore 接口 让用户跳转到应用商店
+void UPicoSocialGameInstanceSubsystem::PicoGetVersion()
+{
+    if (!PicoApplicationInterface)
+    {
+        return;
+    }
+    GetVersionDelegate.Unbind();
+    GetVersionDelegate.BindUObject(this, &UPicoSocialGameInstanceSubsystem::OnPicoGetVersionComplete);
+    PicoApplicationInterface->GetVersion(GetVersionDelegate);
+}
+
+void UPicoSocialGameInstanceSubsystem::OnPicoGetVersionComplete(int64 CurrentCode, const FString& CurrentName, int64 LatestCode, const FString& LatestName, bool IsSuccessed, const FString& ErrorMessage)
+{
+    if (!IsSuccessed)
+    {
+        UE_LOG(LogTemp, Log, TEXT("Error Message: %s"), *ErrorMessage);
+    }
+    // 此处你可添加自定义逻辑
+    UE_LOG(LogTemp, Log, TEXT("OnPicoGetVersionComplete successed"));
+
+// 跳转至当前应用在 PICO 商店的详情页。若玩家确定跳转，当前应用将会退出
+void UPicoSocialGameInstanceSubsystem::LaunchPicoStore()
+{
+    if (!PicoApplicationInterface)
+    {
+        return;
+    }
+    LaunchStoreDelegate.Unbind();
+    LaunchStoreDelegate.BindUObject(this, &UPicoSocialGameInstanceSubsystem::OnLaunchPicoStoreComplete);
+    PicoApplicationInterface->LaunchStore(LaunchStoreDelegate);
+}
+
+void UPicoSocialGameInstanceSubsystem::OnLaunchPicoStoreComplete(const FString& StringMessage, bool IsSuccessed, const FString& ErrorMessage)
+{
+    if (!IsSuccessed)
+    {
+        UE_LOG(LogTemp, Log, TEXT("Error Message: %s"), *ErrorMessage);
+    }
+    // 此处你可添加自定义逻辑
+    UE_LOG(LogTemp, Log, TEXT("OnLaunchPicoStoreComplete successed"));
+}
+
+// “分享至抖音” 接口涉及的文件路径必须位于公共目录
+void UPicoSocialGameInstanceSubsystem::PicoShareMedia(EShareMediaType InMediaType, const FString& InVideoPath, const FString& InVideoThumbPath, TArray<FString> InImagePaths, EShareAppTyp InShareType)
+{
+    if (!PicoPresenceInterface)
+    {
+        return;
+    }
+    ShareMediaDelegate.Unbind();
+    ShareMediaDelegate.BindUObject(this, &UPicoSocialGameInstanceSubsystem::OnPresenceSendInvitesComplete);
+    PicoPresenceInterface->ShareMedia(InMediaType, InVideoPath, InVideoThumbPath, InImagePaths, InShareType, ShareMediaDelegate);
+}
+
+void UPicoSocialGameInstanceSubsystem::OnPicoShareMediaComplete(bool IsSuccessed, const FString& ErrorMessage)
+{
+    if (!IsSuccessed)
+    {
+        UE_LOG(LogTemp, Log, TEXT("Error Message: %s"), *ErrorMessage);
+    }
+    // 此处你可添加自定义逻辑
+    UE_LOG(LogTemp, Log, TEXT("OnPicoShareMediaComplete successed"));
+}

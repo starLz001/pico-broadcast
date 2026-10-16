@@ -1,0 +1,42 @@
+通过手势驱动 Motion Controller，实现交互
+========================================
+*本文档介绍如何将手势与手柄按键进行绑定，从而通过手势来驱动 Motion Controller 组件进行交互。
+*相关 OpenXR 拓展
+*XR_EXT_hand_interaction
+*背景信息
+*在虚幻引擎中，通过 Enhanced Input 系统可以将按键绑定至 PICO 手柄，同时还允许 PICO 手柄驱动 Motion Controller。而通过 XR_EXT_hand_interaction 扩展，可以让用户在没有手柄的情况下，通过手势实现“手柄”相关效果。
+*手势交互区别于手势追踪。手势追踪返回被追踪关节点的位置姿态，而手势交互则并不会返回被追踪关节点的信息，但可以用于驱动 Motion Controller 以及进行按键绑定。
+*环境要求
+*设备型号须为 PICO 4 Ultra 或 Project Swan（PICO OS 6）。
+*前提条件
+*你已在引擎中安装并启用了 PICO Unreal OpenXR 插件。详情参考 PICO Unreal OpenXR Plugin 快速开始。
+*你已了解 OpenXR 支持的不同手势，详情参考 OpenXR 官方文档 中的 Action poses for hand interactions 部分。
+*配置步骤
+*前往 Project Settings > Plugin > PICO OpenXR > Hand Tracking 中，勾选 Is Hand Tracking Used。
+*驱动 Motion Controller 组件：
+*在 Components 窗口中，选中 VRPawn 目录下的 Motion Controller 相关组件。
+*在 Details 窗口中，展开 Motion Controller 目录，然后按需配置以下参数，从而驱动 Motion Controller 组件：
+**
+* 
+*将不同手势与手柄按键绑定。其中 Axis 为 0 到 1 的值，Ready 为布尔值。
+* 
+
+
+
+
+参数
+
+说明
+
+Motion Source
+
+通过左物理手柄数据还是右物理手柄数据来驱动 Motion Controller。
+*Motion Source 支持的值如下：AnyHand、Left、Right、LeftGrip、RightGrip、LeftAim、RightAim、LeftPinch、LeftPoke、RightPoke、RightPinch。
+
+Player Index
+
+指定 Motion Controller 应自动跟随的玩家的索引。
+
+Disable Low Latency Update
+
+若不勾选，Motion Controller 层级内的渲染变换（Render Transform）将在渲染之前立即进行第二次更新。勾选后将不会进行第二次更新。推荐不勾选。

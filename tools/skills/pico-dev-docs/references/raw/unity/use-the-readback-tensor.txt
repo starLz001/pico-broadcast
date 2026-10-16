@@ -1,0 +1,44 @@
+使用 Readback Tensor
+========================================
+Readback Tensor 用于开放相机相关数据的读取权限。当应用同时具备 Camera 与 Spatial-Data 权限时，可在 SecureMR 中读取指定 GlobalTensor 的数据。
+*数据读取方式
+目前支持两种读取方式。
+*
+*权限要求
+无论采用哪种读取方式，应用在调用 Readback Tensor 接口之前，均需具备足够的权限。
+“足够的权限”定义如下：
+*相机权限
+*如果应用在当前 SecureMR Framework Session 中的任意 pipeline 使用了相机相关 Operator（例如 Rectified_VST_Access），无论该 pipeline 是否实际执行，应用都必须被授予 Android 相机权限：android.permission.CAMERA
+*空间数据权限
+*如果应用在当前 SecureMR Framework Session 中的任意 pipeline 使用了空间数据相关 Operator（例如 UV_to_Camera_Space），无论该 pipeline 是否实际执行，应用都必须被授予空间数据权限：com.picovr.permission.SPATIAL_DATA
+*相关接口
+若应用需要将 Tensor 内容拷贝至自身的 CPU 内存，应调用 tensor.CreateBufferAsync。
+
+
+
+方式
+
+对目标 Tensor 的限制
+
+优点
+
+缺点
+
+读取到应用自身的 CPU 内存
+
+任何非 glTF Tensor 的 GlobalTensor 均可。
+
+适用范围广，可直接获取数据。
+
+*涉及跨进程拷贝，耗时较长；
+*拷贝为一次性操作，若目标 Tensor 在拷贝后发生更新，应用需重新执行拷贝才能获取最新数据。
+
+读取为 GPU 资源（Vulkan Image / OpenGL ES Image）
+
+仅支持 dynamic-texture 类型的 Tensor。
+
+*零拷贝，开销小；
+*获取的 Vulkan / OpenGL ES Image 同样为 dynamic texture，Tensor 后续更新可实时同步到对应的 GPU 资源。
+
+*仅可用于 GPU 渲染场景，只能作为 GPU sampler 使用；
+*若不自行执行 GPU-CPU 拷贝，应用无法在 CPU 侧获取 Tensor 的最新数据。

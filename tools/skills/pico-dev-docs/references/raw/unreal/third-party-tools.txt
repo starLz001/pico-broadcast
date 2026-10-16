@@ -1,0 +1,17 @@
+第三方工具
+========================================
+*RenderDOC
+RenderDOC 对 GPU 进行性能分析，可以查看程序在渲染一帧画面时都调用了哪些渲染指令。与此同时，它还可以追踪到每条渲染指令执行事件的时长。例如：可以看到一帧内为了渲染画面而产生的所有绘制调用以及每个调用的时间和渲染管线。
+你可以使用 RenderDOC 来分析渲染耗时较长的地方，从而优化场景、提高性能。RenderDOC 插件在虚幻引擎中的安装与使用操作，参考 RenderDoc。
+ 
+*Snapdragon Profiler
+Snapdragon Profiler 可在 Windows、Mac 和 Linux 平台上运行。你可以使用该工具分析 CPU、GPU、DSP、内存、功耗、散热和网络数据，从而发现并修复性能瓶颈。该工具有如下功能和优势：
+*实时预览系统资源使用情况
+*通过 Trace Capture 模式将内核与系统事件可视化，协助开发者进行事件分析
+*通过 Snapshot Capture 模式来协助开发者捕捉和调试渲染帧
+*提供以下 GPU 接口：OpenGL ES 3.1、OpenCL 2.1 和 Vulkan 1.0
+详细使用说明请参考 Snapdragon Profiler。
+*Android Profiler
+Android Profiler 是 Android Studio 自带的分析工具，它可以分析 CPU 的性能，查看 CPU 的调用堆栈。当应用程序出现卡顿、掉帧，或 CPU 出现性能瓶颈时，可以用这个工具进行分析。详细使用说明，参考 Android Profiler。
+ 
+

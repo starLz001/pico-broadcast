@@ -1,0 +1,18 @@
+性能监控与分析
+========================================
+本页介绍如何使用 Unity 性能监控与分析工具（Unity Profiler）。
+*Unity Profiler 概览
+Unity Profiler 工具可展示应用性能分析数据，包括 CPU、内存、渲染器、音频等，帮助开发者识别应用的性能瓶颈并有针对性地优化应用。
+应用开发过程中，开发者可通过性能数据总览应用的资源分配情况；应用开发完毕后，开发者可连接 Unity Profiler 与 PICO VR 一体机，测试应用在目标平台的运行情况。更多信息请参考 Unity 官网的 Profiler 概览文档。
+ 
+*打开 Unity Profiler
+按以下步骤打开 Unity Profiler。
+*在 Unity Editor 中打开项目。
+*打开 Unity Profiler。从以下方法中选择一个：
+*在上方菜单栏处，选择 Window > Analysis > Profiler。
+*使用 Ctrl+7 快捷键（macOS 系统使用 Command+7）。
+*你将看到 Profiler 窗口。窗口介绍见 Unity 官网的 Profiler 窗口介绍文档。
+* 
+
+
+建议在分析前锁定相关指标水平，以获得一致的性能分析数据。

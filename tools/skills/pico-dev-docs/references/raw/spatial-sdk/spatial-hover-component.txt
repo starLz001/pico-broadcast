@@ -1,0 +1,44 @@
+3D 悬停高亮
+========================================
+当视线注视 3D 物体，或使用手柄或手指靠近 3D 物体时，将触发悬停的高亮效果。
+* 
+*相关组件
+*实现悬停高亮效果所需组件的说明如下：
+*
+*前置条件
+*确保已为目标 entity 添加 InteractableComponent 和 CollisionComponent，使其可交互。
+*为 3D entity 添加悬停高亮效果
+为 3D entity 挂载 HoverEffectComponent，使其在被交互时触发悬停高亮效果。同时，悬停高亮效果会传递给该 entity 的子节点。
+*代码示例：
+* 
+
+**
+
+ 
+
+ 
+
+
+
+组件名称
+
+描述
+
+*InteractableComponent
+
+用于将 entity 标记为可交互，使其能够接收并处理输入事件。
+
+*CollisionComponent
+
+通过指定 entity 的形状、材质、响应行为、过滤规则，以及碰撞报告的详细程度，赋予 entity 物理交互能力。
+*通过 collisionShape 属性，你可以设置 entity 的可交互范围。例如，entity 是一个直径为 0.5 米的球体。若将其 collisionShape 设置为一个直径为 1 米的球体，则该 entity 在该球体范围内可交互。
+
+*HoverEffectComponent
+
+用于为 3D entity 添加悬停高亮效果。为父 entity 添加悬停高亮效果后，其子 entity 也会呈现相同效果。
+
+entity.apply {
+    components.set(InteractableComponent())
+    components.set(CollisionComponent(listOf(ShapeResource.createConvexMesh(mesh)), PhysicsMaterialResource()))
+    components.set(HoverEffectComponent())
+}

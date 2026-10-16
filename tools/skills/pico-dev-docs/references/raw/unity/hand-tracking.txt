@@ -1,0 +1,345 @@
+接入手势追踪
+========================================
+手势追踪功能将用户的手部动作作为 PICO 设备的输入。开启后，PICO 系统会实时跟踪用户手部 26 个关节点的位置。将手部作为应用的主要输入源时，不同的手部姿态会触发不同的事件，例如：当大拇指指尖与食指指尖捏合时，会启用射线指针（即 Ray Pointer，作用等同于手柄射线）。用户可使用射线指针进行点击、选中、拖放等操作。你可以使用手势生成器为应用创建不同的手势，例如：戳、捏、握等，并为手势配置不同的事件，丰富交互体验。
+*环境要求
+*PICO 设备型号：PICO Neo3 系列、PICO 4 系列 和 PICO 4 Ultra 系列（手部模型自适应功能仅支持 PICO 4 Ultra 系列设备）
+*PICO 设备系统版本：5.11.0 及以上
+*手部关节定义
+PICO SDK 的 “手势追踪” 功能遵循 OpenXR 标准所提出的手势定义规范并支持以下 26 个手部关节点。从掌骨关节（Metacarpal）开始，每一个关节点的 Z 轴都指向下一个关节点。
+* 
+*
+以下为 XrHandJointEXT 枚举：
+ 
+*PICO 标准手部模型预制体
+SDK 提供标准两个标准手部模型预制体：HandLeft 和 HandRight。单个手模预制体的顶点数为 1209，四边形面数为 1198，三角形面数为 2414 。
+*预制体位于 Project 窗口的 /Packages/PICO Integration/Assets/Resources/Prefabs 目录下，已按照 OpenXR 手势定义规范绑定了手部关节点，同时已绑定默认射线交互位置（Ray Pose）和射线模型（Default Ray）。
+* 
+*开启手势追踪
+*开启手势追踪后，应用可以识别用户的手部动作。若你仅需让应用具有手势识别能力，参考以下步骤为应用开启手势追踪。
+*第一步：导入 SDK 并完成项目配置
+*导入 PICO Unity Integration SDK
+*完成项目配置
+*升级 XR Interaction Toolkit
+*第二步：添加手部模型（以 PICO 手部模型预制体为例）
+*SDK 提供标准手模预制体，可直接使用，或按需进行自定义配置，包括：绑定手模骨骼节点、绑定射线交互点、绑定射线模型。使用步骤如下：
+*删除 XR Origin 目录下的手柄模型（即 LeftHand Controller 和 RightHand Controller）。
+* 
+*在 Project 窗口中，前往 Packages > PICO Integration > Assets > Resources > Prefabs。
+*你将看到 HandLeft 和 HandRight 手模预制体。
+* 
+*将 HandLeft 拖至 XR Origin 目录下，与 Main Camera 节点同级。
+* 
+*选中 HandLeft。
+*Inspector 窗口中将显示 HandLeft 挂载的脚本和组件，包括手模配置脚本 PXR_Hand（如下图所示）：
+* 
+*(可选) 点击手部关节参数处的 圆圈 图标，修改 HandLeft 绑定的手模骨骼节点。
+* 
+*(可选) 修改 Ray Pose 和 Default Ray。默认已绑定 RayPose (Transform)，即 SDK 提供的默认位置模板，以及系统射线模型 DefaultRay。
+*按相同步骤配置 HandRight。
+*第三步：为应用开启手势追踪
+*在 Unity 编辑器中新建一个场景或打开已有场景。
+*在 Hierarchy 窗口中，点击 + > XR > XR Origin (VR)，为场景添加 XR Origin。
+*选中 XR Origin，然后在 Inspector 窗口中为其添加 PXR_Manager 脚本。
+*勾选 Hand Tracking。
+*面板上显示 Hand Tracking Support 参数。
+* 
+*在 Hand Tracking Support 参数处，选择交互方式。可选项如下：
+*Controller And Hands：手柄交互和手势交互自动切换。用户放下手柄后，若设备识别到手势，则切换为手势交互；用户拿起手柄后，则切换为手柄交互。
+*Hands Only：仅手势交互。
+*第四步：为 PICO 设备开启手势追踪
+* 
+*手部模型尺寸自适应
+*PICO 官方手模支持自适应能力，其尺寸可以自动根据用户真实手部尺寸的变化而变化。若想启用该功能，需要在 PXR_Manager (Script) 面板上勾选 Adaptive Hand Model (PICO) 选框。勾选后，SDK 会自动在应用的 AndroidManifest.xml 文件内写入以下信息：
+ 
+* 
+若你使用的是自定义手模，则需要调用 GetHandScale 接口获取用户手部尺寸数据，然后动态调整场景内的手部模型尺寸。代码示例如下：
+ 
+*高频手势追踪（60Hz）
+高频手势追踪支持以 60Hz 追踪用户的手部动作，以捕捉更快速的手部移动，从而提升手势追踪的准确性，带给用户更加自然流畅的交互体验。
+通常情况下，普通手势追踪模式已经可以达到追踪准确性和速度之间的平衡。高频追踪模式会带来更大的性能消耗。若你的应用类型（健身应用、音乐舞蹈类应用等）需要追踪更加快速的手部移动，则可以选择开启高频追踪模式。开启前，建议先测试普通的手势追踪模式可否达到预期追踪效果。
+在 PXR_Manager (Script) 面板上，勾选 High Frequency Tracking (60Hz) 选框，启用高频手势追踪。
+* 
+* 
+*启用后，SDK 会自动在应用的 AndoridManifest.xml 文件中写入以下元数据：
+ 
+*输入源切换事件说明
+*当输入源发生变化时，你会收到 PXR_Plugin.System.InputDeviceChanged 事件通知。事件内返回当前的输入源对应的值：0 (头戴)、1 (手柄)、2 (手)。例如，由手柄控制切换至手势控制时，会收到返回值 2，表明当前的输入源为手。
+*Unity XR Hands 套件说明
+*PICO Unity Integration SDK 支持 Unity 官方的 XR Hands 套件。套件中定义了一套 API，允许你从支持手部追踪的设备中访问手部追踪数据。关于如何使用该套件来自定义手势，参考 Unity 官方文档。
+*API 参考
+*若想了解手势追踪接口的详细信息，包括参数说明、返回值说明等，查阅 API 参考。
+*
+
+
+
+*值
+
+*关节名称
+
+*关节含义
+
+*OpenXR 定义字段
+
+*0
+
+*Palm
+
+*手掌中心点
+
+XR_HAND_JOINT_PALM_EXT
+
+*1
+
+*Wrist
+
+*手腕关节点
+
+XR_HAND_JOINT_WRIST_EXT
+
+*2
+
+*Thumb_metacarpal
+
+*大拇指掌骨关节
+
+XR_HAND_JOINT_THUMB_METACARPAL_EXT
+
+*3
+
+*Thumb_proximal
+
+*大拇指近端骨关节
+
+XR_HAND_JOINT_THUMB_PROXIMAL_EXT
+
+*4
+
+*Thumb_distal
+
+*大拇指远端骨关节
+
+XR_HAND_JOINT_THUMB_DISTAL_EXT
+
+5
+
+Thumb_tip
+
+大拇指顶端骨关节
+
+XR_HAND_JOINT_THUMB_TIP_EXT
+
+*6
+
+*Index_metacarpal
+
+*食指掌骨关节
+
+XR_HAND_JOINT_INDEX_METACARPAL_EXT
+
+*7
+
+*Index_proximal
+
+*食指近端骨关节
+
+XR_HAND_JOINT_INDEX_PROXIMAL_EXT
+
+*8
+
+Index_intermediate
+
+食指中端骨关节
+
+XR_HAND_JOINT_INDEX_INTERMEDIATE_EXT
+
+9
+
+*Index_distal
+
+*食指远端骨关节
+
+XR_HAND_JOINT_INDEX_DISTAL_EXT
+
+10
+
+Index_tip
+
+食指顶端骨关节
+
+XR_HAND_JOINT_INDEX_TIP_EXT
+
+*11
+
+*Middle_metacarpal
+
+*中指掌骨关节
+
+XR_HAND_JOINT_MIDDLE_METACARPAL_EXT
+
+*12
+
+*Middle_proximal
+
+*中指近端骨关节
+
+XR_HAND_JOINT_MIDDLE_PROXIMAL_EXT
+
+*13
+
+Middle_intermediate
+
+中指中端骨关节
+
+XR_HAND_JOINT_MIDDLE_INTERMEDIATE_EXT
+
+14
+
+*Middle_distal
+
+*中指远端骨关节
+
+XR_HAND_JOINT_MIDDLE_DISTAL_EXT
+
+15
+
+Middle_tip
+
+中指顶端骨关节
+
+XR_HAND_JOINT_MIDDLE_TIP_EXT
+
+*16
+
+*Ring_metacarpal
+
+*无名指掌骨关节
+
+XR_HAND_JOINT_RING_METACARPAL_EXT
+
+*17
+
+*Ring_proximal
+
+*无名指近端骨关节
+
+XR_HAND_JOINT_RING_PROXIMAL_EXT
+
+*18
+
+Ring_intermediate
+
+无名指中端骨关节
+
+XR_HAND_JOINT_RING_INTERMEDIATE_EXT
+
+19
+
+*Ring_distal
+
+*无名指远端骨关节
+
+XR_HAND_JOINT_RING_DISTAL_EXT
+
+20
+
+Ring_tip
+
+无名指顶端骨关节
+
+XR_HAND_JOINT_RING_TIP_EXT
+
+*21
+
+*Little_metacarpal
+
+*小指掌骨关节
+
+XR_HAND_JOINT_LITTLE_METACARPAL_EXT
+
+*22
+
+*Little_proximal
+
+*小指近端骨关节
+
+XR_HAND_JOINT_LITTLE_PROXIMAL_EXT
+
+*23
+
+Little_intermediate
+
+小指中端骨关节
+
+XR_HAND_JOINT_LITTLE_INTERMEDIATE_EXT
+
+24
+
+*Little_distal
+
+*小指远端骨关节
+
+XR_HAND_JOINT_LITTLE_DISTAL_EXT
+
+25
+
+Little_tip
+
+小指顶端骨关节
+
+XR_HAND_JOINT_LITTLE_TIP_EXT
+
+// 由 XR_EXT_hand_tracking 提供
+typedef enum XrHandJointEXT {
+    XR_HAND_JOINT_PALM_EXT = 0,
+    XR_HAND_JOINT_WRIST_EXT = 1,
+    XR_HAND_JOINT_THUMB_METACARPAL_EXT = 2,
+    XR_HAND_JOINT_THUMB_PROXIMAL_EXT = 3,
+    XR_HAND_JOINT_THUMB_DISTAL_EXT = 4,
+    XR_HAND_JOINT_THUMB_TIP_EXT = 5,
+    XR_HAND_JOINT_INDEX_METACARPAL_EXT = 6,
+    XR_HAND_JOINT_INDEX_PROXIMAL_EXT = 7,
+    XR_HAND_JOINT_INDEX_INTERMEDIATE_EXT = 8,
+    XR_HAND_JOINT_INDEX_DISTAL_EXT = 9,
+    XR_HAND_JOINT_INDEX_TIP_EXT = 10,
+    XR_HAND_JOINT_MIDDLE_METACARPAL_EXT = 11,
+    XR_HAND_JOINT_MIDDLE_PROXIMAL_EXT = 12,
+    XR_HAND_JOINT_MIDDLE_INTERMEDIATE_EXT = 13,
+    XR_HAND_JOINT_MIDDLE_DISTAL_EXT = 14,
+    XR_HAND_JOINT_MIDDLE_TIP_EXT = 15,
+    XR_HAND_JOINT_RING_METACARPAL_EXT = 16,
+    XR_HAND_JOINT_RING_PROXIMAL_EXT = 17,
+    XR_HAND_JOINT_RING_INTERMEDIATE_EXT = 18,
+    XR_HAND_JOINT_RING_DISTAL_EXT = 19,
+    XR_HAND_JOINT_RING_TIP_EXT = 20,
+    XR_HAND_JOINT_LITTLE_METACARPAL_EXT = 21,
+    XR_HAND_JOINT_LITTLE_PROXIMAL_EXT = 22,
+    XR_HAND_JOINT_LITTLE_INTERMEDIATE_EXT = 23,
+    XR_HAND_JOINT_LITTLE_DISTAL_EXT = 24,
+    XR_HAND_JOINT_LITTLE_TIP_EXT = 25,
+    XR_HAND_JOINT_MAX_ENUM_EXT = 0x7FFFFFFF
+} XrHandJointEXT;
+
+*若不删除手柄模型，在设备上运行场景时，将出现手部模型和手柄模型共存的情况。
+
+*手模预制体已默认绑定手部关节节点。若需自定义，须保证手模的骨骼结构与现实的手部骨骼结构吻合。
+
+**
+
+*启动 PICO 设备。
+*前往 设置 > 实验室 > 手势识别。
+*打开 手势识别 开关。
+* 
+
+*启动 PICO 设备。
+*前往 控制中心 > 设置 > 交互。
+*将 交互方式 设置为 手势与手柄自动切换。
+* 
+
+<meta-data android:name="Enable_AdaptiveHandModel" android:value="1" />
+
+ float scale = 0; // 自定义的手模缩放比例
+ PXR_HandTracking.GetHandScale(handType,ref scale);
+
+高频追踪模式启用后，无法在运行时关闭。
+
+<meta-data android:name="Hand_Tracking_HighFrequency" android:value="1" />

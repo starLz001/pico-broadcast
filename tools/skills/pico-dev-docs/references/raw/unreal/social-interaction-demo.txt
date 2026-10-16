@@ -1,0 +1,729 @@
+太空竞技场
+========================================
+太空竞技场是展示玩家在 VR 世界中进行社交互动的 Demo，带你快速体验 PICO SDK 提供的“账号&好友” 服务、“社交互动”服务和“房间&匹配”服务。具体而言，玩家可以在 Demo 中体验创建房间、邀请他人进入房间、加入他人房间、在房间内发起好友申请等功能。
+*预览视频
+你可以通过以下视频快速了解该 Demo 的主要功能。
+ 
+*环境要求
+要体验本 Demo，你需要配置以下环境：
+*虚幻引擎 4.27.2 版本
+*Visual Studio 2019 或 2022 版本
+*SDK 2.1.4 版本及以上
+要了解如何在 Unreal Engine 4.27.2 中配置安卓环境，请参考配置安卓开发环境。
+*设备支持
+PICO Neo3、PICO 4。
+*探索 Demo
+你可以直接下载该 Demo 到本地，再使用 ADB 命令将该 Demo 安装到 PICO 设备上体验：
+ 
+ 
+*Demo 模块
+本 Demo 主要由以下模块组成：
+*
+*Demo 操作
+进入到 Demo 中后，你可以参考以下图示和说明通过手柄来控制你的角色。
+ 
+ 
+*
+*主菜单面板
+玩家可按下 A 键或 X 键呼出主菜单面板。在主菜单面板中，玩家可以通过右手柄扳机键点击菜单按钮创建房间，查看房间列表，查看好友列表，查看当前所在房间中信息。下表展示使用 UMG 制作的菜单面板。
+*
+*游戏流程
+Demo 实现了两种进入游戏的方式：
+*自启动进入游戏
+* 
+*接受邀请加入游戏
+* 
+*实现 Demo
+本部分介绍自行实现 Demo 中社交互动能力的步骤。
+*第一步：获取 Demo 项目
+*前往 GitHub 下载社交互动 Demo 的项目文件夹到本地。
+*解压该 Demo 压缩包到 Unreal Projects 目录下。
+*将下载的 2.1.4 及以上版本的 SDK plugins 包移动到 Demo 文件夹内。
+* 
+*右键点击 PlatformSquare.uproject 文件，点击 Generate Visual Studio project files，生成 PlatformSquare.sln 文件。
+* 
+*双击 PlatformSquare.sln 文件，该文件将通过 Visual Studio 打开。
+*在 Visual Studio 界面中，右键点击 PlatformSquare，在下拉选项中，点击 生成（Build）。
+* 
+*项目生成成功后，你可以双击 PlatformSquare.uproject 打开 UE 工程查看 Demo。
+*第二步：创建应用
+要使用 PICO 的平台服务能力，你需要前往 PICO 开发者平台创建应用。要了解更多信息，参考创建应用。
+*第三步：开通平台服务
+本 Demo 使用了 PICO 平台服务中的匹配服务和 Destinations 功能。因此，你需要在创建的应用中开通匹配服务并创建一个 Destination。
+*登录 PICO 开发者平台。
+*在 我的应用 页面，选择在第二步中创建的应用，进入应用概览页。
+*在左侧导航栏，点击 平台服务 > 匹配服务 > 启动服务。
+* 
+*在左侧导航栏，点击 平台服务 > Destinations。为应用创建一个 Destination。配置项按需填写即可。
+*第四步：为项目添加 App ID
+*在 PICO 开发者平台上，前往先前所创建应用的 API 页面，获取该应用的 APP ID。 
+* 
+*在 Unreal 编辑器中打开 Demo 项目。
+*前往 编辑（Edit） > 项目设置（Proejct Settings） > 插件（Plugins） > OnlinePico Settings，填写 AppID。
+* 
+*第五步：在项目配置文件中添加 Destination
+在 Demo 项目文件夹中，打开 Config > DefaultEngine.ini 文件，填写你在开发者平台创建的 Destination 的名称。
+* 
+现在，你已经在 Demo 中实现了 PICO 平台服务的能力。你可以将 Demo 项目打包安装至 PICO 设备上开始体验。
+*Gameplay 架构与代码说明
+本部分介绍 Demo 中的 Gameplay 架构与主要代码。
+*PlayerState
+Demo 中使用继承自 PlayerState 的 APicoSquarePlayerState 类来管理当前玩家信息，好友列表，好友与房间列表等用户信息：
+ 
+将获取到的信息存储于以下的全局变量中：
+ 
+声明获取 PICO 平台服务函数与相关回调函数，由于 Delegate 定义，所以这里为所有回调函数添加 UFUNCTION 宏：
+ 
+C++ 代码实现如下：
+ 
+在这里由于好友与房间列表的获取次数不固定（可能分为多页多次请求获取），所以同时调用请求时，用统一的函数判断是否所有的数据都获取完成：
+ 
+以上数据将通过蓝图函数进行调用刷新：
+ 
+用到的 SDK 服务与接口汇总如下：
+*
+*GameMode
+Demo 中创建了新的 GameMode 类处理 Demo 房间信息收集与管理、好友邀请、设置 Presence 等行为。
+*在房间内创建用户角色
+每当玩家成功创建房间、加入房间导致房间信息更新时，都调用该函数生成房间内用户角色：
+ 
+*创建私有房间并加入
+创建回调 Delegate，并声明创建房间函数与对应的回调函数：
+ 
+*设置房间描述信息
+*用全局变量保存创建房间时传入的色调信息，创建房间成功后将色调信息设置为房间的描述信息。设置房间的描述信息同样需要创建回调 Delegate，并声明设置房间描述函数与对应的回调函数：
+ 
+*加入房间
+创建回调 Delegate，并声明加入房间函数与对应的回调函数：
+ 
+*离开房间
+创建回调 Delegate，并声明离开房间函数与对应的回调函数：
+ 
+*设置 Presence
+发送邀请，调起邀请面板：
+ 
+*清除 Presence
+ 
+*获取系统（S2S）创建的房间列表
+ 
+用到的 SDK 服务与接口汇总如下：
+*
+*WorldSubsystem
+Demo 基于 PICO 平台服务中的房间模块，同步管理 VirtualSynchronyManager。
+通过继承自 UObject 的类 UVirtualSynchronyManager 来处理 PICO 平台服务中房间服务模块的房间二进制消息：
+ 
+在该类中定义读取发送二进制消息及转换：
+ 
+函数实现中调用 PICO 平台服务提供的 Networking 接口：
+ 
+用到的 SDK 服务与接口汇总如下：
+*
+*GameInstanceSubsystem
+*处理邀请回调
+由于 OnlineSubsystemPico 初始化完成后就会收到 JoinIntentChanged 的通知，所以该类型通知不能在较低的 GamePlay 架构中绑定处理。Demo 引入了继承自 UGameInstanceSubsystem 的类 UPICOGameInstanceSubsystem，来处理邀请 JoinIntentChanged 回调。
+ 
+声明回调相应函数：
+ 
+初始化时将 PicoPresenceInterface 中 JoinIntentReceivedCallback 进行绑定：
+ 
+响应函数只负责保存邀请回调的信息不处理游戏逻辑：
+ 
+其他类获取以上信息后将该类中所保存的数据清空：
+ 
+用到的 SDK 服务与接口汇总如下：
+*
+*收集 PICOPlatformSDK 日志
+声明全局变量并记录Log条目数：
+ 
+其他类调用 Subsystem 中 SetLogString 函数，当 Log 数量大于四十时将 Log 清空，以避免 FString 容量越界。每当这个函数被调用时发出广播通知，以便 UI 对其进行处理。
+ 
+*PlayerCharacter
+Demo 中使用继承自 ACharacter 的 ARoomPlayerCharacter 来简单模拟其他玩家的行为，包括移动，自身颜色：
+ 
+保存玩家信息的全局变量：
+ 
+模拟 Character 的行为函数：
+ 
+*SDK 服务与接口
+下表汇总了本 Demo 使用的所有 PICO SDK 中的服务与接口。
+*
+
+
+adb install {APK 路径}
+
+
+
+*模块
+
+*说明
+
+角色
+
+角色（Character）为玩家在游戏场景中的具化体现，是默认拥有一定双足运动功能的 Pawn。在本 Demo 中，你可以使角色在场景中行走、抬起手臂、转动头部、改变肤色颜色等。
+
+房间
+
+Demo 支持玩家创建私人房间和公共房间。启动游戏后，玩家默认进入 Demo 设置的公共房间。
+
+主菜单面板
+
+在主菜单面板中，玩家可创建房间，查看房间列表，查看好友列表，查看当前所在房间中信息。
+
+社交系统 
+
+Demo 接入了 PICO “好友” 服务。玩家登录后，可在主菜单上查看好友列表、查看好友在线状态、邀请好友。 
+
+
+
+角色预期行为
+
+手柄按键
+
+线性移动
+
+左手柄摇杆（Thumbstick）推动
+
+VR 抛物线移动
+
+扳机键 
+
+转向
+
+右手柄摇杆 X 轴推动
+
+呼出或者关闭主菜单
+
+A & X 键
+
+切换角色皮肤颜色
+
+B & Y 键
+
+
+
+选项卡
+
+描述
+
+图示
+
+Room List
+
+
+Room List 选项卡展示了当前玩家可以看到的所有房间列表，包括系统（S2S）创建的房间及好友所创建的房间。根据列表中房间的属性，Room List 还展示了房间名称、房间最多支持人数与当前人数的信息。
+在此选项卡中，玩家可以：
+*点击 CreateRoom 按钮创建房间；
+*查看好友所在房间并加入。 
+
+* 
+* 
+*
+
+Room Info
+
+在当前玩家在任意房间时，Room Info 选项卡才会展示有效信息，包括房间名称、房间人数、房间属性、房间内具体人员。
+在此选项卡中，玩家可以：
+*查看当前房间内的玩家；
+*添加房间中玩家为好友；
+*点击 LaunchInvite，邀请好友加入。 
+*点击 ExitRoom，离开房间；
+*房间主人可以设置房间属性信息。
+
+* 
+* 
+*
+
+My Friends
+
+My Friends 选项卡展示了当前玩家的所有好友，以及他们当前所在的房间信息。
+在此选项卡中，玩家可以：
+*查看好友列表，列表中会展示好友的在所在房间；
+*当房间有效且为公开房间时，点击 Join 按钮直接加入到当前好友所在的房间。 
+
+* 
+* 
+
+UCLASS()
+class PLATFORMSQUARE_API APicoSquarePlayerState : public APlayerState
+{}
+
+// Current PICO user info class
+UPROPERTY()
+UPico_User* CurrentUser;
+
+// Friends and rooms array
+UPROPERTY()
+TArray<UPico_UserAndRoom*> UserAndRoomList;
+
+// Get user info
+void Login();
+
+UFUNCTION()
+void OnLoginComplete(bool bIsError, const FString& ErrorMessage, UPico_User* User);
+
+// Get user and room info
+void GetLoginedUserFriendsAndRooms();
+
+UFUNCTION()
+void OnGetUserFriendsAndRoomsComplete(bool bIsError, const FString& ErrorMessage, UPico_UserAndRoomArray* UserAndRoomArray);
+
+void APicoSquarePlayerState::Login()
+{
+    PlatformLog(FString(TEXT("PicoSquarePlayerState::Login!")));
+    LoginDelegate.Clear();
+    LoginDelegate.BindDynamic(this, &APicoSquarePlayerState::OnLoginComplete);
+    UOnlinePicoUserFunction::GetLoginUser(this, LoginDelegate);
+}
+
+void APicoSquarePlayerState::OnLoginComplete(bool bIsError, const FString& ErrorMessage, UPico_User* User)
+{
+    LoginDelegate.Clear();
+    if (bIsError)
+    {   
+        PlatformLog(FString((TEXT("OnLoginComplete return Failed ErrorMessage : %s"), *ErrorMessage)));
+        return;
+    }
+    PlatformLog(FString((TEXT("OnLoginComplete return successed! User Displayname : %s"), *User->GetDisplayName())));
+    CurrentUser = User;
+    bLoginComplete = true;
+    APlatformSquareGameModeBase* GM = Cast<APlatformSquareGameModeBase>(UGameplayStatics::GetGameMode(this));
+    if (GM)
+    {
+        GM->SetPlayerID(CurrentUser->GetID());
+    }
+    CheckUserDataAlready();
+
+}
+
+void APicoSquarePlayerState::GetLoginedUserFriendsAndRooms()
+{
+    PlatformLog(FString(TEXT("Call PicoSquarePlayerState::GetLoginedUserFriendsAndRooms!")));
+    UserAndRoomList.Empty();
+    LoginedInUserFriendsAndRoomsDelegate.Clear();
+    LoginedInUserFriendsAndRoomsDelegate.BindDynamic(this, &APicoSquarePlayerState::OnGetUserFriendsAndRoomsComplete);
+    UOnlinePicoUserFunction::PicoGetLoggedInUserAndRoom(this, LoginedInUserFriendsAndRoomsDelegate);
+}
+
+void APicoSquarePlayerState::OnGetUserFriendsAndRoomsComplete(bool bIsError, const FString& ErrorMessage, UPico_UserAndRoomArray* UserAndRoomArray)
+{
+    LoginedInUserFriendsAndRoomsDelegate.Clear();
+    NextUserAndRoomArrayPage.Clear();
+    if (bIsError)
+    {
+        PlatformLog(FString((TEXT("OnGetUserFriendsAndRoomsComplete return failed : %s"), *ErrorMessage)));
+        return;
+    }
+    PlatformLog(FString(TEXT("OnGetUserFriendsAndRoomsComplete return successed!")));
+    for (int32 i = 0; i < UserAndRoomArray->GetSize(); i++)
+    {
+        UserAndRoomList.Add(UserAndRoomArray->GetElement(i));
+    }
+    if (UserAndRoomArray->HasNextPage())
+    {
+        NextUserAndRoomArrayPage.BindDynamic(this, &APicoSquarePlayerState::OnGetUserFriendsAndRoomsComplete);
+        UOnlinePicoUserFunction::PicoGetNextUserAndRoomArrayPage(this, UserAndRoomArray, NextUserAndRoomArrayPage);
+    }
+    else
+    {
+        bReadFriendsAndRoomsComplete = true;
+        CheckUserDataAlready();
+    }
+}
+
+void APicoSquarePlayerState::CheckUserDataAlready()
+{
+    if (bLoginComplete && bReadFriendsAndRoomsComplete)
+    {
+        bBaseDataAlready = true;
+        PicoDataReadyDelegate.ExecuteIfBound();
+        PicoDataReadyDelegate.Unbind();
+    }
+}
+
+UFUNCTION(BlueprintCallable)
+void RefreshUserData();
+
+void APicoSquarePlayerState::RefreshUserData()
+{
+    bBaseDataAlready = false;
+    bLoginComplete = false;
+    bReadFriendsAndRoomsComplete = false;
+    Login();
+    GetLoginedUserFriendsAndRooms();
+
+    PicoDataReadyDelegate.Unbind();
+    PicoDataReadyDelegate.BindUObject(this, &APicoSquarePlayerState::CallUserDataAlready);
+}
+
+
+
+模块
+
+函数
+
+User
+
+GetLoginUser
+
+
+
+PicoGetLoggedInUserAndRoom
+
+
+
+PicoGetNextUserAndRoomArrayPage
+
+UCLASS()
+class PLATFORMSQUARE_API APlatformSquareGameModeBase : public AGameModeBase
+{}
+
+FRoomCreateAndJoinPrivate2 RoomCreateJoinDelegate;
+
+// Create Private Room
+UFUNCTION()
+void OnCreateRoomComplete(bool bIsError, int ErrorCode, const FString& ErrorMessage, UPico_Room* Room);
+
+UFUNCTION(BlueprintCallable)
+void CreateRoom(ERoomJoinPolicy InJoinPolicy, FLinearColor InColor);
+
+FRoomSetDescription RoomSetDescriptionDelegate;
+  
+// Set Room Description
+void SetRoomDescription(FString InDescription, FString RoomID);
+
+UFUNCTION()
+void OnSetRoomDescriptionComplete(bool bIsError, int ErrorCode, const FString& ErrorMessage, UPico_Room* Room);
+
+// JoinRoom
+FRoomJoin2 RoomJoinDelegate;
+
+UFUNCTION(BlueprintCallable)
+void JoinRoom(const FString& RoomID);
+
+UFUNCTION()
+void OnJoinRoomComplete(bool bIsError, int ErrorCode, const FString& ErrorMessage, UPico_Room* Room);
+
+// LeaveRoom
+FRoomLeave RoomLeaveDelegate;
+
+UFUNCTION(BlueprintCallable)
+void LeaveRoom();
+
+UFUNCTION()
+void OnLeaveRoomComplete(bool bIsError, int ErrorCode, const FString& ErrorMessage, UPico_Room* Room);
+
+FOnPresenceSetComplete PresenceSetDelegate;
+void OnPresenceSetComplete(bool bIsSuccessed, const FString& ErrorMessage);
+
+FOnSentInvitesComplete SentInvitesDelegate;
+void OnPresenceSendInvitesComplete(bool bIsSuccessed, const FString& ErrorMessage);
+
+FOnLaunchInvitePanelComplete LaunchInvitePanelDelegate;
+void OnLaunchInvitePanelComplete(bool bIsSuccessed, const FString& ErrorMessage);
+
+// Clear Presence
+FOnPresenceClearComplete PresenceClearDelegate;
+
+UFUNCTION(BlueprintCallable)
+void ClearCurrentPresence();
+
+void OnPreseneClearComplete(bool bIsSuccessed, const FString& ErrorMessage);
+
+// Get Moderated Rooms
+FRoomGetModeratedRooms RoomGetModerateRoomsDelegate;
+
+UFUNCTION(BlueprintCallable)
+void ReadRoomList(FGMGetRoomListCompleteDelegate InGetListDelegate);
+
+UFUNCTION()
+void OnGetRoomListComplete(bool bIsError, int ErrorCode, const FString& ErrorMessage, UPico_RoomArray* RoomArray);
+
+
+
+模块
+
+函数
+
+Room
+
+*CreateAndJoinPrivate2
+
+
+
+GetModeratedRooms
+
+
+
+Join2
+
+
+
+SetDescription
+
+
+
+UpdatePrivateRoomJoinPolicy
+
+Presence
+
+PresenceSet
+
+
+
+PresenceSendInvites
+
+
+
+PresenceClear
+
+
+
+LaunchInvitePanel
+
+UCLASS()
+class PLATFORMSQUARE_API UVirtualSynchronyManager : public UObject
+{}
+
+// Convert binary data to and from structured data
+void SaveLoadData(FArchive& Ar, FSyncInfo& SyncInfo);
+
+// Read synchronized data within a room
+bool ReadSyncInfo(FString& SendUserID, FSyncInfo& InSyncInfo);
+
+// Send data to be synchronized within a room
+bool SendSyncInfo(FSyncInfo& InSyncInfo);
+
+bool UVirtualSynchronyManager::ReadSyncInfo(FString& SendUserID, FSyncInfo& InSyncInfo)
+{
+    UE_LOG(LogPICO, Log, TEXT("%s"), *PICO_FUNC_LINE);
+    TArray<uint8> BinaryArray;
+    bool ReadResult = UOnlinePicoNetworkingFunction::ReadPacket(this, BinaryArray, SendUserID);
+    if (!ReadResult || BinaryArray.Num() == 0)
+    {
+        return false;
+    }
+    FMemoryReader FromBinary = FMemoryReader(BinaryArray, true);
+    FromBinary.Seek(0);
+    SaveLoadData(FromBinary, InSyncInfo);
+    FromBinary.FlushCache();
+    BinaryArray.Empty();
+    FromBinary.Close();
+    return true;
+}
+
+bool UVirtualSynchronyManager::SendSyncInfo(FSyncInfo& InSyncInfo)
+{
+    UE_LOG(LogPICO, Log, TEXT("%s"), *PICO_FUNC_LINE);
+    FBufferArchive ToBinary;
+    SaveLoadData(ToBinary, InSyncInfo);
+    if (ToBinary.Num() <=0)
+    {
+        return false;
+    }
+    bool SendResult = UOnlinePicoNetworkingFunction::SendPacketToCurrentRoom(this, ToBinary, false);
+    if (!SendResult)
+    {
+        UE_LOG(LogPICO, Log, TEXT("%s: Send sync info failed"), *PICO_FUNC_LINE);
+    }
+    ToBinary.FlushCache();
+    ToBinary.Empty();
+    ToBinary.Close();
+    return SendResult;
+}
+
+
+
+模块
+
+函数
+
+Networking
+
+ReadPacket
+
+
+
+SendPacketToCurrentRoom
+
+UCLASS()
+class PLATFORMSQUARE_API UPICOGameInstanceSubsystem : public UGameInstanceSubsystem
+{}
+
+void OnJoinIntentChanged(const FString& DeeplinkMessage, const FString& DestinationApiName, const FString& LobbySessionId, const FString& MatchSessionId, const FString& Extra);
+
+void UPICOGameInstanceSubsystem::Initialize(FSubsystemCollectionBase& Collection)
+{
+    Super::Initialize(Collection);
+    JsonManager = NewObject<UJsonManager>();
+    if (IOnlineSubsystem* Subsystem = IOnlineSubsystem::Get())
+    {
+        FOnlineSubsystemPico* PicoSubsystem = static_cast<FOnlineSubsystemPico*>(Subsystem);
+        if (PicoSubsystem && PicoSubsystem->Init())
+        {
+            PicoPresenceInterface = PicoSubsystem->GetPicoPresenceInterface();
+            if (PicoPresenceInterface)
+            {
+                PicoPresenceInterface->JoinIntentReceivedCallback.AddUObject(this, &UPICOGameInstanceSubsystem::OnJoinIntentChanged);
+            }
+        }
+    }
+}
+
+void UPICOGameInstanceSubsystem::OnJoinIntentChanged(const FString& DeeplinkMessage, const FString& DestinationApiName, const FString& LobbySessionId, const FString& MatchSessionId, const FString& Extra)
+{
+    UE_LOG(LogPICO, Log, TEXT("%s, DeeplinkMessage: %s, DestinationApiName: %s, LobbySessionId: %s, MatchSessionId: %s, Extra: %s.!"), *PICO_FUNC_LINE, *DeeplinkMessage, *DestinationApiName, *LobbySessionId, *MatchSessionId, *Extra);
+    bReceiveLaunchIntentChange = true;
+    SaveDestinationApiName = DestinationApiName;
+    SaveMatchSessionID = MatchSessionId;
+}
+
+UFUNCTION(BlueprintCallable)
+bool GetIntentChanged(FString& OutDestinationApiName, FString& OutMatchSessionId);
+
+bool UPICOGameInstanceSubsystem::GetIntentChanged(FString& OutDestinationApiName, FString& OutMatchSessionId)
+{
+    if (bReceiveLaunchIntentChange)
+    {
+        OutDestinationApiName = SaveDestinationApiName;
+        OutMatchSessionId = SaveMatchSessionID;
+        bReceiveLaunchIntentChange = false;
+        SaveDestinationApiName = FString();
+        SaveMatchSessionID = FString();
+        return true;
+    }
+    return false;
+}
+
+
+
+模块
+
+函数
+
+Presence
+
+JoinIntentReceivedCallback
+
+UPROPERTY()
+FString TotalLog;
+
+int32 LogInfoCount;    
+
+void UPICOGameInstanceSubsystem::SetLogString(const FString& InNewLog)
+{
+    LogInfoCount++;
+    if (LogInfoCount >= 40)
+    {
+        LogInfoCount = 0;
+        TotalLog = FString();
+    }
+    TotalLog = InNewLog + TEXT("/n") + TotalLog;
+    OnGameInstanceSubsystemLogChangedNotify.Broadcast(LogInfoCount);
+}
+
+UCLASS()
+class PLATFORMSQUARE_API ARoomPlayerCharacter : public ACharacter
+{}
+
+// Player's Pico id
+FString UserId;
+
+// Player's Pico display name
+FString DisplayName;
+
+// Dynamic material
+UMaterialInstanceDynamic* DynamicMaterialInstance;
+
+// Implement by blueprint
+UFUNCTION(BlueprintImplementableEvent)
+void CharacterMoveTo(FVector TargetLocation);
+
+// Set character material color
+void SetPlayerColor(FLinearColor InColor);
+
+void SetBaseInfo(const FString& InUserId, const FString& InDisplayName);
+
+UFUNCTION(BlueprintCallable, BlueprintPure)
+FString GetUserDisplayName(){return DisplayName;}
+
+
+
+模块
+
+函数
+
+User
+
+GetLoggedInUserAndRoom
+
+
+
+GetLoginUser
+
+
+
+GetNextUserAndRoomArrayPage
+
+
+
+*GetRelations
+
+
+
+LaunchFriendRequestFlow
+
+Room
+
+CreateAndJoinPrivate2
+
+
+
+GetCurrent
+
+
+
+GetModeratedRooms
+
+
+
+Join2
+
+
+
+Leave
+
+
+
+SetDescription
+
+
+
+UpdatePrivateRoomJoinPolicy
+
+Presence
+
+LaunchInvitePanel
+
+
+
+PresenceSendInvites
+
+
+
+PresenceSet
+
+
+
+PresenceClear
+
+
+
+JoinIntentReceivedCallback
+
+Networking
+
+SendPacketToCurrentRoom
+
+
+
+ReadPacket

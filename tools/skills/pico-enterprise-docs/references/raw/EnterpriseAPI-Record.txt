@@ -1,0 +1,127 @@
+TobService实现录屏、录音功能，然后将音视频数据通过接口传给客户端。
+*接口列表
+*
+*pbsStartRecordScreenBySurface
+开始录屏
+传入Surface，TobService录屏后把屏幕图像渲染到Surface。
+ 
+适用设备
+全系企业级设备
+入参说明
+*
+返回值
+无
+调用示例
+ 
+*pbsStopRecordScreenBySurface
+停止录屏
+ 
+适用设备
+全系企业级设备
+入参说明
+*
+返回值
+无
+调用示例
+ 
+*pbsStartRecordAudio
+开始录音
+录音，音频原始数据通过callback返回给客户端
+ 
+适用设备
+全系企业级设备
+入参说明
+*
+返回值
+无
+调用示例
+ 
+*pbsStopRecordAudio
+停止录音
+ 
+适用设备
+全系企业级设备
+入参说明
+*
+返回值
+无
+调用示例
+ 
+接口
+说明
+pbsStartRecordScreenBySurface
+传入Surface，TobService录屏后把屏幕图像渲染到Surface。
+pbsStopRecordScreenBySurface
+停止录屏
+pbsStartRecordAudio
+录音，音频原始数据通过callback返回给客户端
+pbsStopRecordAudio
+停止录音
+void pbsStartRecordScreenBySurface(in Surface surface,int width, int height, int ext);
+参数名称
+类型
+说明
+surface
+Surface 
+TobService把屏幕内容渲染到此Surface上
+width
+int 
+图像的宽
+height
+int 
+图像的高
+ext
+int 
+扩展位，无意义
+ToBServiceHelper.getInstance().getServiceBinder().pbsStartRecordScreenBySurface(surfaceHolder.getSurface(),size,size,0);
+void pbsStopRecordScreenBySurface(int ext);
+参数名称
+类型
+说明
+ext
+int 
+扩展位，无意义
+ToBServiceHelper.getInstance().getServiceBinder().pbsStopRecordScreenBySurface(0);
+ void pbsStartRecordAudio(in AudioFormat audioFormat, in IBytesCallback callback, int ext);
+参数名称
+类型
+说明
+audioFormat
+AudioFormat
+详见：android.media.AudioFormat
+callback
+IBytesCallback
+音频流回调接口
+ext
+int 
+扩展位，无意义
+AudioFormat audioFormat = new AudioFormat.Builder()
+        .setChannelMask(AudioFormat.CHANNEL_IN_MONO)
+        .setEncoding(AudioFormat.ENCODING_PCM_16BIT)
+        .setSampleRate(44100)
+        .build();
+
+IBytesCallback.Stub callback = new IBytesCallback.Stub(){
+    @Override
+    public void callBack(byte[] buffer, int bufferSize) throws RemoteException {
+        Log.i(TAG, "callBack: " + bufferSize + "  " + Arrays.toString(buffer));
+        try {
+            os.write(buffer);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+};
+try {
+    ToBServiceHelper.getInstance().getServiceBinder().pbsStartRecordAudio(audioFormat,callback,0);
+} catch (RemoteException e) {
+    e.printStackTrace();
+}
+ void pbsStopRecordAudio(int ext);
+参数名称
+类型
+说明
+ext
+int 
+扩展位，无意义
+ToBServiceHelper.getInstance().getServiceBinder().pbsStopRecordAudio(0);

@@ -1,0 +1,38 @@
+渲染视口调节
+========================================
+渲染视口尺寸（Render Viewport Scale）控制着应该用于渲染的被分配的眼部纹理的比例。尺寸越大，用于渲染的眼部纹理越多，画面越清晰。渲染视口尺寸可以在 Runtime 侧修改，而无需重新分配眼部纹理。因此，可以通过调节渲染视口尺寸来动态地调节眼部渲染像素。
+* 
+*环境要求
+*PICO 设备型号：PICO Neo3 系列、PICO 4 系列、PICO 4 Ultra 系列
+*PICO 设备系统版本：5.6.0 及以上
+*效果预览
+视频所示例子中，渲染视口尺寸值从 1.0 降低至 0.1，然后再提升至 1.0。可以发现画面从清晰到模糊，再到清晰的变化。
+* 
+*注意事项
+*若相机正在被渲染，则无法更改渲染视口尺寸。若试图在相机被渲染期间进行更改，系统会忽略该请求并在日志中记录错误信息。若在 Gameplay 更新过程中修改该值，则需要等到下一帧才能生效。
+*渲染视口尺寸越大，用于渲染的眼部纹理越多，画面清晰度越高，但同时也会增加延迟并降低应用性能。建议根据实际需求调节渲染视口尺寸。
+*调节方法
+你可以通过修改 XR.XRSettings.renderViewportScale 的值来修改渲染视口尺寸。默认值为 1.0，取值范围为 0.0 至 1.0。示例脚本如下：
+ 
+*了解更多
+*Unity 对渲染视口尺寸调节的说明。
+*你也可以通过修改 Eye Buffer 像素来调节眼部渲染像素，但该操作成本更高。更多信息可参考此文档。
+
+
+using UnityEngine;
+public class RenderVSTest : MonoBehaviour
+{
+        float eyeTextureScale = 1.2f;
+        
+        void Start()
+        {
+                UnityEngine.XR.XRSettings.eyeTextureResolutionScale = eyeTextureScale;
+                UnityEngine.XR.XRSettings.renderViewportScale = 1.0f;
+        }
+
+        private void Update()
+        {
+                UnityEngine.XR.XRSettings.renderViewportScale = 0.58f + 0.42f * (Mathf.Cos(Time.time));
+                Debug.Log("Current renderViewportScale: " + UnityEngine.XR.XRSettings.renderViewportScale);
+        }
+}

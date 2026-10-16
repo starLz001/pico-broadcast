@@ -1,0 +1,127 @@
+应用空间扭曲
+========================================
+应用空间扭曲 (Application SpaceWarp，AppSW) 是一项能够显著降低渲染延迟、提高性能的功能，可以为 PICO 应用提供额外算力。
+*技术原理
+通过使用 AppSW 功能，PICO 应用能以实际屏幕刷新率的一半刷新率来渲染画面，而不会影响显示质量。例如，你的应用可以以 36 FPS 的帧率进行渲染，但仍可以达到 72 FPS 的显示效果。要使用此技术，应用需要在渲染 Eye Buffer（眼部缓冲区）的基础上额外提供 Motion Vector Buffer（运动矢量缓冲区）和 Depth Buffer（深度缓冲区），用于合成新帧。
+* 
+各个核心概念的说明如下：
+*
+*环境要求
+使用 AppSW 的环境要求如下：
+*PICO 设备型号：PICO Neo3 系列、PICO 4 系列、PICO 4 Ultra 系列
+*PICO 设备系统版本：5.4.0 及以上
+*Unity 编辑器：Unity 2021 LTS 及以上版本（推荐使用 Unity 2021，Unity 2022 和 2023 与 AppSW 可能存在兼容性问题）
+*若使用 Unity 6 及以上版本的编辑器，还需要进一步满足以下条件：
+*通用渲染管线（URP）：17.0.3 及以上版本
+*Render Graph：已开启  Compatibility Mode (Render Graph Disabled)
+* 
+*使用流程
+*第一步：配置渲染模式
+*前往 Edit > Project Settings > XR Plug-in Management > PICO，将 Stereo Rendering Mode 设置为 Multiview。
+ 
+*第二步：导入可生成运动矢量的 URP
+按以下步骤，在项目内导入可生成运动矢量的 URP。
+*克隆 Unity-Graphics 仓库。
+*使用 git checkout “AppSpacewarpForUnity” 命令切换至目标分支。
+*在 Unity 编辑器中打开你的项目。
+*前往 Window > Package Manager > + > Add package from disk，将下图三个文件夹中的 package.json 文件导入你的项目。
+* 
+*导入后，Core RP Library、Shader Graph 和 Universal RP 将被添加至 Package Manager 的 Custom 目录。
+* 
+**
+*第三步：启用 URP
+参考该文档，完成以下任务：创建 URP Asset、添加 URP Asset 至 Graphics 配置、禁用 HDR 、升级 Materials。
+*第四步：替换 Shader
+*将场景内动态物体的默认 Shader 替换为能生成运动矢量的 URP Shader。你可以使用 Unity-Graphics 仓库提供的标准 URP Shader (com.unity.render-pipelines.universal/Shaders/Lit.shader)，或参考该 Shader 进行修改。
+*第五步：设置图形接口为 Vulkan
+为应用开启 AppSW 前，需要完成 Player 配置。步骤如下：
+*前往 Edit > Project Settings > Player > Other Settings > Rendering。
+*在 Graphics API 处，添加 Vulkan 并将其移到首位。
+* 
+*第六步：为应用开启 AppSW
+完成 Player 配置后，按以下步骤为应用开启/关闭 AppSW：
+*前往 Edit > Project Settings > XR Plug-in Management > PICO > Android Settings。
+*勾选 Application SpaceWarp。
+* 
+*为场景添加 XR Origin，然后为 XR Origin 挂载 PXR_Manager 脚本。若已完成，可跳过此步骤。
+*新建一个脚本，然后在 Start 部分调用 PXR_Manager.Instance.SetSpaceWarp 接口。
+*  开启 AppSW：
+* 
+*关闭 AppSW：
+* 
+*将脚本添加至场景中，例如：挂载到 XR Origin 下。
+*第七步：确认 AppSW 开启状态
+你可以通过 PxrMetric 日志输出查看当前帧率及 AppSW 开启情况。
+ 
+*合成层 AppSW
+若你想通过独立渲染的合成层来处理场景内的 UI 元素，你可以通过开启 AppSW 的方式使合成层的移动更加平滑，该效果不受帧率限制。此外，由于独立渲染的合成层是独立显示的，你可以将该层设置为透明，用来处理透明 UI。
+*问题排查
+*若场景内的背景十分简洁，并且包含直线、网格等元素，AppSW 可能会导致图像失真，例如：直线扭曲（下图所示）。若出现图像失真情况，可不断进行调试并调整背景，直到达到满意的效果。
+* 
+*若场景内包含一些高速旋转的物体，开启 AppSW 后，物体周围可能会出现失真伪影，可通过降低物体的旋转速度来解决该问题。
+*若同时开启 AppSW 和缓冲区丢弃优化（Optimize Buffer Discards），会导致画面撕裂。原因是 AppSW 需要处理深度缓冲区，而开启缓冲区丢弃优化后，深度缓冲区内的内容将被丢弃。
+*常见问题
+*需要为应用一直开启 AppSW 吗？
+*不一定。可以根据应用的实际需要，在任何合适的时刻开启或者关闭 AppSW 功能。
+*使用 AppSW 必须同时开启 Late Latching 吗？
+*Late Latching 可以很好地改善延迟，我们鼓励开发人员在使用 AppSW 功能的同时开启 Late Latching，但这并不是必选项。
+*AppSW 是否支持 OpenXR？
+*支持。
+*已知问题
+*若同时开启 AppSW 和内容保护，会导致场景画面抖动及拖影问题。
+*推荐内容
+延迟锁定（Late Latching）是一种降低运动的光子延迟（motion-to-photon latency，MTP）的技术。在画面传输过程中，Late Latching 可以帮助应用消除 1 帧的头戴和手柄动作延迟。若你既需要保证画面渲染质量，又需要尽可能地降低画面延迟，则可以为应用开启 Late Latching。更多信息可参考此文档。
+*
+
+
+
+
+概念
+
+说明
+
+眼部缓冲区
+
+眼部缓冲区处于 VR 设备端 3D 图像渲染的中间一环。在渲染过程中，系统将每只眼睛的标准视图渲染到眼睛缓冲区中，然后将眼部缓冲区作为渲染纹理提供给 ATW 线程进行畸变和采样处理。
+
+运动矢量缓冲区
+
+运动矢量描述了每个像素的移动速度，用于追踪像素在屏幕空间和深度缓冲区中的移动量，因此可被用来预测像素在不久的将来会在哪里。
+
+深度缓冲区
+
+深度缓冲区记录了每个像素与渲染相机之间的距离，可以用于进行基于深度的重投影，从而减少头戴端的延迟。
+
+帧合成
+
+帧合成是一个使用渲染的缓冲区来合成新帧的过程，由 PICO 系统完成。
+
+
+
+资源
+
+说明
+
+Core RP Library
+
+Scriptable Render Pipeline Core (SRP Core) 使创建或定制可编写脚本的渲染管道（SRP）变得更加容易。SRP Core 包含了可重复使用的代码，包括用于处理特定平台图形 API 的样板代码、用于常见渲染操作的效用函数、以及着色器库。如果你要从头开始创建一个自定义 SRP，或者定制一个预先构建的 SRP，你可以使用 SRP Core 以节省部分时间。
+
+Shader Graph
+
+Shader Graph 软件包为 Unity 编辑器添加了一个可视化的 Shader 编辑工具，可用来以可视化的方式创建着色器，无需写代码。若你需要修改 Shader，可使用该资源。
+
+Universal RP
+
+通用渲染管线（URP）是一个预建的可编写脚本的渲染管线，由 Unity 制作。你可以通过 URP 便捷地优化场景内的图形。
+
+void Start()
+{
+    PXR_Manager.Instance.SetSpaceWarp(true);
+}
+
+void Start()
+{
+    PXR_Manager.Instance.SetSpaceWarp(false);
+}
+
+xxx/com.pico.xxx I/PxrMetric: FPS=36/72,MTP=40.60ms,AppSW=on,FrmEarly=0,FrmLate=0,FrmCpu=2.33ms,FrmGpu=7.16ms,FrmTime=9.50ms,VsyncDelay=1,GPU=43%/441Mhz,GPUTemp=55.2C,LayerCnt=3

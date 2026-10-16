@@ -1,0 +1,87 @@
+准备开发环境
+========================================
+*在使用 PICO Spatial SDK 开发空间应用前，需检查你的系统环境是否符合要求，并安装所需的开发工具。
+*系统要求
+确保你的操作系统满足以下最低要求：
+**
+*第一步：安装 Android Studio
+*安装指定版本的 Android Studio、Android 平台、以及 Android 源码。
+*前往 Android Studio 下载归档页面。
+*将页面的显示语言切换为 English，阅读条款和条件，然后点击页面底部的 I agree to the terms 按钮。
+* 
+*页面上显示 Android Studio 发布版本列表。
+*找到任意 2025.1.x 的版本，根据你的操作系统下载对应的安装包，并完成安装。
+* 
+* 
+*如果你的系统中已安装了非上述版本的 Android Studio，并且需要在同一台电脑上安装第二个 Android Studio，建议使用 JetBrains Toolbox 进行安装和管理。
+*前往 JetBrains Toolbox 官方网站，下载并安装 JetBrains Toolbox。
+*打开已安装的 JetBrains Toolbox 应用。
+*在 工具 页签的 已安装 列表中，找到已安装的 Android Studio，点击其右侧的 更多 按钮，然后在菜单中选择 其他版本。
+* 
+*在 Android Studio 版本 列表中，找到 2025.1.x 的版本，然后点击 安装 按钮。
+* 
+*安装完成后，返回 工具 页签，在 已安装 列表中找到上一步安装的 Android Studio 版本，然后双击启动。
+*启动 Android Studio，然后跟随设置向导完成初始设置。
+*界面上出现 Welcome to Android Studio 窗口。
+*前往 Android Studio > Settings > Languages & Frameworks > Android SDK > SDK Platforms，然后勾选右下角的 Show Package Details 选项。
+* 
+*SDK Platform 页签中显示各个 Android SDK Platform 包中的资源以及安装状态。
+*展开 Android 15.0 ("vanillaIceCream") 目录，检查是否已安装 Android SDK Platform 35 和 Sources for Android 35。若未安装，勾选这两个选项，然后点击右下角的 OK 按钮进行安装。
+* 
+*第二步：安装 PICO Spatial Plugin
+*你可以从 JetBrains Marketplace 在线安装 PICO Spatial Plugin，也可以下载 .zip 包进行离线安装。
+*方法一：从 JetBrains Marketplace 安装
+*打开 Android Studio。
+*前往 Plugins > Marketplace，在搜索框中输入 PICO Spatial，根据你所处的地理位置选择合适的 Plugin 版本，然后点击右侧的 Install 按钮安装 PICO Spatial Plugin。
+*中国大陆：PICO Spatial (CN)
+*非中国大陆：PICO Spatial (Global)
+* 
+*点击 Restart IDE 按钮，重启 Android Studio。
+*方法二：下载 .zip 包安装
+*从 PICO 开发者官网下载 PICO Spatial Plugin 的 .zip 包（请勿解压）。根据你所处的地理位置选择合适的下载链接：
+*中国大陆：https://developer-cn.picoxr.com/resources/?platform=spatial
+*非中国大陆：https://developer.picoxr.com/resources/?platform=spatial
+*打开 Android Studio。
+*前往 Plugins > 齿轮图标 > Install Plugin from Disk...，然后导入 PICO Spatial Plugin 的 .zip 包。
+* 
+*点击 Restart IDE 按钮，重启 Android Studio。
+*第三步：安装 PICO Emulator 和 Spatial Editor
+*前往 Android Studio > Settings > Languages & Frameworks > PICO Spatial Tools。
+* 
+*在 PICO Spatial Tools 页签中：
+*勾选右下角的 Show Package Details。PICO Spatial Tools 页签的 Spatial Tools 列表中显示 Spatial Editor 和 PICO Emulator。
+*在 PICO OS 6 v6.1 下勾选 Spatial Editor 和 PICO Emulator。
+* 
+*点击 OK 按钮进行安装。 
+* 
+*下一步
+*基于模板创建 Spatial 项目，然后在 PICO 设备或 PICO Emulator 中运行 Spatial 项目。详情参阅《第二步：创建并运行 Spatial 项目》。
+
+
+
+
+操作系统
+
+要求
+
+*Windows 
+
+*操作系统版本：Windows 10 64 位或 Windows 11 64 位
+*内存：16 GB
+*硬盘可用空间：40 GB 
+*CPU：Intel Core i5 
+*GPU：NVIDIA GeForce GTX 1060 
+
+macOS 
+
+*操作系统版本：macOS 14.0
+*内存：16 GB 
+*硬盘可用空间：40 GB 
+*CPU：M1 Pro，不支持 Intel 芯片
+
+*目前仅支持 2025.1.x 版本，请勿安装其他版本。
+
+PICO Spatial Plugin 仅支持 PICO OS 6 major.minor 版本相同的 Spatial Editor 和 PICO Emulator。例如：
+*PICO Spatial Plugin 6.1.x 支持 PICO OS 6 v6.1 对应的 Spatial Editor 和 PICO Emulator。
+*PICO Spatial Plugin 6.1.x 不支持 PICO OS 6 v6.0 对应的 Spatial Editor 和 PICO Emulator。
+*PICO Spatial Plugin 6.0.x 不支持 PICO OS 6 v6.1 对应的 Spatial Editor 和 PICO Emulator。

@@ -1,0 +1,74 @@
+自定义空间交互事件
+========================================
+并非所有手势都是通过开箱即用的手势修饰符实现的。如果你想自定义 3D 交互手势，可以通过访问原始指针事件，并组合这些原始事件的方式来实现。实现方式有以下两种：
+*方式一：使用position3d() 函数
+*在 PointerInputChange 上，PICO Spatial SDK 提供了以下扩展函数：
+* 
+*通过这个扩展函数，你可以获取任意 pointer 事件的 3D 坐标：
+* 
+*方式二：使用 detectSpatialPointerEvent() 函数
+*使用 detectSpatialPointerEvent 函数解析出 SpatialPointerInfo。SpatialPointerInfo 包含了交互事件的 3D 坐标及内容。以下代码展示了如何在按压后使 SpatialPointerInfo 里的 targetEntity 进行缩放。
+* 
+
+fun PointerInputChange.position3d(): Offset3D
+
+@Composable
+private fun LogPointerEvents() {
+    var log by remember { mutableStateOf("") }
+    Column {
+        Text(log)
+        Box(
+            Modifier
+                .size(100.dp)
+                .background(Color.Red)
+                .pointerInput(Unit) {
+                    awaitPointerEventScope {
+                        while (true) {
+                            val event = awaitPointerEvent()
+                            // 处理 pointer 事件
+                            if (event.type == PointerEventType.Press) {
+                                log = "$${event.type}, $${event.changes.first().position3d()}"
+                            }
+                        }
+                    }
+                }
+        )
+    }
+}
+
+@Composable
+fun SpatialPointerEventDemo() {
+    val context = LocalContext.current
+    SpatialView(
+        modifier =
+            Modifier.fillMaxSize().pointerInput(Unit) {
+                detectSpatialPointerEvent(context = context) { eventList ->
+                    eventList.forEachIndexed { index, spatialPointerInfo ->
+                        spatialPointerInfo.targetedEntity?.components.get<TransformComponent>?.apply {
+                            scaleBy(if (spatialPointerInfo.pressed) 1.4f else 1f)
+                        }
+                    }
+                    false
+                }
+            }
+    ) { content, _ ->
+        val entity = Entity()
+        entity.set(
+            ModelComponent(
+                mesh = MeshResource.createSphere(radius = 0.3f),
+                material = PhysicallyBasedMaterial.create().apply {
+                    setBaseColor(
+                        Color4.GREEN
+                    )
+*        })
+)
+*        // entity 默认不可交互。要让 entity 可交互，需要同时添加 InteractableComponent 和 CollisionComponent
+        entity.components.set(InteractableComponent())
+        entity.components.set(
+            CollisionComponent(
+                collisionShape = listOf(ShapeResource.createSphere(radius = 0.3f)),
+                physicsMaterial = PhysicsMaterialResource()
+            )
+        )
+        content.addEntity(entity)
+}

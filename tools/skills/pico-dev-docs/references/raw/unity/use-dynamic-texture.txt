@@ -1,0 +1,42 @@
+使用 Dynamic Texture
+========================================
+被声明为 Dynamic Texture 的 GlobalTensor 可在 pipeline 中以零拷贝方式加载为 GPU Texture，供 glTF Tensor 使用。
+通过 Dynamic Texture，SecureMR 渲染的 glTF 场景能够以极低延迟更新其材质贴图，特别适用于以下场景：
+* 贴图来源于相机视频流
+* 贴图内容需要由 MR pipeline 实时更新
+*使用限制
+仅 GlobalTensor 或 PipelinePlaceholder 可以被声明为 Dynamic Texture。
+*Dynamic Texture 的声明方式
+Dynamic Texture 通过 TensorDataType 与 TensorUsage 中的相关枚举值进行声明。
+仅当 TensorDataType 与 TensorUsage 同时满足以下要求时，该 GlobalTensor 才会被视为 Dynamic Texture。
+*TensorDataType
+*GlobalTensor 的 DataType 必须设置为以下之一：
+*TensorDataType.DynamicTextureByte
+*TensorDataType.DynamicTextureFloat
+*该设置用于声明该 tensor 的底层数据具备 Dynamic Texture 语义，并决定其在 GPU 侧创建 texture 时的数据格式。
+*TensorUsage
+*同时，GlobalTensor 的 Usage 必须设置为 TensorUsage.DynamicTexture。
+*该设置用于明确该 tensor 在 pipeline 中的用途，表示其将被用于创建并绑定 Dynamic Texture，供后续 texture 与材质相关的 operator 使用。
+*占位符规则
+与所有 GlobalTensor 一致，若需在 pipeline 中读写 Dynamic Texture 类型的 GlobalTensor，必须完成以下操作：
+*声明对应的 Dynamic Texture Placeholder
+*在 pipeline submit 时显式引用该 GlobalTensor
+*Texture 创建与更新机制
+在 pipeline 中，可通过 Operator Load_Texture 将输入 tensor 创建为 texture，其行为取决于输入 tensor 的类型：
+*非 Dynamic Texture Tensor
+*创建的 texture 为静态 texture。
+*texture 内容与创建时 tensor 中的数据保持一致。
+*若需更新 texture 内容，必须显式调用 Operator Update_Texture，将 tensor 数据重新拷贝至 texture。
+*Dynamic Texture Tensor
+*创建的 texture 将与该 tensor 绑定为 Dynamic Texture。
+*texture 与 tensor 的底层数据保持绑定关系。
+*当 tensor 中的数据发生变化时，texture 会自动更新。
+*不需要、也不允许调用 Operator Update_Texture。
+ 
+*glTF 材质更新
+在通过 Operator Load_Texture 将 Dynamic Texture Tensor 绑定为 Dynamic Texture 后，可使用 Operator UpdateMaterial，将该 texture 应用于 glTF 材质的以下属性（包括但不限于）：
+* BaseColor
+* NormalMap
+* 其他支持的材质贴图通道
+
+不支持对已绑定 tensor 的 Dynamic Texture 调用 Operator Update_Texture。如需更新 Dynamic Texture 的内容，必须直接写入其绑定的 tensor 数据。

@@ -1,0 +1,128 @@
+此文档用于表述手动修改PICO 一体机设备Launcher首页推荐位的方案方法，通过离线文件操作修改。 
+*支持设备 
+G2 4K、Neo 2、Neo3、PICO4E、PICO4UE系列 企业版设备。 
+*软件版本 
+G2、G2 4K： PUI 3.7.0及以上系统版本。 
+Neo2：全部软件版本。 
+Neo3：全部软件版本。 
+PICO4E：PUI 5.9.2及以上系统版本。
+PICO4UE：PUI 5.12.0及以上系统版本。
+*操作指南 
+*获取配置文件及测试 demo 
+下载地址：https://lf-picoent.picovr.com/obj/pico-tob-wan/launcherconfigdemo.zip
+*配置文件修改说明 
+*适用事件 
+home_rec：推荐位的数据； 
+home_app：快捷入口的数据；（仅针对PUI3.0系统） 
+home_notice：公告栏的数据。 
+*PUI 推荐位示意图 
+PUI3.0 
+ 
+ 
+PUI4.0 
+ 
+ 
+*修改说明 
+*home_rec推荐位数据修改说明 
+试用范围：PUI主页主推荐位； 
+媒体类型：视频、应用（游戏）、图片； 
+海报尺寸：正方形海报尺寸292*292px；长方形海报尺寸： 592*292px； 
+海报格式：png/jpeg； 
+修改范例： 
+视频 
+ 
+{ 
+“mid”:-1, 
+“type”:1, 
+“subtype”:0, 
+“title”:”forexample0”, 
+“focusimage”:”/sdcard/forexample0.png”, 
+“url”:”/sdcard/forexample0.mp4” 
+} 
+应用（游戏） 
+ 
+{ 
+“mid”:-1, 
+“type”:2, 
+“title”:”forexample1”, 
+“focusimage”:”/sdcard/forexample1.png”, 
+“packagename”:”com.pvr.forexample1” 
+} 
+图片 
+ 
+{ 
+“mid”:-1, 
+“type”:5, 
+“title”:”forexample2”, 
+“focusimage”:”/sdcard/forexample2.png”, 
+“url”:”http:\/\/www.forexample2.com:” 
+} 
+备注：PUI主页主推荐位五个位置只能同时修改，不能单独修改某一位置。 如果是配置应用，请确保应用已经在设备中安装成功； 
+*home_app快捷入口数据修改说明 
+试用范围：PUI应用快捷入口； 
+媒体类型：应用（游戏）； 
+海报尺寸：280*130px； 
+海报格式：png/jpeg； 
+修改范例： 
+ 
+{ 
+“type”:2, 
+“title”:”forexample0”, 
+“focusimage”:”/sdcard/forexample0.png”, 
+“packagename”:”com.pvr.forexample0” 
+} 
+备注：PUI主页快捷入口四个位置只能同时修改，不能单独修改某一位置。 如果是配置应用，请确保应用已经在设备中安装成功； 
+*home_notice公告栏数据修改说明 
+试用范围：PUI主页主推荐位； 
+海报尺寸：580*280px； 
+海报格式：png/jpeg； 
+媒体类型：视频、应用（游戏）、链接； 
+修改范例： 
+视频 
+ 
+{ 
+“mid”:-1, 
+“type”:1, 
+“subtype”:0, 
+“title”:”forexample0”, 
+“focusimage”:”/sdcard/forexample0.png”, 
+“url”:”/sdcard/forexample0.mp4” 
+“content”: “forexample0”, 
+“date”: “2019-07-30” 
+“button”: “forexample0” 
+} 
+应用（游戏） 
+ 
+{ 
+“mid”:-1, 
+“type”:2, 
+“title”:”forexample1”, 
+“focusimage”:”/sdcard/forexample1.png”, 
+“packagename”:”com.pvr.forexample1” 
+“content”: “forexample1”, 
+“date”: “2019-07-30” 
+“button”: “forexample1” 
+} 
+链接 
+ 
+{ 
+“mid”:-1, 
+“type”:3, 
+“title”:”forexample2”, 
+“focusimage”:”/sdcard/forexample2.png”, 
+“url”:”http:\/\/www.forexample2” 
+“content”: “forexample2”, 
+“date”: “2019-07-30” 
+“button”: “forexample2” 
+} 
+备注：如果是配置应用，请确保应用已经在设备中安装成功； 
+*Config示例 
+详见测试 demo 里的config.txt 
+demo下载连接：https://lf-picoent.picovr.com/obj/pico-tob-wan/launcherconfigdemo.zip
+*操作说明 
+将配置完成后“config.txt”放置在内置存储卡根目录； 
+将配置文件中所对应的资源放置在对应目录； 
+如下图：
+* 
+重启设备； 
+完成部署。

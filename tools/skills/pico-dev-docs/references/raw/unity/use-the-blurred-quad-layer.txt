@@ -1,0 +1,49 @@
+Blurred Quad 层使用说明
+========================================
+Blurred Quad 层用于渲染空间图片或空间视频。
+若想使用 Blurred Quad 层，需要在 PXR_Composition Layer 组件中将 Shape 参数设置为 Blurred Quad，将 Texture Type 设置为 External Surface（目前仅支持此类型），然后配置相关参数。
+* 
+Blurred Quad 层相关参数说明如下。
+*
+除了在 Unity 编辑器内的 PXR_Over Lay (Script) 组件中设置参数外，你也可以直接修改 PXR_OverLay.cs 文件中的值（如下所示），设置后会每帧生效。
+ 
+
+
+
+参数名称
+
+说明
+
+Mode
+
+用于设置空间图片或空间视频在场景内的展示模式：
+*Small Window：小窗模式，在场景内打开一个窗口，展示图片或视频。纹理位于窗口后面 0.5 米处。
+* 
+*Immersion：沉浸模式，与 ”小窗模式“ 相比，窗口更大，不再遮挡纹理，并增加毛玻璃向外羽化透出的效果。纹理位于窗口后面 0.5 米处。
+* 
+
+Scale
+
+用于降低视差，判断主体是否过近、视差是否过大。如果视差过大，则在播放时降低图像的全图 Scale，并且对左右眼图像做水平方向的全图偏移（Shift），降低视差以改善合像困难。取值范围为 [0.0, +∞]，需根据窗口大小调整。Small Window 模式建议设置为 0.5，Immersion 模式建议设置为 1.0。
+
+Shift 
+
+用于对左右眼图像做水平方向的全图偏移，降低视差以改善合像困难。左右眼的偏移方向相反，设置的 Shift 值默认用于左眼，右眼会使用相反的 Shift 值（即 -Shift）。取值范围为 [-1, 1]，默认值为 0.01。
+
+FOV
+
+用户拍摄的图片或视频的纵向视场角，取值范围为 [0, 180]，默认值为 70。如果图片或视频本身携带 FOV 值或者已知实际的 FOV 值，则使用该 FOV 值，否则推荐设置为 61.05。
+提示：此参数设置的为纵向角度，而非弧度。运行时会根据纹理此处的设置以及纹理的宽高来计算纵向 FOV。
+
+IPD
+
+拍摄图像或视频时所用的相机的瞳孔间距。取值范围为 [0.05, 0.07]，默认值为 0.064。
+
+#region Blurred Quad
+public BlurredQuadMode blurredQuadMode = BlurredQuadMode.SmallWindow;
+
+public float blurredQuadScale = 0.5f;
+public float blurredQuadShift = 0.01f;
+public float blurredQuadFOV = 70.0f;
+public float blurredQuadIPD = 0.064f;
+#endregion

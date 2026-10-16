@@ -1,0 +1,73 @@
+眼动追踪
+========================================
+*通过眼动追踪功能，可在应用中实时追踪用户的注视点。眼动追踪本质上是一种传感器技术，可将用户的眼部移动转换为数据流，包含瞳距、双目注视向量以及注视点，作为设备的输入。设备通过对数据流进行解码，向用户实时呈现其眼球的注视画面。本文档介绍如何为你的应用启用眼动追踪功能并提供调用蓝图接口示例。
+*相关 OpenXR 扩展
+PICO OpenXR 使用了 XR_EXT_eye_gaze_interaction 扩展来实现眼动追踪。
+* 
+*效果展示
+*眼动追踪在 PICO 设备中的效果如下：
+* 
+*环境要求
+*PICO 设备：PICO 4 Pro 或 Project Swan（PICO OS 6）
+*PICO 设备系统版本：5.7.0 或以上版本
+*使用限制
+*目前暂不支持 StereoGaze。
+*前提条件
+*已在引擎中安装并启用 PICO Unreal OpenXR 插件。详情参考 PICO Unreal OpenXR 快速开始。
+*PICO 设备系统设置中开启视线追踪功能，用于在设备上调试眼动追踪功能。
+*实现眼动追踪
+*第一步：开启眼动追踪能力
+*在编辑器中，前往 编辑 >  插件 > 内置 > Virtual Reality，勾选 OpenXREyeTracker 插件，然后点击右下角的 立即重启。
+*在编辑器中，前往 项目设置 >  插件 > PICO OpenXR，在 Movement 选项卡下，勾选 Eye Tracking Enabled。如果需要在应用启动时，进行眼动追踪校准，也需要勾选 Enable Eye Tracking Calibration。
+* 
+*第二步：调用蓝图接口
+*在 PICO 设备上，IsEyeTrackerConnected 接口用于查询设备是否支持 XR_EXT_eye_gaze_interaction 扩展。但即使 PICO 设备支持该扩展，也不意味着该设备支持 PICO 的眼动追踪功能。PICO Unreal OpenXR Plugin 提供 IsEyeTrackerSupportedPICO 接口，可以用于查询当前设备是否支持眼动追踪功能。
+*
+*以下接口可以在上述基础上返回更多双眼数据：
+*
+*你的应用需要获取和使用用户设备上的眼动追踪数据来实现眼动追踪，因此应用必须向用户申请数据获取和使用权限。相关的权限字段为 com.picovr.permission.EYE_TRACKING。
+ 
+*参考 UE 眼动追踪蓝图接口和以下完整蓝图示例，在应用中实现眼动追踪。
+ 
+ 
+
+
+**
+
+* 
+
+ 
+
+
+
+接口
+
+说明
+
+示例
+
+*IsEyeTrackingRunningPICO
+
+查询眼动追踪功能是否启用。
+
+* 
+
+*StartEyeTrackingPICO
+
+开启眼动追踪功能。
+
+* 
+
+*StopEyeTrackingPICO
+
+停止眼动追踪功能。
+
+* 
+
+*GetEyeTrackingDataPICO
+
+获取眼动追踪数据。
+
+* 
+
+以下接口返回的坐标数据经过了一次 TrackingToWorld 计算。如果你想在应用中使用眼动追踪功能来驱动物体，你需要调用 SetWorldLocation 来设置物体的世界坐标。

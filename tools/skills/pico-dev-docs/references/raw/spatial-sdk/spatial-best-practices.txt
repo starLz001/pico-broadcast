@@ -1,0 +1,53 @@
+SpatialML 最佳实践
+========================================
+本文介绍 SpatialML 的最佳实践。
+*平衡用户隐私与 MR 创意
+为了在实现 MR 创意的同时保护用户隐私，我们建议你遵循以下准则：
+*优先使用 SpatialML 空间容器来渲染 MR 效果。这是最能保护用户隐私的推荐做法。
+*如果 SpatialML 空间容器无法满足你的渲染需求，你可以不创建关联的 SpatialML 空间容器，而是直接从 SpatialML 框架中读取模型推理结果，然后在应用的空间容器或 Stage 中进行渲染。但是，你必须在创建 SpatialML Session 前，向用户申请相机和空间数据权限。此时，应用需要向用户解释需要这些数据的具体原因。
+*当用户拒绝应用的权限申请时，应用应将 SpatialML 空间容器作为备选方案。同时，应用需要告知用户，这会导致应用的某些效果或功能受到限制。
+*使用 Kotlin 协程异步调用 SpatialML
+调用某些 SpatialML API 可能会耗时，尤其是在以下场景：
+*为 Tensor 赋值或读取其结果：因为这需要在你的应用和 SpatialML 框架之间传递数据。
+*创建 SceneGraph Tensor（场景张量）：因为这涉及 I/O 操作和渲染资源的加载。
+为避免阻塞你的应用，我们建议你在协程中异步调用这些耗时的 SpatialML API。
+*选择合适的 Tensor 类型
+*为了获得最佳性能，我们建议你在绝大多数情况下优先使用 Multidimensional Tensor。
+此建议是出于性能考虑。由于 Tensor 是强类型的，一旦创建，其类型便无法更改。如果需要转换类型，只能通过拷贝赋值的方式将一个 Tensor 复制到另一个不同类型的 Tensor ，这会产生额外的性能开销。Multidimensional Tensor 能够胜任大部分场景，将其作为默认选择可以有效避免不必要的类型转换。
+但是，在以下几种特定场景中，你必须使用其他类型的 Tensor ：
+*相机时间戳：必须使用由 TimeStampInitInfo 创建的 timestamp tensor。它包含一个 128 位的时间戳，由 4 个 32 位有符号整数（INT32）组成，分别表示秒的高 32 位、秒的低 32 位、纳秒的高 32 位和纳秒的低 32 位。
+*待渲染的场景：对于需要在 SpatialML 容器中渲染的场景，必须使用 SceneGraph Tensor。详情参阅  。
+*对 Tensor 进行切片和赋值操作：详情参阅  。
+*字符串：为了正确显示字符，必须将 Tensor 声明为 UINT8 或 INT8 类型的标量数组（scalar array），用以存储字符串的 UTF-8 编码。详情参阅  。
+*正确使用 Tensor 的 channel 参数
+我们建议你将 Tensor 的通道（channel）视为其数据类型的一部分，而不是一个额外的维度。这种设计与 OpenCV 的多通道 cv::Mat 保持一致，可以方便你迁移现有算法。同时，它也类似于 OpenGL 或 Vulkan 等图形 API 定义图像格式的方式。
+例如，以下两个 Tensor 在内存占用和数据布局上完全相同，但它们的类型定义有所区别。
+*一个维度为 512x486、UINT8 类型、3 通道的 Tensor，类似于一个 R8G8B8_UNORM 格式的 Image2D 对象。
+*一个维度为 3x512x486、UINT8 类型、1 通道的 Tensor，类似于一个 R8_UNORM 格式的 Image2DArray 对象。
+为了确保代码的清晰和高效，我们建议你在绝大多数情况下使用单通道 Tensor 。只在以下两种场景中才需要使用多通道：
+*表示图像：当 Tensor 用于表示 RGB 或 RGBA 图像时，应分别使用 3 或 4 通道。
+*用作切片索引：当 Tensor 作为 Slice tensor 时，必须使用 2 或 3 通道。
+因此，当你创建 Tensor 并指定 channel 参数时，该值通常应为 1、2、3 或 4。如果你需要使用其他数值，建议其作为 Tensor 的一个新维度，而不是作为通道。
+*切片与赋值操作
+*切片与赋值操作适用于所有不是 SceneGraph Tensor 的 Tensor。但在使用时，你需要注意以下几点：
+*切片体积过大的 Tensor 会比较耗时。
+*在不同数据类型的 Tensor 之间进行切片赋值时，系统会执行类型转换，而不是直接进行内存拷贝。
+*为了在 Pipeline 中使用切片，你必须将其赋值给一个 Local Tensor 或 Placeholder。你可以使用 toPipelineTensor() 函数从 Tensor 的切片创建一个新的 Tensor 。这个新 Tensor （如 tensorSliced）与原始 Tensor （如tensor）是相互独立的，修改其中一个不会影响另一个。
+* 
+*拆分长 Pipeline 以提升并发性能
+过长的 Pipeline 可能会影响并发性能。SpatialML 会按顺序执行来自同一个 Pipeline 的多次提交，以避免局部张量发生冲突；而来自不同 Pipeline 的提交则可以并行执行（除非你明确指定了依赖关系）。
+因此，对于可以并行处理的操作，我们建议你：
+*将这些操作拆分到多个独立的 Pipeline 中。
+*使用 Global Tensor 在 Pipeline 之间传递共享数据。
+*将 Pipeline 内原有的 Local Tensor 改为 Placeholder，以便在运行时接收共享的 Global Tensor。
+*控制 Pipeline 的提交频率
+SpatialML 通过内部的任务队列和线程池来执行提交的 Pipeline。然而，如果你提交 Pipeline 的频率过高，可能会超出 SpatialML 的处理能力。我们建议你通过以下方式来控制提交频率：
+*拆分 Pipeline：将更新场景与运行算法的操作分开。您可以高频提交仅用于更新场景的 Pipeline，但应降低运行算法（尤其是使用相机或空间数据的算法）的 Pipeline 提交频率。
+*避免频繁读取结果：从 Tensor 中读取数值可能会阻塞后续更新该 Tensor 的 Pipeline 执行。因此，你需要避免频繁地从 SpatialML 框架中读取运算结果。
+*使用 Pipeline 执行一次性操作：许多操作只需在初始化的 Pipeline 中执行一次即可，例如：
+*使用 switchSceneVisibility 切换 SceneGraph Tensor 的可见性。
+*当你使用 Dynamic-texture tensor 时，只需调用一次 updateSceneGraphProperty() 函数将目标材质的贴图替换为该 Tensor 。此后，你只需更新 Tensor 的值，而无需再次调用 updateSceneGraphProperty()。
+*使用 Logcat 捕获日志
+*要捕获 SpatialML 内部的警告和错误，请使用 Android Studio 的 Logcat 工具，并筛选标签为 Secure MR::Server 的日志。
+
+val tensorSliced = tensor[0..5, 100..200]toPipelineTensor(...)

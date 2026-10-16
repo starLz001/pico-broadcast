@@ -1,0 +1,25 @@
+问题排查
+========================================
+本文介绍了如何处理在使用 SecureMR 时可能遇到的错误。
+*Server Err: [INVALID PARAMETER]
+错误信息：
+ 
+解决方案：
+*根据第一行的错误，第二十三个 Operator 是 XR_SECURE_MR_OPERATOR_TYPE_RECTIFIED_VST_ACCESS_PICO。2464x3248 与 256x256 之间的不匹配是由于框架中设置的 VST 图像分辨率与 RECTIFIED_VST_ACCESS 操作符提供的结果形状不一致所导致的错误。
+*Server Err: [HANDLE NOT INITIALIZED]
+错误信息：
+ 
+解决方案：
+*检查是否有未注册到 Pipeline 中的 Tensor。该 Pipeline 的 ID 是 b40000776b92e718。
+*Server Err: [HANDLE NOT INITIALIZED]
+错误信息：
+ 
+解决方案：
+有未注册到 Pipeline 中的 Tensor。Tensor 通过 xrCreateSecureMrPipelineTensorPICO 注册到 Pipeline 中。你需要检查代码，以确认是否存在变量命令错误，导致 Pipeline 中使用的 Tensor 未通过 xrCreateSecureMrPipelineTensorPICO 注册。
+
+01-15 06:48:37.800 6956 11741 E Secure MR::Server: [06:48:37.800][Error ] Operator<23> >>> result 1 size (2464x3248) mismatches the config (256x256)
+01-15 06:48:37.800 6956 11741 E Secure MR::Server: [06:48:37.800][Error ] setNamedResult >>> Server Err: [INVALID PARAMETER]: operator result 1 is incompatible with tensorb4000076967c7d18. You may need to double check the extension specification for the operator's operand requirements
+
+01-15 07:09:16.919 6956 11741 E Secure MR::Server: [07:09:16.919][Error ] setNamedResult >>> Server Err: [HANDLE NOT INITIALIZED]: queryLocalTensor(0) >>> cannot find the local tensor with ID = 0 in pipeline ID = b40000776b92e718; check whether it has been registered
+
+01-13 07:58:57.826 7235 7255 E Secure MR::Server: [07:58:57.826][Error ] submitPipeline >>> Server Err: [HANDLE NOT INITIALIZED]: isLocalTensorPlaceHolder(ffffffffffffffff) >>> cannot find the local tensor with ID = ffffffffffffffff in pipeline ID = b4000077a552de58; check whether it has been registered

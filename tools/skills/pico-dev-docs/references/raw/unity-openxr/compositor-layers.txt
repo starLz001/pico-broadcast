@@ -1,0 +1,248 @@
+合成层
+========================================
+合成层（Compositor Layers）可以用来展示场景中的焦点对象，例如信息、文本、视频以及纹理，也可以用来展示简单的场景环境和背景。 
+通常来说，渲染 VR 内容时，左右眼摄像机首先将场景内容渲染到 Eye Buffer 上；绘制完成后，异步时间扭曲线程（Asynchronous Timewarp，ATW）对 Eye Buffer 进行畸变、采样、合成等处理；处理完毕后，场景内容最终被渲染到屏幕上。 
+若通过合成层技术进行场景渲染，则无需将场景内容绘制到 Eye Buffer 上，而是直接透传给 ATW 线程进行畸变、采样、合成等处理。因此，减少了一次额外的纹理采样，简化了整个渲染流程，同时可提升渲染质量。
+*环境要求
+*PICO 设备型号：PICO Neo3 系列、PICO 4 系列、PICO 4 Ultra 系列
+*PICO 设备系统版本：5.7.0 及以上
+*重要提示
+*目前，单个场景支持的合成层数量最多为 15，超过 15 层将不会显示。 
+*考虑到对性能的影响，建议单个场景的合成层数量控制在 4 层左右。 
+*应该遵循近处物体遮挡远处物体的规则来使用合成层，否则可能会出现轻微晃动。
+*Composite Layer Feature 脚本说明
+*Composite Layer Feature 脚本用于配置合成层相关参数。
+*Type (合成层类型)
+PICO Unity OpenXR SDK 提供两种类型的合成层：Overlay 和 Underlay。具体说明如下： 
+*
+*Shape (合成层形状) 
+SDK 提供四种形状的合成层：Quad、Cylinder、Equirect 和 Cubemap。具体说明如下：
+*
+*Depth (合成层深度) 
+合成层深度（Depth）用于定义合成层在场景中的顺序。数值越小，越靠近 Eye Buffer。假设一个场景中添加了三层 Overlay 和三层 Underlay，深度值设定可以为[Camera](Overlay)2/1/0[EyeBuffer]0/1/2(Underlay)。
+*Texture Type (纹理类型) 
+提供两种纹理类型：动态纹理（Dynamic Texture）和静态纹理（Static Texture）。
+*
+*Texture (纹理)
+Texture 参数用于指定左右眼透传的纹理。
+* 
+*Radius (半径) 
+将 Shape (合成层形状) 设置为 Equirect（球体纹理）时，需要配置 Radius 参数，指定圆柱的半径。
+*Texture Rects (纹理矩形) 
+勾选 Texture Rects 选框后，可配置 Source Rects 和 Destination Rects 相关参数。
+* 
+*Source Rects (源矩形) 
+Source Rects 参数用于设置被渲染到物体表面的纹理区域。选项说明如下：
+**
+*Destination Rects (目标矩形) 
+Destination Rects 参数用于设置合成层所覆盖的目标区域。选项说明如下：
+**
+*Layer Blend (图层混合) 
+Layer Blend 用于设置 Source 层和 Destination 层的颜色值和透明度值。
+*图层混合可将源图层颜色和目标图层颜色进行混合，常用来绘制透明或半透明的物体。合成层默认从后往前进行混合，若当前场景有合成层 1、2、3、4，则图层混合顺序为： 
+*合成层 4 和 3 优先被混合，作为 Destination 层 1。此时，合成层 2 将作为 Source 层。 
+*Destination 层 1 与合成层 2 进行混合，作为 Destination 层 2。此时，合成层 1 将作为 Source 层。 
+*Destination 层 2 与合成层 1 进行混合。
+* 
+*参数说明如下：
+**
+*最终颜色 = (srcColor × LayerBlend.srcColor) + (dstColor × dst.layerBlend) 
+*最终透明度 = (srcColor × LayerBlend.srcAlpha) + (dstColor × dst.dstAlpha)
+*Override Color Scale (覆盖全局颜色设置) 
+若想覆盖该层的全局颜色设置，可勾选 Override Color Scale，然后配置以下参数：
+* 
+参数说明如下：
+*
+Scale 和 Offset 参数中的 X、Y、Z、W 分别对应颜色通道的 R、G、B、A。最终颜色=(原始颜色×缩放倍数)+偏移量。
+*使用流程
+*第一步：添加 XR Origin 和 PICO Manager 脚本
+*在 Hierarchy 窗口中，点击 + > XR > XR Origin (VR)。
+*XR Origin 被添加至场景。
+*选中 XR Origin，然后点击 Inspector 窗口底部的 Add Component 按钮，为其添加 PICO Manager 脚本。
+* 
+*选中 XR Origin 下的 Main Camera 对象（默认名称）。
+*在 Inspector 窗口中，将 Main Camera 的 Tag 设置为 MainCamera。一般已默认为该设置。
+* 
+*第二步：添加 3D 对象并为其挂载 Composite Layer Feature 脚本
+Composite Layer Feature 脚本用于配置合成层参数。
+*在上方菜单栏处，选择 GameObject > 3D Object。 
+*从菜单里选择一个 3D 对象，例如：Quad。 
+*调整 3D 对象的位置，使其处于摄像机可见位置。 
+*在 Hierarchy 窗口中，选中该 3D 对象。 
+*Inspector 窗口中将展示该 3D 对象挂载的配置脚本和组件。 
+*点击 Inspector 窗口底部的 Add Component 按钮。 
+*搜索 Composite Layer Feature (Script) 脚本，然后双击添加。
+*脚本界面如下：
+* 
+*第三步：配置基础参数
+*配置 Type、Shape、Depth 和 Texture Type 参数。 
+*在 Texture 参数处，选择左右眼透传的纹理。
+*至此，合成层基础配置完成。你可以在设备上运行该场景，体验效果。
+*第四步：(可选) 配置高级参数
+*勾选Texture Rects 选框，然后配置 Source Rects 和 Destination Rects 相关参数。
+*勾选 Layer Blend 选框，然后设置 Source 层和 Destination 层的颜色值和透明度值。 
+*若想覆盖该层的全局颜色设置，可勾选 Override Color Scale 选框，然后配置相关参数。
+*相关接口
+使用 SetTexture 接口设置纹理。
+ 
+参数说明如下：
+*
+*了解更多：Unity XR Composition Layers 插件
+* 
+*PICO Unity OpenXR SDK 1.3.0 及以上版本已支持 Unity 官方的 XR Composition Layers 插件 1.0.0 版本。XR Composition Layers 插件定义了一些常见的合成层类型，并提供扩展机制，允许插件作者添加新的合成层类型或添加自定义扩展，以满足特定需求或特性。关于如何使用 XR Composition Layers 插件，参考 Unity 的官方文档。
+*XR Composition Layers 插件包含了用于访问合成层的接口、类型和模拟，但不提供运行时层面的实现。若需要在运行时使用合成层，必须提供一个实现 ILayerProvider 接口的 XR Plugin。PICO Unity OpenXR SDK 1.3.0 版本中已提供一套 LayerProvider 的实现（下图所示）。
+* 
+
+
+
+
+类型
+
+说明
+
+Overlay
+
+将纹理呈现在 Eye Buffer 前面。默认为该选项。
+
+Underlay
+
+将纹理呈现在 Eye Buffer 后面。 
+Underlay 类型依赖于渲染目标上的 alpha 通道。场景中的所有对象绘制到 Eye Buffer 后，你需要在 Eye Buffer 上构建一个 “洞”，使 Underlay 纹理透过这个 “洞” 显示出来。你可以在 Packages/OpenXR PICO Plugin/Assets/Resources/Shader 目录下获取 PXR_UnderlayHole 脚本，然后使用该脚本来构建“洞”，或根据应用需求编写 shader 来构建 “洞”。
+
+
+
+形状
+
+说明
+
+Quad
+
+具有四个顶点的平面纹理，通常用来显示场景中的文本或信息。默认为该选项。
+
+Cylinder
+
+具有柱面弧度的圆柱形纹理，通常用于显示曲面 UI 界面。 
+若使用 Cylinder，则： 
+*Transform 中心将作为 Cylinder 的中心，Transform 的尺寸将作为 Cylinder 的尺寸，且 Cylinder 中 Transform 的尺寸均为全局尺寸（Global Scale）。其中，Z 作为 Cylinder 的半径，Y 作为 Cylinder 的高，X/Z 作为 Cylinder 的弧长。
+*必须将摄像机放置在圆柱内切球内。如果摄像机接近内切球表面，合成层将无法显示。 
+
+Equirect
+
+球体纹理，通常用于显示 360/180 全景纹理。
+
+Cubemap
+
+立方体贴图。一个立方形贴图为六个正方形纹理的集合，用来表示环境反射。这六个立方体构成了围绕某物体的假想立方体的面，每个面都代表了对应世界轴方向（上、下、左、右、前、后）的视图。立方体贴图常用来捕捉物体的反射或周围环境。
+
+
+
+类型
+
+说明
+
+动态纹理
+
+若要将动态内容渲染至该合成层，即为合成层每帧更新纹理，则需要使用动态纹理。例如：若想使用普通摄像机生成的 RenderTexture 图片，则需使用动态纹理。
+
+静态纹理
+
+若需要渲染静态内容，例如：在画廊中显示一幅画，则需使用静态纹理。
+
+左右眼必须指定同一张纹理且纹理宽高需保持一致。若想实现 3D 效果，可根据实际情况，为左右眼选择不同的纹理。
+
+
+
+选项
+
+说明
+
+Mono Scopic
+
+为左右眼摄像机选择不同的纹理，分别显示。
+
+Stereo Scopic
+
+纹理左右中分，左眼摄像机显示左半部分，右眼摄像机显示右半部分。 
+提示：建议左右眼指定同一张纹理且纹理宽高需保持一致，否则可能会因为左右眼纹理差别过大而导致异样感。
+
+Custom
+
+自定义渲染到物体表面的纹理区域，其中： 
+*X 和 Y 用于设置纹理上的起始点 
+*W 用于设置纹理区域的宽度 
+*H 用于设置纹理区域的高度 
+例如，如果你将 X 和 Y 都设置为 0.5，然后将 W 和 H 都设置为 0.5，那么起始点为纹理的中心，纹理右上角 1/4 的区域将渲染至物体表面。
+
+
+
+选项
+
+说明
+
+Default
+
+保持目标区域的原始尺寸。
+
+Custom
+
+自定义合成层所覆盖的目标区域，其中： 
+*X 和 Y 用于设置目标区域的起始点 
+*W 用于设置目标区域的宽度 
+*H 用于设置目标区域的高度 
+例如，如果在 Source Rects 参数处，你将 X 和 Y 都设置为 0.5，并且将 W 和 H 都设置为 0.5；在此处，你将 X 和 Y 都设置成 0.5，并且将 W 和 H 都设置成 1，那么物体表面右上方 1/4 区域将被纹理右上方 1/4 区域所覆盖。
+
+
+
+参数
+
+说明
+
+Src Color
+
+设置的颜色值。
+
+Dst Color
+
+设置背景图层的颜色值。
+
+Src Alpha
+
+设置合成层的透明度值。
+
+Dst Alpha
+
+设置背景图层的透明度值。
+
+
+
+参数
+
+说明
+
+Scale
+
+设置颜色值的缩放倍数。
+
+Offset
+
+设置颜色值的偏移量。
+
+public void SetTexture(Texture texture, bool dynamic)
+
+
+
+参数名称
+
+说明
+
+texture
+
+用图片生成 Texture，然后上传。可以上传静态图或动态图。以相机生成的 Render Texture 为例，可以使用动态图。
+
+dynamic
+
+上传的纹理是否为动态图：
+*true：是
+*false：不是
+
+XR Composition Layers 插件要求的 Unity 编辑器版本为 2022.3 及以上。

@@ -1,0 +1,35 @@
+已知问题
+========================================
+本文档记录了 PICO Unity Integration SDK 中的已知问题。若想了解 SDK 每个版本的已知问题和问题修复情况，可参阅《更新说明》。
+*Build 相关
+若使用 Unity 2022，在构建 Development Build 时会发生崩溃。
+*静态注视点渲染相关
+*若在项目内使用通用渲染管线（URP）并开启静态注视点渲染，会导致静态注视点渲染失效。
+*原因一：静态注视点渲染能力目前与 Eye Buffer 绑定，由于 URP 引入了 Intermediate Texture，因此会使图像首先被渲染至 Intermediate Texture 上而非 Eye Buffer 上，从而导致静态注视点渲染失效。
+*解决方法：禁用后处理、HDR 及会用到 Intermediate Texture 的 Renderer Feature。
+*原因二：在 URP 10.10.1 版本中，相机的 Clear Flags 设置项行为发生改变，选择 Skybox 时会使 Color Attachment 的 Invalidate 设置丢失，导致静态注视点渲染失效。
+* 
+*解决方法：在 ScriptableRenderer 的 GetCameraClearFlag 方法中注释掉CameraClearFlags.Skybox 部分，使其也返回 ClearFlag.All，如下图所示。
+* 
+*若在项目内使用内置渲染管线（Built-in Render Pipeline），也需要禁用后处理，否则会导致静态注视点渲染失效。
+*若在项目内同时使用 OpenGLES 图形接口、Gamma 颜色空间和静态注视点渲染，则暂时不支持开启下采样（Subsampling）。
+*应用空间扭曲相关
+*若同时开启应用空间扭曲（AppSW）和内容保护功能，会导致场景画面抖动及拖影问题。
+*延迟锁定相关
+*若同时使用延迟锁定（Late Latching）和合成层（Overlay/Underlay），会导致合成层抖动。
+*空间音频相关
+若你使用的是 MacOS 系统，当在 Unity 编辑器中运行 Packages/PICO Integration/SpatialAudio/Samples 目录下的音频样例，并按下键盘按键时，可能会听到 “滴滴滴” 的 MacOS 系统警告音效。这是一个已知的 Unity 问题，待 Unity 官方修复该问题。若有需要，可前往 Unity 社区进行讨论。
+*通用渲染管线相关
+在 Unity 修复以下问题前，请谨慎使用通用渲染管线。
+*针对 Unity 2021 及以上版本，若在使用通用渲染管线（URP）时设置抗锯齿倍数（MSAA），会发生掉帧。
+*针对 Unity 2020 及以上版本，若将 Vulkan 添加至 Graphics API，与 OpenGLES 相比，存在帧率低、内存和 GPU 占用率高的问题。
+*若同时使用 Vulkan、URP 和 HDR，Underlay 层和视频透视（VST）层无法显示。
+*针对 Unity 2021 及以上版本，若在 URP 渲染器中启用屏幕空间环境光屏蔽（Screen Space Ambient Occlusion，SSAO），会导致低帧率、高内存和 GPU 消耗。
+*针对 Unity 2022 及以上版本，如果在项目中使用了 OpenGLES 和 MutilView，且添加了 URP 但未使用，则需要主动删除 URP Package，删除场景中现有的灯光并重新添加灯光，否则程序运行过程中可能会崩溃。
+*若同时使用 Unity6、URP、OpenGL、Multi-pass、MSAA（非 Disabled 状态），则会导致 Eye Buffer 的内容无法渲染，改变上述任意配置便可以解决该问题。
+*发布设置相关
+启用 Minify 相关选项会导致应用崩溃。
+*其他
+*PICO 4 系列设备与同时使用 Unity 6 和 Vulkan 开发的应用存在兼容性问题，推荐使用 Unity 2022 LTS 或更低版本。
+
+10.10.1 之后的版本中可能也存在该问题，具体以实际使用情况为准。

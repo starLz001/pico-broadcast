@@ -1,0 +1,113 @@
+SpatialMLCapture 使用指南
+========================================
+SpatialMLCapture App 是一款专为 PICO 设备设计的应用程序，旨在帮助用户和开发者轻松录制包含丰富空间信息的多模态数据。这些数据包括同步的立体 RGB 图像、深度信息以及设备的实时位姿（位置和方向），并统一存储为 SpatialMP4 格式文件。
+本应用主要服务于需要高质量空间数据的开发者、研究人员以及对空间计算和机器人技术感兴趣的用户，可用于机器学习模型训练、机器人导航、场景理解、算法调试等多种场景。
+*环境要求
+*PICO 设备型号：PICO 4 Ultra 系列
+*PICO 设备系统版本：5.14.0 及以上（具体版本要求请参考 PICO 官方发布信息或应用商店说明）
+*核心功能
+*空间数据录制 : 实时录制设备周围环境的立体 RGB 图像、深度图以及设备的六自由度 (6DoF) 位姿数据。
+*同步存储 : 将所有传感器数据进行时间同步，并封装到单一的 SpatialMP4 文件中，方便后续处理和分析。
+*数据导出 : 支持将录制好的 SpatialMP4 文件从 PICO 设备导出，用于离线分析或在其他平台进行模型训练。
+*应用场景
+*机器学习与 AI 模型训练:
+*为 XR 应用（如手势识别、场景理解、物体检测）训练和优化模型。
+*机器人导航和自主避障算法开发。
+*机器人技术研究:
+*收集第一人称视角的交互数据，用于训练具身智能体。
+*提升机器人对三维空间的理解和交互能力。
+*算法研发与调试:
+*快速生成包含 RGB 和位姿的视频文件，用于调试视觉里程计 (VIO)、SLAM 或图像防抖等算法，无需复杂的多模块数据采集和对齐流程。
+*使用说明
+*前提条件
+*在启动 SpatialMLCapture 应用前，确保已开启视频透视功能，否则应用会自动退出。
+*获取应用
+打开头戴端中的 PICO 商店，搜索 SpatialMLCapture 应用并安装。
+* 
+*启动应用
+*在你的 PICO 设备上找到 SpatialMLCapture App（数据采集） 图标，点击启动。
+*录制
+*准备录制 :
+*确保设备电量充足。
+*选择光照条件适宜的环境进行录制，以保证图像和深度数据质量。
+*在录制开始前，建议在环境中进行小范围移动，帮助系统更好地初始化和跟踪位姿。
+*第一次运行应用，需要确认法律告知，以及允许应用获取 camera、audio、spatial data 权限。否则，应用将自动退出。
+*开始录制 :
+*在 App 主界面，按下手柄的 Trigger 键或者按“音量+”按键，开始录制空间数据。
+*录制过程中，请尽量保持设备稳定，避免剧烈晃动，以获取更准确的位姿和传感器数据。
+*停止录制 :
+*完成录制后，再次按下手柄的 Trigger 键或者按“音量+”按键，结束录制。
+*App 会自动处理数据并保存为 SpatialMP4 文件（文件后缀名为 .mp4）。
+*管理和导出录制文件
+*查看文件 :
+*连接你的 PICO 设备到电脑。
+*默认保存路径为 /sdcard/Movies/SpatialMP4/xxxx.mp4，可通过 adb 命令查看：
+* 
+*导出文件 :
+*利用 adb 将需要分析的 .mp4 (SpatialMP4) 文件复制到你的电脑或其他存储设备。
+* 
+*关于录制的数据 (SpatialMP4 格式)
+SpatialMLCapture App 生成的文件采用 SpatialMP4 格式。这是一种基于标准 MP4 容器的扩展格式，专门用于存储空间计算所需的多模态数据。
+*数据内容
+一个 SpatialMP4 文件通常包含以下数据流：
+*立体 RGB 视频 : 左眼和右眼的彩色图像序列。
+*深度数据 : 与 RGB 图像同步的深度图像序列，利用时间戳进行软同步。
+*位姿数据 : 设备在录制过程中的头部实时六自由度位姿（平移和旋转）。
+*相机参数 : 包括 RGB 相机和深度相机的内外参数，用于数据解析和三维重建。
+*音频数据 : (根据实际支持情况) 包含同步录制的音频，解析工具暂不支持解析，后续版本或会支持。
+*数据解析
+要解析和使用 SpatialMP4 文件中的数据，推荐使用配套的 SpatialMP4 C++/Python SDK（https://github.com/Pico-Developer/SpatialMP4）。该 SDK 提供了便捷的 API 来读取和处理各种数据流。
+SDK 主要功能 (参考 SpatialMP4 SDK 文档):
+*读取 RGB 图像、深度图、位姿数据。
+*获取相机内参和外参。
+*支持多种数据读取模式 (如 RGB-only, Depth-only, Depth-first)。
+*支持帧的随机访问。
+ 
+ 
+快速解析可视化你录制的spatial mp4文件：
+*按照 https://github.com/Pico-Developer/SpatialMP4 仓库中的 README 的描述，构建 ffmpeg 以及测试可执行文件 test_reader。
+*将你录制的文件，放置在 /SpatialMP4/video/test.mp4（参考 https://github.com/Pico-Developer/SpatialMP4/tree/main/video），确保文件名为 test.mp4。
+*运行测试：./build/test_reader。
+*可视化结果保存在 tmp_vis_*.
+更多关于 SpatialMP4 SDK 的详细用法和 API 参考，查阅其 https://github.com/Pico-Developer/SpatialMP4 仓库中的 README)。
+*常见问题
+*Q: 单次录制时长有限制吗？
+*A: 录制时长主要受设备存储空间和电池续航的限制。建议根据实际需求分段录制较长的场景。
+*Q: 录制的 SpatialMP4 文件会占用多大空间？
+*A: 文件大小取决于录制时长、分辨率以及数据的复杂度。包含深度和高帧率 RGB 的视频通常会比较大。
+*Q: 如何确保录制数据的质量？
+*A: 尽量在光照良好且均匀的环境中录制；避免摄像头被遮挡或镜头模糊；录制过程中平稳移动设备。
+*Q: 我可以在哪里找到更详细的 SpatialMP4 格式说明或 SDK 文档？
+*A: 请参考 SpatialMP4 SDK 的官方代码仓库 ( https://github.com/Pico-Developer/SpatialMP4) 中的文档，如 README.md 。
+*问题反馈
+*对于 SpatialMP4 SDK 相关问题，可以在其代码仓库 ( https://github.com/Pico-Developer/SpatialMP4 ) 提交 Issues。
+*对于 SpatialMLCapture App 本身的问题，请通过 PICO 应用商店的反馈渠道或 PICO 开发者支持联系。
+
+adb shell ls /sdcard/Movies/SpatialMP4
+
+# Replace xxxx with existing filename.
+adb pull /sdcard/Movies/SpatialMP4/3DVideo_xxxx.mp4
+
+#include "spatialmp4/reader.h"
+#include "spatialmp4/data_types.h"
+
+// Create reader
+SpatialML::Reader reader("path/to/your/spatial_video.mp4");
+
+// Check data type
+if (reader.HasRGB()) { /* ... */ }
+if (reader.HasDepth()) { /* ... */ }
+if (reader.HasPose()) { /* ... */ }
+
+// Load data frame
+while (reader.HasNext()) {
+    SpatialML::rgb_frame rgb_frame_data;
+    SpatialML::depth_frame depth_frame_data;
+    reader.Load(rgb_frame_data, depth_frame_data);
+    // Process rgb_frame_data.left_rgb, depth_frame_data.depth 
+    ...
+}
+
+# WIP
+from spatialmp4 import Reader
+reader = Reader("path/to/your/spatial_video.mp4")

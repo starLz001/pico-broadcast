@@ -1,0 +1,1228 @@
+*更新日志
+*
+* 说明
+*目的
+本文档用于说明PICO 企业应用套件SDK的使用方法。
+*范围
+本文档面向利用PICO企业应用套件开发行业软件的客户。
+*术语或缩略语
+**
+*使用说明
+*概述
+企业应用套件SDK提供了一系列简单实用的API，方便行业用户开发桌面应用程序，实现对VR头戴(以下简称头戴)的监视和控制，已实现的功能包括：
+*设备发现
+*视频播放
+*App播放
+*音量控制
+*电量获取
+*关机
+*重启
+*画面监控
+*软件清单
+*软件下载
+软件下载及安装
+*使用PICO 企业套件 SDK 需保证PC和VR端已安装对应的企业应用套件。
+https://business.picoxr.com/cn/doc/Business-Suite-Download
+*安装企业应用套件SDK程序
+安装步骤如下
+*双击PICOBusinessSuiteSetup.exe
+*选择语言
+*安装媒体服务器，如图
+* 
+*  这里选择安装本地媒体服务器，安装媒体服务器后，用户可以通过浏览器查询媒体服务器是否工作正常(参见附录5.2)
+*选择安装路径
+*选择是否安装快捷方式，保持默认
+*选择是否安装桌面图标，保持默认
+*开始安装，安装完成后，启动PICO企业应用套件，完成用户登陆后，退出套件
+ 
+ 
+
+*配置企业应用套件SDK程序
+安装成功后，进入企业应用套件本地数据目录 C:\Users\Admin\AppData\Local\PICOBusinessSuitData（非安装目录，和之前版本有变化。），打开配置文件 "key-setting.ini"，开启软件的服务模式，如图所示（路径中的admin指用户名，可按实际情况修改）
+* 
+*启动企业应用套件SDK程序
+进入企业应用套件安装目录 C:\Program Files (x86)\PICO Business Suite， 双击启动 PICOBusinessSuite.exe，启动成功后，可以在系统右下角看到企业应用条件的图标，如图。之后用户就可以通过SDK API连接该服务并控制设备了。
+* 
+当用户不再控制设备，希望关闭该程序时，可以右击托盘图标，点击退出即可.
+ 
+* 
+
+*使用举例
+企业应用套件SDK目前提供适用于C/C++的调用接口
+企业应用套件SDK 客户端库位于C:\Program Files (x86)\PICO Business Suite\SDK\clientdll
+只支持64位版本，都包含以下文件
+*
+* 引入方式
+*c++
+*构建程序时，用户需要在自己的工程内引入头文件PXREAClientSDK.h和导入库PXREAClientSDK.lib进行编译和链接
+一旦程序构建完成，需要启动，只需要将 PXREAClientSDK.dll 和可执行文件放在同一目录或者环境变量path包含的目录当中，就可以正常加载PXREAClientSDK.dll。
+*c#
+从4.1.1起，企业套件sdk新增c# demo工程（获取方法参考3.3），方便c#开发者参考，如您使用的是早期版本，请联系PICO工作人员获取。
+* 如果使用unity开发推荐参考这个例子："C:\Program Files (x86)\PICO Business Suite\SDK\client"
+ 
+*接口调用
+*调用接口前，开发者需要先调用初始化接口，初始化成功后，才可以调用设备监视和控制相关的API，在程序终止之前，需要调用终止接口用于释放已经申请的资源，如下
+*
+*示例程序与源码
+如果希望更直观的了企业应用套件支持的功能，可以打开企业应用套件安装目录 C:\Program Files (x86)\PICO Business Suite，找到示例程序PXREAClient2.exe，此程序展示了目前SDK支持的所有功能。
+程序的源代码位于C:\Program Files (x86)\PICO Business Suite\SDK\clientdll\demo，可以帮助开发者更好的理解SDK的功能。
+*接口汇总
+以下接口的具体调用方式，都可以参考示例程序源码，本节仅对调用规范加以说明
+*初始化与终止
+*接口描述
+*
+*设备发现
+*接口描述
+SDK初始化完成后，客户端程序可以通过PXREADeviceFind 回调获取到局域网内所有在线设备
+之后，当局域网中有新的设备进入或离开房间，都会触发回调，回调参数说明如下
+*
+ 
+*查询设备电量
+*接口描述
+查询接口为
+*
+回调接口为
+*
+*监视设备画面
+*接口描述
+此接口用于监视VR设备当前画面。从4.1.4版本起 SDK增加了对于多路画面监控的支持，最高可支持25路画面监控
+需要注意
+*每一路的的分辨率需要单独设置，帧率、码率无需用户设置，SDK内部会自行设置。通常宫格监控的画面使用360p或者480p分辨率，主画面使用1080p以上分辨率。
+*已经监控的设备如果退出房间，SDK的调用方需要先停止该设备的监控，待设备重新进房后，再次启动监控。
+开关控制函数
+*
+回调接口为
+*
+*监视设备自定义流画面(如摄像头)
+*接口描述
+此接口用于监视VR设备自定义流，如摄像头的画面
+开关控制函数
+*
+回调接口为
+*
+*当前应用查询
+*接口描述
+此接口用于查询当前头戴内的前台应用
+查询接口为
+ 
+
+回调接口为
+*
+*设备型号查询
+*接口描述
+查询接口为
+ 
+回调接口为
+*
+*手柄电量查询
+*接口描述
+此接口用于查询VR手柄剩余电量。注意：当手柄处于未连接状态时，电量查询会失败
+查询接口为
+* 
+回调接口为
+*
+*佩戴传感器状态
+当VR设备佩戴状态变化时，用户会受到PXREADeviceSensor回调
+回调接口为
+*
+*屏幕状态查询与设置
+*接口描述
+ 
+查询接口为
+ 
+回调接口为
+*
+设置接口为
+*
+*播控
+*接口描述
+*设备锁定:
+ 
+重复锁定设备会返回失败
+*
+回调接口为:
+*
+
+*受控提示框:
+受控提示框的作用是提示VR设备的使用者，设备已受控，但是它与锁定不同，不是设备播控的必要条件
+注意，此指令无法在C端设备上使用，用户需自行开发受控界面App，并在设备发现后启动
+*
+ 
+*视频播控
+注：企业套件4.1.4 新增循环播放接口,具体参考: Json格式设备控制指令->指令列表 一节
+视频路径格式为 视频地址|格式 例如 /sdcard/pre_resource/1.mp4|2D
+目前支持以下两种格式
+RTSP 地址 示例
+http://39.134.115.163:8080/PLTV/88888910/224/3221225642/index.m3u8
+内部存储视频地址 示例
+/sdcard/pre_resource/1.mp4
+已支持的格式包括
+*
+*
+*应用播控
+用于控制头戴打开某一安装好的app。
+本接口支持支持无参和带参数启动应用。
+无参启动应用，appName仅需传入应用包名，形式如下:
+com.tencent.mm
+带参数启动应用，appName传入json对象，形式如下:
+{ "packageName": "com.tencent.mm", "extra": { "arg1": "arg1Data" } }
+*
+*全景图播控
+用于控制头戴打开一副全景图
+图片路径格式为 url:类型代码
+目前仅支持内部存储图片
+内部存储图片路径
+/sdcard/pre_resource/1.png:1
+已支持的类型包括
+*
+*
+* 播控结果统一回调
+此接口为 4.1.2 新增，用于通知调用者每一条播控指令的结果
+*
+
+
+*音量控制
+*接口描述
+*
+*关机与重启
+ 
+*接口描述
+*
+回调接口为
+*
+*Home键功能定制
+*接口描述
+此接口用于控制home键功能，可将home键的 单击、双击、长按分别定义为“返回主界面”、“无效”、“初始功能”，注意，home键功能设置后，如果企业套件VR端退出，设置将失效，需要重新设置
+ 
+*校准设备视角
+*接口描述
+此接口用于将头显设备的应用窗口重新调整到视野的正中央
+ 
+*设备别名查询与设置
+*接口描述
+设备别名查询接口为
+ 
+回调接口为
+*
+设置接口为，只能设置1-999范围内的字符串
+*
+*Json格式设备控制指令
+*接口描述
+为增强接口的兼容性与扩展性，新增Json格式的设备控制指令，后续如新增简单的设备控制命令，都会采用这种格式
+接口定义为
+ 
+*指令列表
+*
+*Json格式设备状态返回
+*接口描述
+为增强接口的兼容性与扩展性，新增Json格式的设备控制指令，后续如新增简单的设备控制命令，都会采用这种格式
+*回调接口
+*
+*状态列表
+*
+
+
+*字节流发送
+*接口描述
+*
+*字节流接收
+*接口描述
+详见4.1.1 回调接口 PXREADeviceCustomMessage //@brief 自定义消息 
+*
+*附录
+*安装企业应用套件头戴端程序
+首先将android-platform-tools添加到windows环境变量path中
+然后启动cmd 运行命令
+adb install path\to\EnterpriseAssistant-HMD.apk”
+安装成功后，在头戴端->行业设置中，将企业应用套件设置为启动程序，并重启头戴设备，
+重启完成后，如果头戴自动进入企业应用套件界面，说明安装成功
+* 媒体服务器状态查询
+用户可以在浏览器地址栏输入以下链接，查询RTC服务是否启动成功
+http://127.0.0.1:49090/singleCenter/serverStatus
+其中127.0.0.1 代表了本机的IP地址，如果RTC服务运行在局域网内的其他PC上，只需将
+*127.0.0.1替换成实际IP即可
+该链接返回的结果如下
+* 
+
+如看detail一栏状态全部变为Available (SDK安装后需要等待大约30秒左右)，说明服务已经正常启动
+ 
+
+*文档版本
+*软件版本
+*主要更新内容
+*更新日期
+V4.30.0
+PC-4.30.0.13
+VR-4.30.0.63
+430版本新增接口：
+*支持VR端播放视频停留在视频第一帧
+*支持VR端播放器隐藏操作界面接口
+20241230
+V4.20.0.450
+PC-4.20.0.450
+VR-4.20.0.033
+
+420版本 新增接口：
+*可自定义画面监控的参数：分辨率，帧率等
+*画面监控接口 支持配置音频传输
+*关闭应用接口，增加通过包名关闭应用
+*支持打开/关闭安全区，设置快速安全区
+*提供设定地面高度接口
+*支持播放视频进度回调和播放结束回调
+*提供护眼模式接口，获取设备温度，CPU占用等
+*提供一个公共消息通道，用户可配合VR端sdk ，实现自定义设备控制或设备状态监控。
+20240717
+术语
+解释
+企业应用套件SDK
+一种用来满足企业应用定制化需求的应用程序接口
+文件名
+说明
+PXREAClientSDK.h
+头文件，定义SDK接口
+PXREAClientSDK.lib
+dll导入库
+PXREAClientSDK.dll
+动态链接库
+visual studio 调试c#工程，目标架构应选择x64否则会报错
+初始化接口
+连接服务同时注册回调，需传入回调上下文
+*void Init(void* context,
+*pfPXREAClientCallback cliCallback,
+*unsigned mask);
+终止接口
+断开服务连接
+*void Deinit();
+ 
+回调接口 
+
+*typedef void(*pfPXREAClientCallback)(
+*void* context, 
+*//回调上下文
+*PXREAClientCallbackType type, 
+*//回调类型,具体参考"接口汇总"一节
+*int status, 
+*//回调状态码
+*void* userData); 
+*//回调数据
+初始化接口
+连接服务同时注册回调，需传入回调上下文
+*void Init(void* context,
+*pfPXREAClientCallback cliCallback,
+*unsigned mask);
+终止接口
+断开服务连接
+*void Deinit();
+ 
+回调类型定义
+ 
+回调接口 
+*typedef void(*pfPXREAClientCallback)(
+*void* context, 
+*//回调上下文
+*PXREAClientCallbackType type, 
+*//回调类型
+*int status, 
+*//回调状态码
+*void* userData); 
+*//回调数据
+ 
+*回调类型
+*context
+*type
+*userData
+*status
+*设备发现
+*用户自定义
+*PXREADeviceFind
+*设备sn
+*0
+*设备消失
+*用户自定义
+*PXREADeviceMissing
+*设备sn
+*0
+*设备连接
+
+*用户自定义
+*PXREADeviceConnect
+
+*设备sn
+*0 设备未佩戴
+ 1 设备已佩戴
+注意：当开发者使用SDK接口重启设备后，当设备再次进入房间，会同时触发PXREADeviceFind，PXREADeviceConnect两个回调，当用户通过VR设备实体按键重启设备后，不一定保证PXREADeviceFind触发，但一定会触发PXREADeviceConnect，如果希望设备重启后再次锁定设备，可以在PXREADeviceFind，PXREADeviceConnect这两个回调的处理逻辑中，都加入锁定设备的指令
+* 
+*回调类型
+*context
+*type
+*userData
+*status
+*设备电量
+*用户自定义
+
+*PXREADeviceBattery
+
+ 
+*0
+
+开启设备屏幕画面监视
+
+int StartMonitorScreen(const char* devID,PXREAMonitorQuality quality);
+
+ 
+修改已监视画面的分辨率
+int SetMonitorScreenQuality(const char* devID, PXREAMonitorQuality quality);
+此接口通常用于画面监控预览和全屏展示之间的切换,调用相关一定确保对应设备的画面监控已经开启
+关闭设备屏幕画面监视
+int StopMonitorScreen(const char* devID);
+
+
+*回调类型
+*context
+*type
+*userData
+*status
+*监控画面参数
+*用户自定义
+*PXREADeviceScreenMonitorParameter
+ 
+*
+*0
+*监控画面帧
+*用户自定义
+
+*PXREADeviceScreenMonitor
+ 
+ 
+*0
+
+开启设备屏幕画面监视
+int StartMonitorStream(const char* devID);
+关闭设备屏幕画面监视
+int StopMonitorStream(const char* devID);
+*回调类型
+*context
+*type
+*userData
+*status
+*监控画面参数
+*用户自定义
+*PXREADeviceStreamMonitorParameter
+*typedef struct _PXREAMonitorPara{
+* char devID[32];
+* //监控设备ID
+* unsigned width;
+* //画面宽度
+* unsigned height;
+* //画面高度
+*}PXREAMonitorPara;
+* 
+*0
+*监控画面帧
+*用户自定义
+
+*PXREADeviceStreamMonitor
+ 
+ 
+*0
+
+int GetCurrentApp(const char* devID)
+*回调类型
+*context
+*type
+*userData
+*status
+*应用状态
+
+*用户自定义
+
+PXREACurrentApplication
+
+ 
+*0
+
+int GetDeviceModel(const char* devID)
+*回调类型
+*context
+*type
+*userData
+*status
+*设备型号
+
+*用户自定义
+
+*PXREADeviceModel
+
+ 
+*0
+
+int GetControllerBattery(const char* devID,int controllerID);
+*回调类型
+*context
+*type
+*userData
+*status
+*设备型号
+
+*用户自定义
+
+PXREAControllerBattery
+
+ 
+*0: 查询成功
+-1: 查询失败，手柄未连接，此时userData为空
+
+*回调类型
+*context
+*type
+*userData
+*status
+*设备型号
+
+*用户自定义
+
+*PXREADeviceSensor
+
+*设备sn
+
+*1: 已佩戴
+*0: 未佩戴
+注意：向VR头戴发送屏幕状态指令之前，必须锁定设备
+int GetScreenState(const char *devID);
+*回调类型
+*context
+*type
+*userData
+*status
+*屏幕状态
+
+*用户自定义
+
+*PXREAScreenState
+
+*设备sn
+
+*1: 屏幕处于亮屏状态
+*0: 屏幕处于息屏状态
+设置屏幕状态
+
+ 
+向VR头戴发送任何播控指令之前，必须锁定设备
+锁定设备
+*int LockDevice(const char* devID);
+解锁设备
+*int UnlockDevice(const char* devID);
+*回调类型
+*context
+*type
+*userData
+*status
+*锁定结果
+
+*用户自定义
+
+*PXREADeviceLock
+
+*锁定设备的sn
+
+*0: 锁定成功
+-1: 锁定失败
+
+*解锁结果
+
+*用户自定义
+
+*PXREADeviceUnLock
+
+*解锁设备的sn
+
+*0: 锁定成功
+-1: 锁定失败
+
+显示受控提示框
+*bool StartControlDevice(const char* devID);
+关闭受控提示框
+*bool StopControlDevice(const char* devID);
+*格式
+*说明
+2D
+普通2D模式
+3D_LR
+左右视角3D模式，需视频文件支持
+3D_TB
+上下视角3D模式，需视频文件支持
+180
+180广角模式，需视频文件支持
+180_LR
+180左右广角3D模式，需视频文件支持
+180_TB
+180上下广角3D模式，需视频文件支持
+360
+360广角模式，需视频文件支持
+360_LR
+360左右广角3D模式，需视频文件支持
+360_TB
+360上下广角3D模式，需视频文件支持
+Youtube
+Youtube专有2D视频格式
+Youtube3D
+Youtube专有3D视频格式
+开始播放
+*int StartPlayVideo(
+*const char* devID,
+*//设备ID
+*const char* videoPath
+*//视频路径
+*);
+* 
+停止播放
+*int StopPlayVideo(
+*const char* devID
+*//设备ID
+*);
+视频跳转
+*int SeekVideoTime(
+*const char* devID,
+*//设备ID
+*int milliseconds
+*//跳转时间点,单位是毫秒
+*);
+暂停视频
+*int PauseVideo(
+*const char* devID
+*//设备ID
+*);
+继续播放
+*int ContinueVideo(
+*const char* devID
+*//设备ID
+*);
+开始播放
+*int StartPlayApp(
+*const char* devID,
+*//设备ID
+*const char* appName
+*//应用包名
+*);
+* 
+停止播放
+
+*int StopPlayApp(
+*const char* devID
+*//设备ID
+const char* appName=NULL 
+//应用包名, 可传空，也可传包名
+*);
+* 
+*类型代码
+*说明
+0
+360模式，需图片内容支持
+1
+普通2D模式
+2
+360左右3D模式，需图片格式支持
+3
+360上下3D模式，需图片格式支持
+开始播放
+*int StartPlayPicture(
+*const char* devID,
+*//设备ID
+*const char* picPath
+*//图片存储路径
+*);
+停止播放
+*int StopPlayPicture(
+*const char* devID
+*//设备ID
+*);
+*回调类型
+*context
+*
+*type
+*userData
+*status
+*播控结果
+
+*用户自定义
+
+
+*PXREAVideoControlResult
+
+ 
+
+*0: 播控成功
+-1: 播控失败
+
+*int SetDeviceVolumn(
+*const char* devID,
+*//设备ID
+*int vol
+*//设备音量,范围0-100
+*);
+向VR头戴发送以下指令之前，必须锁定设备
+设备关机
+*int ShutDownDevice(
+*const char* devID
+*//设备ID
+*);
+设备重启
+*int RestartDevice(
+*const char* devID
+*//设备ID
+*);
+*回调类型
+*context
+*type
+*userData
+*status
+*设备关机
+
+*用户自定义
+
+*PXREADeviceShutdown
+
+*设备sn
+
+0
+
+//按键类型定义
+typedef enum {
+    HomeFunction_singleClick = 0, //单击
+    HomeFunction_doubleClick, //双击
+    HomeFunction_longPress //长按
+}PXREAHomeButtonType;
+//按键功能定义
+typedef enum {
+    HomeFunction_backToHome = 0,//返回主界面
+    HomeFunction_default,//系统默认定义
+    HomeFunction_null//无效
+}PXREAHomeFunction;
+
+int CustomControllerHomeButtonFunction(
+const char *devID, //设备ID
+bool isControlMode, //受控模式or自由模式
+PXREAHomeButtonType btnType,// 按键类型(参考枚举定义)
+PXREAHomeFunction homeFunc// 按键功能（参考枚举定义）
+);
+
+//重置设备视角
+int RecenterView(
+const char* devID //设备ID
+);
+int GetDeviceAlias(const char *devID);
+*回调类型
+*context
+*type
+*userData
+status
+*设备别名
+
+*用户自定义
+
+*PXREADeviceAlias
+
+//设备别名信息
+typedef struct {
+ //设备sn
+ char devID[32];
+ //设备别名
+ char alias[128];
+}PXREADevAlias;
+
+0
+
+设置设备别名
+
+ 
+int DeviceControlJson(
+    const char *devID,//设备ID
+    const char *parameterJson//以json格式定义的设备控制指令
+);
+*指令说明
+*functionName
+*参数
+*示例
+瞳距调节
+
+IPDValue
+value:瞳距 
+瞳距范围62-72
+超出无效
+
+ 
+开启/关闭自动瞳距调节
+
+AutoIPD
+
+value:bool
+true 开启
+false 关闭
+ 
+
+启动/禁用Power功能
+
+SingleClickPowerKey
+
+value:bool
+true 启用
+false 禁用
+ 
+
+获取温度
+
+DeviceTemperature
+value:string
+CPU：CPU温度
+GPU: GPU温度
+BATTERY:设备电池温度
+SKIN:设备表面温度
+
+ 
+
+
+设定地面高度
+
+FloorHeight
+FloorHeight:float
+单位 米
+ 
+获取cpu利用率
+
+CPUUsage
+无
+ 
+获取设备信息
+
+DeviceInfo
+value:string
+电量查看：ELECTRIC_QUANTITY
+PUI版本号查看：PUI_VERSION
+设备型号查看：EQUIPMENT_MODEL
+设备SN查看：EQUIPMENT_SN
+ 设备内部存储空间查看：
+INTERNAL_STORAGE_SPACE_OF_THE_DEVICE
+设备蓝牙状态查看：DEVICE_BLUETOOTH_STATUS
+ 设备蓝牙状态查看：BLUETOOTH_NAME_CONNECTED
+ 蓝牙MAC地址查看：BLUETOOTH_MAC_ADDRESS
+设备WiFi状态查看：DEVICE_WIFI_STATUS
+已连接WiFi名称查看：WIFI_NAME_CONNECTED
+WLAN MAC地址查看：WLAN_MAC_ADDRESS
+设备IP查看：DEVICE_IP
+设备是否充电：CHARGING_STATUS
+ 
+
+播放视频
+
+PlayVideo
+（1）path
+String类型：视频文件地址
+（2）format
+String类型：视频格式，可选2D/3D_LR/3D_TB/180/180_LR/180_TB/360/360_LR/360_TB/Youtube/Youtube3D
+（3）isLoop
+boolean类型：true设置为循环播放，false为非循环播放
+（4）startTime、endTime
+long类型：isLoop为true时，可以设置循环播放的起始时间和结束时间，单位为毫秒。
+（5）uiDefaultHide
+boolean类型：true表示VR端默认隐藏进度条，false表示默认显示进度条。
+默认为false，即默认显示进度条
+ 
+
+关闭/打开定位追踪
+
+PositionTrackingSwitch
+value: bool
+true 打开
+false 关闭 
+ 
+打开/关闭快速安全区
+
+QuickSafeAreaSwitch
+
+value: bool
+true 打开
+false 关闭
+
+ 
+设置快速安全区的大小
+
+QuickSafeAreaSet
+
+value: json object
+radius 安全区半径（米）
+ 
+
+ 
+护眼模式接口开关
+
+EyeProtectModeSwitch
+
+value: bool
+true 打开
+false 关闭 
+
+ 
+
+打开画面监控声音
+
+SubscribeScreenAudio
+value: bool
+true 打开
+false 关闭 
+
+ 
+*回调类型
+*context
+*type
+*userData
+*status
+*Json格式设备状态
+
+*用户自定义
+
+*PXREADeviceStateJson
+
+typedef struct {
+ ///设备sn
+ char devID[32];
+ /// json格式的设备状态
+ char stateJson[256];
+}PXREADevStateJson;
+
+0
+
+指令说明
+functionName
+参数
+示例
+向PC SDK传递头戴的CPU、GPU、电池、设备表面温度
+
+DeviceTemperature|CPU
+DeviceTemperature|GPU
+DeviceTemperature|BATTERY
+DeviceTemperature|SKIN
+
+value:int类型
+单位：摄氏度
+ 
+向PC SDK传递头戴的CPU利用率
+CPUUsage
+
+value:float类型
+cpu利用率
+
+ 
+向PC SDK传递头戴的设备信息
+DeviceInfo|ELECTRIC_QUANTITY
+DeviceInfo|PUI_VERSION
+……
+value:String类型
+相关设备信息
+ 
+ 
+播放视频的进度的回调 
+回传频率：1S
+
+SyncVideoProgress
+
+value: json object
+videoName 视频名称
+progress 播放时长
+
+ 
+ 
+视频播放结束的回调 
+
+SyncVideoEnd
+
+value: string
+"xxx" 视频名称
+
+ 
+向指定设备发送字节流， 适用于用户自定义消息
+
+*int SendBytesToDevice(
+*const char* devID,
+*//设备ID
+*const char* data,
+*//起始地址
+*unsigned len
+*//数据长度,以字节为单位
+*);
+向局域网内所有设备发送字节流
+
+*int SendBytesToRoom(
+*const char* data,
+*//起始地址
+*unsigned len
+*//数据长度,以字节为单位
+*);
+回调接口 
+*typedef void(*pfPXREAClientCallback)(
+*void* context, 
+*//回调上下文
+*PXREAClientCallbackType type, 
+*//回调类型为PXREADeviceCustomMessage 
+*int status, 
+*//回调状态码
+*void* userData); 
+*//回调数据即为用户自定义的消息
+ 
+userData对应结构体为
+typedef struct {
+ ///设备sn
+ char devID[32];
+ ///数据长度
+ uint64_t dataSize;
+ ///数据指针，回调内有效
+ const char* dataPtr;
+}PXREADevCustomMessage;
+typedef enum
+{
+    PXREAFrameCaptureStart      = 1,
+    PXREAFrameCaptureStop       = 1<<1,
+    /// @brief 服务已连接
+    PXREAServerConnect          = 1<<2,
+    /// @brief 服务已断开
+    PXREAServerDisconnect       = 1<<3,
+    /// @brief 设备上线
+    PXREADeviceFind             = 1<<4,
+    /// @brief 设备离线
+    PXREADeviceMissing          = 1<<5,
+    /// @brief 设备电量
+    PXREADeviceBattery          = 1<<6,
+    /// @brief 设备已锁定
+    PXREADeviceLock             = 1<<7,
+    /// @brief 设备已解锁
+    PXREADeviceUnlock           = 1<<8,
+    /// @brief 设备连接
+    PXREADeviceConnect          = 1<<9,
+    /// @brief 设备佩戴传感器
+    PXREADeviceSensor           = 1<<10,
+    /// @brief 设备关闭
+    PXREADeviceShutdown         = 1<<11,
+    /// @brief 设备唤醒
+    PXREADeviceResume           = 1<<12,
+    /// @brief 画面监控参数返回
+    /// @deprecated 已废弃 被具体的流类型取代
+    PXREADeviceMonitorParameter = 1<<13,
+    /// @brief 监控画面帧
+    /// @deprecated 已废弃 被具体的流类型取代
+    PXREADeviceMonitor          = 1<<14,
+    /// @brief 设备型号
+    PXREADeviceModel            = 1<<15,
+    /// @brief 设备当前应用程序
+    PXREACurrentApplication     = 1<<16,
+    /// @brief 手柄电量
+    PXREAControllerBattery      = 1<<17,
+    /// @brief 当前屏幕状态
+    PXREAScreenState            = 1<<18,
+    /// @brief 播控指令执行结果
+    PXREAVideoControlResult     = 1<<19,
+    /// @brief 屏幕监控参数返回
+    PXREADeviceScreenMonitorParameter       = 1<<20,
+    /// @brief 屏幕监控画面帧
+    PXREADeviceScreenMonitor                = 1<<21,
+    /// @brief 自定义流监控参数返回
+    PXREADeviceStreamMonitorParameter       = 1<<22,
+    /// @brief 自定义流监控画面帧
+    PXREADeviceStreamMonitor                = 1<<23,
+    /// @brief 设备别名
+    PXREADeviceAlias                        = 1<<24,
+    /// @brief 设备状态Json描述
+    PXREADeviceStateJson                    = 1<<25,
+    /// @brief 自定义消息
+    PXREADeviceCustomMessage                = 1<<26,
+    /// @brief 掩码,用于开启全部回调
+    PXREAFullMask               = 0xffffffff
+} PXREAClientCallbackType;
+int GetBattery(const char* devID)
+typedef struct _PXREADevBattery{
+char devID[32];
+//设备sn
+unsigned battery;
+//设备电量,范围0-100
+}PXREADevBattery;
+//  画面监控质量
+enum PXREAMonitorQuality {
+    //  854x480
+    Quality480P = 0,
+    //  1280x720
+    Quality720P,
+    //  1920x1080
+    Quality1080P,
+    //  2560x1440
+    Quality2K,
+    //  640x360
+    Quality360p,
+};
+//画面监控启动信息
+typedef struct {
+    //设备sn
+    char devID[32];
+    //帧宽度
+    unsigned width;
+    //帧高度
+    unsigned height;
+}PXREAMonitorPara; 
+//多路画面监控帧信息
+typedef struct {
+    //设备sn
+    char devID[32];
+    //流类型 0 stream 1 screen
+    int isScreen;
+    //帧数据起始地址
+    const char* addr;
+    //帧数据长度
+    unsigned size;
+    //帧宽度
+    unsigned width;
+    //帧高度
+    unsigned height;
+    //帧行宽
+    unsigned bytesPerLine;
+    //帧画面格式,当前支持YUV420P和rgba
+    //对应值为 bgra8888 4
+    //        yuv420p 13
+    
+    int pixFormat;
+}PXREAFrameBlobMultiplyMonitor;
+参见PXREADeviceScreenMonitor对应userData
+typedef struct _PXREACurrentApp{
+char devID[32];
+//设备sn
+char appName[128];
+//应用包名
+}PXREACurrentApp;
+typedef struct _PXREADevModel{
+char devID[32];
+//设备sn
+char devModel[32];
+//设备型号
+}PXREADevModel;
+typedef struct _PXREACtrllerBattery{
+char devID[32];
+//设备sn
+int controllerID;
+//手柄编号
+// 0 左手柄
+// 1 右手柄
+unsigned battery;
+//手柄电量 0-100
+}PXREACtrllerBattery;
+int SetScreenState(
+    const char *devID,
+    //设备ID
+    int screenState
+    //屏幕状态
+    // 1 点亮屏幕
+    // 0 熄灭屏幕
+ );
+typedef struct _PXREAVideoCtrlResult{
+    char devID[32];
+    //设备sn
+    char action[32];
+    //播控类型
+    //openApp 打开应用
+    //closeApp 关闭应用
+    //openVideo 打开视频
+    //closeVideo 关闭视频
+    //openImage 打开图像
+    //closeImage 关闭图像
+    int  result;
+    // 播控是否成功，同status
+    //0 成功
+    //-1 失败
+    char detail[128];
+    // 错误详情 
+    int  errorcode;
+    // 错误码 某些播控类型没有错误码，则返回0
+    
+}PXREAVideoCtrlResult;
+int SetDeviceAlias(
+    const char *devID, //设备ID
+    const char *alias //设备别名
+ );
+{
+    "functionName": "IPDValue",
+    "value": 67
+}
+{
+    "functionName": "AutoIPD",
+    "value": true
+}
+{
+    "functionName": "SingleClickPowerKey",
+    "value": false
+}
+{
+    "functionName": "DeviceTemperature",
+    "value": "CPU"
+}
+{
+    "functionName": "FloorHeight",
+    "value": 1.7
+}
+{
+    "functionName": "CPUUsage"
+}
+{
+    "functionName": "DeviceInfo",
+    "value": "PUI_VERSION"
+}
+{
+    "functionName": "PlayVideo",
+    "path": "/sdcard/pre_resource/1.mp4",
+    "format": "2D",
+    "isLoop": true,
+    "startTime": 0,
+    "endTime": 5000，
+    "uiDefaultHide": true,
+    "uiHide": true,
+    "startThenPause": true
+}
+{
+  "functionName": "PositionTrackingSwitch"
+  "value": true
+}
+{
+  "functionName": "QuickSafeAreaSwitch"
+  "value": true
+}
+{
+  "functionName": "QuickSafeAreaSet"
+  "value": {
+    "radius ": 10
+  }
+}
+{
+  "functionName": "EyeProtectModeSwitch"
+  "value": true
+}
+{
+  "functionName": "SubscribeScreenAudio"
+  "value": true
+}
+{
+    "functionName": "DeviceTemperature|CPU",
+    "value": 72
+}
+{
+    "functionName": "CPUUsage",
+    "value": 0.2747
+}
+{
+    "functionName": "DeviceInfo|PUI_VERSION",
+    "value": "5.8.0"
+}
+{
+  "functionName": "SyncVideoProgress"
+  "value": {
+    "videoName ": "xxx"
+    "progress": 160
+  }
+}
+{
+  "functionName": "SyncVideoEnd"
+  "value": "xxxx"
+}

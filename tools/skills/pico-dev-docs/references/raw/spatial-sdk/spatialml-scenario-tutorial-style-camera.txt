@@ -1,0 +1,401 @@
+示例：超级分辨率相机
+========================================
+该示例通过 SpatialML 部署 Real-ESRGAN 模型，对相机捕捉的低分辨率图像进行超分辨率重建，从而提升画面清晰度。应用包含 SecureMR 与 RelaxMR 两种模式：
+*SecureMR 模式：安全模式。在该模式下，应用无法从 SpatialML 框架中直接读取图像数据用于显示；系统会在隔离环境中渲染并显示超分结果，以满足更严格的隐私与数据安全诉求。
+*RelaxMR 模式：标准模式。应用通过 SpatialML 部署并加速模型推理，将放大后的图像结果显示给用户。
+*前提条件
+*参阅 《准备开发环境》 配置 PICO Spatial SDK 开发环境。
+*准备一台 PICO OS 6 真机。
+* 
+*获取示例项目
+*前往《PICO Spatial SDK 示例》下载 使用 SpatialML 框架实现实时超级分辨率 示例项目。
+*运行示例项目
+*把示例项目拉取到本地，然后用 Android Studio 打开示例项目。
+*连接 PICO OS 6 真机。
+*运行 SuperResolutionApp 模块。
+* 
+*运行示例后，首先会在一个 DefaultWindowContainer 里看到模式选择页，随后进入两条不同链路：
+*SecureMR mode：SecureMR 模式下会同时显示两个空间容器：左侧为 SpatialML 空间容器（系统隔离渲染的“取景器”），用于显示放大后的相机图像；右侧为主面板（包含控制缩放倍率的 3D “控制柄”）。
+*RelaxMR mode：RelaxMR 模式下仅显示主面板空间容器，不再显示隔离的 SpatialML 空间容器；取景器与 UI 控制组件都在主面板内渲染。应用会把超分结果读回成纹理，贴到 Display512.glb 的屏幕材质上；同时出现工具栏，可用 slider 调节缩放倍率。如果已配置 VQA 后端 LLM 服务，还可以点击 Ask AI，把当前超分图像提交给远端服务并在弹出的子窗口中显示回答。
+* 
+ 
+*示例项目结构说明
+示例项目的核心代码在 SuperResolutionApp/src/main/java/com/pico/spatial/ml/sample/sr/ 下，建议按下面顺序阅读：
+*MainApplication.kt：应用入口；用 DefaultWindowContainer 启动一个 640x640 的主面板
+*MainActivity.kt：SpatialLaunchActivity 的最小入口；负责把应用接到空间应用启动链路上
+*AndroidManifest.xml：声明相机/网络权限，以及 Planar WindowContainer 的样式和默认尺寸
+*view/MainContainer.kt：应用的第一层状态分发；决定显示模式选择页、确认页，还是主 SpatialView
+*vm/SrViewModel.kt：保存 AppMode 状态机、初始化算法实例、触发读回和 VQA
+*vm/SrAlgorithmImpl.kt：SpatialML 核心实现；创建 Session、Tensor、Pipeline，并部署超分模型
+*helper/AsyncPipelineRunner.kt：把 Pipeline 封装成“持续运行”或“修改参数后单次运行”的协程调度器
+*view/SuperResolutionSpatialView.kt：SecureMR / RelaxMR 的主视图分歧、权限申请、3D 交互、结果贴图
+*view/ControlBarAugment.kt：RelaxMR 工具栏；slider 控制倍率，按钮触发 VQA
+*vm/VQAWrapper.kt：VQA 功能，封装图片上传与问答请求；默认对接火山引擎方舟服务。你可以设置火山引擎方舟服务的 API Key，也可以使用其他 LLM 服务。
+相关资源位于 SuperResolutionApp/src/main/assets/，最关键的资源包括：
+*real_esrgan_x4v3.serialized.bin：Real-ESRGAN 模型，用于对相机捕捉的低分辨率图像进行超分辨率重建
+*Display512.glb：显示结果的屏幕模型
+*Controller.glb：SecureMR 模式下可拖拽的控制器
+*基于 SpatialML 实现一个超级分辨率相机应用
+*下面以示例项目的 SuperResolutionApp/src/main/java/com/pico/spatial/ml/sample/sr/vm/SrAlgorithmImpl.kt 为主线，分步骤说明如何实现基于 SpatialML 的超级分辨率相机应用。
+*步骤一：初始化并声明 Global Tensor
+*初始化逻辑封装在异步协程任务 sessionDeferred 中：先创建 SpatialMLInstance 并等待其就绪，然后创建 SpatialMLSession。在 SecureMR 模式下，该 Session 会关联一个 SpatialML 空间容器；在 RelaxMR 模式下则不创建隔离容器（容器尺寸设为 0）。
+ 
+*接下来通过该 SpatialMLSession 声明 Global Tensor。将 Tensor 声明为全局类型，主要用于在不同 Pipeline 之间共享与传递数据。本示例声明了以下 Global Tensor：
+*scenegraph：在 SpatialML 空间容器中渲染的场景图，对应 SecureMR 模式下的“取景器”。
+*dynamicTexture：作为“取景器”的纹理贴图。
+*zoomAffine：一个 2x3 矩阵，用于描述相机图像放大区域的仿射变换。
+ 
+*步骤二：为 Global Tensor 创建一次性 Pipeline
+*在完成初始化 Session 和声明 Global Tensor 的异步任务后，你可以创建一个一次性 Pipeline 并立即执行它。该 Pipeline 会执行以下操作：
+*将 scenegraph 的 visibility 属性设为非零 Tensor，使“取景器”可见。
+*将 scenegraph 中“取景器”对象的颜色贴图替换为 dynamicTexture。
+ 
+* 
+*步骤三：创建 Main Pipeline
+*Main Pipeline 是应用的核心：负责部署超分模型并持续运行，以保证图像结果实时更新。该 Pipeline 会执行以下操作：
+*获取实时的相机背景图像。
+*使用 zoomAffine Global Tensor 中的仿射变换矩阵来放大背景图像，并将其像素值从 0-255 范围映射到 0.0-1.0 范围，以满足 Super-Resolution 模型的输入要求。
+*将放大后的图像输入 Super-Resolution 模型，运行模型并获得输出。
+*将模型输出的像素值映射回 0-255 范围，然后将最终结果写入 dynamicTexture Global Tensor。
+ 
+示例代码提供了一个辅助类：AsyncPipelineRunner，它可以持续地运行 Main Pipeline，从而保证放大后的图像的实时更新。
+* 
+*步骤四：创建 Affine Pipeline
+*Affine Pipeline 用于根据用户设定的放大比例，计算并更新 zoomAffine Global Tensor 的内容，从而确保送入模型的 affinedFloat 与用户的放大要求一致。该 Pipeline 无需循环执行，仅需在用户更新放大比例后触发即可：
+ 
+*步骤五：回调 Affine Pipeline
+*如前所述，Affine Pipeline 只需要在用户更新放大比例时运行。示例中提供了一个方法作为 UI 事件回调入口。
+该实现使用 AsyncPipelineRunner.runOnceAfterValueReset：它允许调用者先更新 Tensor 的数据，再提交 Pipeline 执行。这样可以在用户更新放大比例时，先写入新的 zoomPoints/zoomAffine，再触发 Affine Pipeline 计算生效。
+ 
+*步骤六：在 UI 中启动 Main Pipeline
+*到这里，超级分辨率相机的核心算法已经完成。接下来需要在 UI 层（示例项目的 SuperResolutionApp/src/main/java/com/pico/spatial/ml/sample/sr/vm/SrViewModel.kt）启动 Main Pipeline，使算法按既定流程持续处理并输出图像结果。
+示例以 4x 作为默认放大倍率，因此在启动 Main Pipeline 前会先调用 setUpscaleFactor(4.0f, ...) 更新仿射矩阵，再开始持续提交推理任务：
+ 
+*
+ 
+*步骤七：在 RelaxMR 模式下实现渲染
+*在前面的步骤中，我们并没有实现“由应用直接渲染超分输出”的逻辑。这是因为在 SecureMR 模式下，渲染由系统在 SpatialML 空间容器内隔离完成：当创建了 sceneGraph 与 dynamicTexture 并执行初始化 Pipeline 后，dynamicTexture 的更新会自动反映在该隔离容器的渲染结果中。
+而在 RelaxMR 模式下，上述流程会跳过 SpatialML 空间容器的创建、SceneGraph 的加载与初始化 Pipeline；因此需要由应用自行读取 dynamicTexture，将其作为纹理贴图并完成渲染。下面代码（位于 SuperResolutionApp/src/main/java/com/pico/spatial/ml/sample/sr/vm/SrAlgorithmImpl.kt）展示了如何将 dynamicTexture 读回为可渲染的纹理资源：
+ 
+*依据 SpatialML 隐私声明的要求：当 Session 使用了相机数据时，应用必须在获得用户相机权限授权后，才允许执行读回与渲染等操作。示例中仅在 RELAX_MR_CONFIRMED 模式下请求相机权限，并在授权后启动算法：
+ 
+
+
+*PICO Emulator 不支持 SpatialML，因此该示例项目只能运行在 PICO OS 6 真机上。
+
+*Ask AI 对应的 VQA（Visual Question Answering，视觉问答）功能默认使用火山引擎方舟服务。如果你想体验 Ask AI，需要先给设备写入 API Key：adb shell setprop debug.spatialml.apikey <API-KEY>。如果没有配置 API Key，Ask AI 按钮会保持禁用状态。你也可以自定义使用其他 LLM 服务。
+
+**
+
+*SecureMR
+ 
+
+*RelaxMR
+* 
+
+class SrAlgorithmImpl(
+    private val appContext: Context,
+    private val scope: CoroutineScope,
+    private val useSecureMr: Boolean = false,
+) {
+    private val sessionDeferred =
+        scope.async {
+            val session =
+                SpatialMLInstance.create(appContext)
+                    .also {
+                        while (!it.ready) {
+                            delay(100)
+                        }
+                        Log.i("SpatialML", "SpatialMLInstance ready")
+                    }
+                    .createSession(
+                        // note: if not SecureMR mode, no need for the SpatialML container 
+                        //       so let's set the SpatialML container's dimensions all to 0.
+                        InitInfo(
+                            imageWidth = CAMERA_IMG_SIZE,
+                            imageHeight = CAMERA_IMG_SIZE,
+                            containerWidth = if (useSecureMr) 1200 else 0,
+                            containerHeight = if (useSecureMr) 1200 else 0,
+                            containerDepth = if (useSecureMr) 200 else 0,
+                        )
+                    )!!
+            TODO()
+            session
+        } // end of async
+    TODO()
+} // end of class
+
+class SrAlgorithmImpl(
+    private val appContext: Context,
+    private val scope: CoroutineScope,
+    private val useSecureMr: Boolean = false,
+) {
+    private lateinit var dynamicTexture: GlobalTensor
+    private lateinit var zoomAffine: GlobalTensor
+    private lateinit var zoomPoints: PipelineTensor
+    
+    private val sessionDeferred =
+        scope.async {
+            val session = ...
+            if (useSecureMr) {
+                // only need to have a display scene graph in SecureMR mode. 
+                displaySceneGraph = session.newSceneFromGLTFSuspend("Display512.glb")
+            }
+            dynamicTexture =
+                session.newGlobalTensor(
+                    MultiDimensionalInitInfo(
+                        DataType.UINT8,
+                        intArrayOf(ZOOMED_IMG_SIZE, ZOOMED_IMG_SIZE),
+                        channel = 3,
+                        dynamicTexture = true,
+                    )
+                )
+            zoomAffine =
+                session.newGlobalTensor(
+                    MultiDimensionalInitInfo(DataType.FLOAT32, intArrayOf(2, 3))
+                )
+            session
+        } // end of async
+        TODO()
+} // end of class
+
+该 Pipeline 用于配置 SpatialML 空间容器中渲染的 SceneGraph，因此仅在 SecureMR 模式下才需要执行。
+
+class SrAlgorithmImpl(
+    private val appContext: Context,
+    private val scope: CoroutineScope,
+    private val useSecureMr: Boolean = false,
+) {
+    private lateinit var dynamicTexture: GlobalTensor
+    private lateinit var zoomAffine: GlobalTensor
+    private lateinit var zoomPoints: PipelineTensor
+    
+    private val sessionDeferred = ...
+    
+    val initTask =
+        if (useSecureMr) {
+            scope.async {
+                val session = sessionDeferred.await()
+                Log.i("SpatialML", "Async task (session) is done -> init pipeline")
+    
+                session.newPipeline().run {
+                    // step 1: use the dynamic texture to replace the Panel's color texture
+                    updateSceneGraphProperty(
+                        displaySceneGraph,
+                        "/",
+                        PBRMaterials[0].BaseColorTexture,
+                        dynamicTexture,
+                    )
+                    // step 2: set visibility
+                    switchSceneVisibility(displaySceneGraph, displaySceneGraph)
+    
+                    Log.i("SpatialML", "submit the init pipeline")
+                    submit(mapOf(), null, null)
+                }
+            }
+        } else {
+            null
+        }
+}
+
+由于 dynamicTexture 是动态纹理 Tensor（dynamic-texture tensor），当结果写入 dynamicTexture 后，使用该 Tensor 的渲染内容会随之更新。因此你无需进行额外操作。
+
+// inside SrAlgorithmImpl, after initTask = ...
+val mainPipeline =
+    AsyncPipelineRunner(scope, sessionDeferred) { pipeline, _ ->
+        pipeline.apply {
+            // step 3.1: local tensor for camera image
+            val rightEyeImg =
+                newLocalTensor(
+                    MultiDimensionalInitInfo(
+                        DataType.UINT8,
+                        intArrayOf(CAMERA_IMG_SIZE, CAMERA_IMG_SIZE),
+                        3,
+                    )
+                )
+            // step 3.2: get the camera image into the tensor
+            rectifiedVSTAccess(
+                rightImageResult = rightEyeImg,
+                leftImageResult = null,
+                timestampResult = null,
+                cameraMatrixResult = null,
+            )
+            // step 3.3: affine the camera image
+            val affinedUint8 =
+                newLocalTensor(
+                    MultiDimensionalInitInfo(
+                        DataType.UINT8,
+                        intArrayOf(AFFINE_IMG_SIZE, AFFINE_IMG_SIZE),
+                        3,
+                    )
+                )
+            applyAffine(zoomAffine, rightEyeImg, affinedUint8)
+            // step 3.4: converted the image into float, and scale it to 0~1
+            val affinedFloat =
+                newLocalTensor(
+                    MultiDimensionalInitInfo(
+                        DataType.FLOAT32,
+                        intArrayOf(AFFINE_IMG_SIZE, AFFINE_IMG_SIZE),
+                        3,
+                    )
+                )
+            copy(affinedUint8, affinedFloat)
+            arithmetic("{0} / 255.0", arrayOf(affinedFloat), affinedFloat)
+            // step 3.5: prepare the tensor to hold the output from super-resolution
+            val zoomedResult =
+                newLocalTensor(
+                    MultiDimensionalInitInfo(
+                        DataType.FLOAT32,
+                        intArrayOf(ZOOMED_IMG_SIZE, ZOOMED_IMG_SIZE),
+                        3,
+                    )
+                )
+            // step 3.6: deploy the super-resolution model and run
+            //           input: affinedFloat, i.e., the image after affined, type conversion and scaling
+            //           output: zoomedResult
+            loadAssetToSharedMemory(appContext, "real_esrgan_x4v3.serialized.bin") {
+                runModelInference(
+                    modelName = "real_esrgan_x4v3",
+                    modelType = Pipeline.ModelInferenceType.QNN_HTP,
+                    modelBinary = it,
+                    inputs = arrayOf(Pipeline.ModelNodeEncoding("image", affinedFloat)),
+                    outputs =
+                        arrayOf(Pipeline.ModelNodeEncoding("upscaled_image", zoomedResult)),
+                )
+            }
+            // step 3.7: scale it back to 0~255
+            arithmetic("{0} * 255.0", arrayOf(zoomedResult), zoomedResult)
+            copy(zoomedResult, dynamicTexture)
+        }
+    }
+
+// inside SrAlgorithmImpl, after initTask = ...
+// delcare the zoomPoints as a class member, because we may reset its values in
+// UI callback triggered by user events. 
+private lateinit var zoomPoints: PipelineTensor
+
+private val affinePipeline =
+    AsyncPipelineRunner(scope, sessionDeferred) { pipeline, _ ->
+        pipeline.apply {
+            zoomPoints =
+                newLocalTensor(MultiDimensionalInitInfo(DataType.FLOAT32, intArrayOf(3, 1), 2))
+
+            // affine transform: from the region selected by zoomPoints to
+            //                   a square of 128x128 (because our super-resolution mode
+            //                   expects a 128x128 input image)
+            val targetZoomPoints =
+                newLocalTensor(zoomPoints.config).apply {
+                    SharedMemory.create("affined_dst_points", 6 * Float.SIZE_BYTES).use { mem ->
+                        val buf = mem.mapReadWrite()
+                        buf.order(ByteOrder.nativeOrder())
+                        buf.putFloat(0.0f)
+                        buf.putFloat(0.0f)
+
+                        buf.putFloat(AFFINE_IMG_SIZE.toFloat() - 1) // AFFINE_IMG_SIZE = 128
+                        buf.putFloat(0.0f)
+
+                        buf.putFloat(0.0f)
+                        buf.putFloat(AFFINE_IMG_SIZE.toFloat() - 1)
+
+                        SharedMemory.unmap(buf)
+                        tensorResource = mem
+                    }
+                }
+
+            getAffine(zoomPoints, targetZoomPoints, zoomAffine)
+        }
+    }
+
+private lateinit var superResolution: SrAlgorithmImpl
+
+// ... other init
+
+superResolution =
+    SrAlgorithmImpl(
+        appContext,
+        viewModelScope,
+        useSecureMr = appMode.value == AppMode.SECURE_MR_CONFIRMED,
+    )
+val affineTask = superResolution.setUpscaleFactor(4.0f, superResolution.initTask)
+superResolution.mainPipeline.runContinuously(10, affineTask)
+
+private lateinit var superResolution: SrAlgorithmImpl
+
+// ... other init
+
+superResolution =
+    SrAlgorithmImpl(
+        appContext,
+        viewModelScope,
+        useSecureMr = appMode.value == AppMode.SECURE_MR_CONFIRMED,
+    )
+val affineTask = superResolution.setUpscaleFactor(4.0f, superResolution.initTask)
+superResolution.mainPipeline.runContinuously(10, affineTask)
+
+// inside SrAlgorithmImpl
+
+/**
+ * The callback to read the upscaled image as a dynamic texture so that it can be rendered
+ * inside the [com.pico.spatial.ml.sample.sr.view.SuperResolutionSpatialView] container.
+ */
+fun imageReadbackAsTexture() =
+    scope.async {
+        sessionDeferred.await()
+        dynamicTexture.readbackAsTextureResourceSuspend()
+    }
+
+@Composable
+fun SuperResolutionSpatialView(srViewModel: SrViewModel = viewModel()) {
+    // first, apply for camera permission ONLY in RELAX MR mode
+    var hasCameraPermission by remember {
+        mutableStateOf(
+            ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) ==
+                PackageManager.PERMISSION_GRANTED
+        )
+    }
+    
+    val launcher =
+        rememberLauncherForActivityResult(contract = ActivityResultContracts.RequestPermission()) {
+            isGranted: Boolean ->
+            hasCameraPermission = isGranted
+        }
+
+    LaunchedEffect(hasCameraPermission) {
+        if (!hasCameraPermission && appMode == SrViewModel.AppMode.RELAX_MR_CONFIRMED) {
+            launcher.launch(Manifest.permission.CAMERA)
+        } else {
+            srViewModel.init(context, 4.0f)
+        }
+    }
+    
+    if (appMode != SrViewModel.AppMode.RELAX_MR_CONFIRMED || hasCameraPermission) {
+        SpatialView(
+            ...,
+            update = { content, _ ->
+                // textureHasReset: viewmodel state
+                // to ensure the texture is only reset ONCE
+                if (!srViewModel.textureHasReset) {
+                    content.entities
+                        .filter { it.getName() == "display512" }
+                        .forEach { display ->
+                            val newMat = UnlitMaterial.create()
+                            ... // init the newMat
+                            srViewModel.useZoomedImageAsBaseColor(newMat)
+                            // which calls: 
+                            //     newMat.setBaseColorTexture(
+                            //             superResolution.imageReadbackAsTexture().await()
+                            //    )
+                            //    srViewModel.textureHasReset = true
+                            
+                            // Then: replace the display entity's material with the
+                            //       newly-created UnlitMaterial whose base color uses
+                            //       the dynamic-texture from the super-resolution.
+                            display.components[ModelComponent::class.java]
+                                ?.materials
+                                ?.set(0, newMat)
+                        }
+                }
+            },
+        )
+    }
+}

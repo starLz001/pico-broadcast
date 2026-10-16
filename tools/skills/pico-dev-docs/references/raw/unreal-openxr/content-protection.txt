@@ -1,0 +1,20 @@
+内容保护
+========================================
+你可启用内容保护功能来防止用户对你应用中的画面进行截屏、录屏或投屏。具体而言，若用户在你的应用内截屏、录屏或投屏，相关画面将呈现黑色。
+*环境要求
+*PICO Unreal OpenXR 版本：1.1.0 或以上版本
+*PICO 设备：PICO Neo3、PICO 4、PICO 4 Pro、PICO 4 Enterprise、PICO G3、PICO 4 Ultra 或 Project Swan（PICO OS 6）
+*前提条件
+你已在引擎中安装并启用了 PICO Unreal OpenXR 插件。详情参考 PICO Unreal OpenXR 快速开始。
+*启用步骤
+*参考以下步骤启用内容保护功能。
+*方式一：在编辑器中启用 
+*在编辑器左上角，点击 编辑（Edit） > 项目设置（Project Settings） > 插件（Plugin） > PICO For OpenXR。
+*移动到 Feature 选项卡下，勾选 Use Content Protect。
+* 
+*已为应用开启内容保护能力。
+*方式二：使用蓝图动态启用 
+你可以添加 Enable Content Protect 蓝图节点启用内容保护。
+ 
+*相关 OpenXR 扩展
+*PICO OpenXR 使用了 XR_FB_composition_layer_secure_content 扩展来实现内容保护功能。

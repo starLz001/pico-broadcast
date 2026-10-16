@@ -1,0 +1,70 @@
+导入 PICO SDK 并完成项目设置
+========================================
+PICO Unreal Integration SDK（以下简称 SDK）是 PICO 官方提供的、基于虚幻引擎研发的一组工具包。本文档介绍如何在创建的 UE 项目中导入 PICO Unreal Intergration SDK 并完成项目设置。
+*前提条件
+*你已经创建了一个 UE 项目。
+*为避免出现错误，在导入 SDK 前，你需要确保你已经关闭了 UE 编辑器。
+*导入 SDK
+导入 PICO Unreal Intergration SDK 的步骤如下：
+*从 PICO 开发者官网下载并解压最新版 PICO Unreal Integration SDK。根据你所处的地理位置选择合适的下载链接：
+*中国大陆：https://developer-cn.picoxr.com/resources/?platform=unreal
+*非中国大陆：https://developer.picoxr.com/resources/?platform=unreal
+*选择一个与你的 UE 版本适配的文件夹。PICO SDK 支持 UE 4.27、5.5 和 5.6。
+*将该文件夹下的 Plugins 文件夹复制到新建项目的根目录下。
+* 
+*配置插件
+插件导入后，你需要在 Unreal 编辑器中进行配置。
+*重新打开项目，若此时编辑器提示 SDK 模块没有编译，点击 是。
+*在编辑器左上角，点击 编辑（Edit） > 插件（Plugins）。
+*你可在 已安装（Installed）下，看到导入的 OnlineSubsystemPico 插件。在 项目（Project）下，看到导入的 PICOSpatialAudio 插件、PICO XR 插件、和 PICOEnterprise 插件。
+*要体验 Integration SDK 所有插件功能，确认上述 4 个插件已勾选。你也可按需启用插件。
+*前往 编辑（Edit） > 插件（Plugins） > 内置（Built-In），取消勾选 Virtual Reality 和 Input Devices 下的所有插件，包括 OpenXR、Google 相关插件等。这是因为 PICO SDK 可能会与其它 VR 插件不兼容而出错。
+* 
+*在编辑器左上方，点击 编辑（Edit）> 项目设置（Project Settings） > 插件（Plugins） > OnlinePico Settings。
+*为确保 OnlineSubsystemPico 插件可以正常使用，即平台服务可以初始化成功，你需要在 平台（Platform）选卡下，勾选 bEnable 并填入在开发者平台创建应用时获得的 AppID。了解如何查看 AppID，参考创建开发者账号和应用。
+* 
+*按照编辑器提示重启。
+*修改项目设置
+为使 UE 能够兼容 PICO SDK，你需要参考以下步骤对新项目进行配置： 
+* 
+*打包测试
+*导入 SDK 后，你可参考打包与安装测试 UE 项目能否打包成功。
+
+
+**
+
+如果你创建的项目是基于 虚拟现实（Virtual Reality）模板的项目，参考以下步骤修改项目设置：
+*在 项目设置（Project Settings）> 引擎（Engine）> 渲染（Rendering）> VR 选卡下，取消勾选 移动 HDR（Mobile HDR）。这是因为勾选 移动 HDR 可能会导致应用显示画面出现模糊、卡顿、花屏等一系列问题。
+* 
+*在 项目设置（Project Settings）>  平台（Platforms） > Android > APK 打包（APK Packaging） 选卡下：
+*点击 立即配置（Configure Now） 以及 接受 SDK 证书（Accept SDK License）。若 接受 SDK 证书 按钮置灰，则无需点击。
+*将 最低 SDK 版本（Minimum SDK Version） 设置为 29，目标 SDK 版本（Target SDK Version） 设为 29 或更高。
+* 
+*在 构建（Build） 选卡下：
+*勾选 支持arm64（Support arm64） 并取消勾选 支持armv7 （Support armv7）。
+*如果你想用 OpenGLES 渲染接口来打包项目，仅勾选 支持 OpenGL ES3.1。
+*如果你想用 Vulkan 渲染接口来打包项目或你使用的是 UE 5.1 引擎，仅勾选 支持 Vulkan。UE 5.1 引擎不支持 OpenGLES。
+* 
+你已完成所有配置。
+
+*如果你创建的项目是空白或其它非 虚拟现实（Virtual Reality）模板项目，参考以下步骤修改项目设置：
+*按下 Ctrl + S 或点击编辑器左上角 保存当前关卡（Saves the current level to disk），选择你的关卡 Map 所要存储的路径并为其命名，然后点击 保存（Save）。
+*在编辑器左上角，点击 编辑（Edit） > 项目设置（Project Settings） > 项目（Project） > 地图和模式（Maps & Modes）。在 默认地图（Default Maps） 下，将 编辑器开始地图（Editor Startup Map） 与 游戏默认地图（Game Default Map） 设置你在步骤 1 中保存的地图。
+* 
+*在 项目设置（Project Settings）> 引擎（Engine） > 输入（Input）> 移动平台（Mobile） 选卡下，点击 默认触控界面（Default Touch Interface） 右侧下拉菜单，选择 清除（Clear）。
+* 
+*在 项目设置（Project Settings）> 引擎（Engine）> 渲染（Rendering）> VR 选卡下，取消勾选 移动 HDR（Mobile HDR）。这是因为勾选 移动 HDR 可能会导致应用显示画面出现模糊、卡顿、花屏等一系列问题。
+* 
+*在 项目设置（Project Settings）>  平台（Platforms） > Android > APK 打包（APK Packaging） 选卡下：
+*点击 立即配置（Configure Now） 以及 接受 SDK 证书（Accept SDK License）。若 接受 SDK 证书 按钮置灰，则无需点击。
+*将 最低 SDK 版本（Minimum SDK Version） 设置为 29，目标 SDK 版本（Target SDK Version） 设为 29 或更高。
+* 
+*勾选 启用 KitKat 及以上设备的全屏沉浸（Enable FullScreen Immersive on KitKat and above devices）。否则项目打包后会出现 Android 系统的虚拟按钮。
+* 
+*在 构建（Build） 选卡下，勾选 支持arm64（Support arm64） 并取消勾选 支持armv7 （Support armv7）。
+* 
+*在 构建（Build） 选卡下：
+*如果你想用 OpenGLES 渲染接口来打包项目，仅勾选 支持 OpenGL ES3.1；
+*如果你想用 Vulkan 渲染接口来打包项目或你使用的是 UE 5.1 引擎，仅勾选 支持 Vulkan。UE 5.1 引擎不支持 OpenGLES。
+* 
+你已完成所有配置。

@@ -1,0 +1,984 @@
+通过Miracast或PICO自研投屏把头戴屏幕的画面显示到外部设备。
+*接口列表
+*
+*Miracast投屏
+*接口列表
+*
+*pbsOpenMiracast
+开启投屏功能
+ 
+适用设备
+全系企业级设备
+入参说明
+无
+返回值
+无
+调用示例
+ 
+*pbsIsMiracastOn
+获取投屏开启状态
+ 
+适用设备
+全系企业级设备
+入参说明
+无
+返回值
+*
+调用示例
+ 
+*pbsCloseMiracast
+关闭投屏功能
+ 
+适用设备
+全系企业级设备
+入参说明
+无
+返回值
+无
+调用示例
+ 
+*pbsStartScan
+开始扫描可投屏设备
+ 
+适用设备
+全系企业级设备
+入参说明
+无
+返回值
+无
+调用示例
+ 
+*pbsStopScan
+停止扫描可投屏设备
+ 
+适用设备
+全系企业级设备
+入参说明
+无
+返回值
+无
+调用示例
+ 
+*pbsSetWDModelsCallback
+设置扫描结果callback——WDModel
+设定扫描结果callback，返回List<PBS_WifiDisplayModel>，包含当前扫描到的设备
+ 
+适用设备
+全系企业级设备
+入参说明
+*
+返回值
+无
+调用示例
+ 
+*pbsSetWDJsonCallback
+设置扫描结果callback——JSON
+设定扫描结果callback，返回json字符串，包含当前扫描到的设备
+ 
+适用设备
+全系企业级设备
+入参说明
+*
+返回值
+无
+调用示例
+ 
+*pbsConnectWifiDisplay
+投屏到指定设备
+ 
+适用设备
+全系企业级设备
+入参说明
+*
+返回值
+无
+调用示例
+ 
+*pbsDisConnectWifiDisplay
+断开投屏
+ 
+适用设备
+全系企业级设备
+入参说明
+无
+返回值
+无
+调用示例
+ 
+*pbsForgetWifiDisplay
+忘记已连接过设备
+忘记之前记住的的Miracast设备。
+如果当前已连接到该设备，则自动断开与该设备的连接。
+ 
+适用设备
+全系企业级设备
+入参说明
+*
+返回值
+无
+调用示例
+ 
+*pbsRenameWifiDisplay
+修改已连接设备名称
+重命名设备。
+需要重命名的设备必须已经成功连接至少一次，并且不要忘记它。
+ 
+适用设备
+全系企业级设备
+入参说明
+*
+返回值
+无
+调用示例
+ 
+*pbsUpdateWifiDisplays
+更新设备列表
+更新扫描到的设备列表，并通过pbsSetWDModelsCallback或者pbsSetSDJsonCallback设置的回调返回
+ 
+适用设备
+全系企业级设备
+入参说明
+无
+返回值
+无
+调用示例
+ 
+*pbsGetConnectedWD
+获取当前连接的设备信息
+ 
+适用设备
+全系企业级设备
+入参说明
+无
+返回值
+*
+调用示例
+ 
+*pbsGetAutoMiracastConfig
+获取自动投屏配置
+获取/sdcard/miracastconfig.txt文件中配置的自动投屏的设备名称
+ 
+适用设备
+全系企业级设备
+入参说明
+无
+返回值
+*
+调用示例
+ 
+*PICO 自研投屏
+【请确认自研投屏应用已经升级到v1.1.0及之后版本，以保证接口正常使用】
+*接口列表
+*
+*pbsPicoCastInit
+投屏接口初始化 
+ 
+适用设备
+PICO4 E，Neo3 企业版，G3【PUI5.4.0及以上】，Neo3 Pro【PUI4.8.0&4.8.1及以上】
+入参说明
+*
+返回值
+*
+调用示例
+ 
+*pbsPicoCastSetShowAuthorization
+设置头戴是否弹出确认投屏授权窗口
+默认情况下，PICOCast投屏时，需要弹出授权框，用户点击授权后才开始投屏；
+此接口设置是否默认授权，如果默认授权不会弹出授权框。
+ 
+适用设备
+PICO4 E，Neo3 企业版，G3【PUI5.4.0及以上】，Neo3 Pro【PUI4.8.0&4.8.1及以上】
+入参说明
+*
+返回值
+*
+调用示例
+ 
+*pbsPicoCastGetShowAuthorization
+获取头戴是否弹出授权窗口
+ 
+适用设备
+PICO4 E，Neo3 企业版，G3【PUI5.4.0及以上】，Neo3 Pro【PUI4.8.0&4.8.1及以上】
+入参说明
+*
+返回值
+*
+调用示例
+ 
+*pbsPicoCastGetUrl
+获取投屏地址 
+ 
+适用设备
+PICO4 E，Neo3 企业版，G3【PUI5.4.0及以上】，Neo3 Pro【PUI4.8.0&4.8.1及以上】
+入参说明
+*
+返回值
+*
+调用示例
+ 
+*pbsPicoCastStopCast
+停止投屏
+ 
+适用设备
+PICO4 E，Neo3 企业版，G3【PUI5.4.0及以上】，Neo3 Pro【PUI4.8.0&4.8.1及以上】
+入参说明
+*
+返回值
+*
+调用示例
+ 
+*pbsPicoCastSetOption
+设置投屏参数
+ 
+适用设备
+PICO4 E，Neo3 企业版，G3【PUI5.4.0及以上】，Neo3 Pro【PUI4.8.0&4.8.1及以上】
+入参说明
+*
+返回值
+*
+调用示例
+ 
+*pbsPicoCastGetOptionOrStatus
+获取当前设备投屏设置或状态
+ 
+适用设备
+PICO4 E，Neo3 企业版，G3【PUI5.4.0及以上】，Neo3 Pro【PUI4.8.0&4.8.1及以上】
+入参说明
+*
+返回值
+*
+调用示例
+ 
+*etPicoCastMediaFormat
+设置投屏参数二
+ 
+适用设备
+PICO 4E ，Neo3 Pro， Neo3 企业版，G3【PUI 5.7.0】
+入参说明
+*
+返回值
+*
+调用示例
+ 
+*setSingleEyeSource
+设置单目画面来源
+ 
+适用设备
+全系设备PUI5.9.x及以上
+入参说明
+*
+返回值
+*
+调用示例
+ 
+*getSingleEyeSource
+获取单目画面来源
+ 
+适用设备
+PICO 4 Ultra OTA1，PICO 4E\NEO3\MerlinE PUI 5.12.0
+入参说明
+无
+返回值
+*
+调用示例
+ 
+*setViewVisual
+设置画面视野
+ 
+适用设备
+全系设备PUI5.9.x及以上
+入参说明
+*
+返回值
+*
+调用示例
+ 
+*getViewVisual
+获取画面视野
+ 
+适用设备
+PICO 4 Ultra OTA1，PICO 4E\NEO3\MerlinE PUI 5.12.0
+入参说明
+无
+返回值
+*
+调用示例
+ 
+*setAcceptCastMode
+设置是否接受外部投屏
+ 
+适用设备
+全系设备PUI5.9.x及以上
+入参说明
+*
+返回值
+*
+调用示例
+ 
+*getAcceptCastMode
+获取是否接受外部投屏
+ 
+适用设备
+PICO 4 Ultra OTA1，PICO 4E\NEO3\MerlinE PUI 5.12.0
+入参说明
+无
+返回值
+*
+调用示例
+ 
+*setScreenCastMode
+分享屏幕给外部设备
+ 
+适用设备
+全系设备PUI5.9.x及以上
+入参说明
+*
+返回值
+*
+调用示例
+ 
+*getScreenCastMode
+获取是否分享屏幕给外部设备
+ 
+适用设备
+PICO 4 Ultra OTA1，PICO 4E\NEO3\MerlinE PUI 5.12.0
+入参说明
+无
+返回值
+*
+调用示例
+ 
+*setScreenRecordShotRatio
+设置录屏、截屏画面比例
+ 
+适用设备
+全系设备PUI5.9.x及以上
+入参说明
+*
+返回值
+*
+调用示例
+ 
+*getScreenRecordShotRatio
+获取录屏、截屏画面比例
+ 
+适用设备
+PICO 4 Ultra OTA1，PICO 4E\NEO3\MerlinE PUI 5.12.0
+入参说明
+无
+返回值
+*
+调用示例
+ 
+*setScreenResolution
+设置录屏、截屏画面分辨率
+ 
+适用设备
+全系设备PUI5.9.x及以上
+入参说明
+依赖当前设备的画面比例设置。
+*
+*
+返回值
+*
+调用示例
+ 
+*getScreenResolution
+获取录屏、截屏画面分辨率
+ 
+适用设备
+PICO 4 Ultra OTA1，PICO 4E\NEO3\MerlinE PUI 5.12.0
+入参说明
+无
+返回值
+*
+调用示例
+ 
+*setScreenRecordFrameRate
+设置录屏帧率
+ 
+适用设备
+全系设备PUI5.9.x及以上
+入参说明
+*
+返回值
+*
+调用示例
+ 
+*getScreenRecordFrameRate
+获取录屏帧率
+ 
+适用设备
+PICO 4E\NEO3\MerlinE PUI 5.12.0
+入参说明
+无
+返回值
+*
+调用示例
+ 
+*pbsSetScreenCastAudioOutput
+设置投屏发声端
+ 
+适用设备
+PICO 4E ，Neo3 Pro，Neo3 企业版，G3【PUI 5.6.0】
+入参说明
+*
+返回值
+*
+调用示例
+ 
+*pbsGetScreenCastAudioOutput
+获取投屏发声端
+ 
+适用设备
+PICO 4E ，Neo3 Pro，Neo3 企业版，G3【PUI 5.6.0】
+入参说明
+*
+返回值
+*
+调用示例
+ 
+接口
+说明
+Miracast投屏相关接口
+封装了Miracast的打开、关闭、搜索设备、开始/停止投屏等接口
+PICO自研投屏相关接口
+PICO投屏是PICO团队自研的一款投屏应用，TobService封装了一下常用接口供开发者使用
+pbsSetScreenCastAudioOutput
+设置投屏时，哪一端播放音频，可以设置双端发声、接收端发声、头戴端发声
+pbsGetScreenCastAudioOutput
+获取投屏时哪一端发声
+接口
+说明
+pbsOpenMiracast
+打开Miracast投屏功能
+pbsIsMiracastOn
+查看Miracast投屏功能是否已开启
+pbsCloseMiracast
+关闭Miracast投屏功能
+pbsStartScan
+开始扫描附近的Miracast设备，并通过pbsSetWDModelsCallback或者pbsSetSDJsonCallback设置的回调返回扫描结果
+pbsStopScan
+停止扫描附件的Miracast设备
+pbsSetWDModelsCallback
+
+设定扫描结果callback，返回List<PBS_WifiDisplayModel>。
+扫描到新设备后通过回调通知客户端，列表中包含当前扫描到的所有设备
+pbsSetWDJsonCallback
+
+设定扫描结果callback，已JSON字符串形式返回。
+扫描到新设备后通过回调通知客户端，列表中包含当前扫描到的所有设备
+pbsConnectWifiDisplay
+通过Miracast协议，将设备画面投屏到指定的设备
+pbsDisConnectWifiDisplay
+断开正在使用Miracast投屏的设备
+pbsForgetWifiDisplay
+忘记之前记住的的Miracast设备。
+如果当前已连接到该设备，则自动断开与该设备的连接。
+pbsRenameWifiDisplay
+重命名设备。
+需要重命名的设备必须已经成功连接至少一次，并且不要忘记它。
+pbsUpdateWifiDisplays
+更新扫描到的设备列表，并通过pbsSetWDModelsCallback或者pbsSetSDJsonCallback设置的回调返回
+pbsGetConnectedWD
+获取当前Miracast正在投屏到哪个设备
+pbsGetAutoMiracastConfig
+获取/sdcard/miracastconfig.txt文件中配置的自动投屏的设备名称
+ void pbsOpenMiracast();
+ToBServiceHelper.getInstance().getServiceBinder().pbsOpenMiracast();
+ boolean pbsIsMiracastOn();
+类型
+说明
+boolean 
+*true：开启
+*false：关闭
+ToBServiceHelper.getInstance().getServiceBinder().pbsIsMiracastOn();
+void pbsCloseMiracast();
+ToBServiceHelper.getInstance().getServiceBinder().pbsCloseMiracast();
+void pbsStartScan();
+ToBServiceHelper.getInstance().getServiceBinder().pbsStartScan();
+void pbsStopScan();
+ToBServiceHelper.getInstance().getServiceBinder().pbsStopScan();
+ void pbsSetWDModelsCallback(IWDModelsCallback wdModelsCallback);
+参数名称
+类型
+说明
+wdModelsCallback
+IWDModelsCallback 
+
+返回List<IWDModelsCallback>，包含当前扫描到的设备
+PBS_WifiDisplayModel
+ToBServiceHelper.getInstance().getServiceBinder().pbsSetWDModelsCallback(new IWDModelsCallback.Stub() {
+                @Override
+                public void callback(List<PBS_WifiDisplayModel> models) throws RemoteException { }
+            });
+ void pbsSetWDJsonCallback(IWDJsonCallback wdJsonCallback);
+参数名称
+类型
+说明
+wdJsonCallback
+IWDJsonCallback 
+返回json字符串，包含当前扫描到的设备
+ToBServiceHelper.getInstance().getServiceBinder().pbsSetWDJsonCallback(new IWDJsonCallback.Stub() {
+                @Override
+                public void callback(String json) throws RemoteException {}
+            }); 
+void pbsConnectWifiDisplay(PBS_WifiDisplayModel model);
+参数名称
+类型
+说明
+modelwdJsonCallback
+PBS_WifiDisplayModel
+需要连接的Miracast设备
+ToBServiceHelper.getInstance().getServiceBinder().pbsConnectWifiDisplay(wifiDisplay); 
+void pbsDisConnectWifiDisplay();
+ToBServiceHelper.getInstance().getServiceBinder().pbsDisConnectWifiDisplay();
+void pbsForgetWifiDisplay(String address);
+参数名称
+类型
+说明
+address
+String 
+要忘记的设备的MAC地址
+ToBServiceHelper.getInstance().getServiceBinder().pbsForgetWifiDisplay(display.getDeviceAddress());
+void pbsRenameWifiDisplay(String address, String newName);
+参数名称
+类型
+说明
+address
+String 
+需要重命名的设备的MAC地址
+newName
+String 
+设备的新名字
+ToBServiceHelper.getInstance().getServiceBinder().pbsRenameWifiDisplay(display.getDeviceAddress(), newName);
+void pbsUpdateWifiDisplays();
+ToBServiceHelper.getInstance().getServiceBinder().pbsUpdateWifiDisplays();
+PBS_WifiDisplayModel pbsGetConnectedWD();
+类型
+说明
+PBS_WifiDisplayModel
+当前已连接的设备信息
+ToBServiceHelper.getInstance().getServiceBinder().pbsGetConnectedWD();
+String pbsGetAutoMiracastConfig(int ext);  
+类型
+说明
+String 
+/sdcard/miracastconfig.txt文件中配置的自动投屏的设备名称
+String  device = ToBServiceHelper.getInstance().getServiceBinder().pbsGetAutoMiracastConfig();
+接口
+说明
+pbsPicoCastInit
+TobService与PICO自研投屏之间建立连接，并进行相应的初始化
+pbsPicoCastSetShowAuthorization
+
+默认情况下，PICOCast投屏时，需要弹出授权框，用户点击授权后才开始投屏；
+此接口设置是否默认授权，如果默认授权不会弹出授权框。
+pbsPicoCastGetShowAuthorization
+获取投屏开始时，是否需要弹出授权弹框
+pbsPicoCastGetUrl
+获取投屏的url链接，此链接可以放到浏览器、视频播放器中播放
+pbsPicoCastStopCast
+停止投屏
+pbsPicoCastSetOption
+设置投屏的分辨率、码率，是否传输音频
+pbsPicoCastGetOptionOrStatus
+获取投屏参数
+setPicoCastMediaFormat
+设置投屏音视频格式，详见 PicoCastMediaFormat
+int pbsPicoCastInit(IIntCallback callback, int ext);
+参数名称
+类型
+说明
+callback
+IIntCallback
+初始化结果回调：
+0 初始化失败，1 初始化成功,2 Pico投屏没有麦克风权限
+ext
+int 
+扩展位，无意义
+类型
+说明
+int 
+0 失败, 1 成功(PS:投屏没有麦克风权限时返回0)
+   //建议callback，单独创建。防止多次调用init后，会绑定多个callback。
+    public void initPicoCast(View view) {
+        try {
+            int result = ToBServiceHelper.getInstance().getServiceBinder().pbsPicoCastInit(callback, 0);
+            Log.i("PicoVRIoTService -1", "init_pico_cast : " + result);
+            init_pico_cast.setText("init_pico_cast : " + result);
+        } catch (RemoteException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private IIntCallback callback = new IIntCallback.Stub() {
+        @Override
+        public void callback(int result) throws RemoteException {
+            runOnUiThread(() -> init_pico_cast.setText("init_pico_cast connect : " + result));
+            Log.i("PicoVRIoTService -1", "init_pico_cast connect callback : " + result);
+        }
+    };
+int pbsPicoCastSetShowAuthorization(int authZ, int ext);
+参数名称
+类型
+说明
+authZ
+int 
+0  每次都弹框询问是否授权，默认配置
+1  总是允许
+2  总是拒绝
+ext
+int 
+扩展位，无意义
+类型
+说明
+int
+1 成功, 0 失败
+try {
+    int result = ToBServiceHelper.getInstance().getServiceBinder().pbsPicoCastSetShowAuthorization(1,0);
+    set_cast_authz.setText("set_cast_authz : " + result);
+} catch (RemoteException e) {
+    e.printStackTrace();
+}
+int pbsPicoCastGetShowAuthorization(int ext);
+参数名称
+类型
+说明
+ext
+int 
+扩展位，无意义
+类型
+说明
+int
+0  每次都弹框询问是否授权，默认配置
+1  总是允许
+2  总是拒绝
+try {
+    int authz = ToBServiceHelper.getInstance().getServiceBinder().pbsPicoCastGetShowAuthorization(0);
+    cast_authz.setText("cast_authz : " + authz);
+} catch (RemoteException e) {
+    e.printStackTrace();
+}
+String pbsPicoCastGetUrl(PBS_PICOCastUrlTypeEnum urlType, int ext);
+参数名称
+类型
+说明
+urlType
+PBS_PICOCastUrlTypeEnum 
+详见：PBS_PICOCastUrlTypeEnum
+ext
+int 
+扩展位，无意义
+类型
+说明
+String 
+Url 投屏地址
+try {
+    String url = ToBServiceHelper.getInstance().getServiceBinder().pbsPicoCastGetUrl(PBS_PICOCastUrlTypeEnum.NORMAL_URL,0);
+    normal_url.setText("normal_url : " + url);
+} catch (RemoteException e) {
+    e.printStackTrace();
+}
+int pbsPicoCastStopCast( int ext);
+参数名称
+类型
+说明
+ext
+int 
+扩展位，无意义
+类型
+说明
+int 
+1 成功, 0 失败
+try {
+    int result = ToBServiceHelper.getInstance().getServiceBinder().pbsPicoCastStopCast(0);
+} catch (RemoteException e) {
+    e.printStackTrace();
+}
+int pbsPicoCastSetOption(PBS_PICOCastOptionOrStatusEnum optionEnum, PBS_PICOCastOptionValueEnum value, int ext);
+参数名称
+类型
+说明
+optionEnum
+PBS_PICOCastOptionOrStatusEnum 
+详见 PBS_PICOCastOPtionOrStatusEnum
+value
+PBS_PICOCastOptionValueEnum 
+详见 PBS_PICOCastOptionValueEnum
+ext
+int 
+
+0-保持投屏服务当前状态，
+1-开始投屏服务，设置参数之后要重启投屏服务
+2-停止投屏服务
+类型
+说明
+int 
+1 成功, 0 失败
+//参数设置后，要重启投屏服务才能生效
+//重启投屏服务可以用本接口的ext参数实现，示例如下
+try {
+    //开始设置参数时，扩展位传2，停止投屏服务         
+    ToBServiceHelper.getInstance().getServiceBinder().pbsPicoCastSetOption(PBS_PICOCastOptionOrStatusEnum.OPTION_RESOLUTION_LEVEL, PBS_PICOCastOptionValueEnum.OPTION_VALUE_RESOLUTION_HIGH_2K, 2);
+    ToBServiceHelper.getInstance().getServiceBinder().pbsPicoCastSetOption(PBS_PICOCastOptionOrStatusEnum.OPTION_BITRATE_LEVEL, PBS_PICOCastOptionValueEnum.OPTION_VALUE_BITRATE_HIGH, 0);
+    //结束设置参数时，扩展位传1，启动投屏服务
+    ToBServiceHelper.getInstance().getServiceBinder().pbsPicoCastSetOption(PBS_PICOCastOptionOrStatusEnum.OPTION_AUDIO_ENABLE, PBS_PICOCastOptionValueEnum.OPTION_VALUE_AUDIO_ON, 1);
+} catch (RemoteException e) {
+    e.printStackTrace();
+}
+PBS_PICOCastOptionValueEnum pbsPicoCastGetOptionOrStatus(PBS_PICOCastOptionOrStatusEnum castEnum, int ext);
+参数名称
+类型
+说明
+optionEnum
+PBS_PICOCastOptionOrStatusEnum 
+详见 PBS_PICOCastOPtionOrStatusEnum
+ext
+int 
+扩展位，无意义
+类型
+说明
+PBS_PICOCastOptionValueEnum 
+详见 PBS_PICOCastOptionValueEnum
+try {
+    PBS_PICOCastOptionValueEnum valueEnum = ToBServiceHelper.getInstance().getServiceBinder().pbsPicoCastGetOptionOrStatus(op, 0);
+    Log.i("PicoVRIoTService -1", op.name() + " valueEnum : " + (valueEnum != null ? valueEnum.name() : "null"));
+    sb.append(op.name()).append(" ").append(valueEnum != null ? valueEnum.name() : "null").append("\n");
+} catch (RemoteException e) {
+    e.printStackTrace();
+}
+int setPicoCastMediaFormat(PicoCastMediaFormat mediaFormat, int ext);
+参数名称
+类型
+说明
+mediaFormat
+PicoCastMediaFormat 
+媒体格式封装类，详见 PicoCastMediaFormat
+ext
+int 
+0-保持投屏服务当前状态，
+1-开始投屏服务，设置参数之后要重启投屏服务
+2-停止投屏服务
+类型
+说明
+int
+0:成功
+1:失败
+PicoCastMediaFormat format = new PicoCastMediaFormat();
+format.bitrate = 6 * 1024;
+ToBServiceHelper.getInstance().getServiceBinder().setPicoCastMediaFormat(format, 0);
+int setSingleEyeSource(boolean isLeft);
+参数名称
+类型
+说明
+isLeft
+boolean 
+true-左眼，false-右眼
+类型
+说明
+int
+0:成功
+1:失败
+((IToBServiceProxy)ToBServiceHelper.getInstance().getServiceBinder()).setSingleEyeSource(true);
+int getSingleEyeSource();
+类型
+说明
+int
+0-左眼， 1-右眼， -2-设备不支持
+((IToBServiceProxy)ToBServiceHelper.getInstance().getServiceBinder()).getSingleEyeSource();
+int setViewVisual(int mode);
+参数名称
+类型
+说明
+mode
+int 
+0-广角，1-标准
+类型
+说明
+int
+0:成功
+1:失败
+((IToBServiceProxy)ToBServiceHelper.getInstance().getServiceBinder()).setViewVisual(0);
+int getViewVisual();
+类型
+说明
+int
+0-广角，1-标准， -2-设备不支持
+((IToBServiceProxy)ToBServiceHelper.getInstance().getServiceBinder()).getViewVisual();
+int setAcceptCastMode(int mode);
+参数名称
+类型
+说明
+mode
+int 
+0-每次询问，1-允许，2-拒绝
+类型
+说明
+int
+0:成功
+1:失败
+((IToBServiceProxy)ToBServiceHelper.getInstance().getServiceBinder()).setAcceptCastMode(0);
+int getAcceptCastMode();
+类型
+说明
+int
+0-每次询问，1-允许，2-拒绝，-2-设备不支持
+((IToBServiceProxy)ToBServiceHelper.getInstance().getServiceBinder()).getAcceptCastMode();
+int setScreenCastMode(int mode);
+参数名称
+类型
+说明
+mode
+int 
+0-每次询问，1-允许，2-拒绝
+类型
+说明
+int
+0:成功
+1:失败
+((IToBServiceProxy)ToBServiceHelper.getInstance().getServiceBinder()).setScreenCastMode(0);
+int getScreenCastMode();
+类型
+说明
+int
+0-每次询问，1-允许，2-拒绝，-2-设备不支持
+((IToBServiceProxy)ToBServiceHelper.getInstance().getServiceBinder()).getScreenCastMode();
+int setScreenRecordShotRatio(int mode);
+参数名称
+类型
+说明
+mode
+int 
+0，对应1：1，
+1，对应16：9，
+2，对应9：16
+类型
+说明
+int
+0:成功
+1:失败
+((IToBServiceProxy)ToBServiceHelper.getInstance().getServiceBinder()).setScreenRecordShotRatio(0);
+int getScreenRecordShotRatio();
+类型
+说明
+int
+0 - 1：1，1 - 16：9，2 - 9：16，-2-设备不支持
+((IToBServiceProxy)ToBServiceHelper.getInstance().getServiceBinder()).getScreenRecordShotRatio();
+int setScreenResolution(int width, int height);
+当前画面比例
+可传的宽*高
+1:1
+1920*1920
+16:9
+1920*1080，1280*720
+9:16
+1080*1920
+720*1280
+参数名称
+类型
+说明
+width
+int 
+宽
+height
+int
+高
+类型
+说明
+int
+0:成功
+1:失败
+((IToBServiceProxy)ToBServiceHelper.getInstance().getServiceBinder()).setScreenResolution(1920, 1080);
+int getScreenResolution();
+类型
+说明
+int
+正常：[宽，高]
+设备不支持：[-2,-2]
+((IToBServiceProxy)ToBServiceHelper.getInstance().getServiceBinder()).getScreenResolution();
+int setScreenRecordFrameRate(int value);
+参数名称
+类型
+说明
+value
+int 
+24，36，30
+类型
+说明
+int
+0:成功
+1:失败
+-2:设备不支持
+((IToBServiceProxy)ToBServiceHelper.getInstance().getServiceBinder()).setScreenRecordFrameRate(26);
+int getScreenRecordFrameRate();
+类型
+说明
+int
+24，36，30，
+设备不支持：-2
+((IToBServiceProxy)ToBServiceHelper.getInstance().getServiceBinder()).getScreenRecordFrameRate();
+int pbsSetScreenCastAudioOutput(PBS_ScreencastAudioOutputEnum screencastAudionOutputEnum, int ext);
+参数名称
+类型
+说明
+screencastAudionOutputEnum
+PBS_ScreencastAudioOutputEnum
+哪一端发声，详见 PBS_ScreencastAudioOutputEnum
+ext
+int 
+扩展位，无意义
+类型
+说明
+int
+0:成功
+1:失败
+try {
+    int result = ToBServiceHelper.getInstance().getServiceBinder().pbsSetScreenCastAudioOutput(PBS_ScreencastAudioOutputEnum.AUDIO_SINK_TARGET,0);
+} catch (RemoteException e) {
+    e.printStackTrace();
+}
+PBS_ScreencastAudioOutputEnum pbsGetScreenCastAudioOutput(int ext);
+参数名称
+类型
+说明
+ext
+int 
+扩展位，无意义
+类型
+说明
+PBS_ScreencastAudioOutputEnum 
+哪一端发声，详见 PBS_ScreencastAudioOutputEnum
+try {
+    PBS_ScreencastAudioOutputEnum outputEnum = ToBServiceHelper.getInstance().getServiceBinder().pbsGetScreenCastAudioOutput(0);
+} catch (RemoteException e) {
+    e.printStackTrace();
+}
+setSingleEyeSource
+设置单目画面来源
+setViewVisual
+设置画面视野
+setAcceptCastMode
+设置是否接受外部投屏
+setScreenCastMode
+分享屏幕给外部设备
+setScreenRecordShotRatio
+设置录屏、截屏画面比例
+setScreenResolution
+设置录屏、截屏画面分辨率
+setScreenRecordFrameRate
+设置录屏帧率
+getSingleEyeSource
+获取单目画面来源
+getViewVisual
+获取画面视野
+getAcceptCastMode
+获取是否接受外部投屏
+getScreenCastMode
+获取是否分享屏幕给外部设备
+getScreenRecordShotRatio
+获取录屏、截屏画面比例
+getScreenResolution
+获取录屏、截屏画面分辨率
+getScreenRecordFrameRate
+获取录屏帧率

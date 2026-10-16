@@ -1,0 +1,18 @@
+管理应用的空间状态
+========================================
+你可以使用 context.getSelfSpaceState() 方法获取应用当前的空间状态。该方法返回枚举类型 SpaceState，包括以下取值：SpaceState.UNKNOWN、SpaceState.SHARED_SPACE 和 SpaceState.FULL_SPACE。
+ 
+*若需确保你的应用仅在 Full Space 状态下运行，可调用 context.enforceSelfFullSpace() 进行验证。该方法会验证应用当前的空间状态，若不处于 Full Space，则抛出 IllegalStateException。
+
+
+@Composable
+fun SpaceStateExample() {
+    val context = LocalContext.current
+    var spaceState: String by remember { mutableStateOf(context.getSelfSpaceState().toString()) }
+    Column {
+        Text(text = "Current space state = $$spaceState")
+        Button(onClick = { spaceState = context.getSelfSpaceState().toString() }) {
+            Text(text = "Get space state")
+        }
+    }
+}

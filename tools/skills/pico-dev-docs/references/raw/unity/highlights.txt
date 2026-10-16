@@ -1,0 +1,116 @@
+高光时刻
+========================================
+“高光时刻” 服务用于记录用户使用应用过程中的精彩时刻，并将这些时刻以图片或视频的形式保存下来，供用户回顾和分享。主要功能如下：
+*记录高光时刻：提供录屏、截屏接口，用于生成游戏高光时刻的图片和视频；
+*分享高光时刻：提供高光时刻预览分享接口，在应用内展示高光时刻预览界面，允许用户保存图片或视频，直接在头戴端将内容分享至 “抖音” 应用，或先将内容跨端分享到移动端的 “PICO VR” 应用中，然后再分享至 “微信” 应用。
+*基本概念
+*
+*重要提示
+目前，高光时刻服务仅支持上架到中国大陆 PICO 商店的应用接入。
+*使用前提
+PICO SDK 版本为 2.3.0 及以上。
+*使用流程
+*第一步：完成通用配置
+参考《平台服务概览》文档，完成通用配置，包括信息注册、SDK 导入、项目配置、平台服务初始化等。
+*第二步：在 PICO 开发者平台开启高光时刻服务
+*登录 PICO 开发者平台。
+*进入目标应用的 概览 页。
+*在左侧导航栏中，点击 平台服务。
+*你将前往 PPS 开发平台。
+*在左侧导航栏中，选择 高光时刻。
+*你将进入高光时刻服务管理面板。
+* 
+*点击 启用服务。
+*平台将为你的应用开启高光时刻服务。
+*第三步：在 Unity 编辑器内开启高光时刻服务
+*在 Unity 编辑器内打开你的项目。
+*在上方菜单栏处，选择 PICO > Platform Settings。
+*在 PICO Platform Settings 窗口中，输入应用的 APP ID，勾选 开启高光时刻 选框，然后点击 应用。
+* 
+*开启服务后，SDK 会在应用的 AndroidManifest.xml 文件中自动写入以下元数据：
+* 
+*第四步：实现高光时刻服务
+*调用接口，在应用内实现高光时刻服务。以下为流程图：
+* 
+以下为实现步骤：
+*调用 UserService.RequestUserPermissions，向用户申请截屏和录屏权限。
+*调用 HighlightService.StartSession，开启一个新的 Session，图片和视频都将记录在这个 Session 下。
+*调用 HighlightService.CaptureScreen、HighlightService.StartRecord 和 HighlightService.StopRecord，允许用户进行截屏、开始录屏、停止录屏操作。
+* 
+*调用 HighlightService.ListMedia，获取当前 Session 下的全部图片和视频。
+* 
+*调用 HighlightService.SaveMedia，保存图片和视频至本地相册，或调用 HighlightService.ShareMedia，将某个图片或视频分享至社交平台。
+* 
+*Demo
+*HighlightsDemo 展示高光时刻服务相关功能，包括截屏、录屏、跨端分享等。若想了解更多信息，参阅《高光时刻示例》文档。
+* 
+*接口列表
+以下为高光时刻功能的相关接口。若想了解参数和返回值说明等详细信息，参阅 API 参考。
+*
+
+
+
+
+
+名称
+
+描述
+
+Session
+
+用户必须在某个 Session 中进行截屏和录屏操作。你可以获取指定 Session 下截取的图片和录制的视频。
+
+Job ID
+
+每一次截屏、录屏得到的文件都有一个全局唯一的 Job ID。
+
+跨端分享
+
+将 PICO 设备头戴端的图片或视频分享到移动手机端的 “PICO VR” 应用内，称为跨端分享。
+
+<meta-data android:name="use_record_highlight_feature" android:value="true" />
+
+视频最长录制时间为 15 分钟。若没有在 15 分钟之内调用 StopRecord() 接口停止录屏或由于其它原因导致录屏终止，系统会主动结束录屏，并返回视频的路径、Job ID、视频大小等信息。
+
+你需要自定义 UI 界面供用户选择需要分享的图片或视频。
+
+*用户可以直接在头戴端将内容分享至 “抖音” 应用，或先将内容跨端分享到移动端的 “PICO VR” 应用中，然后再分享至 “微信” 应用。
+*每次只能分享一张图片或者一个视频。
+
+
+
+函数
+
+说明
+
+HighlightService.StartSession
+
+开始一个新的 Session。
+
+HighlightService.CaptureScreen
+
+截取当前屏幕。
+
+HighlightService.StartRecord
+
+开始录屏。
+
+HighlightService.StopRecord
+
+停止录屏。
+
+HighlightService.ListMedia
+
+列出当前 Session 下所有的图片和视频文件。
+
+HighlightService.SaveMedia
+
+保存某个图片或视频至本地相册。
+
+HighlightService.ShareMedia
+
+分享某个图片或视频至社交平台。
+
+HighlightService.SetOnRecordStopHandler
+
+回调函数。录屏结束后，返回视频信息，包括视频的路径、Job ID、视频大小等。

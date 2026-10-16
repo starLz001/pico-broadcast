@@ -1,0 +1,65 @@
+共享空间锚点
+========================================
+在同一物理空间内，不同用户体验同一款应用时，共享空间锚点（Shared Spatial Anchor）功能可以让用户共享场景内容。
+本地的空间锚点被上传至 PICO 云端后，该锚点将变为共享空间锚点。锚点创建者可以将锚点的 UUID 分享给应用内的指定用户。其他用户在得知共享空间锚点的 UUID 后，便可以下载并使用该锚点。
+*环境要求
+*PICO 设备型号：PICO 4 系列、PICO 4 Ultra 系列
+*PICO 设备系统版本：5.15.0 及以上
+*特殊说明
+*仅当用户登录 PICO 设备后，才可以正常使用共享空间锚点功能。
+*前提条件
+*已为场景添加 XR Origin 对象。
+*已为 XR Origin 对象挂载 PXR_Manager (Script) 组件。
+*已为应用开启视频透视能力。详细说明参考此文档。
+*已在项目内添加应用 ID。详细说明参考此文档。
+*已初始化平台服务。详细说明参考此文档。
+*已在代码中调用 GetLoggedInUser 或 GetAccessToken 接口获取用户的账户信息，以触发用户登录提示。详细说明参考此文档。
+*实现流程概览
+* 
+以下为共享空间锚点功能的实现流程概览：
+*在 Unity 编辑器内为应用开启共享空间锚点功能；
+*使用 PICO SDK 中的 RoomService、MatchmakingService 和 NetworkingService 创建多人游戏环境并实现共享空间锚点 UUID 的分享。你也可以使用 Photon Unity Networking 框架来实现锚点 UUID 的分享。
+*调用 CreateSpatialAnchorAsync 接口，在当前房间内创建锚点，然后调用 PersistSpatialAnchorAsync 接口，将空间锚点持久化至 PICO 设备的本地磁盘。更多空间锚点的使用说明参考《空间锚点》。
+*调用 UploadSpatialAnchorAsync 接口，将空间锚点上传至 PICO 云端。
+*使用 PICO SDK 中的 NetworkingService 接口或 Photon Unity Networking 来允许用户分享空间锚点的 UUID。
+*调用 DownloadSharedSpatialAnchorAsync 接口，下载共享空间锚点。
+*调用 QuerySpatialAnchorAsync 接口，在场景内加载已下载的共享空间锚点。
+*启用共享空间锚点能力
+在 Inspector 窗口中的 PXR_Manager (Script) 面板上，勾选 Shared Spatial Anchor 选框，为应用开启共享空间锚点能力。然后，你可以调用共享空间锚点相关接口，在应用内实现该功能。
+* 
+*上传空间锚点至 PICO 云端
+用户可以通过 UploadSpatialAnchorAsync 接口将空间锚点上传至 PICO 云端。上传完成后，该用户可以将锚点的 UUID 分享给其他用户。得知锚点 UUID 的用户可以下载该锚点。
+ 
+*若需要在上传锚点的同时查看上传进度，则可以使用 UploadSpatialAnchorWithProgressAsync 接口。
+ 
+你可以在用户上传锚点时便记录下该锚点的 UUID，以便后续直接通过网络来分享锚点的 UUID，无需再次上传该锚点。
+*分享共享空间锚点
+你可以使用 PICO SDK 中的 RoomService、MatchmakingService 和 NetworkingService 接口来创建多人游戏环境，然后实现锚点 UUID 的分享，也可以直接使用 Photon Unity Networking 框架实现。
+建议增加相关说明以引导用户正确操作：在多人游戏中，建议锚点创建者在创建锚点后充分观察锚点附近环境，然后再分享锚点，以确保锚点后续能够被顺利识别和定位。
+*下载共享空间锚点
+其他用户得知共享空间锚点的 UUID 后，可通过 DownloadSharedSpatialAnchorAsync 接口下载该锚点。下载完成后，应用可以执行自定义逻辑来获取该锚点的位姿数据，但是无法持久化或去持久化该锚点。
+ 
+若需要在下载锚点的同时查看下载进度，则可以使用 DownloadSharedSpatialAnchorWithProgressAsync 接口。
+ 
+*加载共享空间锚点
+其他用户下载共享空间锚点后，可通过 QuerySpatialAnchorAsync 接口在场景中加载该锚点。
+ 
+建议增加相关说明以引导用户正确操作：多人游戏中，若接受锚点的一方无法识别锚点，则需要走到锚点附近或者锚点分享者曾经观察过的地方，然后多观察周围环境，以提高锚点的识别和找回成功率。
+*去持久化共享空间锚点
+用户将锚点上传至 PICO 云端后，无法主动去持久化该锚点。为了管理云端数据，从锚点最近一次活跃（即客户端对该锚点的最近一次请求）的时间开始计算，PICO 云端会自动去持久化 7 天内不活跃的锚点。锚点被去持久化后，已获得该共享空间锚点的其他用户将无法继续使用该锚点。
+此外，用户将锚点上传至 PICO 云端后，即使在应用内存或 PICO 设备本地磁盘中去持久化该锚点，其他用户仍可以继续使用该共享空间锚点。
+*代码示例
+*代码示例参考以下文件中的内容。该示例展示如何使用 PICO SDK 的 RoomService、MatchmakingService 和 NetworkingService 实现锚点 UUID 的分享，并展示了如何使用共享空间锚点相关接口。
+ 
+*API 参考
+若想了解共享空间锚点接口的详细信息，包括参数说明、返回值说明等，参阅 API 参考。
+
+async Task<(PxrResult result, Guid uuid)> UploadSpatialAnchorAsync(ulong anchorHandle)
+
+public static async Task<(PxrResult result, Guid uuid)> UploadSpatialAnchorWithProgressAsync(ulong anchorHandle, Action<int> progressUpdated, CancellationToken token = default)
+
+async Task<PxrResult> DownloadSharedSpatialAnchorAsync(Guid uuid)
+
+public static async Task<PxrResult> DownloadSharedSpatialAnchorWithProgressAsync(Guid uuid, Action<int> progressUpdated, CancellationToken token = default)
+
+async Task<(PxrResult result, List<ulong> anchorHandleList)> QuerySpatialAnchorAsync(Guid[] uuids = null)

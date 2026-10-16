@@ -1,0 +1,211 @@
+示例：创建沉浸式空间音频
+========================================
+该示例演示如何在空间应用中创建“沉浸式场景 + 空间音频”的完整闭环：在 Stage（沉浸场景）中播放环境氛围声，同时让一个会移动的声源（鸟）在空间中发声，并通过一个 Planar 控制面板提供开关控制。
+ 
+*前提条件
+*参阅《准备开发环境》配置 PICO Spatial SDK 开发环境。
+*准备一台 PICO 设备或启动 PICO Emulator。
+*获取示例项目
+前往《PICO Spatial SDK 示例》下载 创建沉浸式空间音频 示例项目。
+*运行示例项目
+*把示例项目拉取到本地，然后用 Android Studio 打开示例项目。
+*连接 PICO 设备或启动 PICO Emulator。
+*运行 app 模块。
+运行示例后，你会看到：
+*一个 Stage（沉浸场景）：包含环境球体与一只会飞的鸟（声源随鸟移动）
+*一个 Planar WindowContainer（控制面板）：提供 2 个开关
+*Enable ambient audio：开启/关闭环境氛围声（循环播放）
+*Enable bird audio：开启/关闭鸟叫声（随机轮播）
+运行示例后，你可以先打开环境音开关体验“整体氛围”，再打开鸟叫声开关体验“移动声源”的方向感与距离衰减；关闭开关后音频会停止播放并释放资源。
+ 
+示例的模块关系如下：
+ 
+*示例项目结构说明
+核心代码都在 app/src/main/java/com/pico/spatial/sample/spatialaudio/ 下：
+*Main.kt：声明 Stage + 控制面板窗口，并预热加载 AssetBundle；通过 LifecycleResetScope 处理前后台切换时的清理与重建
+*ui/ImmersiveScene.kt：Stage 场景入口；注册 ECS 系统；订阅音频事件；在 ON_PAUSE/ON_RESUME 时关闭/恢复控制面板窗口
+*ui/AudioControlViewModel.kt：加载场景、准备音频节点、响应 UI 开关、生命周期清理
+*data/AudioResourceStore.kt：音频路径注册与 AudioResource 预加载/缓存/释放
+*manager/AudioPlayer.kt：创建并管理 AudioPlayerController（环境音循环 + 鸟叫随机轮播）
+*ecs/FlyTrajectory.kt：鸟的飞行轨迹组件与系统（更新 Transform，让 Object Audio 产生空间移动效果）
+音频素材位于：
+*app/src/main/assets/audio/（运行时加载）
+*editor-asset/src/main/res3d/.../Sources/Assets/audio/（在 Spatial Editor 中制作场景时可用）
+*基于 Spatial Audio 创建沉浸式空间音频
+下面以示例项目的核心逻辑为主线，分步骤说明如何实现“环境氛围声 + 跟随移动声源”的空间音频效果。
+*步骤一：创建 Stage 与控制面板
+示例在 Main.kt 中同时声明：
+*DefaultStage { ... }：承载沉浸式 Stage 场景
+*WindowContainer(form = Form.Planar)：承载控制面板 UI（2 个开关）
+ 
+*步骤二：加载 Spatial Editor 场景（AssetBundle）
+示例把 Spatial Editor 工程构建为 editor-asset.bundle，并在运行时加载模型 SpatialAudioScene：
+ 
+ 
+为减少首次进入时卡顿，示例会提前触发一次预热加载：
+ 
+*步骤三：加载音频资源（AudioResource）
+示例的音频文件位于 app/src/main/assets/audio/，例如：
+*jungle_birds_florals.wav：环境音
+*bird001.wav ~ bird004.wav：鸟叫声
+示例通过 AudioResource.load(..., LoadType.FROM_ASSETS) 从 assets 加载 WAV（建议在进入场景后预加载，避免首次播放时抖动）：
+ 
+*步骤四：挂载音频组件（Ambient / Object）
+空间音频的关键规则是：在调用 Entity.prepareAudio() 之前，需要先给该 Entity 添加对应的音频组件；同一个 Entity 上只能添加一种音频组件（AmbientAudioComponent / ObjectAudioComponent / ChannelAudioComponent 三选一）。
+*1) 环境氛围声：AmbientAudioComponent
+示例把环境音绑定到环境节点 SM_Sphere 并添加 AmbientAudioComponent：
+ 
+*2) 跟随移动声源：ObjectAudioComponent
+示例把鸟叫声绑定到鸟实体 pico_bird，并添加 ObjectAudioComponent。为了产生“移动声源”的听感，还会给鸟挂载轨迹组件，让 ECS 系统每帧更新其 Transform：
+ 
+*步骤五：准备控制器并控制播放（AudioPlayerController）
+示例使用 Entity.prepareAudio() 为实体创建 AudioPlayerController，后续由控制面板开关控制 play/stop。
+环境音通常设置为循环播放并降低音量：
+ 
+控制面板的两个 Switch 会调用 ViewModel，再转发给 AudioPlayer：
+ 
+*步骤六：订阅音频事件
+示例在 ImmersiveScene 的初始化阶段订阅音频事件（started/paused/completed），用于调试、埋点或驱动业务逻辑：
+ 
+*步骤七：生命周期与资源释放
+示例把资源生命周期集中在 AudioControlViewModel.instance.cleanUp() 中管理，并在进入后台/退出时统一清理：
+*停止并 close 所有 AudioPlayerController
+*close 并释放 AudioResource
+*取消所有音频事件订阅
+ 
+注意：单应用内可同时播放的音频源数量存在上限，因此及时 stop/close 控制器并释放资源是必要的。
+*在 Spatial Editor 中修改场景与资源
+示例的 Spatial Editor 项目在：editor-asset/src/main/res3d/PicoSpatialAudio/。你可以在 Android Studio 中找到 editor-asset 模块，打开对应的 ModelView 文件，然后点击 Open in Editor 在 Spatial Editor 中打开该项目。
+ 
+*你可以在 Spatial Editor 中调整：
+*场景 SpatialAudioScene.usda（例如替换鸟模型/环境球）
+*资源（textures/audio）
+ 
+重新构建后生成新的 editor-asset.bundle，应用会按 asset://editor-asset.bundle 自动加载。
+*延伸阅读
+*《空间音频概览》
+*《使用 AmbientAudioComponent》
+*《使用 ObjectAudioComponent》
+*《使用音频事件》
+*《音频资源》
+
+// file:app/src/main/java/com/pico/spatial/sample/spatialaudio/Main.kt
+DefaultStage { LifecycleResetScope { PicoTheme { ImmersiveScene() } } }
+
+WindowContainer(
+    id = WINDOW_ID,
+    form = Form.Planar,
+    defaultSize = WindowContainerSize(550.dp, 380.dp),
+    resizeType = ContainerResizeType.ContentSize,
+    enableMaterialBackground = true,
+) {
+    LifecycleResetScope {
+        PicoTheme { ControlPanel(Modifier.windowConstraints(width = 550.dp, height = 380.dp)) }
+    }
+}
+
+MainScope().launch { assetBundle.await() }
+
+@Composable
+private fun LifecycleResetScope(content: @Composable () -> Unit) {
+    val lifecycleOwner = LocalLifecycleOwner.current
+    var restartKey by remember { mutableIntStateOf(0) }
+    var hasPaused by remember { mutableStateOf(false) }
+
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            when (event) {
+                Lifecycle.Event.ON_PAUSE -> {
+                    hasPaused = true
+                    AudioControlViewModel.instance.cleanUp()
+                }
+                Lifecycle.Event.ON_RESUME -> {
+                    if (hasPaused) {
+                        hasPaused = false
+                        restartKey += 1
+                    }
+                }
+                else -> Unit
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+            AudioControlViewModel.instance.cleanUp()
+        }
+    }
+
+    key(restartKey) { content() }
+}
+
+// file:app/src/main/java/com/pico/spatial/sample/spatialaudio/data/AssetBundle.kt
+val assetBundle = CoroutineScope(Dispatchers.IO).async(start = CoroutineStart.LAZY) {
+    AssetBundle.load(BUNDLE_URI)
+}
+
+private const val BUNDLE_URI = "asset://editor-asset.bundle"
+
+// file:app/src/main/java/com/pico/spatial/sample/spatialaudio/ui/AudioControlViewModel.kt
+val model = withContext(Dispatchers.IO) { assetBundle.await().loadModel(SCENE_NAME) }
+rootEntity.addChild(model)
+
+// file:app/src/main/java/com/pico/spatial/sample/spatialaudio/Main.kt
+MainScope().launch { assetBundle.await() }
+
+// file:app/src/main/java/com/pico/spatial/sample/spatialaudio/data/AudioResourceStore.kt
+AudioResource.load(
+    name = name,
+    path = path,
+    loadType = LoadType.FROM_ASSETS,
+)
+
+// file:app/src/main/java/com/pico/spatial/sample/spatialaudio/ui/AudioControlViewModel.kt
+rootEntity.findEntity("SM_Sphere")?.also { env ->
+    env.components.set(AmbientAudioComponent(1.0f))
+    audioPlayer.prepareAmbientAudio(env)
+}
+
+// file:app/src/main/java/com/pico/spatial/sample/spatialaudio/ui/AudioControlViewModel.kt
+rootEntity.findEntity("pico_bird")?.also { bird ->
+    bird.components.set(FlyTrajectoryComponent(isEnabled = true))
+    bird.components.set(
+        ObjectAudioComponent(
+            volume = 1f,
+            directivity = Directivity(0.5f, 2.0f),
+            distanceAttenuationMode = DistanceAttenuationMode.INVERSE_SQUARED,
+            reverbVolume = 1f,
+        )
+    )
+    audioPlayer.prepareBirdAudio(bird)
+}
+
+// file:app/src/main/java/com/pico/spatial/sample/spatialaudio/manager/AudioPlayer.kt
+private fun playAudio(audioName: String, setLoop: Boolean = true, volume: Float = 1f) {
+    controllerMap[audioName]?.let { controller ->
+        controller.setVolume(volume)
+        controller.setLoop(setLoop)
+        controller.play()
+    }
+}
+
+// file:app/src/main/java/com/pico/spatial/sample/spatialaudio/ui/ControlPanel.kt
+onToggleEnable = { enable -> viewModel.toggleAmbientAudio(enable) }
+onToggleEnable = { enable -> viewModel.toggleBirdAudio(enable) }
+
+// file:app/src/main/java/com/pico/spatial/sample/spatialaudio/ui/ImmersiveScene.kt
+viewModel.subscribeAudioEvent(this, AudioEvents.PlaybackStarted::class.java)
+viewModel.subscribeAudioEvent(this, AudioEvents.PlaybackPaused::class.java)
+viewModel.subscribeAudioEvent(this, AudioEvents.PlaybackCompleted::class.java)
+
+// file:app/src/main/java/com/pico/spatial/sample/spatialaudio/ui/AudioControlViewModel.kt
+fun cleanUp() {
+    birdAnimationResource?.close()
+    birdAnimationResource = null
+    audioPlayer.cleanUp()
+    eventManager.unsubscribeAllAudioEvents()
+
+    // Reset states
+    _isAmbientAudioEnabled.value = AudioPlayer.INITIAL_AMBIENT_AUDIO_ENABLED
+    _isBirdAudioEnabled.value = AudioPlayer.INITIAL_BIRD_AUDIO_ENABLED
+    isSceneLoaded = false
+}

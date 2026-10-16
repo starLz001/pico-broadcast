@@ -1,0 +1,43 @@
+原点追踪
+========================================
+用户进入应用时，系统将为其设置一个原点。若用户在应用中进行移动时，将根据设置的原点来追踪和计算位置变化。
+*追踪模式
+PICO Unity Integration SDK 提供以下追踪模式：
+*
+*设置原点追踪模式
+*在 Unity 编辑器中打开项目。
+*为场景添加 XR Origin。
+*选中 XR Origin，然后在 Inpsector 窗口中为其添加 PXR_Manager 脚本。
+*在 XR Origin 面板处，设置 Tracking Origin Mode。
+* 
+*(可选) 设置 Camera Y Offset。Camera Y Offset 指在相机的 Y 方向增加的偏移量，用于模拟用户的身高，仅对 Device 模式生效。
+*获取应用的原点追踪模式
+调用 PXR_System.GetTrackingOrigin 接口，获取应用的原点追踪模式。
+*接口列表
+*详细说明参阅 API 参考。
+*SetTrackingOrigin：设置应用的原点追踪模式。
+*GetTrackingOrigin：获取应用的原点追踪模式。
+
+
+
+模式
+说明
+Not Specified
+
+表示设备不知道或无法确定其当前报告姿势数据的方式。应将此值视为错误条件。
+
+Device
+即通常理解的 Eye 模式。进入应用时，会默认将头戴的初始位置设置为原点，而不会根据头戴检测到地面的高度来计算原点。 
+提示： 
+*该模式要求手动配置相机在 Y 方向上的偏移量（Camera Y Offset），用于模拟用户的身高。
+*该模式比较适合坐姿体验的应用。 
+
+Floor
+进入应用时，将设备的初始位置结合设备检测到地面的高度来计算原点，即将头戴的初始位置垂直映射到地面的位置作为原点。该模式需要设备支持地面检测功能（ 例如：PICO Neo 3 系列）。 
+提示：该模式比较适合站立式体验的应用。
+Floor + Stage Mode
+
+相当于 Floor 模式，但不允许通过长按 Home 键进行校准。
+提示：
+*Stage Mode 选框位于 PXR_Manager (Script) 面板上。
+*仅当 Tracking Origin Mode 为 Floor 时，才可勾选 Stage Mode 选框。

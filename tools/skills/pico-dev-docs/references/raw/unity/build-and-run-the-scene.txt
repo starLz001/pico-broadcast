@@ -1,0 +1,25 @@
+6. 打包并运行场景
+========================================
+*预计阅读和完成时间：3 分钟（不包括编译时间）
+*场景创建完毕后，让我们将其打包为可在 PICO 设备上运行的应用（即 .apk 文件）。
+*第一步：切换开发平台
+PICO XR 应用的目标编译平台是 Android 平台。
+*从上方菜单栏处，选择 File > Build Settings。
+*在 Build Settings 窗口中，从 Platform 列表处选择 Android。
+* 
+*点击 Switch Platform。
+*若该按钮变为 Build，表示平台切换成功。
+* 
+*第二步：打包并运行场景
+使用 Unity 编辑器自带的 Build 工具将 XR 场景构建为可在 PICO 设备上运行的 APK 文件。步骤如下：
+*在 PICO 设备上登录你的账号。
+*使用 USB 数据线连接 PICO 设备和 PC。
+*在 Build Settings 窗口中，点击 Add Open Scenes 将 DemoScene 添加为待构建场景。
+* 
+*将 Run Device 设置为 All compatible devices 或与 PC 连接的 PICO 设备的型号。
+*点击 Build And Run。
+*你将看到 Build Android 窗口。
+*选择 APK 文件的存储位置。
+*Unity 开始编译应用。编译完成后，PICO 设备将自动运行该 APK 文件。
+*后续操作
+*参考分发部分文档，在 PICO 开发者平台上体验应用发布流程。

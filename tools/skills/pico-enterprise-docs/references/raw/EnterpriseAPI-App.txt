@@ -1,0 +1,497 @@
+应用相关的接口：如设置Launcher、开机自启动、保活等。
+*接口列表
+*
+*pbsAppKeepAlive
+应用保活
+TobService中根据包名找到对应的进程号，提高该进程的优先级；
+应用退出后失效，需要应用每次启动后都调用一下此接口。
+ 
+适用设备
+PICO4 E，Neo3 企业版，G3【PUI5.4.0及以上】，Neo3 Pro【PUI4.8.0&4.8.1及以上】
+入参说明
+*
+返回值
+无
+调用示例
+ 
+*Service开机自启动
+此功能不需要调用接口，需要在Manifest中配置Action，如下所示；
+*配置Action
+Service中配置此Action-"com.pvr.tobservice.SERVICE_AUTO_BOOT"，行业设置启动的时候会启动带这个Action的Service
+ 
+*onCreate中调用void startForeground(int id, Notification notification)，将Service启动为前台服务
+适用设备
+PICO4 E，Neo3 企业版，G3【PUI5.4.0及以上】，Neo3 Pro【PUI4.8.0&4.8.1及以上】
+*pbsGetCurrentLauncher
+获取当前设置的Launcher
+ 
+适用设备
+PICO4 E，Neo3 企业版，G3【PUI5.4.0及以上】，Neo3 Pro【PUI4.8.0&4.8.1及以上】
+入参说明
+*
+返回值
+*
+调用示例
+ 
+*pbsStartActivity
+启动Activity
+ 
+适用设备
+PICO4E，Neo3 Pro，Neo3 企业版，G3 【PUI5.4.0及以上】，Neo3 Pro 自升级【PUI4.8.17&4.9.5】
+入参说明
+*
+返回值
+*
+调用示例
+ 
+*appCopyrightVerify
+应用版权校验
+ 
+适用设备
+PICO 4E【PUI 5.9.0】
+入参说明
+*
+返回值
+无
+调用示例
+ 
+*getRunningAppProcesses
+获取系统正在运行的应用
+ 
+入参说明
+无
+返回值
+*
+调用示例
+ 
+*getFocusedApp
+获取系统前台应用
+ 
+入参说明
+无
+返回值
+*
+调用示例
+ 
+*startService
+启动服务
+ 
+入参说明
+*
+返回值
+*
+调用示例
+ 
+*startForegroundService
+启动前台服务
+ 
+入参说明
+*
+返回值
+*
+调用示例
+ 
+*sendBroadcast
+发送广播
+ 
+入参说明
+*
+返回值
+*
+调用示例
+ 
+*sendOrderedBroadcast
+发送有序广播
+ 
+入参说明
+*
+返回值
+*
+调用示例
+ 
+*keepAliveBackground
+提升进程优先级
+ 
+入参说明
+*
+返回值
+*
+调用示例
+ 
+*openIPDDetectionPage
+打开IPD检测页面
+ 
+入参说明
+无
+返回值
+*
+调用示例
+ 
+*pbsRequestSystemPermissionAsync
+给应用授予权限
+ 
+入参说明
+*
+返回值
+无
+调用示例
+ 
+*scanQRCode
+扫描二维码，返回二维码信息
+ 
+适用设备
+PICO 4E【PUI 5.11.0】
+PICO 4 Ultra E【OTA0】
+入参说明
+*
+返回值
+无
+调用示例
+ 
+*setDeviceOwner
+设置DeviceOwner
+ 
+适用设备
+PICO 4 Ultra PUI5.13.0
+入参说明
+*
+返回值
+*
+调用示例
+ 
+*getDeviceOwner
+获取当前设备的DeviceOwner
+ 
+适用设备
+PICO 4 Ultra PUI5.13.0
+入参说明
+无
+返回值
+*
+调用示例
+ 
+*setBrowserHomePage
+设置浏览器主页
+ 
+适用设备
+PICO 4 Ultra PUI5.13.0
+入参说明
+*
+返回值
+*
+调用示例
+ 
+*getBrowserHomePage
+获取浏览器主页
+ 
+适用设备
+PICO 4 Ultra PUI5.13.0
+入参说明
+无
+返回值
+*
+调用示例
+ 
+接口
+说明
+pbsAppKeepAlive
+提升应用优先级，使应用不会轻易杀掉此应用
+Service开机自启动
+开机后自动启用某个Service
+pbsGetCurrentLauncher
+获取当前是哪个应用是Launcher
+pbsStartActivity
+封装Android的StartActivity功能，可以调用此接口启用某个Activity
+appCopyrightVerify
+应用版权校验
+getRunningAppProcesses
+获取系统正在运行的应用
+getFocusedApp
+获取系统前台应用
+startService
+启动服务
+startForegroundService
+启动前台服务
+sendBroadcast
+发送广播
+sendOrderedBroadcast
+发送有序广播
+keepAliveBackground
+提升进程优先级
+openIPDDetectionPage
+打开IPD检测页面
+pbsRequestSystemPermissionAsync
+授予系统权限
+scanQRCode
+扫描二维码，返回二维码信息
+void pbsAppKeepAlive(String appPackageName, boolean keepAlive, int ext);
+参数名称
+类型
+说明
+appPackageName
+String 
+需要保活的应用包名
+keepAlive
+boolean 
+true:将调用进程提高到高优先级
+false:取消调用进程的高优先级
+ext
+int 
+扩展位，无意义
+ToBServiceHelper.getInstance().getServiceBinder.pbsAppKeepAlive("包名",true,0);
+<manifest ...>
+
+    <application ...>
+
+        <service android:name=".ServiceOne"
+            android:exported="true">
+            <intent-filter>
+                <!--Service中配置此Action，行业设置启动的时候会启动带这个Action的Service-->
+                <action android:name="com.pvr.tobservice.SERVICE_AUTO_BOOT" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </service>
+
+    </application>
+
+</manifest>
+String pbsGetCurrentLauncher(int ext);
+参数名称
+类型
+说明
+ext
+int 
+扩展位，无意义
+类型
+说明
+String 
+设置的Launcher：
+package 或者 package/class
+ToBServiceHelper.getInstance().getServiceBinder().pbsGetCurrentLauncher(0);
+int pbsStartActivity(String packageName, String className, String action, String extra, String[] categories, int[] flags, int ext);
+参数名称
+类型
+说明
+packageName
+String 
+应用包名
+className
+String 
+启动的Activity全类名
+action
+String 
+Action
+extra
+String 
+JSON格式的key/value，Tobservice中会解析出key/value，并调用android.content.Intent#putExtra传递给需要启动的应用
+categories
+String[]
+将category透传给Intent，android.content.Intent#addCategory(String)
+flags
+int[]
+将flags透传给Intent
+android.content.Intent#addFlags(int)
+ext
+int 
+扩展位，无意义
+类型
+说明
+int
+*0: 成功;
+*1: 失败
+//启动视频播放器播放视频
+serviceBinder.pbsStartActivity("", "", "picovr.intent.action.player", "{\"uri\":\"/sdcard/test.mp4\",\"videoType\":0,\"videoSource\":1}", new String[]{Intent.CATEGORY_DEFAULT}, new int[]{Intent.FLAG_ACTIVITY_NEW_TASK},0);
+void appCopyrightVerify(String packageName, Consumer<Integer> callback);
+参数名称
+类型
+说明
+packageName
+String 
+应用报名
+callback
+
+Consumer<Integer>
+
+callback 执行结果回调：
+1:接口调用失败
+
+有版权的情况：
+100:  查询的应用不在校验名单中
+101:  无网且无缓存该应用的数据
+102:  请求服务端后，返回该应用有版权
+103:  网络异常，但本地缓存该应用有版权
+无版权的情况
+-102：请求服务端后，服务端返回该应用无版权
+-103：网络异常，但本地缓存该应用无版权
+-104：请求服务端后，发现应用签名与服务端返回的对不上
+-105： 网络异常，但本地缓存发现应用签名与服务端返回的对不上
+try {
+ToBServiceHelper.getInstance().getServiceBinder().appCopyrightVerify("com.example.app", new IIntCallback.Stub() {
+    @Override
+    public void callback(int i) throws RemoteException {}
+});
+ActivityManager.RunningAppProcessInfo[] getRunningAppProcesses();
+类型
+说明
+ActivityManager.RunningAppProcessInfo[]
+正在运行的应用信息
+ActivityManager.RunningAppProcessInfo[] temps = ((IToBServiceProxy)ToBServiceHelper.getInstance().getServiceBinder()).getRunningAppProcesses();
+ComponentName getFocusedApp();
+类型
+说明
+ComponentName 
+前台应用信息
+ComponentName  temps = ((IToBServiceProxy)ToBServiceHelper.getInstance().getServiceBinder()).getFocusedApp();
+ComponentName startService(Intent service);
+参数名称
+类型
+说明
+service
+Intent
+定义需要启动的服务
+类型
+说明
+ComponentName 
+如果服务正在启动或已经在运行，则返回已启动的实际服务的ComponentName；否则，如果服务不存在，则返回null。
+ComponentName  temps = ((IToBServiceProxy)ToBServiceHelper.getInstance().getServiceBinder()).startService(intent);
+ComponentName startForegroundService(Intent service);
+参数名称
+类型
+说明
+service
+Intent
+定义需要启动的服务
+类型
+说明
+ComponentName 
+如果服务正在启动或已经在运行，则返回已启动的实际服务的ComponentName；否则，如果服务不存在，则返回null。
+ComponentName  temps = ((IToBServiceProxy)ToBServiceHelper.getInstance().getServiceBinder()).startForegroundService(intent);
+int sendBroadcast(Intent intent);
+参数名称
+类型
+说明
+intent
+Intent
+定义需要发送的广播
+类型
+说明
+int 
+0-成功
+1-失败
+((IToBServiceProxy)ToBServiceHelper.getInstance().getServiceBinder()).sendBroadcast(intent);
+int sendOrderedBroadcast(Intent intent, String receiverPermission);
+参数名称
+类型
+说明
+intent
+Intent
+定义需要发送的广播
+receiverPermission
+String 
+（可选）字符串命名接收器必须持有的权限才能接收您的广播。如果为null，则不需要任何权限
+类型
+说明
+int 
+0-成功
+1-失败
+((IToBServiceProxy)ToBServiceHelper.getInstance().getServiceBinder()).sendOrderedBroadcast(intent, null);
+int keepAliveBackground(int keepAlivePid, int flags, int level);
+参数名称
+类型
+说明
+keepAlivePid
+int 
+要保活进程pid
+flags
+int 
+接口会根据flag取值执行对应操作，具体取值和操作如下：
+            2：当前进程提高优先级；
+            1：当前进程所在包下的所有进程提高优先级；
+            0：取消（flag 1或2 的）高优先级；
+level
+int 
+提高优先级的程度
+ 1:高优先级 将adj提高到 149
+类型
+说明
+int 
+0-成功
+1-失败
+((IToBServiceProxy)ToBServiceHelper.getInstance().getServiceBinder()).keepAliveBackground(111111, 2, 1);
+int openIPDDetectionPage();
+类型
+说明
+int 
+0-成功
+1-失败
+((IToBServiceProxy)ToBServiceHelper.getInstance().getServiceBinder()).openIPDDetectionPage();
+void pbsRequestSystemPermissionAsync(SystemPermission permission , boolean allow , Consumer<Integer> callback)
+参数名称
+类型
+说明
+permission 
+SystemPermission
+需要授予的权限
+allow 
+boolean 
+true：授予权限，false：取消
+callback
+Consumer<Integer>
+0-成功，1-失败，2-权限验证失败
+((IToBServiceProxy)ToBServiceHelper.getInstance().getServiceBinder()).pbsRequestSystemPermissionAsync(SYS_OPS_PERMISSION_ALERT_WINDOW,true, new Consumer<Integer>{
+    void accept(int result){
+    
+    }
+});
+void scanQRCode(Consumer<String> callback);
+参数名称
+类型
+说明
+callback
+Consumer<String>
+
+扫码结果结果回调：
+*-2 设备不支持
+*null 扫码失败
+*其他：扫描到的二维码信息
+((IToBServiceProxy)ToBServiceHelper.getInstance().getServiceBinder()).scanQRCode(new Consumer(){
+    @Override
+    public void callback(String callback){}
+});
+int setDeviceOwner(ComponentName who);
+参数名称
+类型
+说明
+who
+ComponentName
+DeviceOwner的ComponentName
+类型
+说明
+int
+ 0-成功，1-失败，2-权限校验失败
+((IToBServiceProxy)ToBServiceHelper.getInstance().getServiceBinder()).setDeviceOwner(/*DeviceOwner的ComponentName*/);
+ComponentName getDeviceOwner();
+类型
+说明
+ComponentName 
+ 当前设置的DeviceOwner
+((IToBServiceProxy)ToBServiceHelper.getInstance().getServiceBinder()).getDeviceOwner();
+int setBrowserHomePage(String url);
+参数名称
+类型
+说明
+url
+String 
+网页地址
+类型
+说明
+int
+ 0-成功，1-失败，-2-设备不支持
+((IToBServiceProxy)ToBServiceHelper.getInstance().getServiceBinder()).setBrowserHomePage("https://www.baidu.com");
+String getBrowserHomePage();
+类型
+说明
+String 
+ 当前浏览器主页地址，
+null-默认主页地址
+((IToBServiceProxy)ToBServiceHelper.getInstance().getServiceBinder()).getBrowserHomePage();

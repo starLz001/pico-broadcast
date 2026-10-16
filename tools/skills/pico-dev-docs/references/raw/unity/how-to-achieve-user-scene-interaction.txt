@@ -1,0 +1,7 @@
+如何实现用户和场景间的交互？
+========================================
+PICO Unity Integration SDK 内置了 Unity XR 官方提供的标准场景交互插件 XR Interaction Toolkit，满足了大部分场景交互使用案例，如：UI 点击、抓取物体、瞬移等。此外，你也可通过 VRTK4.0 插件实现场景交互功能。
+具体实现方法，参考以下示例：
+*XR Interaction Toolkit 示例
+*VRTK4.0 示例
+

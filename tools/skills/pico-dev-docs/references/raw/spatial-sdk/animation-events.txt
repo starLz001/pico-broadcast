@@ -1,0 +1,167 @@
+动画事件
+========================================
+*动画事件用于在动画播放的特定时间点执行自定义逻辑。为此，你需要订阅目标事件，并定义该事件被触发时的回调。在动画播放过程中，当系统检测到对应事件被触发时，将自动调用你定义的回调函数。
+*动画事件概览
+*PICO Spatial SDK 的 AnimationEvents 类定义了以下动画事件：
+**
+*订阅动画事件
+*你可以通过有效的 Scene（适用于通过 entity 订阅）或 SpatialViewContent（适用于通过 SpatialView 的 content 订阅）订阅动画事件，并在函数体中定义该事件被触发时所需执行的逻辑，如播放音效、切换技能、展示特效等。不需要监听事件时，你可以通过 cancel 取消订阅。
+ 
+*管理动画事件
+*当你需要处理大量事件时，你可以自定义一个 EventManager 来管理事件的订阅和取消订阅，以及事件被触发时的回调。
+ 
+*使用 PostSystemUpdate 和 PreSystemUpdate 事件
+*动画系统会逐帧更新场景中的动画。在每一帧，它都会计算动画进度，并将结果应用到其驱动的目标属性上，例如实体的位置与旋转、BlendShape 权重或材质参数。
+*PostSystemUpdate 和 PreSystemUpdate 都是系统级的帧事件，并不绑定到任何特定的实体或动画。只要动画系统在当前帧执行更新，这两个事件就会被触发。因此，如果你需要监听特定动画的生命周期（如播放开始、完成、暂停或循环），使用 Started、Completed、Paused 或 Looped 等事件，而不是 PostSystemUpdate 和 PreSystemUpdate。
+*使用场景
+*PostSystemUpdate 和 PreSystemUpdate在执行时机上的差异，是区分其使用场景的关键：
+*PostSystemUpdate：在动画系统更新后触发。此时，由于动画已更新完毕，你对同一属性的修改将不会被覆盖，并会成为该帧的最终生效值。
+*PreSystemUpdate：在动画系统更新前触发。如果你在此事件中修改了由动画驱动的属性，那么在同一帧内，你的改动会被动画的计算结果覆盖，从而导致修改无效。
+* 
+ 
+*订阅 PostSystemUpdate 和 PreSystemUpdate 事件
+*订阅 Scene 或 SpatialView 的内容，即可在回调中获取事件对象，并读取 deltaTime 值：
+ 
+*subscribe 会返回一个 Cancellable，在页面关闭、实体移除或不再需要回调时调用 cancel() 即可。
+*注意事项
+*PreSystemUpdate 和 PostSystemUpdate 是系统级帧事件，不归属于任何特定实体。如果你按实体进行过滤，将无法接收到回调。如需限定作用范围，务必在相应的 Scene 或 SpatialView 内容上订阅。
+*帧事件每帧都会触发。为了避免在页面或实体销毁后回调函数仍在执行，你需要通过返回的 Cancellable 对象取消订阅 PreSystemUpdate 和 PostSystemUpdate。
+*根据你的具体需求选择正确的事件：
+*如需处理与某一帧动画更新前后相关的逻辑，使用 PreSystemUpdate 或 PostSystemUpdate。
+*如需响应“某条特定动画的开始、完成、暂停或循环”等生命周期节点，使用 Started、Completed、Paused 或 Looped 等事件。
+*回调函数每帧都会执行，你需要避免在其中进行重度计算或频繁创建对象。对于时间相关的逻辑，直接使用事件提供的 deltaTime 参数，不要自行通过系统时间计算帧间隔。
+*deltaTime 的单位是秒。只有当动画系统在当前帧实际执行更新时，这两个事件才会被触发。
+*API 参考
+AnimationEvents 对象提供了动画相关的事件，详情参阅 API 参考。根据你所处的地理位置选择合适的文档链接：
+*中国大陆：https://developer-cn.picoxr.com/spatial-api/index.html
+*非中国大陆：https://developer.picoxr.com/spatial-api/index.html
+
+
+
+
+动画事件
+
+触发条件
+
+*AnimationEvents.Started
+
+动画开始播放。
+
+*AnimationEvents.Paused
+
+动画暂停播放。
+
+*AnimationEvents.Resumed
+
+动画由暂停恢复播放。
+
+*AnimationEvents.Looped
+
+动画完成了一个循环。
+
+AnimationEvents.Terminated
+
+动画被终止播放。调用 stop() 方法时被触发。
+
+*AnimationEvents.Completed
+
+动画完成播放并停止。调用 stop() 方法时不会被触发。
+
+AnimationEvents.PostSystemUpdate
+
+*动画系统完成更新本帧之后触发。详细用法参阅  。
+
+AnimationEvents.PreSystemUpdate
+
+*动画系统开始本帧更新之前触发。详细用法参阅  。
+
+@Composable
+fun AnimationStartedEventExample() {
+    val subscription = remember { mutableStateOf<Cancellable?>(null) }
+    // DisposableEffect 用于在 Composable 生命周期内注册和注销事件
+    DisposableEffect(Unit) {
+        onDispose {
+            // 当该 Composable 被移除时，自动取消事件订阅
+            subscription.value?.cancel()
+            subscription.value = null
+        }
+    }
+    SpatialView(
+        initial = { content, _ ->
+            val entity = Entity().apply { setName("Entity for AnimationStartedEvent") }
+            content.addEntity(entity)
+            // 订阅 AnimationEvents.Started 事件，并在动画开始事件触发时，输出 log
+            content.subscribe(AnimationEvents.Started::class.java) {
+                val controller = it.playbackController
+                Log.d("AnimationStartedEvent", "Animation Started on entity: $${controller.entity}")
+            }
+        },
+    )
+}
+
+// 该对象用于统一管理动画事件的订阅与取消订阅
+object EventManager {
+    private var subscription: Cancellable? = null
+
+    fun <T : Event> subscribeAnimationEvent(content: SpatialViewContent, animEvent: Class<T>) {
+        when (animEvent) {
+            // 订阅动画开始事件
+            AnimationEvents.Started::class.java -> {
+                subscription =
+                    content.subscribe(animEvent) {
+                        Log.d("EventManager", "Animation Started!")
+                        // Implement your logic here
+                    }
+            }
+            // 订阅动画终止事件
+            AnimationEvents.Terminated::class.java -> {
+                subscription =
+                    content.subscribe(animEvent) {
+                        Log.d("EventManager", "Animation Terminated!")
+                        // Implement your logic here
+                    }
+            }
+            else -> {
+                Log.e("EventManager", "No Matching Animation Event Found!")
+            }
+        }
+    }
+
+    // 取消订阅所有动画事件
+    fun unsubscribeAllAnimationEvents() {
+        subscription?.cancel()
+    }
+}
+
+**
+
+*PostSystemUpdate
+*如果你希望在动画计算结果的基础上进行二次修改，甚至完全覆盖动画效果，可以使用此事件。典型场景包括：
+*叠加或修正动画效果：在动画更新了某些属性后，你需要于同一帧内对这些属性进行再次修改，并确保你的修改能够生效。
+*锁定特定属性：将某个由动画驱动的属性强制设置为固定值，使其不受动画播放的影响。
+*实现自定义的逐帧模拟：利用回调中精确的 deltaTime，根据真实时间来驱动自定义的运动、呼吸或摆动等效果。即使这些效果与动画修改的是相同属性，你的改动也不会被覆盖。
+
+*PreSystemUpdate
+*如果你需要在动画计算开始前执行逻辑，可以使用此事件。典型应用场景包括：
+*为动画准备输入：在动画系统为当前帧计算结果前，更新其所需的参数和状态。
+*记录更新前的状态：在动画系统修改属性前，读取或记录这些属性的原始值，用于进行帧级预处理或状态打点。
+*驱动其他逻辑：利用稳定的逐帧回调和 deltaTime，来更新那些与当前动画不冲突的目标属性。
+
+
+// 方式一：在 SpatialView 的内容中订阅
+SpatialView(...) { content, _ ->
+    content.subscribe(AnimationEvents.PostSystemUpdate::class.java) { event ->
+        elapsed += event.deltaTime
+        // 动画更新完成后执行自定义逻辑
+    }
+}
+
+// 方式二：在 Scene 上订阅
+val subscription = scene.subscribe(
+    AnimationEvents.PostSystemUpdate::class.java
+) { event ->
+    // 每帧回调
+}
+
+// 不再需要时取消订阅
+subscription.cancel()

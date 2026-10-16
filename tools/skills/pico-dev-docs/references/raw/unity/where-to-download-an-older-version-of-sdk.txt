@@ -1,0 +1,5 @@
+如何获取历史版本的 SDK？
+========================================
+如果你为 PICO 消费者商店开发应用/游戏，则需要使用 PICO Neo 3、PICO 4、PICO 4 Pro 或 PICO 4 Ultra 系列的消费者版本设备，并使用最新版 PICO SDK 进行开发。如果在使用最新版 SDK 过程中遇到技术问题，请联系 developer@support.picoxr.com。
+如果是基于 PICO 企业版设备开发或为企业端行业应用场景开发内容，请联系 PICO 企业支持团队（pico-business-techsupport@bytedance.com）获取历史版本 SDK。
+

@@ -1,0 +1,122 @@
+锐化
+========================================
+锐化（Sharpening）是一种图像处理方法，可通过增强图像中高频信息，使图像得细节边缘和轮廓更加清晰，增强对比度，从而更加突出图像的重要特征和细节。
+*实现原理
+PICO 使用基于微分的空域滤波算法实现锐化。该算法可以根据当前像素与周边像素的颜色对比度来决定对当前像素增强的程度，一般来说，当前像素与周边像素的颜色差值越小，则增强程度越小；反之越大。下图展示使用锐化处理方法前后的对比。
+* 
+针对文字的锐化效果展示如下：
+* 
+*环境要求 
+*PICO 设备型号：PICO Neo3 系列、PICO 4 系列、PICO 4 Ultra 系列 
+*PICO 设备系统版本：5.8.0 及以上版本
+*注意事项
+*图像锐化功能增加了采样次数和计算量，会增加 GPU 功耗。
+*图像锐化功能可能会使图像噪点或摩尔纹更明显。
+*锐化与超分辨率功能不能在同一个 Eye Buffer 内同时开启。若同时开启，SDK 将只使用超分辨率功能。
+*锐化与下采样暂时不支持同时开启。
+*在 Unity 编辑器中开启锐化模式
+*在 Unity 编辑器中打开你的项目。
+*在 Hierarchy 窗口中，添加 XR Origin。
+*选中 XR Origin，然后在 Inspector 窗口中为其添加 PXR_Manager 脚本。
+*在 PXR_Manager (Script) 面板处，选择 Sharpening Mode (锐化模式)。
+* 
+* 
+*锐化模式说明如下：
+**
+*选择 Sharpening Enhance Mode (锐化增强模式)，进一步提升锐化效果。
+* 
+*锐化增强模式说明如下：
+**
+*使用接口动态启用/禁用锐化模式
+*调用 UPxr_SetSuperResolutionOrSharpening 接口，在应用的运行时动态启用或禁用锐化模式。
+ 
+SuperResolutionOrSharpeningType 枚举值如下：
+ 
+*代码示例如下：
+* 
+*最佳实践
+在使用图像锐化功能时，同时开启静态注视点锐化增强模式和自适应锐化增强模式。
+下面两张图分别展示只开启注视点锐化模式后锐化的像素区域，与同时开启静态注视点锐化模式和自适应锐化模式后，锐化的像素区域（红色区域）。从对比中可看出，同时开启注视点锐化模式和自适应锐化模式可明显降低功耗，同时可保持较好的视觉效果。
+*
+*关于超分辨率功能
+锐化和超分辨率功能都可以提升图像的清晰度，但具体实现方式不同。锐化功能可以提升图像中的高频信息，但仅增强图像中已有的高频成分，增强细节边缘和轮廓；超分辨率功能可估算并补充原始图像中没有表现出的图像细节。若想了解更多 PICO SDK 超分辨率功能相关信息，参阅《超分辨率》指南。
+
+
+若无法选择锐化模式，先取消勾选 Super Resolution 选框，然后再进行尝试。
+
+
+
+模式
+
+说明
+
+None
+
+不开启锐化。
+
+Normal
+
+普通锐化。该模式下，锐化一个像素只需采样其周边的 2 个像素，总共需完成 3 次采样。与 Quality 模式相比，功耗更低，锐化效果有所下降。
+
+Quality
+
+高质量锐化。该模式下，锐化一个像素需要采样其周边的 4 个像素，总共需完成 5 次采样。与 Normal 模式相比，功耗更高，锐化效果更好。
+
+锐化增强模式必须基于 Normal 和 Quality 锐化模式使用。
+
+
+
+模式
+
+说明
+
+None
+
+不开启锐化增强。
+
+Fixed Foveated
+
+静态注视点锐化增强模式。开启该模式后，应用只对用户视野中心注视点区域的图像像素进行锐化，对四周图像像素不做锐化。
+
+Self Adaptive
+
+自适应锐化增强模式。开启该模式后，应用只对当前像素与周边像素的颜色对比度超过一定阈值的像素进行锐化，以此减少锐化的像素数，同时减少功耗。
+
+Both
+
+同时开启静态注视点锐化模式和自适应锐化模式。
+
+public static void UPxr_SetSuperResolutionOrSharpening(SuperResolutionOrSharpeningType type);
+
+public enum SuperResolutionOrSharpeningType
+{        
+    None， // 同时关闭超分辨率和锐化模式
+    SuperResolution, 
+    NormalSharpening,  // Normal 级别的锐化（会自动将其他设置为 None）
+    NormalSharpeningAndFixedFoveated, // Normal + FixedFoveated 级别的锐化（会自动将其他设置为 None）
+    NormalSharpeningAndSelfAdaptive, // Normal + SelfAdaptive 级别的锐化（会自动将其他设置为 None）
+    NormalSharpeningAndFixedFoveatedAndSelfAdaptive, // Normal + FixedFoveated + SelfAdaptive 级别的锐化（会自动将其他设置为 None）
+    QualitySharpening, // Quality 级别的锐化（会自动将其他设置为 None）
+    QualitySharpeningAndFixedFoveated, // Quality + FixedFoveated 级别的锐化（会自动将其他设置为 None）
+    QualitySharpeningAndSelfAdaptive, // Quality + SelfAdaptive 级别的锐化（会自动将其他设置为 None）
+    QualitySharpeningAndFixedFoveatedAndSelfAdaptive,// Quality + FixedFoveated + SelfAdaptive 级别的锐化（会自动将其他设置为 None）
+}
+
+// 开启 Normal 级别的锐化
+PXR_Plugin.Render.UPxr_SetSuperResolutionOrSharpening(SuperResolutionOrSharpeningType.NormalSharpening); 
+
+// 开启 Normal + FixedFoveated 级别的锐化
+PXR_Plugin.Render.UPxr_SetSuperResolutionOrSharpening(SuperResolutionOrSharpeningType.NormalSharpeningAndFixedFoveated);
+
+// 关闭超分辨率和锐化模式
+PXR_Plugin.Render.UPxr_SetSuperResolutionOrSharpening(SuperResolutionOrSharpeningType.None);
+
+
+
+只开启静态注视点锐化增强模式后锐化的像素区域。
+
+同时开启静态注视点锐化增强模式和自适应锐化增强模式后锐化的像素区域。
+
+* 
+
+* 

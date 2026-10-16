@@ -1,0 +1,206 @@
+注视点渲染
+========================================
+注视点渲染（Foveated Rendering） 可以优化渲染场景的能力。该技术通过为视野中心区域提供全分辨率（无损），降低边缘区域（人眼焦点区域之外）的分辨率，能够极大降低 HMD 设备的渲染负载，实现渲染优化。
+*PICO SDK 支持眼动追踪注视点渲染（Eye Tracked Foveated Rendering，简称 ETFR）、静态注视点渲染（Fixed Foveated Rendering，简称 FFR）和下采样（Subsampled Layout）功能，帮助你提升应用性能和画面显示的质量。本文档介绍如何为应用开启 ETFR、FFR 和下采样功能。
+*环境要求
+以下为注视点渲染相关功能的环境要求。
+*
+*基本概念
+*在人类的视觉系统中，人眼视力分为中心视力和周边视力两部分。中心视力提供精确和细节的视觉内容，周边视力提供广角视野范围的画面。两者的视敏度差别催生了 VR 领域常用的注视点渲染（Foveated Rendering）技术。 注视点渲染通过为视野中心提供无损分辨率，同时降低周边视野（人眼焦点区域之外）分辨率的方式来大幅降低计算复杂度，优化 VR 场景渲染效果。你可以通过以下说明进一步了解注视点渲染相关概念。
+*静态注视点渲染（FFR）
+FFR 将注视点固定在视口中心位置，通过降低周边视野清晰度，从而降低 GPU 负载，提升应用性能。
+*眼动追踪注视点渲染（ETFR）
+ETFR 根据眼球的注视方向动态调整注视点，以全分辨率渲染眼球注视区域的图像，以低分辨率渲染边缘区域图像。随着眼球的移动，全分辨率渲染区域也会相应地变化。
+与 FFR 相比，ETFR 可以追踪用户当前真实的注视点位置，在眼球周围区域分辨率的降低上可以比 FFR 的浮动更大。因此，使用 ETFR 可以为应用降低更多 GPU 负载。以下为开启超高级等级的 ETFR 与 FFR 后的性能数据对比。数据来源于 PICO 内部测试，实际使用中可能存在误差。
+*
+*注视点渲染等级
+PICO Unreal Integration SDK 为 ETFR 和 FFR 各提供了四个注视点渲染等级，等级越高，周边图像越模糊。其中，高级和超高级效果一致。你可通过以下示意图了解不同等级的注视点渲染对分辨率的具体影响。
+* 
+*下采样
+下采样是一种优化渲染技术，需与 FFR 或 ETFR 配合使用。开启下采样功能后，眼部纹理将采用下采样的布局方式，消除注视点渲染产生的视野边缘低分辨率区域的视觉伪影，提高应用性能。用户在移动时，设备的画面过渡也将更平滑流畅，从而减少眩晕感、提升沉浸感。
+*使用限制
+*如果你的项目使用的图形接口为 Vulkan，则必须使用 UE PICO 分支引擎版本才可使用 ETFR 功能。
+*要使用下采样功能，你必须同时在编辑器中开启 Mobile Multi-View 选项。具体步骤参考多视图渲染。
+*使用步骤
+*本小节介绍如何使用注视点渲染、如何可视化注视点渲染、如何开启下采样功能。
+*启用注视点渲染
+你可参考以下步骤开启 PICO SDK 的注视点渲染功能。
+*准备工作
+*执行 r.VRS.Enable 1。
+* 
+*在 DefaultEngine.ini 的 [/Script/Engine.RendererSettings] 部分，添加 r.Vulkan.VRSFormat=3。
+*方式一：在编辑器中启用
+*在 UE 编辑器中创建一个项目或打开已有项目。
+*在编辑器界面上方工具栏，点击 编辑（Edit）> 项目设置（Project Settings） > 插件（Plugins） > PICOXR Settings。
+*移动到 Foveated Rendering 选项卡下，根据需要选择注视点渲染模式和等级。以下为字段说明：
+* 
+**
+*方式二：使用蓝图动态启用
+你可以添加以下蓝图节点设置注视点渲染模式：
+* 
+ 
+*你可以添加以下蓝图节点设置注视点渲染等级：
+ 
+*你可以添加以下蓝图节点设置注视点渲染参数：
+* 
+*可视化注视点渲染
+你可使用 Tile 可视化工具在引擎中可视化屏幕上每个 Tile 的分辨率来实现注视点渲染可视化。详情参考 Tile 可视化工具。
+*如果你使用 OpenGLES 图形接口，也可使用以下 adb 命令可视化注视点渲染的效果：
+ 
+*启用下采样
+PICO 的下采样功能同时支持 Vulkan 和 OpenGLES 渲染接口，必须与 FFR 或 ETFR 同时使用。启用下采样功能会增加 Timewarp 的 GPU 成本。因此，建议你在启用 Med、High、Top High 等级的 FFR 或 ETFR 时再启用下采样功能。你可参考以下方式启用下采样功能。
+ 
+*方式一：使用控制台变量动态启用 
+下采样功能可以由控制台变量 r.Mobile.PICO.EnableSubsampled 动态控制启停。 
+*方式二：使用蓝图或C++代码动态启用 
+你可以通过蓝图或 C++ 代码在游戏逻辑和交互中动态启用下采样功能。 
+蓝图示例如下： 
+ 
+C++ 代码示例如下：
+ 
+如果你需要应用程序从一开始就启用下采样功能，可在 {项目文件夹}\Config\DefaultEngine.ini 文件中添加以下内容： 
+ 
+*AndroidManifest 权限声明
+启用 ETFR 后，SDK 会自动在 AndroidManifest.xml 文件中写入相关权限声明：
+<meta-data android:name="picovr.software.eye_tracking" android:value=""/>
+<uses-permission android:name="com.picovr.permission.EYE_TRACKING" />
+若非必要，请不要修改相关的权限声明内容。如果使用自定义 Manifest，请根据相应功能添加对应的权限声明。
+*API 列表
+注视点渲染提供如下接口，详细说明，见 API 参考。
+*
+*
+
+
+
+功能
+
+SDK 版本
+
+PICO 设备系统版本
+
+PICO 设备
+
+FFR
+
+2.0 或以上
+
+NA
+
+PICO Neo3 和 PICO 4 系列
+
+ETFR
+
+2.3.0 或以上
+
+
+5.7.0 或以上
+
+
+仅支持搭载眼动追踪摄像头的 PICO 设备，包括 PICO Neo3 Pro Eye、PICO 4 Pro 和 PICO 4 Enterprise
+
+下采样
+
+2.1.5 或以上
+
+5.5.0 或以上
+
+PICO Neo3 和 PICO 4 系列
+
+
+
+性能指标
+
+ETFR
+
+FFR
+
+GPU 占用率
+
+91.94 %
+
+95.33 %
+
+GPU 频率
+
+587 MHz
+
+587 MHz
+
+帧率
+
+71.79 FPS
+
+68.09 FPS
+
+
+
+字段
+
+说明
+
+Foveated Rendering Mode
+
+设置应用初始化时的注视点渲染模式。
+
+Foveated Rendering Level
+
+设置应用初始化时的注视点渲染等级，如果设置为 None，则表示初始化时不开启注视点渲染。
+
+Enable Eye Tracked Foveated Rendering
+
+*若勾选，则应用启动时会向用户申请眼动追踪权限；
+*若不勾选，应用无法向用户申请眼动追踪权限，ETFR 无法生效。
+
+仅支持源码引擎。
+
+adb remount
+adb shell "setenforce 0"
+adb shell "setprop debug.egl.profiler 0"
+adb shell "rm /data/vendor/gpu/*"
+
+adb shell "mkdir data/vendor/gpu"
+adb shell "chmod 777 data/vendor/gpu"
+adb shell "echo '0xe1ad671c=0x356daf03' >/data/vendor/gpu/esx_config.txt"
+adb shell "echo '0x4bc40198=0xf864fbd1' >>/data/vendor/gpu/esx_config.txt"
+
+注意
+如果你启用下采样同时设置了 vr.pixeldensity = 2，画面边缘会有小部分可见的黑边出现。
+
+// 开启下采样功能
+static const auto SubsampleCVar = IConsoleManager::Get().FindConsoleVariable(TEXT("r.Mobile.PICO.EnableSubsampled"));
+if(SubsampleCVar)
+{
+    SubsampleCVar->Set(1);
+}
+
+// 关闭下采样功能
+static const auto SubsampleCVar = IConsoleManager::Get().FindConsoleVariable(TEXT("r.Mobile.PICO.EnableSubsampled"));
+if(SubsampleCVar)
+{
+    SubsampleCVar->Set(0);
+}
+
+[/Script/Engine.RendererSettings]
+r.Mobile.PICO.EnableSubsampled=True
+
+
+
+接口
+
+描述
+
+PXR Get Foveated Rendering Level
+
+获取当前的注视点渲染等级。
+
+PXR Set Foveated Rendering Level
+
+设置注视点渲染等级。
+
+PXR Set Foveated Rendering Parameter
+
+设置注视点渲染相关参数。
+
+PXR Set Foveated Rendering Mode
+
+设置注视点渲染模式。

@@ -1,0 +1,35 @@
+长度单位转换
+========================================
+Spatial UI 支持使用物理长度单位（米、厘米）设置元素和组件的位置与尺寸，并提供物理单位与屏幕尺寸 Dp 之间的相互转换能力。
+* 
+相关函数如下：
+*
+代码示例如下：
+ 
+
+*转换结果可能受 WindowContainer 的 worldScale 影响。
+*目前暂不支持通过物理尺寸直接设置 WindowContainer 的大小。
+
+
+
+函数
+
+描述
+
+dpToLength()
+
+将 dp 转换为一个物理长度单位。
+
+lengthToDp()
+
+将一个物理长度单位转换为 dp。
+
+@Composable
+fun PhysicalLengthConverterSample() {
+    // dp 转换成 meter
+    val meter = LocalPhysicalLengthConverter.current.dpToLength(dp = 100.dp, LengthUnit.Meters)
+    // meter 转换成 dp
+    val dpLens = LocalPhysicalLengthConverter.current.lengthToDp(length = 1.2f, LengthUnit.Meters)
+    // 使用 meter 设置 WindowContainer 的大小
+    Box(modifier = Modifier.size(1.meters).background(color = Color.Red)) {}
+}

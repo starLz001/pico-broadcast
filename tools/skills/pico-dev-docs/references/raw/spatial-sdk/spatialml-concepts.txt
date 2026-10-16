@@ -1,0 +1,32 @@
+SpatialML 基本概念
+========================================
+*本文介绍 SpatialML 的基本概念。
+*SpatialML Session
+*SpatialML Session 是 SpatialML 的运行时上下文和入口。你可以创建多个 Session，多个 Session 之间的数据默认是严格隔离的。只有当你的应用获得必要的授权，并主动将数据从一个 Session 传递至另一个 Session 时，才能实现跨 Session 的数据共享。SpatialML 不会主动在 Session 之间共享数据。
+*SpatialML 空间容器
+*你可以在每个 SpatialML Session 中创建一个关联的 SpatialML 空间容器，用于渲染 MR 内容。SpatialML 空间容器目前仅支持 Volumetric 形态：
+*Volumetric：与应用自身的 Volumetric 容器一致，表现为具有明确三维边界的有限体积容器。
+*你可以使用 SpatialML 提供的渲染 API，依据算法结果，直接在 SpatialML 空间容器中渲染和更新 MR 场景。为确保用户隐私，SpatialML 空间容器与应用自身的空间容器是完全隔离的，两者中的场景无法互动或相互影响。此外，如果你的应用的空间状态为 Full Space，SpatialML 空间容器将被隐藏，无法与应用的 Stage 容器同时显示。
+*SpatialML Pipeline
+*SpatialML Pipeline 是 SpatialML Session 中可被重复调度的执行单元（类似于 Python 中的Callable 对象或 Java/Kotlin 中的 Runnable 对象）。在 SpatialML Pipeline 中，你可以编排一系列操作，包括运行算法包、获取双目相机或深度相机数据、执行 JavaScript 脚本，或更新 SpatialML 空间容器渲染。
+*一个 SpatialML Session 可包含多个 SpatialML Pipeline。SpatialML 内置了线程池，支持串行或并行调度。SpatialML Session 内部的多个 Pipeline 之间可共享数据。SpatialML 会自动分析数据依赖关系，动态调整执行顺序，有效防止并行执行时的竞态条件。
+*SpatialML Tensor
+*SpatialML 将框架内读写的所有数据统一抽象为 Tensor（张量）。在 SpatialML 中，Tensor 分类为 Multi-dimensional Tensor（多维张量）和 Structured Tensor（结构化张量）。
+*Multi-dimensional Tensor
+*这是最基础的数据形态，遵循物理与数学中的张量定义。为了在线性代数运算中明确区分行向量与列向量，SpatialML 要求 Tensor 至少拥有两个维度。若需定义一维向量，请将其声明为 1xN 或 Nx1 的矩阵形式。
+*Structured Tensor
+*为适配 MR 应用场景，SpatialML 扩展了 Tensor 的定义，引入了 Structured Tensor。此类 Tensor 的数据布局具有特定的语义约束，例如：
+*POINT2 / POINT3：数据按组排列。POINT2 每组两个数据代表 (X, Y)；POINT3 每组三个数据代表 (X, Y, Z)。
+*COLOR：数据按 RGB (3个) 或 RGBA (4个) 分组，分别代表颜色通道分量。
+*SpatialML Tensor 的作用域
+根据数据作用域，Tensor 可分为 Global Tensor (全局张量)、Local Tensor (局部张量) 和 Placeholder (占位张量)。
+*Global Tensor 
+*用于在同一个 Session 的不同 Pipeline 之间共享数据。
+*Local Tensor
+*仅在 Pipeline 内部使用，作为具体操作的输入或输出。
+*Placeholder
+*一种特殊的 Local Tensor，类似于程序语言中“引用” 的概念，可作为 Global Tensor 和 Local Tensor 之间的桥梁。当 Pipeline 被提交执行时，你可以把 Placeholder 映射到一个具体的 Global Tensor。在 Pipeline 运行时：
+*如果 Pipeline 中的运算操作使用此 Placeholder 作为输入，它会从映射到的 Global Tensor 读取数据。
+*如果 Pipeline 中的运算操作使用此 Placeholder 作为输出，它会将结果写入映射到的 Global Tensor。
+因此，你可以通过在每次执行时绑定不同的 Global Tensor，来复用同一个 Pipeline 以完成不同的任务。
+

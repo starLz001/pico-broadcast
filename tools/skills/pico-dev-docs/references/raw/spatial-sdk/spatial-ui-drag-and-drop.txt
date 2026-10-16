@@ -1,0 +1,197 @@
+拖放 UI 组件
+========================================
+本文介绍如何通过 Jetpack Compose 的 Modifier 在 PICO OS 6 中拖放 UI 组件。
+*基本概念
+*本文统一使用以下名词来指代拖放 UI 组件过程中涉及的各类元素。
+*拖拽图层 (Drag layer)：拖拽时，在屏幕最顶层渲染的视觉元素，用于代表被拖拽的内容。
+*拖拽缩略图 (Drag shadow)：被拖拽内容的视觉简化预览图，是拖拽图层的主要组成部分。
+*投放目标 (Drop destination/target)：可以接收并处理拖放内容的区域。
+*平面容器 (Planar Container)：2D 或 2.5D 的 UI 容器，例如应用窗口。
+*空间空白处 (WorldSpace)：用户视野内，所有应用窗口之外的 3D 空间。
+*使用场景
+*拖放 UI 组件的使用场景包括在容器内拖拽、跨窗口拖拽以及向空间空白处投放。
+*容器内拖拽
+在单个应用窗口（平面容器）内拖拽组件。拖拽缩略图的移动轨迹严格平行于其所在的窗口面板。根据投放位置的不同，会产生以下两种结果：
+*成功投放：将组件投放到有效的投放目标上，即可成功传输数据。
+*投放失败或取消：如果在无效区域释放组件，拖拽缩略图及其投影会在 150ms 内渐隐消失。
+*跨窗口与空间拖拽
+将 UI 组件从一个窗口拖拽至另一个窗口，或在空间中移动 UI 组件。
+*投放到空间空白处 
+将特定类型的 UI 组件拖拽到应用窗口之外的空间空白处，以触发特定操作。释放组件后，系统将根据其内容的 MIME Type，匹配一个默认 Handler (第一方应用) 来处理。支持的内容类型与 Handler 如下：
+*
+*实现方法
+*你可以使用 Jetpack Compose 的以下 Modifier 实现 UI 组件的拖放：
+*Modifier.dragAndDropSource：将一个 Composable 标记为拖放源。
+*Modifier.dragAndDropTarget：将一个 Composable 标记为投放目标。
+*标记一个 Composable 为拖放源
+*你可以使用 Modifier.dragAndDropSource 将一个 Composable 标记为拖放源。该 Modifier 提供了两个重载版本，主要区别在于拖拽缩略图的绘制策略。
+*默认拖拽缩略图：系统自动截取当前 Composable 的渲染内容作为拖拽缩略图。适用于标准 UI 元素或紧凑布局。
+*自定义绘制拖拽缩略图：通过 DrawScope回调，允许你手动绘制拖拽缩略图。适用于大热区小内容。
+*默认拖拽缩略图
+*下面的代码展示了如何将一个 Composable 标记为拖拽源时使用默认拖拽缩略图。 
+* 
+*自定义拖拽缩略图
+*下面的代码展示了如何将一个 Composable 标记为拖拽源时使用自定义拖拽缩略图。
+* 
+*无论对于哪个重载版本，transferData 都是一个必需的参数，你需要用transferData来返回一个 DragAndDropTransferData 对象。该对象包含 ClipData，负责携带实际传输的数据（如文本、URI 等）。此外，你还可以通过 flags 参数来控制数据的传输权限。例如，设置 flags = View.DRAG_FLAG_GLOBAL 可以允许数据跨应用（窗口）传递。如果不设置该参数，数据将默认只能在当前窗口内被接收。
+ 
+*将一个 Composable 标记为投放目标
+*你可以使用 Modifier.dragAndDropTarget 将一个 Composable 标记为投放目标。
+*该 Modifier 提供了一系列回调函数来响应拖放事件：
+*onEntered：当拖拽物进入热区时调用。
+*onExited：当拖拽物离开热区时调用。
+*onDrop：在目标上释放拖拽物时调用。此回调的 Boolean 返回值表示投放是否被成功接收。返回 true 意味着您已成功处理该事件。
+*onEnded：当次拖放事件结束时（无论成功与否）调用。
+*shouldStartDragAndDrop ：控制一个投放目标是否应该响应当前的拖放事件。
+*响应拖放事件
+*你可以使用 onEntered、onExited、onDrop、onEnded 回调响应拖放事件。
+ 
+*控制是否响应本次拖放事件
+*你可以使用 shouldStartDragAndDrop 回调来控制一个投放目标是否应该响应当前的拖放事件。
+*如果返回 true，表示该目标接受此次拖放，其 DragAndDropTarget 中的其他回调（如 onEntered 和 onDrop）也会被正常触发。
+*如果返回 false，则该目标会忽略此次拖放。在这种情况下，在 onEnded 事件发生前，该目标的所有其他回调都不会触发。
+此设置仅影响当前组件，不会影响页面上其他返回 true 的组件。每当新的拖放事件开始时，系统都会重新调用 shouldStartDragAndDrop 进行判断。
+ 
+*API 参考
+*详情参阅 Jetpack Compose 关于拖放 UI 组件的开发者文档：
+*Modifier.dragAndDropSource
+*Modifier.dragAndDropTarget
+
+
+
+内容类型
+
+MIME Type 示例
+
+默认 Handler (调起的应用)
+
+预期容器类型
+
+HTML
+
+text/html
+
+浏览器
+
+Planar
+
+图片
+
+image/*
+
+查看器
+
+Planar
+
+视频
+
+video/*
+
+播放器
+
+Planar
+
+3D 模型
+
+model/usdz, model/gltf
+
+查看器
+
+*Volumetric
+
+纯文本 / 其他文件
+
+text/plain, */*
+
+无 (不支持)
+
+-
+
+// 默认拖拽缩略图策略，拖拽缩略图大小跟随组件大小
+Modifier.dragAndDropSource(transferData: (Offset) -> DragAndDropTransferData?)
+
+// 此时拖拽缩略图大小为固定200dp，与box内部绘制内容大小无关
+Box(
+    modifier = modifier
+        .size(200.dp)
+        .dragAndDropSource(transferData = {data})
+) {
+    ...
+}
+
+// 自定义拖拽缩略图策略
+Modifier.dragAndDropSource(
+    drawDragDecoration: DrawScope.() -> Unit,
+    transferData: (Offset) -> DragAndDropTransferData?
+)
+Box(
+    modifier = modifier
+        .size(200.dp)
+        .dragAndDropSource(
+            transferData = {data},
+            drawDragDecoration = {
+                // 绘制自定义图片作拖拽缩略图，拖拽缩略图区域仍然为box大小，但显示内容为开发者自定义图片
+*                drawDragDecoration = { drawImageAsShadow(customShadowBitMap) },
+            }
+        )
+) {
+    ...
+}
+
+transferData = {
+    DragAndDropTransferData(
+        ClipData.newPlainText("label", text),
+        flags = View.DRAG_FLAG_GLOBAL
+    )
+}
+
+var isDragging by remember { mutableStateOf(false) }
+var isHovering by remember { mutableStateOf(false) }
+// 使用remember避免target重复创建
+val target = remember {
+    object : DragAndDropTarget {
+        // 拖放开始时，标记isDragging为true
+        override fun onStarted(event: DragAndDropEvent) {
+            isDragging = true
+        }
+        // 拖放结束，恢复Box原状态，
+        override fun onEnded(event: DragAndDropEvent) {
+            isDragging = false
+            isHovering = false
+        }
+        // 拖放源进入当前target，触发hover效果
+        override fun onEntered(event: DragAndDropEvent) {
+            isHovering = true
+        }
+        // 拖放源从enter状态离开，移除hover效果
+        override fun onExited(event: DragAndDropEvent) {
+            isHovering = false
+        }
+    }
+// 通过监听拖放事件，改变state变量，从而使得拖放不同阶段时，box展现不同的背景颜色，来让用户进行感知
+Box(
+    modifier = modifier
+        .size(200.dp)
+        .dragAndDropTarget(
+            // 如果shouldStartDragAndDrop = { false }，所有事件回调都不会触发，
+            // box背景色将始终为Color.Gray.copy(alpha = 0.2f)
+            shouldStartDragAndDrop = { true },
+            target = target,
+        )
+        .background(
+            color = if (isHovering) Color.Green.copy(alpha = 0.5f) else if (isDragging) Color.Yellow.copy(
+                alpha = 0.5f
+            ) else Color.Gray.copy(alpha = 0.2f)
+        ),
+    contentAlignment = Alignment.Center
+) 
+
+shouldStartDragAndDrop = { startEvent ->         
+    // 1. 检查拖过来的数据里有没有 URI（路径）
+    val hasUri = startEvent
+        .mimeTypes()
+        .contains(ClipDescription.MIMETYPE_TEXT_URILIST)                  
+    // 2. 如果有 URI，才对这次拖放感兴趣，返回 true 开启后续监听
+    // 3. 如果没有（比如用户拖的是纯文字），返回 false，后续的 onEntered/onDrop 统统不触发         
+    hasUri      
+}

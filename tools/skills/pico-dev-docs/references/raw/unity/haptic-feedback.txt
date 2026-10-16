@@ -1,0 +1,105 @@
+触觉反馈
+========================================
+PICO 4 系列设备配置了宽频线性马达，结合 SDK 能力，可通过手柄振动的形式提供触觉反馈。振动频率一般在 50 ~ 500Hz 之间，可精确模拟现实世界中大部分的触感输出，为用户提供丰富的触觉交互体验。
+*非缓冲类触觉反馈
+非缓冲类触觉反馈通常基于事件的发生而触发，提供相对简单的振动效果。通过结合事件类型和实场景，你可以设置振动属性，达到期望的振动效果。
+*设备支持
+PICO Neo3 和 PICO 4 系列。
+*开启触觉反馈
+调用 SendHapticImpulse（原 SetControllerVibrationEvent 或 SetControllerVibration）为手柄开启非缓冲类触觉反馈，并设置振动手柄、振动频率、振幅和振动时长。振动频率范围为 50 ~ 500Hz，频率越高，手柄振感越小。振幅取值范围为 0 ~ 1，取值越高，手柄振幅越大，振感越强。接口调用示例如下：
+ 
+若想停止非缓冲类触觉反馈，需再次调用该接口，然后将振幅和振动时长设置为 0。
+*使用技巧
+振动频率设置需基于实际事件类型。通常情况下，软性物体碰撞使用低频率，坚硬物体碰撞使用高频率。具体说明如下：
+*
+*缓冲类触觉反馈
+通过缓冲类触觉反馈，你的应用会向指定手柄发送一个包含触觉数据（音频数据）的缓冲区，触发手柄振动。缓冲类触觉反馈常用于音乐类游戏或有音效需求的场景，当场景中的音量、音调、节奏等声音属性发生变化时，可触发手柄振动，让用户得以感知。
+*设备支持
+PICO 4 系列。
+*注意事项
+*目前仅支持以下音频格式： MP3、WAV、OGG。
+*不支持配置振动时长。振动时长由音频流的时长决定。
+*开启触觉反馈
+缓冲类触觉反馈所需的触觉数据（音频数据）来自于音频文件或 PICO Haptic File (PHF) 文件。左右手柄的触觉反馈由左右声道分别控制，你可以选择为单手柄或双手柄开启振动，同时设置振动参数，包括振幅、声道反转、缓冲类型等。声道反转由 channelFlip 参数控制。开启后，左（右）声道的音频数据将作为右（左）手柄的振动数据来源。
+每一个触觉反馈都有一个 Source ID 作为其唯一标识，由 sourceID 参数返回。你需要在代码里定义 sourceID，从而在调用接口后获取触觉反馈的 Source ID，以便后续对目标触觉反馈进行更新、停止、暂停或恢复。调用以下接口开启缓冲类触觉反馈：
+*
+调用示例如下：
+ 
+*更新触觉反馈配置
+调用 UpdateHapticBuffer（原 UpdateVibrateParams）接口来更新指定触觉反馈的振动配置，包括振动手柄、声道反转和振幅。目标触觉反馈由 sourceID 参数指定。调用示例如下：
+ 
+*停止/暂停/恢复触觉反馈
+调用以下接口来停止/暂停/恢复指定振动。目标振动由 sourceID 参数指定。
+*
+调用示例如下：
+ 
+*API 参考
+若想了解更多接口信息，例如各个接口的入参和返回说明，请阅读 API 文档。
+
+
+//为右手柄开启触觉反馈，振幅为 0.5，振动时长为 500ms，振动频率为 100Hz
+PXR_Input.SendHapticImpulse(VibrateType.RightController, 0.5f, 500, 100) 
+
+
+
+事件类型
+推荐振动频率
+打鼓、打篮球
+低频率（50~100Hz）。
+射击、乒乓球
+中频率（约 170Hz）。
+石头碰撞
+高频率（约 300Hz）。
+
+
+接口
+说明
+备注
+SendHapticBuffer（原 StartControllerVCMotor）
+为指定手柄开启触觉反馈。触觉数据来自存储于 Audio Clip 组件中的音频文件。
+算法会根据音频流的声音属性（音调、音量）计算相应的振幅和振动频率。
+SendHapticBuffer（原 StartVibrateBySharem）
+为指定手柄开启 PCM 类触觉反馈。PCM 数据转换自存储于与 Audio Clip 组件中的音频文件。
+PCM 类触觉反馈具有 高保真 特点。通过脉冲编码调制 (Pulse Code Modulation, PCM) 技术对连续变化的模拟信号进行抽样、量化和编码，形成数字信号。
+SendHapticBuffer（原 StartVibrateByPHF）
+为指定手柄开启触觉反馈。触觉数据来自于 PHF 文件。
+PICO Haptic File (.phf) 是 PICO 自研的触觉数据文件格式，自定义程度高。
+StartHapticBuffer (原 StartVibrateByCache）
+开启触觉反馈，需有缓存数据。
+若在以上接口中配置了 “缓存但不振动（CacheNoVibrate）”，需调用该接口，在缓存完成后开启振动。
+提示：若连续调用该接口，前一次调用的振动数据会被后一次覆盖。
+// 为右手柄开启触觉反馈，由音频文件触发，不开启声道反转，缓存但不振动 
+PXR_Input.SendHapticBuffer(PXR_Input.VibrateType.RightController, audioClip, PXR_Input.ChannelFlip.No, ref sourceid, PXR_Input.CacheType.CacheNoVibrate);
+
+// 为左手柄开启触觉反馈，由 PCM 数据触发，开启声道反转，不缓存数据
+PXR_Input.SendHapticBuffer(PXR_Input.VibrateType.LeftController, pcmData, buffersize, frequency, channelMask, PXR_Input.channelFlip.Yes, ref sourceId, CacheType.DontCache)
+
+// 为左右手柄同时开启触觉反馈，由 PHF 文件触发，不开启声道反转，使用标准振幅
+PXR_Input.SendHapticBuffer(PXR_Input.VibrateType.BothController, phf_text, PXR_Input.ChannelFlip.No, 1, ref sourceid);
+
+PXR_Input.UpdateHapticBuffer(sourceid, PXR_Input.VibrateType.LeftController, PXR_Input.ChannelFlip.No, 2);
+
+
+
+接口
+说明
+备注
+StopHapticBuffer（原 StopControllerVCMotor）
+停止指定触觉反馈。
+若该触觉反馈有缓存数据，可选择是否需要清除缓存数据，默认保留。
+PauseHapticBuffer（原 PauseVibrate）
+暂停指定触觉反馈。
+若想恢复触觉反馈，需调用 ResumeHapticBuffer。
+ResumeHapticBuffer（原 ResumeVibrate）
+恢复指定触觉反馈。
+
+/
+
+// 停止触觉反馈
+PXR_Input.StopHapticBuffer(sourceid);
+
+// 暂停触觉反馈
+PXR_Input.PauseHapticBuffer(sourceid);
+
+// 恢复触觉反馈
+PXR_Input.ResumeHapticBuffer(sourceid);

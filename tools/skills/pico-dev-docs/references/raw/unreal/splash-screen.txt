@@ -1,0 +1,65 @@
+应用内过渡画面
+========================================
+在应用启动并加载完成后，你可以自定义应用内过渡画面（Game Splash Screen）在切换关卡使用，用于突出应用或公司品牌效果或掩饰过渡，提升用户体验。该应用内过渡画面本质上为 Quad 类型的 VR 合成层。
+*本文档介绍如何在 UE 引擎编辑器或在蓝图中添加应用内过渡画面。你也可观看此视频了解如何设置自定义应用内启动画面。
+*启用功能
+*你可以参考以下步骤添加应用内过渡画面。
+*在 UE 编辑器中添加
+*在 UE 编辑器中打开项目。
+*在上方工具栏，点击 编辑（Edit） > 项目设置（Project Settings） > 插件（Plugins） > PICOXR Settings。
+*移动到 Feature 选项卡下，勾选 Auto Show Splash Screen。
+* 
+*你可以在此添加一张或多张合成层。应用切换关卡时，会默认显示所有添加的合成层。该合成层类型为 Tracker Locked，即其坐标原点默认与 Camera 的父级 TrackingSpace 对齐。
+*在 SplashDescs 选项卡下，进行以下参数配置。 
+**
+*下图示例中，Location 为（150，0，100），Quad Size 为 100 厘米 ×100 厘米。这意味着过渡画面会显示在当前 Tracking Origin 正前方150 厘米、高 100 厘米的位置，该画面的宽高均为 100 厘米。
+* 
+*使用蓝图动态添加
+*你可使用以下引擎提供的蓝图接口添加、显示、隐藏应用内过渡画面。
+ 
+*若你添加的过渡画面需要实时每帧更新，你需要使用 Set Loading Screen 接口并将 Show Loading Movie 设置为 True。否则，画面上的内容仅会被刷新一次。
+ 
+*Clear Loading Screen Splash 接口将会清除所有已添加的 Splash 画面。Set Loading Screen 接口会隐式地调用 Clear Loading Screen Splash 接口。
+* 
+ 
+*推荐你使用 Show Loading Screen和 Hide Loading Screen 接口手动管理Splash的显示与隐藏。
+* 
+* 
+* 
+*蓝图示例
+在以下示例中，当关卡开始时，延迟 2 秒等待关卡初始化完成后，可以隐藏掉之前正在显示的 Splash 画面（如果有的话），并且添加新的 Splash 画面。在切换关卡或者加载资源时，再主动显示新的 Splash 画面。
+ 
+*已知问题
+*在 Event BeginPlay 节点后马上调用 Add Loading Screen Splash，可能会由于 Texture 资源加载不及时导致过渡画面不可见的问题。建议在 Event BeginPlay 节点后添加过渡画面时，先进行一定时间的延时。
+*目前暂不支持 Enable Auto Loading Splash Screen 。你需使用编辑器中的项目设置控制切换关卡过程中的自动显示。
+
+
+
+
+参数
+
+说明
+
+Splash Texture Path 
+
+从本地为启动画面选择贴图。 
+
+Splash Transform 
+
+填入所需的变换值，以变换启动画面的四边形中心，以厘米为单位。 
+
+Splash Quad Size 
+
+填写所需的四边形尺寸值，四边形用于容纳贴图，可以理解为贴图的“相框”。 以厘米为单位。
+
+Splash Texture Offset 
+
+如果你需要把纹理放置在启动画面左上角的偏移处，输入偏移值。以厘米为单位。 
+
+Splash Texture Scale 
+
+如果你需要缩放纹理，请将缩放值输入为实际尺寸的浮点倍数。 以厘米为单位。
+
+一旦调用了 Clear Loading Screen Splash 接口，你在编辑器的项目设置中添加的 Splash 画面也会被清除。因此，若使用蓝图接口管理 Splash 画面，建议你不要使用编辑器中设置的 Splash 画面。
+
+*你需成对使用Show Loading Screen和 Hide Loading Screen 接口。如果你在项目设置勾选了 Auto Show Splash Screen 选项并在蓝图中主动调用了 Show Loading Screen 接口，那么在应用切换关卡时，Splash 画面仍将自动显示。此时需要你调用 Hide Loading Screen 接口主动隐藏该 splash 画面。

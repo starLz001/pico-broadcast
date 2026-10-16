@@ -1,0 +1,45 @@
+PICO XR Portal
+========================================
+PICO XR Portal 是一个兼具设置向导和项目配置检测功能的开发者门户，包含 Configs、Tools、Samples 和 About 四个功能模块。通过该门户，你可以快速访问开发者文档、社区、Samples 和 GitHub 开源代码资源，基于自身的开发需求勾选项目设置选项，并完成项目配置检测，从而确保打包的应用能够顺利运行。
+*打开 PICO XR Portal
+*在项目内导入 3.2.0 及更高版本的 SDK 后，点击顶部菜单栏中的 PICO 选项，然后在快捷菜单中选择 Portal，打开 PICO XR Portal。
+* 
+*Configs 模块说明
+*通过 Configs 模块，你可以了解使用 SDK 所需的 Unity 编辑器版本信息，修复和验证使用 SDK 必备的配置项，并快速完成常用的 PICO 项目配置。
+ 
+*相关 UI 介绍：
+*
+*Tools 模块说明
+*通过 Tools 模块，你可以了解 PICO 提供的各类开发者工具。点击 Documentation 后可查看工具的说明文档。
+ 
+*Samples 模块说明
+*Samples 模块介绍了 SDK 为开发者提供的示例项目。点击 Documentation 后会将你引导至示例在 PICO 开发者平台的详细介绍文档；点击 GitHub 后会将你引导至示例的 GitHub 仓库。
+ 
+*About 模块说明
+*通过 About 模块，你可以了解 PICO Unity Integration SDK 的基本信息，包括 SDK 的功能简介、文档站地址和安装说明。
+ 
+
+
+
+
+UI
+
+说明
+
+Information
+
+告知 PICO Unity Integration SDK 支持的 Unity 版本信息：Unity 2020.3.21 及以上版本。
+
+*Configuarion
+
+展示 Unity 项目配置必须满足的要求，例如：
+*PICO XR 插件必须是唯一启用的 XR 插件。
+*Build 平台须为 Android。
+*当前要求的安卓软件开发工具包版本号（AndroidSDKVersions）必须是 AndroidApiLevel29 及以上。
+*对于不符合要求的配置，可以点击 To Apply 逐个修复，或点击 To Apply All 一次性修复所有配置项。
+*更多配置规则参考《项目配置验证》文档。
+
+*PICO XR Project Setting
+
+点击 Open PICO XR Project Setting 可以将你导航至 PXR_ProjectSetting.asset 文件所在的路径，你可以在该文件中修改项目设置。
+ 

@@ -1,0 +1,87 @@
+如何为运行在 PICO 4 Ultra 设备上的项目设置外部文件读写权限？
+========================================
+PICO 4 Ultra 系列设备使用的安卓操作系统为 Android 14。当项目的 Write Permission 为 Externa (SDCard) 且 Android API Level 大于 32 时，Unity 提供的外部文件读取方式在 PICO 4 Ultra 设备上将失效。此问题提供两种解决方法，按实际情况选取。
+*解决方法一
+*此方法更加快捷。若无特殊要求，你可以直接在项目内使用版本小于等于 32 的 Android API。
+*在 Unity 编辑器内打开你的项目。
+*前往 Edit > Project Settings > Player > Other Settings。
+*在 Identification 部分，设置 Target API Level 参数，从 API Level 29 至 API Level 32 之间任选其一。
+* 
+*解决方法二
+* 
+若你仍需要在项目内使用版本大于 32 的 Android API，则需要手动申请 MANAGE_EXTERNAL_STORAGE 权限。该权限无法直接通过 Unity 提供的 Permission.RequestUserPermission() 方法申请，参考以下步骤进行申请：
+*在 Unity 编辑器内打开你的项目。
+*前往 Project 窗口，然后在 /Assets/Plugins/Android 目录下新建一个 Java 文件。
+*在文件中设置包名和类名，并添加一个申请权限的方法。
+*代码示例如下：
+* 
+*在 Jave 文件中实现方法后，在 Unity 中需要申请权限的部分主动调用相关方法。
+*以下示例中，应用启动后便申请权限：
+**
+*前往 Edit > Project Settings > Player > Publishing Settings > Build，勾选 Custom Main Manifest 选框。
+*\Assets\Plugins\Android 目录下生成 AndroidManifest.xml 文件。
+*在 AndroidManifest.xml 文件中添加以下用户权限内容：
+* 
+* 
+
+按照此方法申请权限后，项目内的 Project Validation 配置检测工具仍会报错，可忽略相关报错。
+
+package packageName;
+
+import android.app.Activity;
+import android.content.Intent;
+import android.net.Uri;
+import android.os.Build;
+import android.os.Environment;
+import android.provider.Settings;
+
+public class className {
+    private Activity mUnityActivity;
+    protected static final String TAG = "mUnityActivity";
+
+    // 必须在 Unity 中调用，以初始化 Activity
+    public void setUnityActivity(Activity unityActivity) {
+        this.mUnityActivity = unityActivity;
+    }
+
+    public void requestExternalStorage() {
+        // 申请权限
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            if (!Environment.isExternalStorageManager()) {
+                Intent intent = new Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION);
+                Uri uri = Uri.fromParts("package", mUnityActivity.getPackageName(), null);
+                intent.setData(uri);
+                mUnityActivity.startActivity(intent);
+            } else {
+                // 用户已经授予全盘访问权限，可以进行相关操作
+            }
+        } else {
+            // 对于 Android 10 及更低版本，无需单独请求 MANAGE_EXTERNAL_STORAGE 权限
+        }
+    }
+}
+
+...
+void RequestStoragePermission()
+{
+    if (!Permission.HasUserAuthorizedPermission(Permission.ExternalStorageWrite))
+    {
+        Permission.RequestUserPermission(Permission.ExternalStorageWrite);
+    }
+    if (!Permission.HasUserAuthorizedPermission(Permission.ExternalStorageRead))
+    {
+        Permission.RequestUserPermission(Permission.ExternalStorageRead);
+    }
+}
+void Awake()
+{
+    AndroidJavaObject  javaObj = new AndroidJavaObject("packageName.className");
+    AndroidJavaClass jc = new AndroidJavaClass("com.unity3d.player.UnityPlayer");
+    AndroidJavaObject jo = jc.GetStatic<AndroidJavaObject>("currentActivity");
+    javaObj.Call("setUnityActivity", jo);
+    javaObj.Call("requestExternalStorage");
+    RequestStoragePermission()；
+}
+...
+
+<uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE" />

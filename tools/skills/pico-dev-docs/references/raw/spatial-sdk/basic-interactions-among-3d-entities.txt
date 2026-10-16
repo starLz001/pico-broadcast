@@ -1,0 +1,1143 @@
+3D 物体的基础交互
+========================================
+*在空间应用中，用户与 3D 物体的交互是必不可少的。如何让用户自然地与 3D 空间中的物体进行交互，已成为优化应用的用户体验时必须考虑的问题。
+若要为用户带来完整的交互体验，你需要完成以下三个步骤。结合自身的应用场景，你可以在这三个步骤中使用灵活的配置。
+*完成交互所需的前提条件
+*定义触发交互的动作
+*定义交互的视觉反馈
+* 
+*完成交互所需的前提条件
+首先，需要明确一点：在空间应用中，并非所有可见的 3D 物体都具备交互性。出于对用户体验和系统性能的平衡，只有同时满足以下两个条件的物体，才能与用户产生互动：
+*条件一：为物体添加碰撞体
+*在空间应用中，3D 物体默认往往只是可见不可及的视觉内容。由于缺乏实质的物理形状，用户无法与之产生任何交互。只有通过添加碰撞体组件 CollisionComponent 为物体定义几何边界后，它才具备被触碰的物理基础。
+*通常情况下，为 3D 物体配置碰撞体有两种主流方式：
+**
+*包围盒：3D 物体的包围盒是指能将其完全包裹的最小几何体。直接利用包围盒作为碰撞体是最简便、最高效的方案。通常我们会选用与包围盒尺寸一致的立方体或近似大小的胶囊体。它的优点是配置简单，系统计算开销极小，性能表现优秀。但是由于碰撞边界与物体实际视觉形状存在差异，用户在交互时会发现触碰点与模型表面不贴合，导致交互反馈不够精准、细腻。
+*模型形状：这种方式是直接按照 3D 模型的真实几何轮廓来生成碰撞体。它的优点是交互极其精准。碰撞边界与物体形状完全吻合，用户可以真实地触碰到模型表面的每一个细节，交互体验自然且真实。但是使用这种方式，性能消耗较高。由于模型形状通常由复杂的三角面组成，系统在进行碰撞检测时需要占用更多的计算资源。
+*条件二：物体可交互
+*即使物体拥有了碰撞体，也并不意味着用户就能直接与其交互。在空间计算中，碰撞体组件的意义在于赋予物体物理边界，使其在 3D 空间内具备“可触碰”的属性。这种“触碰”可以来自用户的交互，也可以用于处理物体与物体之间的碰撞检测，或是模拟物理效果。若要进一步明确该物体允许交互，你还必须为其挂载可交互组件InteractableComponent。该组件才是激活物体的交互逻辑、响应手势或射线操作的关键开关。
+*当你把 3D 物体作为 Entity 放到 SpatialView 中进行展示后，默认不会自动为该 Entity 挂载 CollisionComponent 和 InteractableComponent，需要你通过代码手动设置。
+*设置碰撞体组件（CollisionComponent）
+你需要使用 CollisionComponent 来定义物体的碰撞属性。在配置过程中，有两个核心要素：
+*碰撞几何体：ShapeResource，定义了物体在物理空间中的实际范围，直接决定了交互的可触碰区域。
+*物理材质：PhysicsMaterialResource，决定了物体在物理引擎中的行为表现，如摩擦力、弹力等交互系数。
+在针对用户交互的场景中，由于主要关注用户手势或射线投射的检测，而非真实的物理动力学模拟，因此物理材质的配置对最终效果影响较小，配置重点在于明确交互触发范围。你应根据实际需求，灵活选择包围盒或模型形状来构建碰撞体形状 ShapeResource。至于材质，可以选择默认的 PhysicsMaterialResource。
+*方式一：使用包围盒
+你可以调用 SDK 接口获取模型资产的 BoundingBox，并以此尺寸为基准，利用 ShapeResource 提供的 API 生成对应的几何形状，最后将其注入 CollisionComponent 中。
+以下示例代码演示了如何提取地球模型的包围盒数据，并分别为其构建立方体与球形两种不同形态的碰撞体：
+*设置立方体碰撞体
+* 
+*设置球形碰撞体
+* 
+如下图所示，我们将两种形状的碰撞体效果进行了对比。图中地球模型外侧的绿色线条轮廓即代表了该物体实际生效的碰撞边界。
+*
+*方式二：使用模型的网格
+采用模型自身的网格（Mesh）来设置碰撞体是一种更为精准、严谨的做法，但这也意味着系统需要承担更高的性能开销。由于物体的挂载了 Mesh 的子节点并不一定位于模型根部，你需要定位到具体的几何数据节点。为了简化这一过程，我们可以借助 Spatial Editor 或者其他工具进行辅助定位。通过 Spatial Editor，你可以直观地检索并提取出地球模型的挂载了 Mesh 的子节点。
+* 
+如图所示，该地球模型的 Mesh 挂载在名为 geo_earth 的子节点上。模型加载完成后，你可以通过 findEntity 接口定位该节点，并从其绑定的 ModelComponent 中提取出真实的网格数据，进而生成高精度的碰撞体：
+ 
+*通过上述代码生成的碰撞体效果如下图所示。由于地球模型本身是规整的球体，你会发现：使用 Mesh 生成的碰撞体，在视觉效果和交互逻辑上，与此前根据 BoundingBox 构建的球形碰撞体几乎完全一致。
+ 
+*设置可交互组件（InteractableComponent）
+为 3D 物体设置可交互组件，非常简单。只需要将 InteractableComponent 添加到物体上即可。
+ 
+*定义触发交互的动作
+在 3D 物体具备了交互的基础条件之后，你就可调用 SDK 提供的接口实现进一步的功能集成。为了覆盖空间计算中常见的用户操作，SDK 封装了一系列以 detectSpatial 开头的核心接口。这些接口构成了空间交互逻辑的基础，能够精准捕获并响应用户的各种操作意图：
+*
+ 
+*单个交互事件
+当需要实现具体的交互功能时，你需在承载 3D 物体的 SpatialView 上挂载相应的 Modifier，用来监听并捕获用户的交互事件。例如，若要实现通过拖拽来和物体进行交互时，可以通过以下代码来设置：
+ 
+你可以沿用 Jetpack Compose 标准的 Modifier.pointerInput 来统一监听用户输入（包括眼动、手势及手柄）。在 pointerInput 的 DSL 内，通过调用上述手势接口，系统会自动对用户的输入进行解析与判断。一旦系统识别出特定的交互动作，便会触发相应的回调函数。
+这些回调函数会传入一个包含实时状态的参数，你可以根据该参数里包含的数据，对目标实体执行逻辑操作。以 detectSpatialDragGesture() 为例，回调中返回的 SpatialDragValue 包含两个核心属性：
+*dragAmount：Offset3D 类型的数据， 表示用户在 3D 空间中位移的矢量距离（单位：像素）。
+*targetEntity： 当前被交互的目标 Entity。
+利用这两个参数，我们可以将 dragAmount 实时映射到 targetEntity 的坐标变换上，从而实现物体随手移动的拖拽效果。
+*多个交互事件
+在实际场景中，一个物体往往需要支持多种交互。当需要为 3D 物体配置多个手势时，必须通过链式调用多个 Modifier.pointerInput 来分别实现。由于手势接口在内部具有排他性，它们会相互阻塞，相互影响，导致手势识别失效。因此，切记不要在同一个 pointerInput 的 DSL 内调用多个 detectSpatial 开头的接口。正确的做法是为每一种手势分配一个独立的 pointerInput。
+例如，若要实现“单手拖拽”与“双手缩放”的复合交互，我们需要分别挂载两个 pointerInput：一个专注于捕获用户手势的平移，另一个则专注于解析手势产生的缩放比例。
+ 
+*指定交互物体
+在复杂的 3D 场景中，往往存在多个可交互实体。如果你希望特定手势仅作用于某个或某类物体，可以通过手势接口中的 targetedToEntity 参数来实现交互目标的精准定位。
+所有以 detectSpatial 开头的接口都支持传入一个 TargetEntity 类型的参数。该参数默认值为 null，意味着手势将对空间内所有符合条件的物体生效。通过显式指定 targetedToEntity，你可以灵活控制交互的响应范围。
+TargetEntity 的常见用法主要分为以下两种：
+*通过 TargetEntity.hit() 接口，你可以将交互限制在某个特定实体及其层级树下的所有子节点。例如，当场景中存在多个 3D 模型，但你希望用户的拖拽手势仅对“地球”模型生效时，可以将该模型实体作为参数传入。这样，即使手势触碰到其他物体，系统也不会触发相应的回调。代码如下：
+* 
+*如果需要与符合特定条件的一类物体进行交互，可以使用 TargetEntity.any()。例如，在一个复杂的宇宙场景中，可能存在恒星、行星、星云等多种实体。若你希望拖拽手势仅对名称以 "Planet" 开头的物体生效，而忽略其他物体，可以通过在 any() 中传入逻辑判断来实现。这种方式能够极大程度地提升你处理同类物体交互时的灵活性。
+* 
+*指定动作类型
+虽然在常规开发中，我们通常只需关注手势本身（如拖拽或缩放），但在某些高阶应用场景下，你可能需要更精确地判断交互类型。
+除了 detectSpatialPointerEvent() 外，所有以 detectSpatial 开头的接口在回调中均提供了 InteractionKind 属性。该属性能够明确告知你：当前的操作是由何种形式触发的。
+*单手交互接口：回调参数中直接包含一个名为 interactionKind 的变量。
+*双手交互接口：由于可能存在双手不同形式的操作，回调中会分别提供 leftInteractionKind（左手）和 rightInteractionKind（右手）两个变量。
+目前，系统支持的 InteractionKind 类型主要包括：
+*
+在某些复合交互中，我们可能需要复用同一个接口来实现不同的功能。例如：
+*单手拖拽：实现物体的空间平移。
+*单手滑动：实现物体的轴向旋转。
+你仅需通过 detectSpatialDragGesture() 这一核心接口即可同时覆盖这两类操作。实现的关键在于对 InteractionKind 进行判断，以及对于SpatialDragValue的映射。通过识别不同的InteractionKind，我们可以为同一个接口配置差异化的响应逻辑：
+*
+*在 detectSpatialDragGesture() 的回调函数中，系统会注入一个 SpatialDragValue 类型的参数。你可以通过访问该参数中的 interactionKind 属性，即可精准判定用户的交互形式，进而分别执行对应的业务逻辑。
+ 
+*定义交互的视觉反馈
+基于前面介绍的内容，你已经能够灵活定义可交互实体，并精准捕获交互过程中的手势和相关核心数据。现在，进入最后也是最关键的一步：构建交互反馈。只有通过直观的视觉或物理反馈，才能将零散的逻辑串联成一套完整的用户交互体验。
+在空间应用中，常见的交互反馈主要涵盖以下几个维度：高亮提示、空间位移、等比缩放以及多轴旋转。此外，你还可以针对特定场景定制个性化的交互动效。接下来，我们将逐一介绍这些核心交互效果的实现方式。
+*物体的高亮
+在空间应用中，除了近距离的直接触控，“眼手协同”也是一种极其高效的交互方式。当用户的视线聚焦于某一物体，并配合手势操作时，即可实现远程交互。这种模式能显著减少用户在物理空间中的大幅度肢体动作，有效缓解交互疲劳，从而大幅提升操作的舒适度与流畅性。
+在这种场景下，视觉反馈至关重要。系统必须明确告知用户当前视线的落点，通过视觉效果提示用户当前正在交互的对象。你需要为物体挂载 HoverEffectComponent，即可轻松实现这种随着视线移动而触发的高亮提示效果。
+ 
+在 PICO Emulator 中运行这段代码：
+ 
+*物体的移动
+在空间应用中，让物体跟随用户的操作进行移动是最基础的交互效果。通过 detectSpatialDragGesture() 返回的 dragAmount，我们可以实时操作物体在 3D 空间中的坐标变化。
+但在实际应用中，你需要处理两个关键的适配问题：
+*单位换算：为了与 Jetpack Compose 的标准接口保持一致，dragAmount 返回的是以像素为单位的数据。但在空间计算中，物体的 TransformComponent 是基于米构建的。因此，在将位移应用到 Entity 之前，必须先进行单位转换。具体换算逻辑参考《长度单位转换》。
+*坐标系映射：dragAmount 遵循的是 Compose View 坐标系，而物体的移动发生在空间物理坐标系中。由于这两个坐标系的 Y 轴方向完全相反（View 坐标系向下为正，空间坐标系向上为正），因此在进行增量映射时，必须对 Y 轴取反（即使用 -dragAmount.y）。更多细节参考《坐标空间转换》。
+以下代码片段展示了如何实现精准的物体随手拖拽效果：
+ 
+在 PICO Emulator 中运行这段代码：
+ 
+*物体的缩放
+在空间应用中，缩放是极具沉浸感的体验之一。它允许用户在不改变物体位置的情况下，通过简单的拉伸动作即可观察模型的微观细节。最符合直觉的缩放交互，就是“双手抓取”。通过两手之间的距离变化（靠近或远离）来操作物体的大小变换。
+实现这一交互的关键接口是 detectSpatialScaleGesture()。在该接口的回调函数中，系统会注入一个 SpatialScaleValue 类型的参数。其中最核心的数据是 scaleValue，它捕捉了手势在 3D 空间各个轴向上的缩放增量。
+你只需将物体当前 TransformComponent 中的 scaleVector 与手势返回的 scaleValue 进行向量乘法运算，即可实时更新实体的缩放状态。
+以下代码演示了如何通过双手协作实现物体的平滑缩放：
+ 
+在 PICO Emulator 中运行这段代码：
+ 
+*物体的旋转
+旋转也是空间交互中不可或缺的一种交互反馈。它为用户提供了全方位的观察视角，用户无需绕着实体走动，就可以在原地观察 3D 物体的每一处细节。
+在开发实践中，实现旋转的方式非常灵活，通常可以根据实际需要，结合不同的交互手势来定制。
+*单手拖拽旋转
+除了实现物体的移动，detectSpatialDragGesture() 也是实现“拖拽旋转”的首选方案，核心逻辑与移动类似。你可以利用回调中提供的 dragAmount，将用户手部在 3D 空间中的位移，映射为物体在不同维度上的旋转角度。
+*与直接的坐标平移不同，用户与物体间的交互所产生的空间位移并不能与旋转的弧度进行等价转换。为了确保交互的平滑度与可控性，你通常需要引入自己定义的一个灵敏度参数，用于微调操作手感与用户预期之间的匹配度。
+在实践中，推荐为 Offset3D 编写一个扩展函数，将其逻辑封装并转换为 Rotation3D。Rotation3D 是空间应用中描述旋转变换的标准数据类型。
+该扩展函数的实现如下：
+ 
+在实现过程中，需注意一个关键点：手势的位移轴向并不等同于物体的旋转轴向。
+为了符合直觉，当我们沿水平方向（X 轴）拖动时，通常期望物体绕其垂直中心（Y 轴）旋转；同理，垂直方向（Y 轴）的拖拽则对应绕 X 轴的旋转。因此，在构建映射时，我们需要将偏移量按照 Y、X、Z 的顺序进行重组。
+有了这一层转换，你便能以处理位移的思路来实现旋转。Rotation3D 类型内置了 toQuaternion() 方法，可将旋转增量直接转换为四元数 Quat。最后，通过更新实体的 TransformComponent.rotation 属性，就能让物体精准地响应手势，完成预期的空间旋转。这里 toRotation3D()，传入的 sensitivity 是 180f。你需要自行调整该值，让用户的体验更加接近现实中的交互效果。
+ 
+在 PICO Emulator 中运行这段代码：
+ 
+*双手交互旋转
+除了单手操控，系统还提供了 detectSpatialRotateGesture() 接口，专门用于实现双手的旋转效果。
+这种交互模拟了现实世界中双手旋转物体的动作。用户双手分别“捏住”实体的两个点，通过手部在 3D 空间中的相对位移，驱动物体在多个维度上同步执行顺时针或逆时针旋转。
+该接口的回调函数会返回一个 SpatialRotateValue 类型的参数。其中包含的核心数据是一个 Rotation3D 结构，它精准捕获了用户双手形成的旋转增量。通过调用其内置的 toQuaternion() 方法，你可以将该旋转数据无缝转换为四元数 Quat，并将其应用到实体的 TransformComponent.rotation 上。
+ 
+在 PICO Emulator 中运行这段代码：
+ 
+*单手滑动旋转
+单手拖拽手势既可用于旋转，也可用于移动，但这在实际开发中会引起语义冲突。如果你希望同时支持“拖拽位移”和“拖拽旋转”，就不能简单地将所有位移数据都映射到同一个变换上。要解决此问题，你需要通过判断交互类型 InteractionKind 来区分用户的具体意图。
+你可以再次使用 detectSpatialDragGesture() 接口，但在回调函数内部，根据不同的交互形式执行差异化逻辑：
+*捏合形式 ：DirectPinch 和 GazePinch，当用户通过手指捏合物体时，系统调用 dragToMove()，实现物体的空间平移。
+*指推形式 ：Poke，当用户使用手指拨动物体表面时，系统调用 dragToRotate()，实现物体的轴向旋转。
+这种设计可以有效避开功能冲突，让 3D 物体具有更真实的交互体验，捏住移动，拨动旋转。
+ 
+*关于 dragToMove() 的实现，你可以参考前面物体移动的实现。
+*关于 dragToRotate() 的实现，你可以使用前面提到的单手拖拽旋转方法，也可以使用更加接近真实环境的效果。
+*应用案例
+完成了上述核心组件的配置后，空间交互的基础已构建完毕。然而，要创造出真正符合直觉、自然的体验，仍需要你在开发中遵循以下三大原则：
+*视觉聚焦：被交互的物体需具备清晰的视觉反馈（如高亮），确保用户明确感知交互主体。
+*交互直觉：操作逻辑应符合现实的动作，减少用户的认知成本和操作负担。
+*效果流畅：交互反馈效果平滑，确保虚拟物体的运动和真实世界的体验更加接近。
+为了理解这些原则如何落地，我们将构建具体场景，让用户可以对一个地球模型进行深度交互。结合前面讨论的关键技术点，实现以下功能逻辑：
+*单手捏合拖拽：实现物体的空间平移。
+*单手拨动旋转：实现物体绕轴心的平滑旋转。
+*双手协作变换：实现物体等比缩放。
+在深入代码实现细节之前，让我们先通过这段演示视频，感受一下最终的交互效果：
+ 
+*第一步：搭建一个场景
+在构建该场景时，我们准备了两套不同的地球模型资源，以适应不同的开发需求：
+*开源基础版：来自社区的免费资源，保留了原始的网格与贴图，适合快速原型搭建或基础功能验证。
+*空间增强版（推荐）：利用 Spatial Editor 加工的版本。在该版本中，利用 Shader Graph 为开源版本添加了特有的白色边缘光晕效果。增强了模型的科技感，帮助用户在空间背景中清晰地锁定交互主体。
+你可根据自己的视觉标准，选择对应的模型文件进行加载。
+*
+为了获得最佳的视觉表现，下面会使用增强后的地球模型进行场景搭建。具体的实现流程如下：
+*加载模型资源，将其缩放至适宜的比例，并精准放置在用户的首选交互视距。
+*为模型添加 CollisionComponent。由于地球模型是规则的几何体，虽然可以直接读取 Mesh 数据，但出于性能优化考量，我们推荐根据其包围盒尺寸创建一个球形碰撞体。
+*为模型添加 InteractableComponent，这是使物体能够响应手势接口的前提。
+*在场景中添加 DirectionalLight，通过调整光照角度与强度，确保模型表面的纹理清晰、亮度适中，并产生真实的 3D 明暗感。
+*添加 HoverEffectComponent。当用户的视线或手部射线掠过地球模型时，系统会自动触发预设的高亮动效。
+你可以参考以下代码片段，完成场景的构建与初始化：
+ 
+*第二步：定义触发交互的动作
+在当前场景中，我们期望通过手势，为地球模型添加多样化的交互：
+*单手捏合移动：借助 detectSpatialDragGesture()，当识别到捏合动作时，让地球随手部位置实时同步，实现精准的空间位移。
+*双手协作缩放：调用 detectSpatialScaleGesture()，通过双手间距的变化，实时调整模型的 scaleVector，让用户能平滑地观察地表细节。
+*单手拨动旋转：当用户使用 Poke（指尖触碰/拨动）时，让物体围绕自身的 Y 轴进行旋转。
+*单手拨动旋转和捏合旋转不同。因为用户并没有抓住物体。如果仍然使用前面提到的随时跟手的旋转效果，会给用户带来强烈“不跟手，转不动”的体验。为了追求更自然的体验，单手拨动旋转推荐引入“延迟旋转”的机制。模拟现实中拨动地球仪的物理特性：用户在物体表面划过一段轨迹，在手指离开的瞬间，物体根据滑动的速度与方向启动旋转。这种“拨”的动作不仅符合物理直觉，更能赋予 3D 物体真实的质量感与惯性感。
+以下代码展示了如何通过判断 InteractionKind，有效地处理这三种差异化的交互逻辑：
+* 
+在该实现中，我们并没有在 detectSpatialDragGesture() 的实时回调中直接驱动物体旋转，而是采用了“先记录、后触发”的异步处理策略：
+*利用变量 draggedOffset 实时累积交互过程中的位移。
+*引入标识变量 isRotated 充当交互状态机。它能精准区分当前的拖拽，只有当系统判定当前为 Poke 手势并且手势结束时，才会激活延迟旋转逻辑。
+*最终，我们通过在手势释放瞬间，根据状态触发延迟旋转，模拟了现实中拨动地球仪的物理反馈。
+*第三步：定义交互的视觉反馈
+在当前场景中，三种交互对应着截然不同的视觉反馈。针对延迟旋转这一特殊交互，我们将深入探讨两种主流的实现路径，你可以根据自己的需求进行选择。
+*使用补间动画实现延迟旋转
+利用补间动画实现物体旋转是常用方案，实现简单并且逻辑直观。你只需要定义旋转的起始状态与目标状态，系统便会自动计算并填充中间的过渡内容。
+为了高度还原现实中拨动地球仪的效果，我们在实现时，需要注意：
+*将旋转锁定在 Y 轴，确保地球始终绕其地轴稳定自转，避免了多轴乱转带来的视觉混乱。
+*借助补间动画的 EaseType 来精细调控时间曲线。通过配置“由快到慢”的减速效果（例如 EASE_OUT），模拟物体受摩擦力影响而逐渐停止的过程，使动画的过渡更显自然。
+以下是基于补间动画实现物体旋转的核心代码：
+ 
+在 detectSpatialDragGesture() 的 onDragEnd() 中，调用rotateEntityByTweenAnimation()来完成最终的旋转。代码如下：
+ 
+假设用户执行了一个从左向右的拨动动作，产生的空间位移增量约为 0.8 米，即 Offset3D(0.8f, 0f, 0f)。
+基于前文提到的映射逻辑，系统会将水平方向（X 轴）的线性位移转化为绕垂直轴（Y 轴）的角位移。此时，地球模型将呈现出顺滑的自左向右旋转。这一过程通过补间动画的插值处理，不仅准确还原了用户的动作意图，更通过缓动效果赋予了模型真实的物理质量感。
+具体的动态表现如下：
+ 
+这种效果实现可以满足基本的交互需求，但是它存在一个问题。以下视频展示当用户分别从左向右拨动 0.8 米和 1 米的效果。
+*Offset3D(0.8f, 0f, 0f)
+* 
+*Offset3D(1.0f, 0f, 0f)
+* 
+虽然补间动画逻辑简单，但在大角度旋转场景下会触发 3D 空间特有的最短路径旋转（Shortest Path Rotation）问题。
+由于角度具有周期性，当目标旋转角度超过 180°（例如 270°）时，插值算法为了追求效率，会通过最短路径（即 -90°）进行旋转。在用户看来，地球就会反直觉地向反方向转动。同样，若拨动幅度超过 360°，物体只会表现出余数那部分的旋转，而丢失了那一圈完整的旋转。
+若坚持使用补间动画，你必须手动进行角度切分。例如将 450° 拆解为多个 90° 的序列，并利用 AnimationResource.sequence() 进行链式播放。然而，这种方案在处理非整除角度（如 455°）时，需要精确地按比例缩减末段动画时长。同时，分段执行会导致 EaseType 在衔接处产生明显的顿挫感，极难模拟出流畅的阻尼减速。
+因此，若要实现超越 180°且具备真实物理质感的自然交互，引入物理引擎是更为优雅且根本的解决方案。
+*使用物理引擎实现延迟旋转
+当旋转幅度超过 180° 时，补间动画的插值机制便难以满足自然交互的需求。为了打破“最短路径旋转”的束缚，引入物理系统是实现沉浸式体验的最佳路径。
+物理系统的核心在于模拟真实世界的运动力学。在我们的场景中，不再是生硬地指定目标角度，而是将用户交互时产生的位移转化为作用于地球模型的初始角速度。由物理引擎接管后续的动力学计算，还原物体受力后的自然回转。
+为了实现这一物理逻辑，你需要进行如下配置：
+*为模型添加 RigidBodyComponent，配置物理引擎需要获取的物理属性。
+*由于地球模型的空间位置由拖拽逻辑直接控制，我们不希望物理引擎参与。通过设置 isTranslationLocked，我们可以将物理模拟严格限制在旋转维度。
+*通过设置角速度阻尼系数 angularDamping，可以模拟空气摩擦力。数值越高，旋转动能消耗越快，物体停止得越迅速。我们将该值初始化为 1.0f，你可以根据实际需求进行微调。
+ 
+一旦为地球模型添加 RigidBodyComponent，其动态行为便正式交由物理引擎接管。接下来，我们需要将手势累积的动能转化为物体的初始角速度。
+你可以通过 PhysicsVelocityComponent 接口来实现这一逻辑。我们将用户在交互过程中 X 轴的位移量映射为angularVelocity参数的数值。为了使旋转效果更符合直觉，建议引入一个灵敏度系数 Sensitivity。通过微调该系数，你可以平衡手势幅度与物体转速之间的比例，从而营造出最接近现实地球仪的操控手感。
+有关 RigidBodyComponent 与 PhysicsVelocityComponent 属性配置的更深层原理，参考《添加碰撞和外部作用》中的相关内容。
+ 
+和 TweenAnimation 的实现一样，在 detectSpatialDragGesture() 的 onDragEnd() 函数中，需要调用刚刚定义的 rotateEntityByPhysics() 来完成地球模型的旋转效果。代码如下：
+ 
+这里有一个重要的细节，必须在 onDragStart() 回调中移除当前挂载的 PhysicsVelocityComponent。
+如果不执行移除操作，系统将无法在 onDragEnd 时再次注入新的物理速度。这会导致交互逻辑被锁死在初次拨动的状态，使得后续的任何拨动操作都无法生效。通过“先移除、后注入”的策略，我们确保了每一次交互都能精准地捕捉并应用最新的动量。
+完成上述配置后，当用户执行一个从左向右、距离为 1 米的拨动动作，产生 Offset3D(1.0f, 0f, 0f) 时，地球将不再受“最短路径旋转”的限制。它会根据手势赋予的初始角速度，顺滑地向右开启多圈自转，并随角阻尼自然减速，呈现出真实的物理仿真效果：
+ 
+对比演示视频可以清晰地发现，引入物理引擎可以彻底解决补间动画的局限性。其优势主要体现在两个核心维度：
+*打破旋转限制：地球模型不再受限于“最短路径”的约束，能够根据拨动的力度完成超越 180° 甚至多圈的连续旋转，精准还原了用户的操作意图。
+*真实物理质感：基于角阻尼的动态模拟，地球模型从高速转动到逐渐静止的过程呈现出极佳的线性衰减感。这种非匀速的停滞效果与现实世界中的物理规律高度契合，赋予了虚拟模型真实的“质量感”。
+*了解更多：缩放对效果的影响
+在之前的讨论中，无论是计算补间动画的旋转角度，还是设定物理引擎的初始角速度，我们都引入了灵敏度参数。在多数场景下，该参数可以设为常数。但在一些动态场景中，如果物体的大小会随缩放交互而改变，固定的灵敏度参数将不再适用。
+*
+物体缩放比例的改变直接决定了其物理尺寸，进而改变了用户可操作的有效位移空间。假设当地球模型的缩放比例为 0.1 倍时，其直径对应的有效交互距离为 0.5 米；当缩放至 0.3 倍时，该距离随之扩展到 1.5 米。
+如果我们将灵敏度系数固定：
+*在 0.1 倍率下，用户划过整个球面（0.5m），地球模型将旋转 120°。
+*在 0.3 倍率下，用户划过整个球面（1.5m），地球模型将旋转 360°。
+这种 “物体越大，转得越快” 的反馈逻辑，会导致严重的感官失调。在大模型上，微小的手部动作会引发剧烈的旋转，而小物体则难以拨动。为了纠正这一偏差，我们推荐灵敏度参数与物体的缩放比例成反比。这样，无论物体被放大还是缩小，用户拨动模型表面相同比例的距离时，物体产生的角位移始终保持一致。这种动态补偿机制是实现高品质、符合直觉的空间交互的关键。
+例如，我们在计算初始速度时，我们可以把物体本身的缩放也考虑进去。更新后的代码如下：
+ 
+*附录：完整代码示例
+实现上述应用案例中与地球模型交互的完整代码如下：
+ 
+
+*本文介绍的 3D 物体基础交互，专指通过 PICO Spatial SDK 和 PICO Spatial UI 提供的接口完成的交互。如果想通过手部数据跟踪来完成更丰富的交互，参考《手部追踪》。
+
+
+
+* 
+*包围盒
+
+* 
+*网格
+
+*earthEntity = withContext(Dispatchers.IO) { 
+    var bundle: AssetBundle? = null
+    try {
+        bundle = AssetBundle.load("asset://editor-asset-earth.bundle")
+        load(modelName = "earth_outline", bundle = bundle)
+    } catch (e: ResourceLoadingException) {
+        null
+    } finally {
+        bundle?.close()
+    }
+}?.apply {
+    val boundingBox = getVisualBounds(this, recursive = true, enabledOnly = true)
+
+    // Use a box as the collider
+    val collisionComponent = CollisionComponent(
+        collisionShape = listOf(ShapeResource.createBox(boundingBox.size)),
+        physicsMaterial = PhysicsMaterialResource(),
+    )
+    
+    components.set(collisionComponent)
+}
+
+*earthEntity = withContext(Dispatchers.IO) {
+    var bundle: AssetBundle? = null
+    try {
+        bundle = AssetBundle.load("asset://editor-asset-earth.bundle")
+        load(modelName = "earth_outline", bundle = bundle)
+    } catch (e: ResourceLoadingException) {
+        null
+    } finally {
+        bundle?.close()
+    }
+}?.apply {
+    val boundingBox = getVisualBounds(this, recursive = true, enabledOnly = true)
+    
+    // Use a sphere as the collider
+    val collisionComponent = CollisionComponent(
+        collisionShape = listOf(ShapeResource.createSphere(boundingBox.size.x / 2f)),
+        physicsMaterial = PhysicsMaterialResource(),
+    )
+    
+    components.set(collisionComponent)
+}
+
+
+
+* 
+*立方体碰撞体
+
+* 
+*球形碰撞体
+
+*earthEntity = withContext(Dispatchers.IO) {
+    var bundle: AssetBundle? = null
+    try {
+        bundle = AssetBundle.load("asset://editor-asset-earth.bundle")
+        load(modelName = "earth_outline", bundle = bundle)
+    } catch (e: ResourceLoadingException) {
+        null
+    } finally {
+        bundle?.close()
+    }
+}?.apply {
+    val mesh = findEntity("geo_earth")?.components
+                ?.get(ModelComponent::class.java)?.mesh
+
+    mesh?.let {
+        val collisionComponent = CollisionComponent(
+            collisionShape = listOf(ShapeResource.createConvexMesh(it)),
+            physicsMaterial = PhysicsMaterialResource(),
+        )
+
+        components.set(collisionComponent)
+    }
+}
+
+*earthEntity = withContext(Dispatchers.IO) {
+    var bundle: AssetBundle? = null
+    try {
+        bundle = AssetBundle.load("asset://editor-asset-earth.bundle")
+        load(modelName = "earth_outline", bundle = bundle)
+    } catch (e: ResourceLoadingException) {
+        null
+    } finally {
+        bundle?.close()
+    }
+}?.apply {
+    // Setup collision
+    
+    components.set(InteractableComponent())
+}
+
+
+
+*手势
+
+*示意图
+
+*具体操作
+
+*接口
+
+*点击
+
+* 
+
+*单手食指与拇指迅速捏合再略微张开，做出捏物体的操作。
+
+*detectSpatialTapGesture()
+
+*拖拽
+
+* 
+
+*用单手的食指与拇指捏住物体上的一点，并在空间中移动。
+
+
+*detectSpatialDragGesture()
+
+*缩放
+
+* 
+
+*用双手的食指和拇指分别捏住物体上的两点，然后靠近或拉开双手。
+
+*detectSpatialScaleGesture()
+
+*旋转
+
+* 
+
+*双手捏住物体上的两个点，然后双手同时顺时针或者逆时针旋转。
+
+*detectSpatialRotateGesture()
+
+*自定义手势
+
+* 
+
+*双手接触到物体，然后自由操作。
+
+*detectSpatialPointerEvent()
+
+上面的表格以手部直接交互为例，但你同样可以通过眼手协同、手柄或鼠标触发类似的操作。如需了解更多信息，参考《 》。
+
+SpatialView(
+    Modifier.pointerInput(Unit) {
+        detectSpatialDragGesture(context) {
+            // Handle your own drag logic here.
+            // For example, moving object align with your fingers.
+        }
+    }
+) { content, attachments ->
+    // Your scene initialization.
+}
+
+SpatialView(
+    Modifier
+        .pointerInput(Unit) {
+            detectSpatialDragGesture(context) {
+                // Handle your own drag logic here
+            }
+        }
+        .pointerInput(Unit) {
+            detectSpatialScaleGesture(context) {
+                // Handle your own scale logic here
+            }
+        }
+) { content, attachments ->
+    
+}
+
+var earthEntity by remember { mutableStateOf<Entity?>(null) }
+
+SpatialView(
+    Modifier.pointerInput(Unit) {
+        detectSpatialDragGesture(
+            context,
+            earthEntity?.let { TargetEntity.hit(it) }
+        ) {
+            // Handle your own drag logic here
+        }
+    }
+) { content, attachments ->
+    earthEntity = withContext(Dispatchers.IO) {
+        Entity.load("asset://models/earth.usdz")
+    }.apply {
+        // setup its collision
+        // make it interactable
+    }.also {
+        content.addEntity(it)
+    }
+}
+
+SpatialView(
+    Modifier.pointerInput(Unit) {
+        detectSpatialDragGesture(
+            context,
+            TargetEntity.any { it.getName().startsWith("Planet") }
+        ) {
+            // Handle your own drag logic here
+        }
+    }
+) { content, attachments ->
+    val mercuryEntity = withContext(Dispatchers.IO) {
+        Entity.load("asset://models/mercury.usdz")
+    }.apply { 
+        setName("PlanetMercury")
+        // setup its collision
+        // make it interactable
+    }.also { content.addEntity(it) }
+
+    val earthEntity = withContext(Dispatchers.IO) {
+        Entity.load("asset://models/earth.usdz")
+    }.apply { 
+        setName("PlanetEarth") 
+        // setup its collision
+        // make it interactable
+    }.also { content.addEntity(it) }
+
+    // add other planets ...
+
+    val sunEntity = withContext(Dispatchers.IO) {
+        Entity.load("asset://models/sun.usdz")
+    }.apply { 
+        setName("Sun")
+        // setup its collision
+        // make it interactable
+    }.also { content.addEntity(it) }
+
+    val moonEntity = withContext(Dispatchers.IO) {
+        Entity.load("asset://models/moon.usdz")
+    }.apply { 
+        setName("Moon")
+        // setup its collision
+        // make it interactable
+    }.also { content.addEntity(it) }
+}
+
+
+
+*用食指和拇指捏合
+
+*用食指指尖戳
+
+*眼睛注视，手指捏合
+
+*手柄射线点击
+
+*鼠标指针
+
+* 
+*DirectPinch
+
+* 
+*Poke
+
+* 
+*GazePinch
+
+* 
+*RayBasedPinch
+
+* 
+*Pointer
+
+
+
+* 
+* 
+*通过 DirectPinch、GazePinch 来实现物体的拖拽
+
+* 
+* 
+*通过 Poke 来实现物体的旋转
+
+SpatialView(
+    Modifier.pointerInput(Unit) {
+        detectSpatialDragGesture(context) { dragValue ->
+            val kind = dragValue.interactionKind
+
+            when (kind) {
+                InteractionKind.DirectPinch, InteractionKind.GazePinch -> {
+                    // Handle your drag logic here.
+                }
+                
+                InteractionKind.Poke -> {
+                    // Handle your rotate logic here.
+                }
+
+                else -> {
+                    // You can also handle other types of interactions in your own case.
+                }
+            }
+
+        }
+    }
+) { content, attachments ->
+    // Your scene initialization.
+}
+
+var earthEntity by remember { mutableStateOf<Entity?>(null) }
+
+SpatialView(
+    Modifier.pointerInput(Unit) {
+        detectSpatialDragGesture(context) {
+            // Handle your own drag logic here
+        }
+    }
+) { content, attachments ->
+    earthEntity = withContext(Dispatchers.IO) {
+        Entity.load("asset://models/earth.usdz")
+    }.apply { 
+        // setup its collision
+        // make it interactable
+        components.set(HoverEffectComponent())
+    }.also {
+        content.addEntity(it)
+    }
+}
+
+val context  = LocalContext.current
+val converter = LocalPhysicalLengthConverter.current
+val density = LocalDensity.current
+
+var earthEntity by remember { mutableStateOf<Entity?>(null) }
+
+SpatialView(
+    Modifier.pointerInput(Unit) {
+        detectSpatialDragGesture(context) { dragValue ->
+            // Convert drag offset into Meters.
+            val offsetXInMeter = with(density) {
+                converter.dpToLength(dragValue.dragAmount.x.toDp(), LengthUnit.Meters)
+            }
+            val offsetYInMeter = with(density) {
+                converter.dpToLength(dragValue.dragAmount.y.toDp(), LengthUnit.Meters)
+            }
+            val offsetZInMeter = with(density) {
+                converter.dpToLength(dragValue.dragAmount.z.toDp(), LengthUnit.Meters)
+            }
+
+            // Update the position of the Earth by offset in meters.
+            earthEntity?.apply {
+                components[TransformComponent::class.java]?.apply {
+                    setPosition(
+                        Vector3(
+                            position.x + offsetXInMeter,
+                            position.y - offsetYInMeter,
+                            position.z + offsetZInMeter,
+                        )
+                    )
+                }
+            }
+        }
+    }
+) { content, _ ->
+    earthEntity = withContext(Dispatchers.IO) {
+        Entity.load("asset://models/earth.usdz")
+    }.apply { 
+        // setup its collision
+        // make it interactable
+    }.also {
+        content.addEntity(it)
+    }
+}
+
+var earthEntity by remember { mutableStateOf<Entity?>(null) }
+
+SpatialView(
+    Modifier.pointerInput(Unit) {
+        detectSpatialScaleGesture(context) { scaleValue ->
+            earthEntity?.apply {
+                components[TransformComponent::class.java]?.apply {
+                    setScaleVector(scaleVector * scaleValue.scaleValue)
+                }
+            }
+        }
+    }
+) { content, _ ->
+    earthEntity = withContext(Dispatchers.IO) {
+        Entity.load("asset://models/earth.usdz")
+    }.apply { 
+        // setup its collision
+        // make it interactable
+    }.also {
+        content.addEntity(it)
+    }
+}
+
+fun Offset3D.toRotation3D(sensitivity: Float): Rotation3D {
+    val delta = Vector3(x, y, z)
+    val axis = delta.normalize()
+
+    return Rotation3D(
+        degree = delta.length() * sensitivity,
+        axis = RotationAxis3D(-axis.y, axis.x, axis.z),
+        pivot = NormalizedPoint3D.Center,
+    )
+}
+
+val context  = LocalContext.current
+val converter = LocalPhysicalLengthConverter.current
+val density = LocalDensity.current
+
+var earthEntity by remember { mutableStateOf<Entity?>(null) }
+
+SpatialView(
+    Modifier.pointerInput(Unit) {
+        detectSpatialDragGesture(context) { dragValue ->
+            // Convert drag offset into Meters.
+            val offsetXInMeter = with(density) {
+                converter.dpToLength(dragValue.dragAmount.x.toDp(), LengthUnit.Meters)
+            }
+            val offsetYInMeter = with(density) {
+                converter.dpToLength(dragValue.dragAmount.y.toDp(), LengthUnit.Meters)
+            }
+            val offsetZInMeter = with(density) {
+                converter.dpToLength(dragValue.dragAmount.z.toDp(), LengthUnit.Meters)
+            }
+            
+            val rotation3DInMeter = 
+                Offset3D(offsetXInMeter, offsetYInMeter, offsetZInMeter)
+                    .toRotation3D(180f)
+            
+            // Update the rotation of the Earth.
+            earthEntity?.apply {
+                components[TransformComponent::class.java]?.apply {
+                    setQuaternion(quaternion * rotation3DInMeter.toQuaternion())
+                }
+            }
+        }
+    }
+) { content, _ ->
+    earthEntity = withContext(Dispatchers.IO) {
+        Entity.load("asset://models/earth.usdz")
+    }.apply { 
+        // setup its collision
+        // make it interactable
+    }.also {
+        content.addEntity(it)
+    }
+}
+
+var earthEntity by remember { mutableStateOf<Entity?>(null) }
+
+SpatialView(
+    Modifier.pointerInput(Unit) {
+        detectSpatialRotateGesture(context) { rotateValue ->
+            earthEntity?.apply {
+                components[TransformComponent::class.java]?.apply {
+                    setQuaternion(quaternion * rotateValue.rotation.toQuaternion())
+                }
+            }
+        }
+    }
+) { content, _ ->
+    earthEntity = withContext(Dispatchers.IO) {
+        Entity.load("asset://models/earth.usdz")
+    }.apply { 
+        // setup its collision
+        // make it interactable
+    }.also {
+        content.addEntity(it)
+    }
+}
+
+val context  = LocalContext.current
+val converter = LocalPhysicalLengthConverter.current
+val density = LocalDensity.current
+
+var earthEntity by remember { mutableStateOf<Entity?>(null) }
+
+SpatialView(
+    Modifier.pointerInput(Unit) {
+        detectSpatialDragGesture(context) { dragValue ->
+            // Convert drag offset into Meters.
+            val offsetXInMeter = with(density) {
+                converter.dpToLength(dragValue.dragAmount.x.toDp(), LengthUnit.Meters)
+            }
+            val offsetYInMeter = with(density) {
+                converter.dpToLength(dragValue.dragAmount.y.toDp(), LengthUnit.Meters)
+            }
+            val offsetZInMeter = with(density) {
+                converter.dpToLength(dragValue.dragAmount.z.toDp(), LengthUnit.Meters)
+            }
+            
+            val offset3DInMeter = Offset3D(offsetXInMeter, offsetYInMeter, offsetZInMeter)
+            val rotation3DInMeter = 
+                offset3DInMeter.toRotation3D(180f)
+            val kind = dragValue.interactionKind
+            val target = dragValue.targetEntity ?: return@detectSpatialDragGesture
+            
+            // Handle gestures separately
+            when (kind) {
+                InteractionKind.DirectPinch, InteractionKind.GazePinch -> {
+                    dragToMoveEntity(target, offset3DInMeter)
+                }
+                InteractionKind.Poke -> {
+                    dragToRotateEntity(target, rotation3DInMeter)
+                }
+                else -> { }
+            }
+        }
+    }
+) { content, _ ->
+    earthEntity = withContext(Dispatchers.IO) {
+        Entity.load("asset://models/earth.usdz")
+    }.apply { 
+        // setup its collision
+        // make it interactable
+    }.also {
+        content.addEntity(it)
+    }
+}
+
+
+
+* 
+*Earth by Akshat is licensed under Creative Commons Attribution
+ 
+
+* 
+*Enhanced version powered by Shader Graph with Spatial Editor
+ 
+
+val rootEntity = remember { Entity() }
+var earthEntity by remember { mutableStateOf<Entity?>(null) }
+
+SpatialView { content, _ ->
+    // Initialize Earth 
+    earthEntity = withContext(Dispatchers.IO) {
+        var bundle: AssetBundle? = null
+        try {
+            bundle = AssetBundle.load("asset://editor-asset-earth.bundle")
+            load(modelName = "earth_outline", bundle = bundle)
+        } catch (e: ResourceLoadingException) {
+            null
+        } finally {
+            bundle?.close()
+        }
+    }?.apply {
+        // Scale to the right size and move it to 
+        components[TransformComponent::class.java]?.apply {
+            scaleVector = Vector3(0.1f)
+            position = Vector3(0f, 1.5f, -2f)
+        }
+
+        // Setup collision
+        val boundingBox = getVisualBounds(this, recursive = true, enabledOnly = true)
+        val collisionComponent = CollisionComponent(
+            collisionShape = listOf(ShapeResource.createSphere(boundingBox.size.z / 2f)),
+            physicsMaterial = PhysicsMaterialResource(),
+        )
+        components.set(collisionComponent)
+        
+        // Enable interaction
+        components.set(InteractableComponent())
+
+        // Add Hover effect
+        components.set(HoverEffectComponent())
+    }?.also {
+        rootEntity.addChild(it)
+    }
+
+    // Setup the light of the scene 
+    Entity().apply {
+        components.set(DirectionalLightComponent(Color.White.toColor4(), 800f))
+    }.also {
+        content.addEntity(it)
+    }
+
+    content.addEntity(rootEntity)
+}
+
+val context  = LocalContext.current
+val converter = LocalPhysicalLengthConverter.current
+val density = LocalDensity.current
+
+var earthEntity by remember { mutableStateOf<Entity?>(null) }
+
+var isRotated by remember { mutableStateOf(false) }
+var draggedOffset by remember { mutableStateOf(Offset3D.Zero) }
+
+SpatialView(
+    Modifier
+        .pointerInput(Unit) {
+            detectSpatialScaleGesture(
+                context,
+                targetedToEntity = earthEntity?.let {  TargetEntity.hit(it) }
+            ) { scaleValue ->
+                val target = scaleValue.targetEntity ?: return@detectSpatialScaleGesture
+                
+                scaleEntity(target, scaleValue.scaleValue)
+            }
+        }
+        .pointerInput(Unit) {
+            detectSpatialDragGesture(
+                context,
+                targetedToEntity = earthEntity?.let {  TargetEntity.hit(it) },
+                onDragStart = {
+                    draggedOffset = Offset3D.Zero
+                },
+                onDragEnd = {
+                    if (isRotated) {
+                        earthEntity?.let {
+                            dragToRotateEntity(it, draggedOffset)
+                        }
+                    }
+                }
+            ) { dragValue ->
+                val offsetXInMeter = with(density) {
+                    converter.dpToLength(dragValue.dragAmount.x.toDp(), LengthUnit.Meters)
+                }
+                val offsetYInMeter = with(density) {
+                    converter.dpToLength(dragValue.dragAmount.y.toDp(), LengthUnit.Meters)
+                }
+                val offsetZInMeter = with(density) {
+                    converter.dpToLength(dragValue.dragAmount.z.toDp(), LengthUnit.Meters)
+                }
+
+                val offset3DInMeter = Offset3D(offsetXInMeter, offsetYInMeter, offsetZInMeter)
+                val kind = dragValue.interactionKind
+                val target = dragValue.targetEntity ?: return@detectSpatialDragGesture
+  
+                when (kind) {
+                    InteractionKind.DirectPinch, InteractionKind.GazePinch -> {
+                        dragToMoveEntity(target, offset3DInMeter)
+                        isRotated = false
+                    }
+                    InteractionKind.Poke -> {
+*                        draggedOffset -= offset3DInMeter
+                        isRotated = true
+                    }
+                    else -> {
+                        isRotated = false
+                    }
+                }
+            }
+        }
+) { content, _ ->
+    // Scene initialization
+}
+
+fun rotateEntityByTweenAnimation(target: Entity, offset: Offset3D) {
+*    val rotation3D = offset.copy(offset.x, 0f, 0f)
+        .toRotation3D(180f)
+
+    val from = target.components[TransformComponent::class.java]?.quaternion ?: return
+    val to = from * rotation3D.toQuaternion()
+
+    AnimationResource.generateWithTweenAnimation(
+        TweenAnimation.createTweenAnimation(
+            bindTarget = AnimationBindTarget.bindRotation(),
+            from = from,
+            to = to,
+            easeType = EaseType.EASE_OUT
+        )
+    ).use {
+        target.playAnimation(it)
+    }
+}
+
+SpatialView(
+    Modifier
+        .pointerInput(Unit) {
+            detectSpatialDragGesture(
+                context,
+                targetedToEntity = earthEntity?.let {  TargetEntity.hit(it) },
+                onDragEnd = {
+                    if (isRotated) {
+                        earthEntity?.let {
+                            rotateEntityByTweenAnimation(it, draggedOffset)
+                        }
+                    }
+                }
+            ) { dragValue ->
+                // Keep previous dragging logic
+            }
+        }
+) { content, _ ->
+    // Scene initialization
+}
+
+var earthEntity by remember { mutableStateOf<Entity?>(null) }
+
+SpatialView { content, _ ->
+    // reset part of earthEntity initialization
+    
+    // Config Physics related properties
+    earthEntity?.components.set(RigidBodyComponent().apply {
+        this.rigidBodyMode = RigidBodyMode.DYNAMIC
+        this.isTranslationLocked = Bool3(true)
+        this.angularDamping = 1f
+    })
+    
+    // reset part of scene initialization
+}
+
+fun rotateEntityByPhysics(target: Entity, offset: Offset3D) {
+    val sensitivity = 7f
+    val velocity = offset.x * sensitivity
+
+    target.components.set(
+        PhysicsVelocityComponent().apply {
+            angularVelocity = Vector3(0f, velocity, 0f)
+        }
+    )
+}
+
+SpatialView(
+    Modifier
+        .pointerInput(Unit) {
+            detectSpatialDragGesture(
+                context,
+                targetedToEntity = earthEntity?.let {  TargetEntity.hit(it) },
+                onDragStart = {
+                    draggedOffset = Offset3D.Zero
+                    // remove previous PhysicsVelocityComponent to clear effect
+                    earthEntity?.components?.remove(
+                        PhysicsVelocityComponent::class.java
+                    )
+                },
+                onDragEnd = {
+                    if (isRotated) {
+                        earthEntity?.let {
+                            rotateEntityByPhysics(it, draggedOffset)
+                        }
+                    }
+                }
+            ) { dragValue ->
+                // Keep previous dragging logic
+            }
+        }
+) { content, _ ->
+    // Scene initialization
+}
+
+
+
+* 
+*地球模型的缩放比例为 0.1
+
+* 
+*地球模型的缩放比例为 0.3
+
+fun rotateEntityByPhysics(target: Entity, offset: Offset3D) {
+*    val sensitivity = 7f / target.scale().x
+    val velocity = offset.x * sensitivity
+
+    target.components.set(
+        PhysicsVelocityComponent().apply {
+            angularVelocity = Vector3(0f, velocity, 0f)
+        }
+    )
+}
+
+@Composable
+fun InteractionSDKScreen() {
+    val context  = LocalContext.current
+    val density = LocalDensity.current
+    val converter = LocalPhysicalLengthConverter.current
+
+    var earthEntity by remember { mutableStateOf<Entity?>(null) }
+
+    var isRotated by remember { mutableStateOf(false) }
+    var draggedOffset by remember { mutableStateOf(Offset3D.Zero) }
+
+    SpatialView(
+        Modifier
+            .pointerInput(Unit) {
+                detectSpatialScaleGesture(context) { scaleValue ->
+                    val target = scaleValue.targetEntity ?: return@detectSpatialScaleGesture
+
+                    scaleEntity(target, scaleValue.scaleValue)
+                }
+            }
+            .pointerInput(Unit) {
+                detectSpatialDragGesture(
+                    context = context,
+                    targetedToEntity = earthEntity?.let {  TargetEntity.hit(it) },
+                    onDragStart = {
+                        draggedOffset = Offset3D.Zero
+                        earthEntity?.components?.remove(PhysicsVelocityComponent::class.java)
+                    },
+                    onDragEnd = {
+                        if (isRotated) {
+                            earthEntity?.let {
+                                rotateEntityByPhysics(it, draggedOffset)
+                            }
+                        }
+                    }
+                ) { dragValue ->
+                    val offsetXInMeter = with(density) {
+                        converter.dpToLength(dragValue.dragAmount.x.toDp(), LengthUnit.Meters)
+                    }
+                    val offsetYInMeter = with(density) {
+                        converter.dpToLength(dragValue.dragAmount.y.toDp(), LengthUnit.Meters)
+                    }
+                    val offsetZInMeter = with(density) {
+                        converter.dpToLength(dragValue.dragAmount.z.toDp(), LengthUnit.Meters)
+                    }
+
+                    val offset3DInMeter = Offset3D(offsetXInMeter, offsetYInMeter, offsetZInMeter)
+                    val kind = dragValue.interactionKind
+                    val target = dragValue.targetEntity ?: return@detectSpatialDragGesture
+
+                    when (kind) {
+                        InteractionKind.DirectPinch, InteractionKind.GazePinch -> {
+                            isRotated = false
+                            dragToMoveEntity(target, offset3DInMeter)
+                        }
+
+                        InteractionKind.Poke -> {
+                            isRotated = true
+                            draggedOffset += offset3DInMeter
+                        }
+
+                        else -> {
+                            isRotated = false
+                        }
+                    }
+                }
+            }
+    ) { content, _ ->
+        earthEntity = withContext(Dispatchers.IO) {
+            var bundle: AssetBundle? = null
+
+            try {
+                bundle = AssetBundle.load("asset://editor-asset-earth.bundle")
+
+                load(modelName = "earth_outline", bundle = bundle)
+            } catch (e: ResourceLoadingException) {
+                null
+            } finally {
+                bundle?.close()
+            }
+        }?.apply {
+            components[TransformComponent::class.java]?.apply {
+                scaleVector = Vector3(0.2f)
+                position = Vector3(0f, 1.5f, -2f)
+            }
+
+            val boundingBox = getVisualBounds(this, recursive = true, enabledOnly = true)
+            val collisionComponent = CollisionComponent(
+                collisionShape = listOf(ShapeResource.createSphere(boundingBox.size.x / 2f)),
+                physicsMaterial = PhysicsMaterialResource(),
+            )
+
+            components.set(collisionComponent)
+            components.set(InteractableComponent())
+            components.set(HoverEffectComponent())
+            components.set(RigidBodyComponent().apply {
+                this.rigidBodyMode = RigidBodyMode.DYNAMIC
+                this.isTranslationLocked = Bool3(true)
+                this.angularDamping = 1f
+            })
+        }?.also {
+            content.addEntity(it)
+        }
+
+        val lightEntity = Entity().apply {
+            components.set(DirectionalLightComponent(Color.White.toColor4(), 800f))
+        }
+        content.addEntity(lightEntity)
+    }
+}
+
+fun scaleEntity(target: Entity, scaleValue: Float) {
+    target.apply {
+        components[TransformComponent::class.java]?.apply {
+            setScaleVector(scaleVector * scaleValue)
+        }
+    }
+}
+
+fun rotateEntityByPhysics(target: Entity, offset: Offset3D) {
+    val sensitivity = 10f / (target.scale().x * 2)
+    val velocity = offset.x * sensitivity
+
+    target.components.set(
+        PhysicsVelocityComponent().apply {
+            angularVelocity = Vector3(0f, velocity, 0f)
+        }
+    )
+}
+
+fun dragToMoveEntity(target: Entity, offset: Offset3D) {
+    target.apply {
+        components[TransformComponent::class.java]?.apply {
+            setPosition(
+                Vector3(
+                    position.x + offset.x,
+                    position.y - offset.y,
+                    position.z + offset.z,
+                )
+            )
+        }
+    }
+}

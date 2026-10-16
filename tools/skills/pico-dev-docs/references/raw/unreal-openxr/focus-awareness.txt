@@ -1,0 +1,37 @@
+焦点感知
+========================================
+在应用运行过程中，若用户按下手柄 Home 按键，系统将弹出 2D 的 UI 弹窗，此时应用将失去焦点（Focus），即应用接收不到输入事件。在此情况下，你可以使用虚幻引擎提供的 Focus 相关接口进一步查询应用焦点状态，为用户带来不间断的沉浸式 VR 体验。 
+*环境要求 
+*PICO 设备：PICO Neo3、PICO 4、PICO 4 Pro、PICO 4 Enterprise、PICO G3、PICO 4 Ultra 或 Project Swan（PICO OS 6）
+*前提条件
+你已在引擎中安装并启用了 PICO Unreal OpenXR 插件。详情参考 PICO Unreal OpenXR 快速开始。
+*使用步骤
+你可以调用虚幻引擎提供的 Get VR Focus State 接口查询应用焦点状态。
+* 
+参数说明如下：
+*
+* 
+
+
+
+参数
+
+类型
+
+说明
+
+Use Focus
+
+布尔值
+
+应用是否正在使用焦点。
+*true ：应用正在使用焦点，正在和用户交互。
+*false：应用没有使用焦点。
+
+Has Focus
+
+布尔值
+
+应用是否有焦点。
+*true：应用拥有焦点，可以接收用户输入。
+*false ：应用失去焦点，不再接收用户输入。

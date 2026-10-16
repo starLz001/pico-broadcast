@@ -1,0 +1,127 @@
+注视点渲染
+========================================
+*注视点渲染（Foveated Rendering） 可以优化渲染场景的能力。该技术通过为视野中心区域提供全分辨率（无损），降低边缘区域（人眼焦点区域之外）的分辨率，能够极大降低 HMD 设备的渲染负载，实现渲染优化。
+PICO Unreal OpenXR 支持眼动追踪注视点渲染（Eye Tracked Foveated Rendering，简称 ETFR）和静态注视点渲染（Fixed Foveated Rendering，简称 FFR）功能，帮助提升应用性能和画面显示的质量。
+*了解 FFR 和 ETFR
+*静态注视点渲染（FFR）
+FFR 将视野焦点固定在视口中心位置，将中心区域以高分辨进行渲染，周边区域以低分辨率渲染，从而减轻 GPU 负担，提升性能，提高设备上显示的画面质量。 
+FFR 可以利用可变速率着色（Variable Rate Shading）功能调整目标中像素的着色率来提升性能。如下图所示，中心红色网格区域为高清区，采用 1:1 着色率，即单次像素着色器调用会处理 1 个目标像素；周边蓝色区域着色比率逐级递减，例如 1:2, 1:4 等，即单次像素着色器调用会处理 2 个或 4 目标像素。 
+* 
+应用中可采用 FFR 功能主要原因是人眼对中心区域的敏感度较高，对边缘区域的敏感度较低，因此使用 FFR 不会对用户的视觉体验产生太大影响。其次，在对渲染目标进行反畸变处理后，部分边缘像素将不会再被使用，采用 FFR 功能对边缘像素以低分辨率渲染可减少 GPU 处理资源的浪费，提升GPU 利用率。下图为桶形畸变处理前和处理后的场景。 
+* 
+更多关于 FFR 的信息，可参考 UE 的 XR 性能功能 文档。 
+*眼动追踪注视点渲染（ETFR） 
+ETFR 根据眼球的注视方向动态调整注视点，以全分辨率渲染眼球注视区域的图像，以低分辨率渲染边缘区域图像。随着眼球的移动，全分辨率渲染区域也会相应地变化。
+与 FFR 相比，ETFR 可以追踪用户当前真实的注视点位置，在眼球周围区域分辨率的降低上可以比 FFR 的浮动更大。因此，使用 ETFR 可以为应用降低更多 GPU 负载。
+*相关 OpenXR 扩展
+PICO OpenXR 使用了以下 OpenXR 的扩展来实现静态注视点渲染： 
+*XR_FB_swapchain_update_state
+*XR_FB_foveation
+*XR_FB_foveation_configuration
+*XR_FB_foveation_vulkan
+*环境要求
+*以下为注视点渲染相关功能的环境要求：
+**
+*前提条件
+*你已在引擎中安装并启用了 PICO Unreal OpenXR 插件。详情参考 PICO Unreal OpenXR 快速开始。
+*使用注视点渲染
+ 
+*注视点渲染可视化
+你可使用 Tile 可视化工具在引擎中可视化屏幕上每个 Tile 的分辨率来实现注视点渲染可视化。详情参考 Tile 可视化工具。 
+*已知问题
+*若使用 PICO-5.4 分支为应用开启静态注视点渲染（FFR）和下采样（Subsample）并以非 Shipping 模式打包，会导致该应用在 PICO 4 Ultra 设备上运行时屏幕出现黑框。你可以用 Shipping 模式打包应用来解决该问题。 
+
+
+**
+
+* 
+
+* 
+
+
+
+功能
+
+PICO 设备系统版本
+
+PICO 设备
+
+UE 版本
+
+FFR
+
+5.11.0 或以上
+
+PICO Neo3、PICO 4、PICO 4 Pro、PICO G3 或 Project Swan（PICO OS 6）
+
+与 Unreal OpenXR Plugin 支持的 UE 版本相同。
+
+ETFR
+
+5.11.0 或以上
+
+PICO 4 Pro 或 Project Swan（PICO OS 6）
+
+需要通过 PICO 源码分支 实现。
+
+**
+
+*在 UE 编辑器中创建一个项目或打开已有项目。 
+*前往 Edit > Project Settings > Rendering。
+*移动到 VR 选项卡下，将 Stereo Foveation Level (Experimental) 设置为 Disabled。
+*前往 Plugins > OpenXR Settings > Foveation，勾选 Enable XR_FB_foveation extension（默认启用）。
+*已开启注视点渲染能力。默认为 FFR。
+* 
+*在 {项目文件夹}\Config\DefaultEngine.ini 文件中，添加该扩展的控制台变量，定义注视点渲染等级。
+* 
+* 
+*其中，字段与注视点渲染等级对应关系如下：
+*0：禁用注视点渲染
+*1：低级
+*2：中级
+*3：高级
+*你也可以使用蓝图接口 ExecuteConsoleCommand 动态开关及修改注视点渲染等级。
+* 
+* 
+
+*完成 PICO OpenXR 分支相关配置。详细说明参考虚幻引擎 - PICO OpenXR 分支使用指南。
+*在 UE 编辑器中创建一个项目或打开已有项目。 
+*前往 Edit > Project Settings > Rendering。
+*移动到 VR 选项卡下，将 Stereo Foveation Level (Experimental) 设置为 Disabled。
+*前往 Plugins > OpenXR Settings > Foveation，按需完成以下步骤：
+*勾选 Enable XR_FB_foveation extension。
+*已开启注视点渲染能力。默认为 FFR。
+*勾选 Enable XR_META_foveation_eye_tracked extension。
+*已额外开启 ETFR 能力。
+* 
+*在 {项目文件夹}\Config\DefaultEngine.ini 文件中，添加该扩展的控制台变量，定义注视点渲染等级。
+* 
+* 
+*其中，字段与注视点渲染等级对应关系如下：
+*0：禁用注视点渲染
+*1：低级
+*2：中级
+*3：高级
+*你也可以使用蓝图接口 ExecuteConsoleCommand 动态开关及修改注视点渲染等级。
+* 
+*设置 ETFR 的控制台变量 xr.OpenXRMetaEyeTrackedFoveation。
+* 
+* 
+*开启眼动追踪功能并完成眼动追踪数据权限相关配置。详情参考眼动追踪。
+
+[ConsoleVariables]
+xr.OpenXRFBFoveationLevel=3
+xr.OpenXRFBFoveationDynamic=1 // 默认启用 Dynamic
+
+*UE 5.7 不再支持用下面的蓝图动态更改 FFR 等级，但 FFR 等级仍可以通过 C++ 代码进行更新或者 ini 文件更改。
+
+[ConsoleVariables]
+xr.OpenXRFBFoveationLevel=3
+
+*使用 ETFR 需要配合开启眼动追踪功能以及申请相应的 com.picovr.permission.EYE_TRACKING 权限和com.pico.xrpermission.ETFR权限 ，详情参阅 眼动追踪。
+
+*static TAutoConsoleVariable<bool> CVarOpenXRMetaEyeTrackedFoveation(
+*        TEXT("xr.OpenXRMetaEyeTrackedFoveation"),
+*        false,
+*        TEXT("Whether eye tracked foveation is enabled.\n"),
+*        ECVF_Default);

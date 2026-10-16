@@ -1,0 +1,202 @@
+MR 功能兼容性和迁移说明
+========================================
+本文为 MR 功能兼容性和迁移说明。你可以参考本文档将项目中 2.5.0 及更早版本的 MR 接口升级为 3.0.0 版本。
+*相关提示
+由于 SDK 3.0.0 版本中的 MR 功能重构不涉及视频透视，所以本文不讨论视频透视功能的兼容性。
+*兼容性说明
+以下为 PICO 4 和 PICO 4 Ultra 设备对 SDK 2.5.0 或更早版本及 3.0.0 版本中 MR 接口的支持情况。
+*
+*空间锚点功能迁移说明
+以下为空间锚点功能的迁移说明。功能使用说明参考以下文档：
+*2.5.0 及更早版本：空间锚点指南、API 参考
+*3.0.0 版本：空间锚点指南、API 参考
+*启用空间锚点能力
+*在编辑器左上角，点击 编辑（Edit） > 项目设置（Project Settings） > 插件（Plugins） > PICOXR Settings。 
+*移动到 Mixed Reality 选项卡下启用空间锚点能力。
+**
+*接口对比
+*
+*场景标定功能迁移说明
+以下为场景标定功能的迁移说明。功能使用说明参考以下文档：
+*2.5.0 及更早版本：场景标定指南、API 参考
+*3.0.0 版本：场景标定指南、API 参考
+*启用场景标定能力
+*
+*接口对比
+*
+
+
+
+
+*SDK 版本
+
+*PICO 4
+
+*PICO 4 Ultra
+
+2.5.0 及更早版本
+
+*支持
+
+*不支持
+
+*3.0.0
+
+*仅支持空间锚点（不包含共享空间锚点）和场景标定相关接口
+
+*全部支持
+
+
+
+*2.5.0 及更早版本
+
+*3.0.0
+
+勾选 Enable Anchor 选框。
+* 
+
+
+勾选 Enable Spatial Anchor 选框。
+* 
+
+
+
+操作
+
+*2.5.0 及更早版本
+
+*3.0.0
+
+开始/停止空间锚点功能
+
+无
+
+
+通过异步接口PXR_LaunchSpatialAnchorServiceAsync 开启空间锚点服务。
+通过同步接口 PXR_CloseSpatialAnchorService 关闭空间锚点服务。
+
+创建锚点
+
+PXR Create Anchor Entity Async
+
+调用 PXR_CreateSpatialAnchorAsync 接口，在应用的内存中创建锚点。
+
+销毁应用内存中的锚点
+
+PXR Destroy Anchor Entity
+
+PXR_DestroyAnchorByActor PXR_DestroyAnchorByComponent
+
+存储锚点
+
+PXR Persist Anchor Entity Async
+
+PXR_PersistSpatialAnchorAsync 
+
+删除设备本地存储的锚点
+
+PXR Unpersist Anchor Entity Async
+
+PXR_UnpersistSpatialAnchorAsync
+
+加载锚点
+
+PXR Load Anchor Entity Async
+
+PXR_LoadSpatialAnchorAsync
+
+获取锚点的 UUID
+
+GetAnchorEntityUuid
+
+PXR_GetAnchorEntityUuid 
+
+获取锚点的姿态
+
+PXR_GetAnchorPoseByActor 
+PXR_GetAnchorPoseByComponent 
+
+PXR_GetAnchorPoseByActor 
+PXR_GetAnchorPoseByComponent 
+
+
+
+*2.5.0 及更早版本
+
+*3.0.0
+
+无
+
+
+打开 项目设置 中的 PICOXR Settings，在 Mixed Reality 选项卡中勾选 Enable Scene Capture 选框。
+* 
+
+
+
+*操作
+
+*2.5.0 及更早版本
+
+*3.0.0
+
+开始/停止场景标定
+
+
+无
+
+通过异步接口PXR_LaunchSceneCaptureServiceAsync，开启空间锚点服务。
+通过同步接口 PXR_CloseSceneCaptureService，关闭空间锚点服务。
+
+启动房间标定应用
+
+PXR Start Spatial Scene Capture Async
+
+PXR_LaunchSceneCaptureAppAsync 
+
+加载场景锚点
+
+无
+
+PXR_RequestSceneCapturesAsync 
+
+获取锚点的语义
+
+GetAnchorSceneLabel
+
+无，PXR_RequestSceneCapturesAsync 获取到的SceneLoadInfo 中已包含语义标签。
+
+获取锚点支持的组件
+
+PXR Get Anchor Component Flags
+
+无，PXR_RequestSceneCapturesAsync 获取到的SceneLoadInfo 中已包含组件类型。
+
+获取锚点的立方体数据
+
+PXR GetAnchorVolumeInfo
+
+PXR_GetSceneBoundingBox3DData
+
+获取锚点的矩形平面数据
+
+PXR GetAnchorPlaneBoundaryInfo
+
+PXR_GetSceneBoundingBox2DData
+
+获取锚点的非矩形平面数据
+
+PXR GetAnchorPlanePolygonInfo
+
+PXR_GetSceneBoundingPolygonData
+
+获取锚点的 UUID
+
+GetAnchorEntityUuid
+
+无，PXR_RequestSceneCapturesAsync 获取到的SceneLoadInfo 中已包含UUID。
+
+获取锚点的姿态
+
+GetAnchorPose
+
+无，PXR_RequestSceneCapturesAsync 获取到的SceneLoadInfo 中已包含锚点的姿态。

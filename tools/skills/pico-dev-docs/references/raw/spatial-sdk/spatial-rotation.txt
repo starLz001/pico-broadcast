@@ -1,0 +1,49 @@
+空间旋转
+========================================
+通过 rotation3D 接口，让 UI 元素在空间中真实地旋转。你可以在接口中指定旋转角度、旋转轴以及旋转中心点。代码示例如下：
+ 
+
+@Composable
+fun Rotation3DSample() {
+    Box(
+        modifier =
+            // 将 view 绕 Y 轴旋转 95°（3D 旋转）
+            Modifier.rotate3D(degree = 95f, axis = RotationAxis3D.Y)
+                .size(200.dp)
+                .background(
+                    brush =
+                        Brush.radialGradient(
+                            colors = listOf(Color.Green, Color.Red, Color.Yellow, Color.White),
+                        ),
+                    shape = CircleShape,
+                ),
+        contentAlignment = Alignment.Center
+    ) {
+        BasicText(text = "Rotated circle", color = { Color.White })
+    }
+}
+
+/** 演示一个持续旋转的 3D Box */
+@Composable
+fun RotatingBox() {
+    // 无限动画，degree 从 0° -> 360° 循环旋转
+    val degree by
+        rememberInfiniteTransition("Rotation3D")
+            .animateFloat(
+                initialValue = 0f,
+                targetValue = 360f,
+                animationSpec = infiniteRepeatable(tween()),
+                label = "degree"
+            )
+
+    Box(
+        modifier =
+            Modifier.size(100.dp).background(Color.Green).rotate3D {
+                // 3D 旋转，绕 Y 轴，以中心点为旋转原点
+                Rotation3D(degree = degree, RotationAxis3D.Y, NormalizedPoint3D.Center)
+            },
+        contentAlignment = Alignment.Center
+    ) {
+        // 自定义逻辑
+    }
+}

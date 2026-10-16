@@ -1,0 +1,359 @@
+示例：在应用中播放空间视频
+========================================
+该示例演示如何在空间应用中播放 SBS（Side-by-Side）3D 空间视频，并同时支持两种展示模式：
+*Planar 视频面板（WindowContainer）：以"窗口内的视频面板"形式观看，附带 UI 控制条（播放/进度/音量/沉浸切换）
+*沉浸式视频球（Stage）：将视频投射到球体内侧，实现 360° 沉浸观看
+ 
+*前提条件
+*参阅《准备开发环境》配置 PICO Spatial SDK 开发环境。
+*准备一台 PICO 设备或启动 PICO Emulator。
+*设备需联网：示例视频源为远程 HTTPS 地址。
+*获取示例项目
+前往《PICO Spatial SDK 示例》下载 在应用中播放空间视频 示例项目。
+*运行示例项目
+*把示例项目拉取到本地，然后用 Android Studio 打开示例项目。
+*连接 PICO 设备或启动 PICO Emulator。
+*运行 app 模块。
+示例视频通过 CypressMediaPlayer.setDataSource(url) 直接拉取远程文件：
+*cave_4096x2048_sbs.mp4（4K，示例默认使用，适合 PICO Emulator）
+*cave_8192x4096_sbs.mp4（8K，建议真机使用，需切换 VideoViewModel.VIDEO_URL）
+ 
+沉浸切换的主时序如下（UI → 容器 → 实体显隐）：
+ 
+播放器与渲染实体的关系如下：
+ 
+*示例项目结构说明
+核心代码在 app/src/main/java/com/pico/spatial/sample/spatialvideo/ 下，按职责拆分为：
+*Main.kt：声明 DefaultWindowContainer（平面控制面板）+ Stage(id = STAGE_ID)（沉浸视频球）
+*data/
+*PlaybackManager.kt：CypressMediaPlayer 的创建、远程数据源、prepareAsync、播放/暂停/Seek/音量；维护 state / duration / hasFirstFrameRendered
+*PlaybackState.kt：播放状态枚举（INIT/PREPARING/READY/PLAYING/PAUSED/ERROR）
+*VideoAssetBundle.kt：编辑器导出的资源包（视频球 mesh、PortalEffect 材质）
+*VideoEffectManager.kt：缓存与异步加载球体 mesh 与 ShaderGraphMaterial
+*di/VideoModule.kt：Koin 模块，按 VIDEO_SESSION_SCOPE_ID 提供共享的 VideoViewModel
+*ecs/VideoEntityAssembler.kt：把同一个播放器装配到 videoPanel 与 videoSphere 两个实体上
+*platform/
+*LaunchActivity.kt、SpatialApplication.kt：Koin 初始化与 launch(::mainApp)
+*ui/
+*SpatialVideoScreen.kt：平面模式主界面、加载/错误浮层、生命周期监听
+*PlaybackToolbar.kt：播放/Seek/音量/沉浸切换 UI（Toolbar 组件）
+*ImmersiveScene.kt：Stage 内的沉浸视频球场景
+*VideoViewModel.kt：播放状态、videoPanel/videoSphere 实体引用与模式切换逻辑
+*基于空间视频实现两种展示模式
+*步骤一：容器形态：WindowContainer + Stage
+示例同时使用：
+*DefaultWindowContainer：承载视频控制面板（Planar WindowContainer）
+*Stage(id = STAGE_ID)：承载沉浸式视频球（Full Space）
+ 
+WindowContainer 的 form/尺寸等在 AndroidManifest.xml 中配置为 Planar：
+ 
+worldscaletype = 2（Fixed）使视频面板在空间中保持固定缩放比例，距离越远视觉上越小，更接近真实物理观感。
+*步骤二：跨 Composable 共享 ViewModel：Koin Session Scope
+示例的 DefaultWindowContainer 和 Stage 是两个独立的 Composable 树，但都需要操作同一个播放器与同一对实体。为此示例引入了 Koin，并以一个长生命周期的 Session Scope 来托管 VideoViewModel：
+ 
+ 
+任意 Composable 中通过 getKoin().getScope(VIDEO_SESSION_SCOPE_ID) 取到的 VideoViewModel 都是同一个实例：
+ 
+这是平面面板与沉浸视频球能够共用一个 CypressMediaPlayer、同步播放进度的关键。
+*步骤三：播放器：CypressMediaPlayer（远程数据源）
+示例使用 SDK 内置播放器 CypressMediaPlayer，由 PlaybackManager 统一管理：
+*setup(url)：注册回调、设置远程数据源、prepareAsync()、设置初始音量
+*play / pause / resume / seekTo / setVolume
+*CypressMediaPlayerCallback 用于驱动 state / duration 等可观察状态
+ 
+注意：
+*setDataSource 直接接收一个 HTTPS URL，AndroidManifest.xml 已声明 android.permission.INTERNET
+*state 与 hasFirstFrameRendered 都是 Compose 的可观察状态，UI 层用 snapshotFlow / collectAsStateWithLifecycle 直接消费
+*步骤四：用同一个播放器驱动两种展示：VideoPlayerComponent
+示例的关键点是：同一个 CypressMediaPlayer 同时驱动两套渲染实体：
+*videoPanel：平面视频面板（Planar）
+*videoSphere：沉浸式视频球（Stage 内）
+两者都是普通 Entity，通过 VideoPlayerComponent(player, mesh, material) 绑定到播放器：
+ 
+VideoViewModel 在 initialize() 中先用远程地址初始化播放器，再分别装配两个实体，并把 videoSphere 默认设为不可见：
+ 
+*平面视频面板：自定义 Mesh + ShaderGraphMaterial 特效
+平面面板使用 MeshResource.createVideoPanel(width, height, cornerRadius) 创建带圆角的面板 Mesh：
+ 
+材质使用 VideoMaterial，并额外挂载一个来自 Spatial Editor 的 ShaderGraphMaterial（PortalEffect）实现"投影/门户"视觉效果：
+ 
+PortalEffect 的着色器参数（FOV、球半径、旋转偏移、aspect 等）会被一次性写入：
+ 
+*沉浸式视频球：加载球体 Mesh + 内侧渲染
+沉浸式模式用一个"可正确映射 360° 视频 UV 的球体 Mesh"。示例通过 VideoEffectManager.getVideoSphereMesh() 缓存并加载 mesh：
+ 
+视频球使用 VideoMaterial(VideoDimensionMode.SIDE_BY_SIDE)，并将 MaterialCullingMode 设为 FRONT（剔除正面、渲染背面）：
+ 
+FRONT 的含义是剔除正面、渲染背面，适合人在球内观看"内侧表面"的场景（否则你可能看不到球面内容）。
+*步骤五：选择视频资源（4K/8K）
+示例在 VideoViewModel 内部用常量指定远程视频地址：
+ 
+注意：地址不再走 asset://，而是直接由 CypressMediaPlayer 拉远程流，因此首次进入会有一个 PREPARING 阶段。
+*步骤六：实现 UI 控制：播放/Seek/音量/沉浸切换
+UI 层使用设计库的 Toolbar 容器组织一行控件。
+*播放与进度
+PlaybackToolbar 通过 ViewModel 调用：
+*onPlayPauseClicked()：READY→PLAYING / PLAYING→PAUSED / PAUSED→PLAYING
+*setVideoProgress(ms, dragging)：拖动时只更新 UI；拖动结束才真正 seekTo(ms)
+ 
+进度条与沉浸按钮的可用性由 hasFirstFrameRendered 决定——首帧未渲染前禁用，避免在加载阶段误操作：
+ 
+*音量
+音量 slider 的 onValueChangeFinished 会调用 CypressMediaPlayer.setVolume()：
+ 
+*沉浸模式切换（打开/关闭 Stage）
+沉浸按钮会：
+*openStage(STAGE_ID, StageStyle.Mixed) 并 toggleFullSpace(true)
+*或 closeStage() 并 toggleFullSpace(false)
+ 
+toggleFullSpace() 的实现是切换两个实体的 enabled，并在首帧未渲染时拒绝进入沉浸：
+ 
+*步骤七：加载/错误浮层：AttachmentPanel
+示例使用 SpatialView { attachments = ... } 在视频面板上叠加一个 AttachmentPanel 作为加载/错误提示：
+ 
+showLoadingAttachment 在以下三种情况下为 true：
+*PREPARING（远程拉取/解码中）
+*ERROR（加载失败，文案切换为 video_failed_to_load）
+*PLAYING && !hasFirstFrameRendered（已开始播放但还没真正出画面）
+这样首次启动到第一帧渲染前用户始终能看到一个进度提示。
+*步骤八：生命周期与资源释放
+示例在 SpatialVideoScreen 里监听生命周期：
+*ON_PAUSE：暂停播放，避免应用最小化后继续播放
+*ON_RESUME：再次调用 videoViewModel.initialize(converter)（内部有 hasInitialized 守卫，重复调用安全）
+*onDispose：确保退出时切回非沉浸状态并关闭 Stage
+ 
+播放器资源在 PlaybackManager.reset() 中释放，由 VideoViewModel.onCleared() 触发：
+ 
+ 
+*延伸阅读
+*《视频概览》
+*《视频文件》
+*《使用 VideoMaterial》
+*《使用 VideoPlayerComponent》
+
+**
+
+ 
+
+
+ 
+
+
+// file:app/src/main/java/com/pico/spatial/sample/spatialvideo/Main.kt
+fun mainApp(scope: SpatialAppScope) =
+    with(scope) {
+        DefaultWindowContainer {
+            PicoTheme {
+                Box(
+                    modifier =
+                        Modifier.windowConstraints(width = PANEL_WIDTH, height = PANEL_HEIGHT)
+                ) {
+                    SpatialVideoScreen()
+                    PlaybackToolbar()
+                }
+            }
+        }
+
+        Stage(id = STAGE_ID) { PicoTheme { ImmersiveScene() } }
+    }
+
+const val STAGE_ID = "IMMERSIVE_SPATIAL_VIDEO"
+
+<!-- file: app/src/main/AndroidManifest.xml -->
+
+<meta-data android:name="pico.spatial.windowcontainer.style" android:value="1" />
+<meta-data android:name="pico.spatial.windowcontainer.defaultsize" android:value="1760x990" />
+<meta-data android:name="pico.spatial.windowcontainer.resizetype" android:value="2" />
+<meta-data android:name="pico.spatial.windowcontainer.worldscaletype" android:value="2" />
+
+// file:app/src/main/java/com/pico/spatial/sample/spatialvideo/di/VideoModule.kt
+val videoModule = module {
+    scope(named(VIDEO_SESSION_SCOPE_ID)) { scoped { VideoViewModel() } }
+}
+const val VIDEO_SESSION_SCOPE_ID = "video_session_scope"
+
+// file:app/src/main/java/com/pico/spatial/sample/spatialvideo/platform/SpatialApplication.kt
+startKoin {
+    androidContext(this@SpatialApplication)
+    modules(videoModule)
+}
+GlobalContext.get().createScope(VIDEO_SESSION_SCOPE_ID, named(VIDEO_SESSION_SCOPE_ID))
+launch(::mainApp)
+
+// file:app/src/main/java/com/pico/spatial/sample/spatialvideo/ui/SpatialVideoScreen.kt
+val scope = getKoin().getScope(VIDEO_SESSION_SCOPE_ID)
+val videoViewModel: VideoViewModel = remember(scope) { scope.get<VideoViewModel>() }
+
+// file:app/src/main/java/com/pico/spatial/sample/spatialvideo/data/PlaybackManager.kt
+fun setup(videoPath: String) {
+    state = PlaybackState.PREPARING
+    duration = 1L
+    hasFirstFrameRendered = false
+    player.registerCypressMediaPlayerCallback(callBack)
+    player.setDataSource(videoPath)
+    player.prepareAsync()
+    player.setVolume(PLAYBACK_INIT_VOLUME)
+}
+
+// file:app/src/main/java/com/pico/spatial/sample/spatialvideo/ecs/VideoEntityAssembler.kt
+entity.components.set(VideoPlayerComponent(player, mesh, material))
+
+// file:app/src/main/java/com/pico/spatial/sample/spatialvideo/ui/VideoViewModel.kt
+suspend fun initialize(converter: PhysicalLengthConverter) {
+    if (hasInitialized) return
+    hasInitialized = true
+    manager.setup(VIDEO_URL)
+    VideoEntityAssembler.assembleVideoPanel(
+        videoPanel,
+        manager.player,
+        converter.dpToLength(VideoEntityConfig.PANEL_WIDTH, LengthUnit.Meters),
+        converter.dpToLength(VideoEntityConfig.PANEL_HEIGHT, LengthUnit.Meters),
+    )
+    VideoEntityAssembler.assembleVideoSphere(videoSphere, manager.player)
+    videoSphere.enabled = false
+}
+
+// file:app/src/main/java/com/pico/spatial/sample/spatialvideo/ecs/VideoEntityAssembler.kt
+val mesh =
+    MeshResource.createVideoPanel(
+        panelWidth,
+        panelHeight,
+        VideoEntityConfig.PANEL_CORNER_RADIUS
+    )
+
+// file:app/src/main/java/com/pico/spatial/sample/spatialvideo/ecs/VideoEntityAssembler.kt
+val material = createVideoMaterial(VideoEffectManager.getPortalEffectMaterial().await())
+entity.components.set(VideoPlayerComponent(player, mesh, material))
+
+// file:app/src/main/java/com/pico/spatial/sample/spatialvideo/ecs/VideoEntityAssembler.kt
+val sweep = 2f * VideoEntityConfig.M_PI
+val originSphereRadius = 50.0f
+customMaterial.setParameter("sweep", sweep)
+customMaterial.setParameter("sphereRadius", originSphereRadius)
+customMaterial.setParameter("sphereOrigin", Vector3(0F, 0F, 0F))
+customMaterial.setParameter("minFOV", 30f)
+customMaterial.setParameter("maxFOV", 90.0f)
+customMaterial.setParameter("distanceScale", 2f)
+customMaterial.setParameter("rotateOffset", 0.5f)
+customMaterial.setParameter("aspect", VideoEntityConfig.ASPECT_RATIO)
+
+// file:app/src/main/java/com/pico/spatial/sample/spatialvideo/data/VideoEffectManager.kt
+private suspend fun loadVideoSphereMesh(): MeshResource {
+    val bundle = assetBundle.await()
+    return bundle.loadMeshResource(VIDEO_SPHERE_MESH_PATH).apply { toGlobal() }
+}
+
+// file:app/src/main/java/com/pico/spatial/sample/spatialvideo/ecs/VideoEntityAssembler.kt
+val material =
+    VideoMaterial(
+        BlendingMode.OPAQUE,
+        VideoDimensionMode.SIDE_BY_SIDE,
+        MaterialCullingMode.FRONT,
+        Color4.BLACK,
+    )
+
+// file:app/src/main/java/com/pico/spatial/sample/spatialvideo/ui/VideoViewModel.kt
+private companion object {
+    const val VIDEO_URL =
+        "https://lf-devtools.picoxr.com/obj/spatial-toolbox/examples/cave_4096x2048_sbs.mp4"
+
+    // Use this if you are running the app on a physical device
+    // const val VIDEO_URL =
+    // "https://lf-devtools.picoxr.com/obj/spatial-toolbox/examples/cave_8192x4096_sbs.mp4"
+}
+
+// file:app/src/main/java/com/pico/spatial/sample/spatialvideo/ui/PlaybackToolbar.kt
+// 拖动中
+onValueChange = {
+    seekingPosition = it
+    videoViewModel.setVideoProgress(seekingPosition.toLong(), true)
+},
+// 拖动结束
+onValueChangeFinished = {
+    videoViewModel.setVideoProgress(seekingPosition.toLong(), false)
+},
+
+// file:app/src/main/java/com/pico/spatial/sample/spatialvideo/ui/PlaybackToolbar.kt
+val seekEnabled = hasFirstFrameRendered && videoState != PlaybackState.ERROR
+val immersiveEnabled = hasFirstFrameRendered && videoState != PlaybackState.ERROR
+
+// file:app/src/main/java/com/pico/spatial/sample/spatialvideo/ui/PlaybackToolbar.kt
+onValueChangeFinished = { videoViewModel.setVolume(volume) }
+
+// file:app/src/main/java/com/pico/spatial/sample/spatialvideo/ui/PlaybackToolbar.kt
+coroutineScope.launch(Dispatchers.Main.immediate) {
+    if (!isFullSpace) {
+        spatialNavigator.openStage(STAGE_ID, StageStyle.Mixed)
+        viewModel.toggleFullSpace(true)
+    } else {
+        closeStage()
+        viewModel.toggleFullSpace(false)
+    }
+    isFullSpace = !isFullSpace
+}
+
+// file:app/src/main/java/com/pico/spatial/sample/spatialvideo/ui/VideoViewModel.kt
+fun toggleFullSpace(isFullSpace: Boolean) {
+    if (isFullSpace && !manager.hasFirstFrameRendered) {
+        return
+    }
+    videoSphere.enabled = isFullSpace
+    videoPanel.enabled = !isFullSpace
+}
+
+// file:app/src/main/java/com/pico/spatial/sample/spatialvideo/ui/SpatialVideoScreen.kt
+SpatialView(
+    attachments = {
+        AttachmentPanel(id = LOADING_ATTACHMENT_ID) { VideoLoadingAttachment(videoState) }
+    },
+    initial = { content, attachments ->
+        content.addEntity(videoViewModel.videoPanel)
+        attachments.entity(LOADING_ATTACHMENT_ID)?.apply {
+            components[TransformComponent::class.java]?.apply {
+                setPosition(Vector3(0f, -0.01f, 0.018f))
+                scaleBy(1.65f)
+            }
+            videoViewModel.videoPanel.addChild(this)
+        }
+    },
+    update = { _, attachments ->
+        attachments.entity(LOADING_ATTACHMENT_ID)?.enabled = showLoadingAttachment
+    }
+)
+
+// file:app/src/main/java/com/pico/spatial/sample/spatialvideo/ui/SpatialVideoScreen.kt
+val observer = LifecycleEventObserver { _, event ->
+    if (event == Lifecycle.Event.ON_PAUSE) {
+        videoViewModel.pause()
+    }
+    if (event == Lifecycle.Event.ON_RESUME) {
+        coroutineScope.launch(Dispatchers.Main.immediate) {
+            videoViewModel.initialize(converter)
+        }
+    }
+}
+lifecycleOwner.lifecycle.addObserver(observer)
+onDispose {
+    lifecycleOwner.lifecycle.removeObserver(observer)
+    coroutineScope.launch(Dispatchers.Main.immediate) {
+        videoViewModel.toggleFullSpace(false)
+        closeStage()
+    }
+}
+
+// file:app/src/main/java/com/pico/spatial/sample/spatialvideo/data/PlaybackManager.kt
+fun reset() {
+    player.apply {
+        unregisterCypressMediaPlayerCallback()
+        close()
+    }
+    state = PlaybackState.INIT
+    duration = 1L
+    hasFirstFrameRendered = false
+}
+
+// file:app/src/main/java/com/pico/spatial/sample/spatialvideo/ui/VideoViewModel.kt
+override fun onCleared() {
+    super.onCleared()
+    reset()
+}

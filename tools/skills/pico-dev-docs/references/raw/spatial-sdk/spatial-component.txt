@@ -1,0 +1,51 @@
+空间化组件
+========================================
+*你可以在 WindowContainer 中添加空间化组件，以增强应用的空间感。
+*Augment
+*窗口功能区（Function Area）是针对 Planar 和 Volumetric 窗口的统一设计规范。通常将窗口所在平面划分为四个区域：顶部导航区、左侧导航区、底部操作区和右侧扩展区。在 PICO OS 6 中，还定义了一系列可超出主窗口范围的子窗口 Augment，它们环绕分布在这些区域内，与主窗口共同构成完整的应用窗口结构。
+* 
+ 
+*详细使用说明参考《Augment》。
+*Subwindow
+*Subwindow 是用于承载辅助操作和信息的控件。它位于 WindowContainer 之外，但依附于其存在。
+ 
+*Subwindow 内置 RTL 支持。在默认模式（SubwindowPlacement.Default）下，会根据 RTL 配置自动决定显示在 WindowContainer 的左侧或右侧。
+*详细使用说明参考《Subwindow》。
+*ToolBar
+*ToolBar 是工具控件，固定在 WindowContainer 底部。当应用需要对当前 WindowContainer 的内容进行控制、修改、创建或删除等操作时，优先推荐使用系统提供的 ToolBar 控件。
+ 
+详细使用说明参考《ToolBar》。
+*TabBar
+*TabBar 是显示在窗口容器顶部的空间导航组件，用于在应用的不同视图或页面之间切换。TabBar 由多个 Tab Item 组成，支持文本、图标、Badge 和二级内容。开发者负责维护选中状态，并在用户点击 Tab Item 时切换对应页面内容。
+ 
+详细使用说明参考《TabBar》。
+
+
+**
+
+ 
+
+ 
+
+*Augment 会影响 WindowContainer 的包围盒大小。
+*WindwoContainer 的标题栏（Caption Bar）会对 Augment 进行动态避让。
+
+**
+
+ 
+
+* 
+
+**
+
+* 
+
+* 
+
+**
+
+ 
+
+
+* 
+

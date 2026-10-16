@@ -1,0 +1,56 @@
+*场景制作要求
+*Unity版本不小于2021.3.5；
+*场景渲染管线为Build-in；
+*目标平台为Android；
+*资源压缩格式为LZ4；
+*场景内无自定义脚本；
+*场景内无Camera；
+*注意不要遮挡主屏幕；
+*示例工程
+
+ 
+
+* 
+*示例工程已经做了项目设置与工具安装，并且在场景内标记出了套件UI的位置，开发者可以直接打开使用。场景布置完成之后可以按照下文教程打包导出。
+ 
+*资源打包上传
+*添加Assetbundle Browser工具包
+注意：上述示例工程已包含此工具包无需再次安装，如自建工程可按如下步骤安装工具包。
+
+选择菜单Window>Package Manager>+>Add Package From git URL…
+ 
+ 
+
+
+在输入框中输入：https://github.com/Unity-Technologies/AssetBundles-Browser.git ，点击Add
+* 
+*场景导出Assetbundle包
+选择菜单Window>AssetBundle Browser，打开AssetBundle Browser的Editor界面
+ 
+ 
+
+
+将需要导出的场景拖拽至Configure栏
+* 
+点击Build设置导出的配置参数，参数设置如下：
+* 
+点击下方的Build即可导出资源，资源将出现在Assets同级目录AssetBundles文件夹下。
+* 
+
+将场景对应的ab资源（launcherscene）通过套件PC控制端上传即可。
+*部署场景
+如下步骤将介绍如何通过企业套件PC端部署场景。
+1、切换至方案管理，在主面板处点击鼠标右键，选择“更换虚拟场景”。
+* 
+2、选择“更换场景模型”。
+* 
+3、点击“上传”。
+* 
+4、选择之前的场景文件（launcher scene）。
+* 
+5、点击确认后部署方案即可。
+* 
+
+注意：
+*场景布置完成后，请删除事例场景内的无用资源，如UI标记物：pxr_panel、pxr_toast。
+*场景名不建议修改，保持“LauncherScene”即可，修改场景名有概率与套件已有场景名冲突。

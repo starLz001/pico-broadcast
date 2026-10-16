@@ -1,0 +1,85 @@
+EAC 层使用说明
+========================================
+等角立方体贴图（Equi-Angular Cubemap，EAC）是一种用于展示 180 度或 360 度全景图片和视频的投影技术，是等距投影和立方体投影的结合体。
+SDK 提供四种 EAC 模式，将 Overlay Settings 部分的 Shape 参数设置为 Eac 后，可以在 Model Type 参数处进一步选择 EAC 模式。
+* 
+EAC 各模式的说明如下：
+*
+EAC 层相关参数说明如下：
+* 
+*
+*
+
+
+
+模式
+
+说明
+
+6 个面的排列方式
+
+EAC 360
+
+水平 360°×垂直 360° 全景视频。
+
+360° EAC 层的 6 个面的排列方式如下图所示。
+* 
+
+EAC 360 View Port
+
+在 EAC 360 的基础上，支持视口偏移的功能。
+
+
+
+EAC 180
+
+水平 180°×垂直 180° 视频。
+
+180° EAC 层的 5 个面的排列方式如下图所示：其中 Left、Right、Bottom、Top 四个面只展示靠近前方的一半。
+* 
+
+EAC 180 View Port
+
+在 EAC 180 的基础上，支持视口偏移的功能。
+
+
+
+
+
+参数
+
+说明
+
+备注
+
+Offset Pos Left
+
+表示左眼的纹理映射时的视口平移。
+
+仅适用于 Eac 180 View Port 和 Eac 360 View Port 模式。
+
+
+Offset Pos Right
+
+表示右眼的纹理映射时的视口平移。
+
+
+
+Offset Rot Left
+
+表示左眼的纹理映射时的视口旋转。
+
+
+
+Offset Rot Right
+
+表示右眼的纹理映射时的视口旋转。
+
+
+
+Overlap Factor
+
+重叠系数，表示每一个面扩展的比例。在合成器的采样公式为：Texcoord = arctan(position/overlapFactor)
+
+-
+

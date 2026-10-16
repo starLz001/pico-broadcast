@@ -1,0 +1,12 @@
+应用失去焦点后，追踪功能被禁用（原生 UI 界面弹出）
+========================================
+在 Unity 中，如果正在使用新的输入系统，任何触发 OnApplicationFocus(false) 的事件都可能会禁用追踪功能。
+负责此功能的组件是附加到主摄像机的 "Tracked Pose Driver (Input System)" 组件。由于非输入系统版本不是新输入系统的一部分，因此使用它不会停止追踪功能。
+参考以下步骤解决该问题：
+*前往 Edit > Project Settings > Player > Settings for Windows, Mac, Linux。
+*在 Resolution and Presentation 部分，勾选 Run in Background* 选框。
+* 
+*前往 Input System Package 设置，然后将 Background Behavior 参数设置为 Ignore Focus。
+* 
+
+

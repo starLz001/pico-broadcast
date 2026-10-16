@@ -1,0 +1,22 @@
+性能目标
+========================================
+本页介绍使用 PICO Unity Integration SDK 进行应用开发时需关注的性能目标。
+*Neo 3 系列
+使用 PICO Unity Integration SDK 开发运行在 PICO Neo 3 系列设备上的应用时，需关注以下性能目标。
+*
+
+
+以下因素会影响绘制调用：
+* 切换 Pipeline 状态，包括在绘制之间修改 shaders、textures、以及 meshes。推荐共享 meshes 和实例 meshes。
+* 推荐使用全局纹理数组。
+* 使用一个不产生变体的最小的统一 shader。
+* 图形 API：Vulkan 和 OpenGL ES。
+* 多线程渲染：低延迟和帧后处理。
+* 使用无衬垫的纹理和间接绘图。
+* 三角面数量控制在 100 万以内。
+绘制调用（draw call）
+FPS 至少达到 72 帧/秒。
+FPS
+说明
+指标
+

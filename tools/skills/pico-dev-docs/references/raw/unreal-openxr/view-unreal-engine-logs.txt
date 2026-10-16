@@ -1,0 +1,13 @@
+查看虚幻引擎日志
+========================================
+ 你可以通过以下命令查看虚幻引擎内置的日志。
+ 
+
+
+# 将系统日志级别设置为 Verbose（V），以输出更详细的日志信息
+adb shell "setprop persist.log.tag V"
+
+# 向 Android 系统发送广播命令，开启 Unreal 相关日志输出
+# LogHMD 是 Unreal Engine 中与 OpenXR HMD 相关的日志分类，你可以替换为自己所需的分类
+# 该命令通常用于 dev Demo，在游戏运行过程中或启动后立即执行即可生效
+adb shell "am broadcast -a android.intent.action.RUN -e cmd 'Log LogHMD All'"

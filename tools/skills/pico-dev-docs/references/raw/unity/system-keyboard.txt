@@ -1,0 +1,29 @@
+系统键盘
+========================================
+用户可通过应用内的键盘在各类文字场景下完成文本输入，例如：文字聊天、设置昵称等。SDK 提供系统级键盘，你可以参考本文在应用内启用。
+*效果展示
+射线点击输入框后，会唤起系统键盘。
+* 
+*重要提示
+*应用显示系统键盘时，会失去输入焦点（Input Focus）。
+*准备工作
+*将 XR Interaction Toolkit 升级至 2.1.0 或更高版本，并导入 Starter Assets 资源包。
+*为场景添加 XR Origin，并配置左右手柄。
+具体步骤参考《快速开始》指南中的 “升级 XR Interaction Toolkit” 和 “配置手柄” 部分。
+*启用系统键盘
+按以下步骤启用系统键盘：
+*在 Hierarchy 窗口中完成以下操作：
+*点击 + > UI > Event System，为场景添加 Event System。
+*点击 + > UI > Canvas，为场景添加 Canvas。
+*选中 Canvas，然后在 Inspector 窗口中完成以下操作：
+*将 Canvas 的 Render Mode 设置为 World Space。
+*将 Canvas 的 Event Camera 设置为场景中的主相机（例如：Main Camera）。
+* 
+*为 Canvas 添加 Tracked Device Graphic Raycast 脚本。
+* 
+*在 Hierarchy 窗口中，右击 Canvas，然后在快捷菜单处选择 UI > Input Field - TextMeshPro，为场景添加输入域。
+*调整主相机和 Canvas 的位置，使输入域在画面内可见（下图所示）。
+* 
+*选中 XR Origin 下的 Left Controller 和 Right Controller 对象，然后在 Inspector 窗口中的 XR Ray Interactor 组件面板上调整 Max Raycast Distance 参数（即调整手柄射线的最大长度），直至射线接触到输入域时变为白色（如下图所示，表示射线和输入域之间已具备交互能力）。
+* 
+

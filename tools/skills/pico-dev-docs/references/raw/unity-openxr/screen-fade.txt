@@ -1,0 +1,39 @@
+场景渐变
+========================================
+场景渐变是应用的基础体验之一。在切换关卡、场景加载、游戏状态变化（例如：游戏结束）等场景下，你可以通过场景渐变的方式来提醒用户。
+*环境要求
+*SDK 版本：1.1.0 及以上
+*PICO 设备型号：PICO Neo3 系列、PICO 4 系列、PICO 4 Ultra 系列
+*PICO 设备系统版本：5.7.0 及以上
+*效果展示
+该示例中，场景渐变参数为：
+*Gradient Time：5 秒
+*Fade Color：黑色
+ 
+*设置场景渐变
+*在 Unity 编辑器中打开项目。
+*选中 XR Origin 下的 Main Camera 对象。
+*Inspector 窗口展示 Main Camera 对象挂载的组件和脚本。
+*点击 Inspector 窗口底部的 Add Component 按钮，为 Main Camera 对象添加 PICO Screen Fade 脚本。
+*脚本面板如下：
+* 
+*按需配置场景渐变相关参数。参数说明如下：
+**
+
+
+
+参数
+
+说明
+
+Script
+
+场景渐变效果设置脚本。默认已选择 PICO Screen Fade 脚本，不可修改。
+
+Gradient Time
+
+渐变效果持续时间。默认为 5 秒。
+
+Fade Color
+
+屏幕渐变颜色。默认为黑色。

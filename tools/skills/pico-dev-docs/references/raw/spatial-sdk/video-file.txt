@@ -1,0 +1,205 @@
+视频文件
+========================================
+在空间应用中，视频资源是构建动态视觉效果和沉浸式场景的重要元素。通过合理控制视频的加载，可以保证场景流畅运行，避免内存占用过高或资源泄漏。
+*格式要求
+*在 PICO Spatial SDK 中，使用的视频文件必须符合指定的文件格式和编码格式，以确保能够被正确加载和播放。
+*文件格式
+*支持的视频文件格式如下：
+**
+*编码格式
+*支持的视频编码格式如下：
+**
+*加载视频文件
+*如果你选择使用 PICO Spatial SDK 提供的视频播放器 CypressMediaPlayer，在加载视频文件时，你需要使用 context.assets.openFd 方法获取视频文件的 AssetFileDescriptor，并将其传递给 cypressMediaPlayer.setDataSource(assetFileDescriptor) 函数，从而设置视频数据源。
+ 
+*
+
+
+
+格式
+
+描述
+
+使用场景
+
+.mp4
+
+最常见的 MPEG-4 容器格式
+
+各类视频播放、流媒体
+
+.mov
+
+QuickTime 文件格式
+
+iOS/macOS 录制视频
+
+.m4a
+
+MPEG-4 音频专用格式
+
+音乐或音频流
+
+.3gp
+
+移动端 3GPP 文件格式
+
+老旧手机视频、低码率场景
+
+.mj2
+
+Motion JPEG 2000
+
+高质量存档、特殊影像
+
+.mkv
+
+开源多媒体容器
+
+高清影片、字幕外挂
+
+.webm
+
+基于 Matroska 的Web 视频容器
+
+WebXR、在线视频流
+
+.ts
+
+MPEG 传输流
+
+数字电视广播、流媒体
+
+.m2ts
+
+蓝光光盘使用的传输流格式
+
+蓝光高清视频
+
+.flv
+
+Flash Video 格式
+
+历史 Web 视频格式
+
+.asf
+
+高级系统格式
+
+Windows Media 流媒体
+
+.wmv
+
+Windows 媒体视频
+
+Windows 平台兼容视频
+
+.vob
+
+DVD 视频对象文件
+
+DVD 影片播放
+
+.avi
+
+音频视频交错格式
+
+早期常见视频容器
+
+.mpg / .mpeg
+
+MPEG 程序流格式
+
+VCD/DVD、老式视频存档
+
+.m2p
+
+MPEG-2 程序流格式
+
+广播、视频分发
+
+
+
+编码格式
+
+描述
+
+使用场景
+
+avc (H.264)
+
+高兼容性的视频编码标准
+
+主流视频播放、直播
+
+hevc (H.265)
+
+高效视频编码，压缩率更高
+
+高清/4K/8K 视频
+
+av1
+
+开源高效视频编码
+
+新一代流媒体（YouTube/Netflix）
+
+vp9
+
+Google 开发的视频编码
+
+WebM、YouTube 高清
+
+vp8
+
+VP9 前代编码
+
+WebRTC、旧版 WebM
+
+h263
+
+早期视频编码
+
+移动端视频通话（旧标准）
+
+mpeg4
+
+MPEG-4 Part 2 编码
+
+旧式视频文件、兼容性场景
+
+fun setupVideoPlayer(context: Context) {
+    val player = CypressMediaPlayer()
+    val callBack =
+        object : CypressMediaPlayerCallback {
+            override fun onPrepared() {
+                // 视频准备完毕后，执行的自定义逻辑
+            }
+            override fun onStarted() {
+                // 视频开始播放后，执行的自定义逻辑
+            }
+            override fun onCompleted() {
+                // 视频播放完毕后，执行的自定义逻辑
+            }
+            override fun onSeekToCompleted() {
+*                // 视频跳转到末尾时，执行的自定义逻辑 
+            }
+            override fun onUnknown() {
+                // 视频状态未知时，执行的自定义逻辑
+            }
+            override fun onError() {
+                // 视频出现错误时，执行的自定义逻辑
+            }
+            override fun onFormatChanged() {
+                // 视频格式改变时，执行的自定义逻辑
+            }
+        }
+    val subFolder = "video"
+    val fileName = "your_custom_video.mp4"
+    player.registerCypressMediaPlayerCallback(callBack)
+    context.assets.openFd("asset://$${subFolder}/$${fileName}").use { assetFileDescriptor ->
+        player.setDataSource(assetFileDescriptor)
+    }
+    player.prepareAsync()
+    // 其他操作...
+}

@@ -1,0 +1,70 @@
+提升画面清晰度
+========================================
+画面清晰度是影响用户体验的重要因素之一。导致画面清晰度低的因素有许多，常见的为物体边缘严重的锯齿感，以及纹理模糊闪烁。因此，可以从边缘锯齿感、图像方面改善画面清晰度。
+*核心摘要
+本文提供两种提升画面清晰度的方法：
+*降低边缘锯齿感：开启四倍抗锯齿（4x MSAA）。
+*提升纹理清晰度：对所有纹理开启 Mipmap 与 Trilinear Filtering，并对墙面、地面等可能存在倾斜视角的纹理开启 Anisotropic Filtering。
+具体使用说明见下文。
+*降低边缘锯齿感
+在渲染采样过程中，每个像素只会显示一种颜色，因此像素会对像素中心位置的颜色进行采样。然后，在低分辨率场景下，多边形的边缘并不能准确的被每个像素采样，这就会导致物体边缘存在锯齿，影响场景视觉效果和用户体验。
+多重采样抗锯齿（Multisampling Anti-Aliasing，MSAA） 功能会对锯齿边缘的画面进行多次采样，然后将其和周围像素的颜色进行混合，让画面过渡得更加自然，从而大大减轻锯齿效果。
+*抗锯齿效果预览
+以下为不同倍数 MSAA 的效果图。从左到右依次为：原图、2x MSAA、4x MSAA、8x MSAA。
+ 
+*设置抗锯齿倍数
+SDK 提供的默认抗锯齿倍数为 “4 倍 MSAA”。建议使用默认抗锯齿倍数，这样能在性能开销不是很大的情况下获得比较清晰的视觉效果并提升用户体验。当然，如果应用性能负载比较大，也建议至少开启 “2 倍 MSAA”。“2 倍 MSAA” 的性能开销要比 “4 倍 MSAA” 少得多，并且视觉效果要好于不开启 MSAA。
+* 
+*原图 vs 4 倍 MSAA
+设置抗锯齿倍数的步骤如下：
+* 
+*在 UE 编辑器左上角单击 编辑（Edit）> 项目设置（Project Settings），在 引擎（Engine） > 渲染（Rendering） 下：
+*将 移动平台（Mobile） 下的 移动抗锯齿方法（Mobile Anti-Aliasing Method） 设置为 多重采样抗锯齿（MSAA）。
+*将 默认设置（Default Settings） 下的 抗锯齿方法（Anti-Aliasing Method） 设置为 多重采样抗锯齿（MSAA）。
+* 
+*将 默认设置（Default Settings） 下的 MSAA 取样数（MSAA Sample Count） 设置为 4x MSAA。
+* 
+*UE5 项目注意事项
+*对于使用 UE5 创建的工程，不建议设置 r.Mobile.AntiAliasing=1。用 UE5 创建的任何工程中，参数 r.Mobile.AntiAliasing 的初始值都有可能默认为 1。在此情况下，使用 OpenGL 时，会导致项目在 Debug 模式下的设备上运行时出现黑屏，以及在 Shipping 模式下的设备上运行时出现花屏。
+*问题原因
+*r.Mobile.AntiAliasing 在 UE5 中表示抗锯齿类型，当 r.Mobile.AntiAliasing=1 时，代表 “TAA 抗锯齿（Temporal Anti-Aliasing）”，目前移动平台不支持。
+*解决方案
+*在你的项目文件夹下，找到 Config 文件夹中的 DefaultEngine.ini 文件。
+*打开 DefaultEngine.ini。
+*在 [/Script/Engine.RendererSettings] 下，将 r.Mobile.AntiAliasing=1 改为 r.Mobile.AntiAliasing=3。
+* 
+*“TAA 抗锯齿”已被改为当前移动平台支持的“MSAA 模式”。
+*提升纹理清晰度
+将一张纹理贴图放置在距离相机较远的位置上时，画面中纹理上的线条与文字可能会不停地抖动闪烁。这是由于显示纹理的分辨率不足，并且采样这张纹理的像素少于纹理本身的像素，最终导致混叠现象。可使用 Mipmap、Trilinear 以及 Anisotropic Filtering 技术来提升纹理清晰度。
+*使用多级渐远纹理（Mipmap）
+Mipmap 由一组分辨率逐渐降低的纹理序列组成，每一级纹理的宽度和高度都是上一级纹理宽度和高度的一半。 Mipmap 提升纹理清晰度的核心方法在于：根据待渲染物体在画面中显示的实际大小，选择最接近的纹理尺寸。当物体距摄像机较远时，使用分辨率较低的纹理（纹理质量较差，模糊感较强）；当物体距摄像机较近时，使用分辨率较高的纹理（纹理质量，模糊感弱）。Mipmap 效果如下图所示：
+ 
+*开启步骤
+在纹理导入时，Mipmaps 会自动生成。你可以按以下步骤进一步设置 Mipmaps：
+*在 UE 编辑器左下角 内容浏览器（Content Browser） 面板下，展开 内容（Content） 目录，双击目标纹理来打开 纹理编辑器 窗口。
+*在 纹理编辑器 上方勾选 Mip级别，点击下拉选项（或点击加减按钮）改变纹理的 Mip 级别。
+* 
+*你也可以在编辑器右侧 细节（Details） 面板的 层次细节（Level of Detail） 选项卡中通过 Mip生成设置（Mip Gen Settings） 自定义 mip-map 链内容的外观。
+* 
+*注意事项
+需注意的是，启用 Mipmap 并不断改变摄像机与物体的距离时，画面中的物体有时候会突然变得模糊（如视频所示）。这是由物体切换不同的 Mip 等级的纹理而导致的。在 VR 场景中，这种现象能被用户很明显地感受到，会一定程度上的影响用户的使用体验。因此，使用 Mipmap 后，还需使用 Trilinear Filtering（三线性过滤） 技术来消除不同 Mip 等级的纹理过渡时出现的组合交叠现象。
+ 
+*使用三线性过滤（ Trilinear Filtering）
+开启 Trilinear Filtering 后，渲染时会对两个相邻 Mip 等级的纹理进行双线性过滤采样，然后在两个 Mipmap 之间进行线性插值，得到最终的颜色，以减轻或消除不同组合等级纹理过渡时出现的组合交叠现象。因此，当纹理到摄像机的距离逐渐增加时，可以得到平滑的一个过渡。
+*开启步骤
+按以下步骤为纹理开启 Trilinear Filtering：
+*在 UE 编辑器左下角的 内容浏览器（Content Browser） 面板下，展开 内容（Content） 目录，双击目标纹理来打开 纹理编辑器 窗口。
+*在编辑器右侧的 细节（Details） 面板的 纹理 选项卡下，将该纹理的 过滤器（Filter） 设置为 三线性（Tri-linear）。
+* 
+*使用各向异性过滤（Anisotropic Filtering）
+当一个物体的表面和相机之间有很大的夹角时，物体上的贴图纹理在屏幕上的对应填充区域就不是方形的。例如地板和墙面，在距离相机远的地方，填充区域的宽高是不对等的，此时使用方形的纹理贴图就不是很合适了，会导致模糊或者闪烁或者两者皆有。
+Anisotropic Filtering（各向异性过滤） 通过采样一个非方形纹理解决了这个问题。Anisotropic Filtering 会进行更多次数的纹理采样，在消除纹理模糊感的同时可以最大限度地保留倾斜视角下的纹理细节。因此，对大多数可以从倾斜角度浏览的物体来说，使用各向异性过滤可以带来巨大的画面质量提升。然而，与 Trilinear Filtering 相比，Anisotropic Filtering 的性能开销更高。建议仅为墙面、地面等有需要的纹理开启 Anisotropic Filtering 即可。
+ 
+*各向异性过滤关闭 vs 各向异性过滤开启
+*开启步骤
+*在 UE 编辑器左上角单击 编辑（Edit） > 项目设置（Project Settings），在 引擎（Engine） > 渲染（Rendering） 下，找到 虚拟纹理（Virtual Textures） 选项卡，勾选 启用虚拟纹理支持（Enable virtual texture support）。
+*勾选 启用虚拟纹理各向异性过滤（Enable virtual texture anisotropic filtering），然后重启你的 UE 编辑器应用新的设置。
+* 
+
+
+开启 MSAA 后，建议你将 PICO 设备系统版本升级为最新。否则如果你的 PICO Neo3 设备系统版本较早，可能会出现 Gamma 异常。

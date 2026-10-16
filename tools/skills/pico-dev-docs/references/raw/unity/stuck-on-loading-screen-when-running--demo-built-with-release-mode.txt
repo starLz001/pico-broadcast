@@ -1,0 +1,17 @@
+运行通过 Release 模式打包的 Demo 时，一直卡在 Loading 界面
+========================================
+minifyRelease 会优化 Java 代码的大小，但也可能剔除有用代码。该问题可通过在 proguard-user.txt 文件中添加需要保留的代码来解决。步骤如下：
+*前往 Edit > Project Settings > Player > Android Settings > Publishing Settings。
+*勾选 Custom Proguard File。
+* 
+*Assets\Plugins\Android 目录下会生成 proguard-user.txt 文件。
+* 
+*在 proguard-user.txt 文件中添加以下代码：
+* 
+
+-keep class com.psmart.aosoperation.**{
+   *;
+}
+-keep public class com.pxr.xrlib.**{
+   public *;
+}

@@ -1,0 +1,447 @@
+场景标定
+========================================
+如果你所构建的混合现实场景需要预知用户所处的现实环境结构，同时需要获取现实环境的几何结构信息和语义信息来提供更丰富的互动体验，那么推荐你在应用内使用场景标定功能，捕捉用户所处的现实环境。
+*功能重构说明
+*自 SDK 3.0.0 版本起，PICO 重构了场景标定功能。详细信息参考《MR 功能兼容性和迁移说明》。
+*“房间标定” 应用介绍
+“房间标定” 是 PICO 提供的系统级场景标定应用，用户可以通过此应用将现实空间中的墙、门窗、桌椅、沙发等物体标定出来，用于与混合现实场景中的虚拟物体进行交互。PICO 开发者可以通过 SDK 获取 “房间标定” 应用创建的空间和场景锚点数据，然后用于自己的应用中。
+“房间标定” 应用启动后，它会引导用户完成对现实环境的预扫描并构建出现实环境的几何结构，同时也将识别天花板、地面、墙面、门、窗户和开口区域。“房间标定” 应用还会识别房间特征和家具，如桌子、椅子和沙发。这些信息将有助于你的应用构建足够通用的混合现实体验，确保用户在不同的真实环境结构下依旧能结合身边的现实环境来体验应用。
+“房间标定” 应用的标定方式为 “全自动标定”。用户只需在场景内扫视和走动，系统便会自动捕捉和标定场景内的物体（如以下视频所示），并自动为物体关联场景锚点，匹配语义标签和组件类型。
+* 
+*场景锚点介绍
+场景锚点为系统级锚点，由 “房间标定” 应用创建。场景锚点用于记录用户周围的环境信息，例如沙发、地板、墙面等物体的位置和尺寸等。“房间标定” 应用扫描这些物体时，会自动为它们添加锚点。场景锚点属于 PICO 系统，所以无法被第三方应用修改。但是，在获得用户允许的前提下，第三方应用可以发现并使用场景锚点。
+ 
+以下为场景锚点数据使用权限说明：
+*数据修改权限：仅允许 “房间标定” 应用修改场景锚点数据，任何三方应用都无法修改。 
+*数据读取权限：允许 “房间标定” 应用和所有三方应用读取场景锚点数据。 
+*组件类型 & 语义标签
+场景锚点携带组件类型（PxrSceneComponentType）和语义标签（PxrSemanticLabel）信息，用于描述锚点所代表的现实物体。你可以使用组件类型和语义标签信息获取相应的场景锚点。
+* 
+组件类型说明如下：
+*
+语义标签和组件类型的对应关系如下：
+*
+*环境要求
+*PICO 设备型号：PICO 4 系列、PICO 4 Ultra 系列
+*PICO 设备系统版本：5.14.0 及以上
+*前提条件
+*已为场景添加 XR Origin 对象并为其挂载 PXR_Manager (Script) 组件。
+*已将 XR Origin 对象和 Camera Offset 对象的 Position 和 Rotation 参数设置为（0,0,0）。
+* 
+* 
+*已为应用开启视频透视能力。详细说明参考《视频透视》。
+*使用接口接入场景标定功能
+*第一步：为应用开启场景标定能力
+在 PXR_Manager (Script) 面板上，勾选 Scene Capture 选框，SDK 会自动为应用开启场景标定能力。此为系统能力开关，开启后，你可以调用场景标定相关接口，在应用内接入和实现场景标定功能。
+* 
+*第二步：开始场景标定功能
+调用其它场景标定接口进行相关操作前，需要调用 StartSenseDataProvider 接口，在应用内开始场景标定功能。
+ 
+*第三步：查询场景锚点数据
+通过场景锚点数据，你可以在应用内实现自定义功能。访问数据前，先调用 QuerySceneAnchorAsync 接口，检查当前是否已存在场景锚点数据。
+*若接口返回场景锚点数据，则直接进行 “第四步：访问场景锚点数据” 且不需要再次调用QuerySceneAnchorAsync。
+*若未返回任何数据或返回的数据不符合你的应用的要求，则需先调用 StartSceneCaptureAsync 接口来启用 “房间标定” 应用，让用户标定当前场景。若 PxrResult 为 SUCCESS，表示用户已完成场景标定，你可以继续访问场景锚点数据。
+ 
+*第四步：访问场景锚点数据
+“房间标定” 应用会将扫描结果输出为参数数据，这使得你的应用可以轻松地修改被扫描房间的结构和布局。你可以使用场景锚点数据来实现更多自定义体验，例如：
+*估计空间内特定区域的尺寸、距离和家具的大小；
+*实现家装设计的混合现实效果；
+*提升虚拟场景与现实环境之间的交互。
+ 
+使用以下接口获取场景锚点数据：
+*
+实现流程如下：
+*调用 QuerySceneAnchorAsync，获取指定语义标签的场景锚点。你可以在单次请求中传入多个语义标签。若不传入任何语义标签，则会加载所有类型的场景锚点。该请求会返回相应锚点的 Handle 列表，但不会为每个锚点匹配对应的语义标签。
+* 
+* 
+*调用 GetSceneSemanticLabel 获取指定场景锚点的语义标签。需传入的 Handle 可从 QuerySceneAnchorAsync 接口返回的的 Handle 列表中选择。
+* 
+*调用 LocateAnchor  获取场景锚点的位姿数据。对于场景锚点来说，每次调用 QuerySceneAnchorAsync 后，LocateAnchor 方法返回的位姿数据才会更新。如果没有再次调用 QuerySceneAnchorAsync，LocateAnchor 返回的数据都将保持不变。
+*根据场景锚点的语义标签，调用相关接口获取锚点所关联物体的数据。
+* 
+*监听 PXR_Manager.SceneAnchorDataUpdated 事件。接收到此事件则说明发现了新的场景锚点数据，然后需要重复上述步骤来访问新数据。
+* 
+*第五步：停止场景标定功能
+操作完成后，调用 StopSenseDataProvider 接口，在应用内停止场景标定功能。
+ 
+*代码示例
+ 
+*使用 PXR_Scene Capture Manager (Script) 组件接入场景标定功能
+*PXR_Scene Capture Manager (Script) 组件集成了开启场景数据 Provider、获取数据、绘制模型的功能。你可以直接将此组件挂载到 GameObject 上，然后添加希望显示在场景中的 Box2D 和 Box3D 预制体，组件便会自动完成全流程并直接在场景中展示添加的预制体。
+*第一步：为应用开启场景标定能力
+在 PXR_Manager (Script) 面板上，勾选 Scene Capture 选框，SDK 会自动为应用开启场景标定能力。此为系统能力开关，开启后，你可以调用场景标定相关接口，在应用内接入和实现场景标定功能。
+* 
+*第二步：配置 PXR_Scene Capture Manager (Script) 组件
+*选中一个 GameObject。
+*在 Inspector 窗口中，为该 GameObject 添加 PXR_Scene Capture Manager (Script) 组件。
+* 
+*在 Box 2D Prefab 和 Box 3D Predab 处，添加需要在场景中展示的 Box 2D 和 Box 3D 预制体。你可以配置两个预制体或只配置其中一个。
+*预览场景标定数据
+*用户在 PICO 设备中使用 ”房间标定” 应用完成场景标定后，应用会生成一个 SceneAnchorData.json 文件保存场景标定数据，并将文件保存至 PICO 设备的 sdcard 目录。你可以使用 PXR_Scene Capture Manager (Script) 组件在 Unity 编辑器内预览 JSON 文件中的场景标定数据。
+*环境要求
+*PICO 设备型号：PICO 4 Ultra 系列
+*PICO 设备系统版本：5.13.0 及以上
+*操作步骤
+*使用 adb pull /sdcard/SceneAnchorData.json 命令将 SceneAnchorData.json 文件从 PICO 设备导出至 PC。
+*(可选) 按需调整 SceneAnchorData.json 文件中的数据。
+*在 Unity 编辑器内打开你的项目。
+*选中一个 GameObject，然后在 Inspector 窗口中为该 GameObject 添加 PXR_Scene Capture Manager (Script) 组件。
+* 
+*在 Scene Capture Data 处，添加 SceneAnchorData.json 文件。
+*Unity 编辑器会读取文件中的数据，然后展示虚拟化的房间。
+* 
+*API 参考
+若想了解场景标定接口的详细信息，包括参数说明、返回值说明等，参阅 API 参考。
+
+
+提示
+开发者的应用无法创建空间，但可以在 “房间标定” 应用创建的空间中添加空间锚点。
+
+
+
+组件类型
+
+说明
+
+Location
+
+场景锚点的位置信息。所有场景锚点都携带该组件。
+
+Semantic
+
+场景锚点的语义标签。所有场景锚点都携带该组件。
+
+Box2D
+
+矩形状的平面物体标记为规则平面，赋予 Box2D 组件类型。
+
+Polygon
+
+非矩形状的平面物体标记为不规则平面，赋予 Polygon 组件类型。
+
+Box3D
+
+非平面物体标记为立方体，赋予 Box3D 组件类型。
+
+
+
+语义标签
+
+说明
+
+组件类型
+
+Unknown
+
+除以下给定语义之外的物体。
+
+/
+
+Floor
+
+地面
+
+Polygon
+
+Ceiling
+
+天花板
+
+Polygon
+
+Wall
+
+现实环境中的墙面，可以在上面标定门和窗。
+
+Box2D
+
+Door
+
+门，必须在墙面（Wall）内标定。
+
+Box2D
+
+Window
+
+窗，必须在墙面（Wall）内标定。
+
+Box2D
+
+Opening
+
+开口区域
+
+Box2D
+
+Table
+
+桌子
+
+Box3D
+
+Sofa
+
+沙发
+
+Box3D
+
+Chair
+
+椅子
+
+Box3D
+
+Curtain
+
+窗帘
+
+Box3D
+
+Cabinet
+
+柜子
+
+Box3D
+
+Bed
+
+床
+
+Box3D
+
+Plant
+
+植物
+
+Box3D
+
+Screen
+
+屏幕
+
+Box3D
+
+VirtualWall
+
+虚拟墙面为场景标定应用自动生成的墙面，与现实环境中的墙面无关联，无法在虚拟墙面上标定门和窗。
+虚拟墙面会形成一个封闭空间，将现实和虚拟物体包含在内。你可以在应用内添加用户进出该封闭空间的逻辑判断或增加安全提示。
+
+Box2D
+
+Refrigerator
+
+冰箱
+
+Box3D
+
+WashingMachine
+
+洗衣机
+
+Box3D
+
+AirConditioner
+
+空调
+
+Box3D
+
+Lamp
+
+灯
+
+Box3D
+
+WallArt
+
+墙面艺术，必须在墙面（Wall）内标定。
+
+Box2D
+
+async Task<PxrResult> StartSenseDataProvider(PxrSenseDataProviderType type)
+
+async Task<PxrResult> StartSceneCaptureAsync()
+
+提示
+为提升数据找回的成功率，建议引导用户回到先前创建的空间，或者创建一个新空间。
+
+
+
+接口
+
+说明
+
+QuerySceneAnchorAsync
+
+查询指定语义标签的场景锚点。
+
+GetSceneAnchorComponentTypes
+
+获取场景锚点的组件类型。
+
+GetSceneSemanticLabel
+
+获取指定场景锚点的语义标签。
+
+GetAnchorUuid
+
+获取指定场景锚点的 UUID。
+提示：非必须流程。若你想存储已加载的场景锚点数据，以便在下次打开应用时直接使用而无需重新加载，则可以使用锚点的 UUID 来存储数据。
+
+GetSceneBox3DData
+
+获取场景锚点所关联的 3D Box 物体的数据，包括相对于锚点中心的位置和旋转，以及长宽高。
+
+GetSceneBox2DData
+
+获取场景锚点所关联的 2D Box 物体的数据，包括相对于锚点中心的偏移，以及长宽。
+
+GetScenePolygonData
+
+获取场景锚点所关联的 Polygon 物体的数据，即顶点数组。
+
+LocateAnchor
+
+获取场景锚点的实时位置和旋转。
+
+提示
+若上文第三步中查询到的场景锚点数据可用，则可以跳过此步骤。
+
+async Task<(PxrResult result, List<ulong> anchorHandleList)> QuerySceneAnchorAsync(PxrSemanticLabel[] labels)
+
+PxrResult GetSceneSemanticLabel(ulong anchorHandle,out PxrSemanticLabel label)
+
+// 获取场景锚点所关联的 2D Box 物体的数据
+PxrResult GetSceneBox3DData(ulong anchorHandle, out Vector3 position, out Quaternion rotation, out Vector3 extent)
+
+// 获取场景锚点所关联的 2D Box 物体的数据
+PxrResult GetSceneBox2DData(ulong anchorHandle, out Vector2 offset, out Vector2 extent)
+
+// 获取场景锚点所关联的 Polygon 物体的数据
+PxrResult GetScenePolygonData(ulong anchorHandle, out Vector2[] vertices)
+
+当锚点减少时，系统不会推送该事件。例如，随着用户行走，系统会不断发现新的锚点；但当用户走远后，先前发现的旧锚点不会被自动删除。
+
+PxrResult StopSenseDataProvider(PxrSenseDataProviderType type)
+
+// 点击按钮加载场景锚点数据
+private async void OnBtnPressedLoadSceneData()
+{
+    var result = await PXR_MixedReality.QuerySceneAnchorAsync(null);
+    if (result.result == PxrResult.SUCCESS)
+    {
+        if (result.anchorHandleList.Count > 0)
+        {
+            foreach (var item in result.anchorHandleList)
+            {
+                var result1 = PXR_MixedReality.GetSceneSemanticLabel(item, out var label);
+                if (result1 == PxrResult.SUCCESS)
+                {
+                    DrawSceneModel(item, label);
+                }
+            }
+        }
+    }
+}
+
+// 画出对应的物体
+private void DrawSceneModel(ulong anchorHandle,PxrSemanticLabel label)
+{
+    /*
+     * UnKnown0,
+       Floor-------Polygon
+       Ceiling,----Polygon
+       Wall,-------Box2D
+       Door,-------Box2D
+       Window,-----Box2D
+       Opening,----Box2D
+       Table,------Box3D
+       Sofa,-------Box3D
+       Chair,------Box3D
+     */
+    
+    switch (label)
+    {
+        case PxrSemanticLabel.UnKnown:
+            break;
+        case PxrSemanticLabel.Floor:
+        case PxrSemanticLabel.Ceiling:
+            {
+                var result = PXR_MixedReality.GetScenePolygonData(anchorHandle, out var vertices);
+                if (result == PxrResult.SUCCESS)
+                {
+                    var verVector3S = Array.ConvertAll(vertices, v2 => new Vector3(v2.x, v2.y, 0f));
+
+                    var sceneAnchor = new GameObject(anchorHandle.ToString());
+                    var polygon = new GameObject();
+                    var lineRenderer = polygon.AddComponent<LineRenderer>();
+                    lineRenderer.startColor = Color.red;
+                    lineRenderer.endColor = Color.red;
+                    lineRenderer.startWidth = 0.1f;
+                    lineRenderer.positionCount = verVector3S.Length;
+                    lineRenderer.loop = true;
+                    lineRenderer.useWorldSpace = false;
+                    lineRenderer.endWidth = 0.1f;
+                    lineRenderer.material = new Material(Shader.Find("Sprites/Default"));
+                    lineRenderer.SetPositions(verVector3S);
+                    polygon.transform.SetParent(sceneAnchor.transform);
+                    PXR_MixedReality.LocateAnchor(anchorHandle, out var anchorPosition, out var anchorRotation);
+                    sceneAnchor.transform.rotation = anchorRotation;
+                    sceneAnchor.transform.position = anchorPosition;
+                }
+                else
+                {
+                    // 日志
+                }
+            }
+            break;
+        case PxrSemanticLabel.Wall:
+        case PxrSemanticLabel.Door:
+        case PxrSemanticLabel.Window:
+        case PxrSemanticLabel.Opening:
+        case PxrSemanticLabel.VirtualWall:
+            {
+                var result = PXR_MixedReality.GetSceneBox2DData(anchorHandle, out var offset,out var extent);
+                if (result == PxrResult.SUCCESS)
+                {
+                    // (暂不支持 Offset)
+                    var sceneAnchor = new GameObject(anchorHandle.ToString());
+                    var box2D = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                    box2D.transform.localScale = new Vector3(extent.x,0, extent.y);
+                    box2D.transform.localEulerAngles = new Vector3(90f, 0, 0);
+                    PXR_MixedReality.LocateAnchor(anchorHandle, out var anchorPosition, out var anchorRotation);
+                    box2D.transform.SetParent(sceneAnchor.transform);
+                    sceneAnchor.transform.rotation = anchorRotation;
+                    sceneAnchor.transform.position = anchorPosition;
+                }
+                else
+                {
+                    // 日志
+                }
+            }
+            break;
+        case PxrSemanticLabel.Table:
+        case PxrSemanticLabel.Sofa:
+        case PxrSemanticLabel.Chair:
+            {
+                var result = PXR_MixedReality.GetSceneBox3DData(anchorHandle, out var position,out var rotation,out var extent);
+                if (result == PxrResult.SUCCESS)
+                {
+                    var sceneAnchor = new GameObject(anchorHandle.ToString());
+                    var box3D = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                    // (暂不支持 Rotation)
+                    box3D.transform.localPosition = position;
+                    box3D.transform.localScale = extent;
+                    PXR_MixedReality.LocateAnchor(anchorHandle, out var anchorPosition, out var anchorRotation);
+                    box3D.transform.SetParent(sceneAnchor.transform);
+                    sceneAnchor.transform.rotation = anchorRotation;
+                    sceneAnchor.transform.position = anchorPosition;
+                }
+                else
+                {
+                    // 日志
+                }
+            }
+            break;
+    }
+}

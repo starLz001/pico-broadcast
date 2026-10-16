@@ -1,0 +1,26 @@
+自适应分辨率示例
+========================================
+*AdaptiveResolutionSample 包含一个展示科幻游戏风格的美术场景，其中不同房间具有不同的像素复杂度。自适应分辨率会根据当前视角方向的 GPU 负载自动调整分辨率。
+* 
+*开发环境
+*以下为该示例的开发环境：
+*Unity 编辑器：2022.3.2f1 及以上
+*SDK 版本：2.3.0
+*PICO 设备型号：PICO 4
+*PICO 设备系统版本：5.7.0
+*图形接口：Vulkan 或 OpenGL
+*输入系统版本：1.6.1
+*渲染管线：内置渲染器或 URP
+*XR Interaction Toolkit：2.3.2
+*XR Plugin Management：4.3.3
+*项目设置
+*以下为该示例的项目设置：
+*立体渲染模式（Stereo Rendering Mode）：Multiview
+*自适应分辨率（Adaptive Resolution）：开启
+*抗锯齿倍数（MSAA）：4x
+*光源数量：1x Directional Light
+*HDR：关闭
+*图形接口：Vulkan
+*GitHub 仓库
+*克隆 Demo 的 GitHub 仓库，查看代码示例、图形资产、脚本文件等。
+*地址：https://github.com/Pico-Developer/AdaptiveResolutionSample-Unity

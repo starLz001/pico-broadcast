@@ -1,0 +1,13 @@
+运动数据授权 Demo
+========================================
+本文档介绍 PICO Unreal Integration SDK 提供的运动数据授权服务 Demo。要了解运动数据授权服务，查看运动数据授权文档。
+*前提条件
+确保你 PICO 设备的 PUI（ROM）版本为 4.8.0 及以上。
+*使用说明
+你可以前往 PICO GitHub 获取对应引擎版本的运动数据授权 Demo。运动数据授权 Demo 位于 Content\Maps\WindowsMaps 中。Demo 的图形化界面如下：
+ 
+*点击 GetSportUserInfo 按钮，来获取用户的基础信息和运动计划信息。
+*获取用户今日的运动数据汇总： 在 BeginTime and EndTime 右侧输入框填入起止时间范围（不超过 24 小时），然后点击 GetSummary。
+*获取用户某段时期内的每日运动数据汇总： 在 BeginTime and EndTime 右侧输入框填入起止时间范围（不超过 90 天），然后点击 GetDailySummary。
+*API 参考
+运动数据授权相关 API 详情，可参考 API 文档。

@@ -1,0 +1,81 @@
+播放控制按钮被视频面板遮挡，怎么解决？
+========================================
+*问题描述
+在视频面板上叠加播放控制按钮时，3D 视频面板与 2D UI（按钮、进度条等）混合渲染过程中出现遮挡：按钮被视频面板覆盖，无法显示或无法点击；或按钮的层级关系不符合预期。
+* 
+*原因分析
+3D 实体（如 VideoComponent）与 2D Compose UI 在 PICO Spatial SDK 中并不属于同一套排序系统：
+*3D 实体在世界坐标系中按距离 / Z 值进行深度排序。
+*2D Compose UI 在窗口内按 Compose 自身的绘制顺序排序。
+两套坐标系的深度信息不会自动对齐，因此即使按钮在视觉上应位于前方，运行时仍可能被视频面板遮挡，或表现出不符合预期的层级关系。要解决此类 3D/2D 混合渲染层级问题，需将 3D 实体显式纳入与 2D UI 一致的统一排序系统。
+*解决方案
+SortAsUIElementComponent 是 PICO Spatial SDK 提供的统一渲染排序组件，专门用于解决 3D 实体与 2D UI 混合渲染的层级问题。该组件将 3D 渲染对象（如 VideoComponent、VideoPlayerComponent、ModelComponent）纳入与 2D UI 一致的排序系统，可通过 distanceBias参数显式控制 3D 实体在统一层级中的前后关系。关于 SortAsUIElementComponent的更多信息，详情参阅《实体与 2D UI 的渲染顺序》。
+* 
+*更多信息
+*用法示例
+使视频面板（3D）位于播放控制按钮（2D）后方。资源装配遵循 remember + DisposableEffect 最佳实践（参见 视频没有填满整个窗口，如何解决？），下方仅展示与遮挡解决直接相关的关键代码：
+ 
+*动态调整 distanceBias
+若需在运行时调整层级，可通过获取或创建组件并修改 distanceBias：
+ 
+
+若使用 Toolbar 或 Augment 等悬浮于窗口外部的组件，本身位于窗口主面板之外，一般不会触发遮挡问题。
+
+*该方案对 VideoComponent 与 VideoPlayerComponent 完全一致——SortAsUIElementComponent 与具体视频渲染组件无关，只要 Entity 上挂载有可渲染组件即可生效。下方示例以 VideoComponent 演示，将 videoEntity 上的组件替换为 VideoPlayerComponent 同样适用。
+
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.Button
+import androidx.compose.material3.Text
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import android.media.MediaPlayer
+import com.pico.spatial.core.ecs.Entity
+import com.pico.spatial.core.ecs.SortAsUIElementComponent
+import com.pico.spatial.ui.foundation.content.SpatialView
+
+@Composable
+fun VideoWithControlsNoOcclusion(mediaPlayer: MediaPlayer) {
+    // 视频 Entity 在外部持有；此处仅展示与本问题相关的部分，
+    val videoEntity = remember { Entity() }
+
+    DisposableEffect(Unit) {
+        // ... 构造 Mesh / VideoMaterial / VideoComponent / SurfaceRenderTexture
+        //     绑定 MediaPlayer 等
+
+        // 关键：挂载 SortAsUIElementComponent，distanceBias 设为负值，
+        // 使视频在统一层级中位于 2D UI 后方
+        videoEntity.components.set(
+            SortAsUIElementComponent(distanceBias = -0.1f)
+        )
+
+        onDispose { /* 释放 srt / videoEntity 等 */ }
+    }
+
+    Box(modifier = Modifier.fillMaxSize()) {
+        // 视频 SpatialView：initial 仅完成装配
+        SpatialView(
+            modifier = Modifier.fillMaxSize(),
+            initial = { content, _ -> content.addEntity(videoEntity) },
+        )
+
+        // 播放控制按钮（2D Compose UI），自然显示于视频面板之上
+        Button(
+            onClick = { /* 播放/暂停 */ },
+            modifier = Modifier.align(Alignment.BottomCenter)
+        ) {
+            Text("Play/Pause")
+        }
+    }
+}
+
+import com.pico.spatial.core.ecs.SortAsUIElementComponent
+
+// 获取或创建 SortAsUIElementComponent，并更新 distanceBias
+val comp = videoEntity.components[SortAsUIElementComponent::class.java]
+    ?: SortAsUIElementComponent(distanceBias = bias).also {
+        videoEntity.components[SortAsUIElementComponent::class.java] = it
+    }
+comp.distanceBias = bias  // 例如：-0.1f 使视频位于 UI 后方，0.1f 使视频位于 UI 前方

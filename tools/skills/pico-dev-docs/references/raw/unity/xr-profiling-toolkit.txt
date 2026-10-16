@@ -1,0 +1,301 @@
+XR Profiling Toolkit
+========================================
+PICO XR Profiling Toolkit Unity 包是一款自动化并可自定义的图形性能分析工具，用于测试并分析 XR 应用在头显设备上的运行效能。工具包的核心框架包括：自动化測试脚本、图形特性切换、分析数据导出和分析报告生成，以支持深度性能评估和跨设备对比。
+开发者可以通过 Unity Package Manager 快速将此工具集成到已有 XR 项目中。同时，我们提供了开源的 VR 和 MR 高质量示例场景，用于展示工具包功能和用法。
+*用
+*XR Profiling Toolkit VR 和 MR 示例场景
+*使用场景
+*跨厂商性能评估：开发者可以通过 XR Profiling Toolkit 比较不同 XR 头显设备上的硬件能力，以及在同一场景下各设备的稳定性和性能开销。
+*图形内容优化：帮助开发者就图形内容、渲染特性以及在不同头显上可实现的视觉质量做出决策，针对 XR 设备优化内容创作和资源规划。
+*示例场景测试：为开发者提供高质量的 VR 和 MR 美术场景作为参考。这些示例场景也可作为测试平台，复现性能或功能问题。
+*使用 XR Profiling Toolkit 项目
+你可以通过 Unity Asset Store 或 PICO 的 GitHub 仓库获取 XR Profiling Toolkit 包及其示例场景。
+该项目包含源码脚本、美术资源以及其他素材，全部采用 MIT 许可证开源发布。你也可以在 GitHub 的页面中找到并安装我们基于该项目构建的 APK 文件。
+*设置指南
+*支持的设备
+*PICO 4 系列（包含 PICO 4 Ultra）
+*PICO Neo 3 系列
+*Meta Quest 3
+*Meta Quest 2
+*开发环境
+*PICO SDK 版本：3.1.2
+*已包含在项目中，可通过下载文件导入
+*注意：如果你从 Git URL 导入 PICO SDK，可能会与其他插件包产生 GUID 冲突。这是已知问题，将在后续版本中修复。
+*Meta XR All-in-One SDK 版本：72.0.0
+*已包含在项目中，并通过 Unity Package Manager 安装
+*Unity 版本：2022.3.23f1 LTS
+*图形 API：Vulkan
+*目标架构：ARM64
+*Windows 或 Mac 主机
+*已安装 Android Debug Bridge（ADB）
+*Python 版本：3.7.17（pip 版本：23.0.1）
+*跨平台构建
+如果你希望自行构建 Unity 项目，请将构建目标设置为 Android，并正确配置 XR Plug-in provider。
+本项目已针对跨平台构建和测试进行开发。若需构建特定平台版本（如 PICO 或 Quest），请前往 Project Settings -> XR Plug-in Management 中选择相应的插件。我们推荐使用项目中预设的配置，以获得最佳性能和功能支持。
+请注意，在切换目标平台时需取消选中原平台对应的插件。
+如果你希望在自己的项目中实现跨平台部署，或扩展示例项目中未覆盖的平台，请参考 PlatformSwitcher.cs 脚本以及场景中的 XR Origin 设置。
+*XR 功能设置
+XR 功能设置文件位于 Packages/XR Profiling Toolkit/Settings/XRFeatureSettings，设置后将自动应用于所有场景。
+* 
+*Incompatible Features：指不能同时启用的功能组合。例如，Foveated Fixed Rendering（固定注视渲染）和自适应分辨率无法同时启用。默认情况下，没有任何功能被标记为不兼容。
+*Foveation Level：设置注视渲染的强度等级。推荐使用中等级，以在画质和性能之间取得平衡。
+*MSAA Samples：多重采样抗锯齿的采样数量。始终推荐使用 4x。
+*Feature Status In Manual Mode：配置手动模式下启用的功能。在手动模式中，用户可以自由探索场景并与物体交互。推荐同时启用 MSAA 和 FFR。
+*Target Resolution：设置渲染场景时的眼部缓冲分辨率。
+*不同平台的缓冲区宽高可能略有不同，但总像素数量应接近。
+*当前数值适用于主流设备；高端设备可设置更高分辨率。
+*示例场景
+你可以通过 Unity 菜单栏中 Window -> Package Manager -> XR Profiling Toolkit -> Samples -> Cyber Alley VR Sample Scene 导入示例场景。在该 VR 示例场景中，用户可以与可交互物体互动、进行传送，并探索各类图形优化选项。
+*主菜单
+使用控制器在主菜单界面中选择示例场景。我们提供了两个测试场景。
+* 
+*VR 示例场景 – Cyber Alley
+Cyber Alley 是一个高质量的 VR 场景，用于评估复杂场景的图形性能。该场景包含粒子系统、渲染特性开关和调试工具。在 PICO 4 上，它稳定运行在 72 FPS，这是该设备的默认最大帧率。项目设置中已将帧率锁定为 72 FPS 以控制设备负载，建议保持此设置。若希望取消锁帧，可在 Assets -> XR -> Settings -> PXR_Settings 中修改。
+* 
+*XR Profiling Toolkit VR 示例场景 - 赛博小巷
+*控制方式
+ 
+*场景传送点
+传送点共有 5 个，激活后即可看到它们。当光标悬停其上时会显示特效，松开摇杆即完成传送。
+ 
+*UI 菜单
+菜单包含两个选项卡：设置 与 用户指南。
+* 
+
+* 
+*动态粒子系统
+粒子发射器默认带有描边高亮效果，当光标悬停时描边消失，弹出提示引导用户切换粒子渲染模式：
+*关闭：无粒子效果
+*粒子系统：橙色烟雾
+*VFX Graph：紫色烟雾
+ 
+*MR 示例场景 – Relic
+Relic 是一个 MR 示例场景，用于评估混合现实下的图形性能。场景包含：
+*Passthrough 透视背景
+*空间锚点道具系统
+*项渲染增强特性
+*性能评估与调试工具
+* 
+*控制方式
+*打开 UI 菜单：A/X 键 或 菜单键
+*与 UI 交互：扳机键
+*放置空间道具：扳机键
+*删除空间道具：B/Y 键
+*取消选中道具：握把键
+*UI 菜单
+UI 菜单中有两个选项卡：设置和道具。
+ 
+ 
+*空间道具配置
+示例场景提供了 3 种基础模型，用户也可按如下方式导入自定义模型并进行测试：
+*配置路径：Demo Sample Scenes/RelicMRSampleScene/Settings
+*Main Test Prefab：用于在校准后生成主道具。优先放置于标记为 “Table” 的物体上，否则将出现在用户面前。若为空则不生成。
+*Id2Prefab：示例中的 3 个模型配置在此表中，也可添加自定义模型。需确保模型挂载了 XR Simple Interactable 和 Collider 组件以实现选择操作。
+*MR 资产设置指导
+*Main Test Prefab：用于在校准后生成主道具。优先放置于标记为 “Table” 的物体上，否则将出现在用户面前。若为空则不生成。
+*Id2Prefab：以下是三个对象的示例。你也可以在此表格中配置自己的模型。之后，你可以在场景的 “Props” 菜单中找到它们，自由地在空间中创建并进行性能测试。
+* 
+*对象应挂载 XR Simple Interactable 和 Collider 脚本，以支持 UI 选择操作。
+* 
+* 
+*自动化测试
+该工具包支持通过预设指令队列自动运行测试流程，并生成包含性能数据的报告，帮助开发者评估场景复杂度、识别性能瓶颈，或验证优化效果。
+MR 示例场景的自动化测试功能目前仅支持在 PICO 4 Ultra 或 Meta Quest 3 设备上运行。
+*Command Queue（指令队列）
+Command Queue 用于存储场景的自动化操作序列。运行测试前，必须指定一个序列化后的指令队列。建议通过菜单：XR Profiling Toolkit -> Shortcut -> Copy Scriptfolder To Assets 将内置脚本复制到项目目录以便查看和调试。
+*创建与编辑指令队列
+要在 Unity 编辑器中创建 Command Queue（指令队列），请在 Project 窗口中右键点击并选择：Create -> XRProfilingToolkit -> Command Queue。
+配置完成后，点击 Save to File 按钮，即可将当前的指令队列保存为 JSON 文件，以供后续使用。
+你可以在以下路径中找到默认提供的三个指令队列示例资源：Package/XR Profiling Toolkit/Editor/ProfilingToolScripts/SampleCommandQueues。
+若你点击菜单栏中的快捷项：XR Profiling Toolkit -> Shortcut -> Copy ProfilingToolScripts folder To Assets，这些示例指令队列资源将被复制到 Assets/XRProfilingToolkit/Editor/ProfilingToolScripts/SampleCommandQueues 文件夹中，方便查看与修改。
+同样地，你还可以在以下目录找到三个指令队列的 JSON 文件示例：Package/XR Profiling Toolkit/Editor/ProfilingToolScripts/AutomationScripts 或 Assets/XRProfilingToolkit/Editor/ProfilingToolScripts/AutomationScripts。
+* 
+*示例 Command Queues
+* 
+*示例 Command Queues
+* 
+*Profiling Tool 脚本：我们建议将这些文件从 Packages 文件夹复制到 Assets 文件夹中，以便于使用和管理。
+*配置参数说明
+*Id：当前指令队列的唯一标识符（建议使用语义化版本号格式 X.Y.Z）
+*Stop Time：达到该秒数后中止整个测试流程
+*Commands：包含所有测试流程命令的列表，支持以下类型：
+*基本命令（适用于所有场景）
+*CommandMove：以设定速度移动至目标位置
+*CommandPause：暂停当前流程
+*CommandWait：延迟指定秒数后执行下一个命令
+*CommandScreenCapture：截图或录屏（支持多种采集类型）
+*组件联动命令（需配套 Prefab）
+*CommandLoadLevel：加载指定测试关卡（使用 SceneLoader）
+*CommandToggleFeature：切换图形特性（如 FFR、MSAA、动态分辨率）
+*Cyber Alley 特有命令
+*CommandSetDynamicMode：设置粒子效果模式（0 无、1 粒子系统、2 VFX Graph）
+*CommandTeleport：传送至预设锚点位置（0-4）
+*Relic 特有命令
+*CommandCreateSpaceItem：在 MR 空间中创建指定道具
+*CommandSetLODLevel：设置所有道具的 LOD 等级
+*CommandWaitForSceneCapture：等待场景截图完成
+*设备性能测试工具窗口
+在 Unity 编辑器中打开性能测试窗口，可执行自动化测试并查看日志。
+* 
+*运行要求
+*主机系统：Windows 或 macOS（需安装 ADB）
+*与主机连接的 XR 设备（adb devices 可识别）
+*Python 版本：3.7 或更高
+*启动流程
+*设置指令队列 JSON 路径（可通过文件选择器或粘贴路径）。
+*设置性能数据输出目录。
+*点击 Run Automation 启动自动测试。成功后输出路径下会生成包含截图和性能数据的新文件夹。
+* 
+*若按钮失效，可使用 Copy Run Automation Command 复制终端命令执行。
+*分析测试结果
+测试完成后可使用本地工具生成报告网页，便于分析每一项指标。
+*运行要求
+*Python 3.7+ 安装
+*安装依赖库：可点击 Set Up Analysis Tool Environment 自动安装。如果该按钮无法正常工作，你也可以手动配置：打开命令行终端，定位到路径 Package/XR Profiling Toolkit/Editor/ProfilingToolScripts/，并运行以下命令：pip install -r requirements.txt 以手动安装所需依赖。
+*指标配置文件（.schema）
+ProfilingToolScripts 文件夹下包含三个以 JSON 格式编写的 .schema 文件，用于定义在性能分析报告中应显示哪些指标：
+*pxr_metrics.schema：PICO 平台的基础性能指标
+*ovr_metrics.schema：Quest 平台对应的基础性能指标
+*pil_output.schema：高级的跨平台 GPU 性能指标
+每个 schema 文件中都列出了可用的指标及其说明（可能是网页链接，也可能直接写在文件中）。以下是一个指标的示例：
+每个文件定义展示哪些指标、如何解析和显示。例如：
+ 
+*分析方式
+分析性能分析会话有两种方式：
+*单场景报告（Generate Analysis Report）
+*点击 Browse 按钮，选择生成的性能数据文件夹，或复制该文件夹的完整路径粘贴到命令输入框中。
+*点击 Generate Analysis Report 按钮，工具会在所选的数据文件夹下生成一个名为 analyze_report 的文件夹，并自动打开本地网页进行展示。你也可以稍后通过点击 analyze_report 文件夹中的 index.html 文件手动打开报告。
+*如果 Generate Analysis Report 按钮无法使用，你也可以点击 Copy Generate Analysis Command 按钮，将命令复制并粘贴到命令行终端中运行。
+*对比报告（Generate Comparison Report）
+*该功能用于将两个性能分析会话的结果进行对比，并在同一网页中展示。
+*点击 Browse 按钮，选择另一个生成的性能数据文件夹，或复制该文件夹的完整路径粘贴到命令输入框中。此数据将与选择的 Profiling Data Path 进行对比。
+*点击 Generate Comparison Report 按钮，工具将在性能数据目录中生成一个名为 comparison_report_{benchmark_session_directory_1}_{benchmark_session_directory_2} 的文件夹，并自动打开本地网页进行展示。你也可以稍后通过点击该文件夹中的 index.html 文件手动打开报告。
+*如果 Generate Comparison Report 按钮无法使用，你也可以点击 Copy Generate Comparison Command 按钮，将命令复制并粘贴到命令行终端中运行。
+*报告阅读指南
+*顶部信息
+显示测试名称、使用的指令队列 ID、设备型号和渲染设置。
+* 
+*指标图表
+展示所有启用的指标图表（可切换），并显示平均值等摘要信息。
+左侧的标签页用于切换配置的各项性能指标。每个标签页上会显示对应的指标名称及该会话的平均值。
+* 
+*屏幕截图对比
+报告中会展示捕获的屏幕截图。具有相同上下文的截图会被自动分组。如下图所示，左右两张图用于对比：左图为基准版本，启用的渲染功能最少；右图则启用了部分额外的渲染特性。
+* 
+对比报告在以下几个方面与常规报告有所不同：
+*如果两个会话在不同设备上运行，每个会话的设备规格信息将并列显示，便于对比分析。
+*如果两个会话都包含相同的性能指标数据，该数据将被绘制在同一张图表上，并在标签页中显示两个会话各自的平均值。
+*截图只有在具有相同上下文和渲染功能配置时，才会并排显示用于对比。
+*将 XR Profiling Toolkit 集成到其他项目中
+若你希望将 XR Profiling Toolkit 移植到其他 Unity 项目中，可按以下最小步骤进行：
+*通过 Window -> Package Manager -> Add package from disk 导入 XR Profiling ToolKit 包。或从 Unity Asset Store 导入。
+*在 Unity 编辑器菜单中点击 XR Profiling Toolkit -> Shortcuts -> Validate Provider Plugin (Meta/PICO)。此操作会自动检测项目中已集成的 XR SDK（如 Meta 或 PICO），并启用对应平台所需的功能代码。
+*点击 Add CommandRunner To Scene，将核心运行组件 CommandRunner.prefab 添加至场景。你也可手动创建一个空 GameObject，并将 CommandRunner.cs 脚本挂载其上。
+*创建并配置 Command Queue。请按照 “自动化测试” 部分的说明，在你的 Unity 项目中创建指令队列。需要注意的是，当前仅支持有限的一组指令，因为部分指令依赖其他系统。不过，你也可以参考现有指令，自定义适合你项目需求的新指令类型。详见 “配置参数说明” 部分。
+*构建并部署项目。构建并部署你的 Unity 项目，将 APK 文件安装到设备上。之后，你可以按照“自动化测试”部分的说明运行性能分析会话并生成性能报告。
+*Unity 编辑器菜单说明
+以下是 XR Profiling Toolkit 提供的 Unity 编辑器菜单项及其说明：
+*
+
+
+**
+
+PICO 4 手柄输入，其他手柄类似。
+* 
+*手柄按键提示也会在运行时提示，见右图。
+
+ 
+*打开 UI 菜单：A/X 键 或 菜单键
+*与物体/UI 交互：扳机键
+*传送：推动摇杆激活传送，松开选择目标点
+*快速转向：摇杆左右拨动实现旋转
+
+传送后玩家朝向可能会发生变化，这是为了让用户面向重要区域。
+
+**
+
+* 
+*设置菜单
+* 
+*Tile Visualizer Debug View
+
+*设置内容
+*Graphics
+*切换不同图形渲染特性可直接观察到画面变化。
+*Debug View
+*Tile Visualizer（瓦片可视化工具）用于在启用 FFR（固定注视渲染）时可视化 Fragment Density Map（片元密度图）模式。绿色区域表示全分辨率区域。当 FFR 启用后，视野边缘区域应出现部分黄色（1/2 分辨率）和橙色（1/4 分辨率）瓦片。
+*瓦片模式在不同平台上有所不同，且会随着 MSAA 的启用或关闭而发生变化。
+*Misc
+*静音音效，适用于需要安静进行测试的场景
+
+
+**
+
+示
+
+*用户指南
+显示场景交互方式的说明内容。
+
+*请注意，默认的 VFX Graph 渲染模块与 Multiview（多视图）不兼容。我们通过使用自定义 Shader Graph 实现了粒子效果的渲染。如果你希望自行调整该特效，需要在 VFX Graph 中启用 Shader Graph 支持。
+*切换模式后 GPU 负载会有所波动，稳定后可恢复满帧运行。
+
+**
+
+* 
+*Graphics 设置菜单
+
+设置内容
+*Graphics：图形开关切换可观察到显著画面变化
+*LOD 等级：示例道具预设了 3 级 LOD，可通过移动观察位置或按钮点击切换
+*Misc：静音测试场景音效
+
+**
+
+* 
+*道具设置菜单
+
+Props 菜单
+用户可根据菜单指引，在 MR 场景中放置空间锚点道具进行性能测试。
+
+**
+
+
+
+
+
+{
+  "enabled": 1,
+  "name": "% Time Shading Fragments",
+  "description": "着色片段所占百分比：用于衡量 GPU 渲染负载",
+  "template": "{time_shading_fragments_percentage.value:f}"
+}
+
+
+
+*菜单项
+
+*说明
+
+Device Profiling Tool Window
+
+打开设备性能分析主窗口，用于运行自动测试与生成报告
+
+Shortcuts -> Add CommandRunner To Scene
+
+添加 CommandRunner 预制体，用于运行预设指令序列
+
+Shortcuts -> Validate Provider Plugin (Meta/PICO)
+
+检测并切换 XR SDK 插件配置，适配当前项目平台
+
+Shortcuts -> Add SceneLoader To Scene
+
+添加 SceneLoader 预制体，用于 CommandLoadLevel 命令
+
+Shortcuts -> Add FeatureManager To Scene
+
+添加 FeatureManager 预制体，用于 CommandToggleFeature 命令
+
+Shortcuts -> Copy ProfilingToolScripts folder To Assets
+
+快速复制分析脚本及命令配置文件至项目 Assets 目录，便于调试

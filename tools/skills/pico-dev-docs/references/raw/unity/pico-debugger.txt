@@ -1,0 +1,91 @@
+PICO Debugger
+========================================
+PICO Debugger 是一款调试工具，你不仅可以通过它查看日志和场景信息，还能使用其内置工具，从而更有针对性地优化应用。
+*配置与构建
+*前往 Edit > Project Settings，然后在 PICO Debugger 面板中配置该工具的参数。
+* 
+*
+作为调试工具，PICO Debugger 仅支持在 development build 中使用，构建项目时需要勾选 Development Build 选项。
+* 
+*主界面
+*主界面由三个主按钮组成，分别是 Logger 按钮、Inspector 按钮和 Tools 按钮，按下后会显示对应的子界面。此外，拖拽蓝色拳头图标按钮可移动整个 PICO Debugger 界面。
+* 
+*Logger 界面
+*日志系统用来收集运行中的各种日志，协助定位问题。日志系统的主界面如下：
+*左上角三个图标分别对应 Info、Warning 和 Error 三种日志类型。点击图标后，可仅展示对应类型的日志。
+*日志列表中展示当前日志出现的时间与日志内容（logString），以及日志详情（stackTrace）。
+* 
+*Inspector 界面
+*Inspector 界面分为左右两部分：
+*左边是当前场景的结构树，可以通过点击 + 图标逐级展开。点击某个节点后，右侧会展示该节点的对应物体的 transform 数据。
+*右边是对应物体的 transform 数据，包含 position、rotation 和 scale 信息。被观察对象的 transform 数据是实时更新的。但为避免造成过大的性能开销，Inspector 界面并不会实时更新场景数据，你可以点击左上角的刷新按钮强制更新数据（包括在当场景中新增物体时）。然而，当前观察对象被删除时，会强制自动刷新数据。
+* 
+*Tools 界面
+Tools 界面展示当前所有工具。将 pointer 悬停至某个工具的图标然后按下 Trigger 键后，可选择当前工具。需注意的是：
+*选择工具时，会隐藏手柄的模型，显示当前工具的模型。
+*工具具有互斥性，切换不同工具后，右手的模型也会切换。
+*需要继续使用手柄时，点击左上角的回收图标即可。
+* 
+可用工具如下：
+*
+*
+
+
+
+模块
+
+参数
+
+描述
+
+*Default Panel
+*
+
+Enable/Disable
+
+是否启用 PICO Debugger 工具，默认启用。
+
+
+
+Launcher Button
+
+*配置 PICO Debugger 的打开方式，对应手柄上的相关按键。可选项为：PressA、PressX 和 PressY。
+*按下所配置的按钮即可呼出工具的主界面，再按下可隐藏。
+
+
+
+Movement > Initial Position
+
+*PICO Debugger 的初始显示位置，对应其与相机之间的距离。可选项为：Far、Near 和 Medium。
+*配置后，每次唤醒 PICO Debugger 时，其界面与使用者的距离都保持固定。
+
+*Console Panel
+
+Maximum Count
+
+日志界面允许显示的最大日志条数。
+
+Tool Panel
+
+Ruler Tools > Launcher Button
+
+配置测量尺的关闭方式，对应手柄上的相关按键。可选项为：PressA、PressX 和 PressY。
+
+
+
+工具名称
+
+描述
+
+*测量尺
+
+测量尺用于在场景中测量虚拟和真实物体的尺寸。
+* 
+*长按右手柄上的 Grip 键，沿着被测量的物体移动测量尺，然后松开 Grip 键，界面上会显示一把带有刻度的尺，其中央显示测量的长度。
+* 
+
+时间控制器
+
+*时间控制器用于暂停和开启时间。
+* 
+*按下右手柄的 Grip 键，按钮会不断在开启/关闭状态间切换。开启后，场景的时间暂停。

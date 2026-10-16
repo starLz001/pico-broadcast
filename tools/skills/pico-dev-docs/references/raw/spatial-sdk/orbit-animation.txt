@@ -1,0 +1,92 @@
+轨道动画
+========================================
+*轨道动画（Orbit Animation）是一种让对象围绕指定轴线进行“公转”的动画效果。对象会沿圆形轨迹绕轴线运动，类似于卫星环绕行星或摄像机环绕目标物体拍摄的效果。
+*核心参数
+*以下为用于控制轨道动画的核心参数。
+**
+*使用要点
+*明确轨道平面：axis 决定轨道所在的平面。例如，axis = (0, 1, 0) 表示对象在 XZ 平面上绕行。
+*控制旋转速度：速度 ≈ (2πR × rotationCount) / duration。
+*调整起始相位：初始角度由 startTransform.position 决定。若需指定初始角度，可先对起点进行旋转。
+*处理异常的方向：若运动方向不符合预期，可尝试更换 spinClockwise 的取值或反转 axis 向量；启用 orientToPath 以更直观地校验方向。
+*绕目标点旋转：若希望对象围绕非原点的目标点旋转，可以将对象作为子节点放在以目标点为位置的父节点下；或在动画计算中加入中心点偏移。
+*注意事项
+*起点在轴线上会导致半径为 0，无法看到绕行效果。这种情况下，需调整起点位置。
+*不同模型的前向轴可能不同，启用 orientToPath 后若出现“侧走”或“倒走”现象，可通过调整模型自身的 rotation 来补偿修正。
+*父节点或子节点的位移或旋转会改变实际运动路径，需确认旋转中心所在的空间。
+*过大的 rotationCount 或过短的 duration 会导致旋转速度过快，从而可能造成插值误差或抖动，需将两个参数的值控制在合理的范围内。
+*代码示例：让 entity 绕原点做圆周运动
+让 entity 在 XZ 平面绕原点做圆周运动，每四秒转两圈，方向始终沿切线。循环播放该动画。
+* 
+* 
+*API 参考
+OrbitAnimation 类提供了轨道动画相关的属性和函数，详情参阅 API 参考。根据你所处的地理位置选择合适的文档链接：
+*中国大陆：https://developer-cn.picoxr.com/spatial-api/index.html
+*非中国大陆：https://developer.picoxr.com/spatial-api/index.html
+
+
+
+
+参数
+
+描述
+
+axis
+
+轨道平面的法向量，系统内部会进行归一化。禁止传入 (0, 0, 0)。
+
+startTransform.position
+
+确定起始点位置与轨道半径（即相对 axis 的垂直距离）。起始点离轴线越远，轨道半径越大。
+
+rotationCount
+
+动画时长内需完成的完整圈数，一圈为 360°（例如：1 = 360°，2 = 720°，2.5 = 900°）。
+
+orientToPath
+
+是否让对象朝向轨迹切线的方向（即面向运动方向）。
+
+spinClockwise
+
+旋转方向（顺时针或逆时针），受坐标系惯用手影响。
+
+duration
+
+动画的时长。
+
+delay
+
+动画开始播放前的延迟时长。
+
+repeatMode
+
+动画的循环模式。
+
+repeatCount
+
+动画的循环次数。
+
+// 创建一个 entity 绕 Y 轴旋转的轨道动画
+val orbit = OrbitAnimation.createOrbitAnimation(
+    name = "SatelliteOrbit",            // 动画名称
+    duration = 4f,                      // 每 4 秒完成 2 圈旋转
+    axis = Vector3(0f, 1f, 0f),         // 旋转轴为 Y 轴
+    startTransform = Transform(
+        position = Vector3(2f, 0f, 0f), // 初始位置距原点 2 个单位，形成半径约为 2 的轨道
+        EulerAngles(0f, 0f, 0f),        // 初始旋转角度为 0°
+        Vector3(1f, 1f, 1f),            // 初始缩放比例为 1:1:1
+    ),
+    spinClockwise = false,              // 逆时针旋转
+    orientToPath = true,                // 始终面向切线方向
+    rotationCount = 2f,                 // 动画期间完成两圈旋转（共 720°）
+    delay = 0.5f,                       // 动画开始前延迟 0.5 秒
+    repeatMode = RepeatMode.RESTART,    // 每次循环时从起点重新开始
+    repeatCount = -1                    // 无限循环播放
+)
+
+// 将创建的轨道动画转换为 AnimationResource，便于绑定到 entity
+val resource = AnimationResource.generate(orbit)
+
+// 让目标 entity 播放刚生成的动画资源
+entity.playAnimation(resource)

@@ -1,0 +1,145 @@
+PDC 问题排查指南
+========================================
+本文档介绍使用 PICO Developer Center 工具时可能遇到的问题及解决方法。
+*客户端问题
+*PICO 设备无法连接 PDC 工具
+如果你无法成功连接 PICO 设备与 PDC 工具，请参考以下步骤：
+*确认你的 PICO 设备系统版本为 5.11.0 或以上版本，使用的 SDK 为 2.5.0 或以上版本。
+*检查 USB 连接线是否存在端口松动、线材破损等问题。
+*如何获取 PDC 日志
+按照以下路径获取 PDC 日志：
+**
+*如何获取 PICO 设备头戴端日志
+*在 PICO 设备端，前往 设置 > 通用，开启 日志记录 功能，以记录 PDC 工具运行过程中产生的日志。 
+* 
+*使用 ADB 指令 adb shell setprop persist.log.tag D 开启 debug 日志功能。PICO 4 Ultra 及 Project Swan 系列设备无需操作此步骤。
+*使用 adb pull data/logs 将日志拉到本地。
+*串流服务问题
+*PICO 4 Ultra 设备连接至 PC 后，PDC 提示串流异常
+*在头戴端，前往 设置 > 通用，关闭 电脑互联自动发现 开关，然后再将其开启，从而为 PDC 工具开启串流模式。
+*重启 PDC。
+*“串流运行时服务”安装异常
+参考以下步骤检查你是否正确安装串流服务：
+*在 PDC 工具运行时，打开 PC 端的 “任务管理器”（Windows）或 ”活动监视器“（macOS）。
+*在服务（Services）标签页下，查看是否存在 "ps_service" 服务（Windows）或 "ps_server" 服务（macOS）。
+*如不存在，则未正确安装串流服务，参考《下载串流服务》重新下载安装串流服务以修复该问题。
+ 
+*串流运行基础环境问题
+串流服务依赖 Windows 10 或以上的操作系统。请确保你的操作系统为官方正版的 Windows 系统，否则可能会导致系统防火墙的网络授权无法通过、显卡驱动不兼容等问题。前往 Microsoft 官网下载 Windows 系统；前往 NVIDIA 官网或 AMD 官网下载最新驱动程序。
+*无法连接串流服务
+无法连接串流服务的原因较多，你需参考以下步骤检查串流服务环境是否正常：
+*打开 PICO 设备，进入到系统太空舱（启动器桌面）界面。
+*使用 USB 数据线连接 PICO 设备至 PC 端。
+*在 PC 端搜索并打开 设备管理器。
+*你将看到你电脑的可用设备列表。在串流服务连接正常时，设备管理器中应有以下 PICO 相关设备：
+**
+* 
+若你的设备管理器中没有显示以上 PICO 相关设备，参考以下常见问题及其解决方法。
+*提示串流服务未安装 
+若你已安装串流服务，但 PDC 仍提示串流服务未安装，请按照以下步骤排查问题：
+*打开 PC 端命令行工具，查看命令行工具语言环境。
+*若为非英文环境，则需要在命令行工具中执行 chcp 437 切换至英文环境。
+*重启 PDC。
+*设备管理器中没有显示 “PICO 设备（PICO Device）”
+如果在设备管理器中没有找到 "PICO 设备（PICO Device）"一行，则表示 USB 驱动未正确安装，或设备未成功连接。请先参考以下两种方法判断 PICO 设备是否成功连接：
+*方法一：使用 PowerShell 命令搜索设备
+*以管理员身份在 PC 端打开 Windows PowerShell 应用并执行以下命令：
+* 
+*命令执行后，若设备成功连接，你将看到多个不同的硬件 ID。若设备未成功连接，你将无法看到 ID。
+* 
+*方法二：在设备管理器中查看未识别设备的 ID
+*在设备管理器中，查看 其他设备 下是否有未识别设备（设备图标前有警告标志的设备为未识别设备）。你也可以在 通用串行总线设备 下，查看是否出现新设备。
+*右键单击该设备，在下拉框中，选择 属性（Properties）。
+*在属性窗口中，点击 详细信息（Details）。
+*在 详细信息（Details）标签页下，点击 属性 下拉框，选择 硬件 Id（Hardware Ids），查看硬件 ID 的值。若硬件 ID 为下图所示值，该设备即为 PICO 设备。
+* 
+若通过以上方法判断 PICO 设备已成功连接，则问题应为 USB 驱动未正确安装。修复方法如下：
+*前往“串流运行时服务”安装路径 Streaming Runtime Service\drivers\picousb，右键单击 picousb.inf，选择 安装（需管理员权限）。
+*安装完成后，重启电脑。
+*再次打开设备管理器，确认是否显示“PICO 设备（PICO Device）”。
+*设备管理器周期性闪屏刷新
+若数据线连接 PC 端和 PICO 设备后，设备管理器周期性闪屏刷新，则是因为数据线或 USB 接口发出的信号不稳定。你需更换数据线或者电脑端 USB 接口：
+*对于数据线，你需使用符合 USB 3.2Gen1 或以上标准的全功能数据线；
+*对于电脑端 USB 接口，你需连接 3.0 或以上的电脑端 USB 接口。如果你的电脑为台式机，请将数据线插在台式机后方主板的 3.0 或更高版本的 USB 接口上。
+*设备管理器服务异常
+若数据线连接 PC 端和 PICO 设备后，设备管理器未刷新，你可先选中第一行设备名，再点击 操作 > 扫描检测硬件更新。
+* 
+若此时设备管理器无响应，你可尝试断开其它非必要的外部设备，然后重新启动计算机，之后再次尝试操作。如果问题仍未解决，请联系专业人员，检查系统中是否存在未正确安装的驱动程序或异常运行的外部设备，必要时还可以考虑重装系统。
+*串流服务被异常禁止
+如果你遇到以下现象，其原因通常是串流服务被异常禁止：
+*在成功安装“串流运行时服务”前提下，PDC 界面显示“连接异常”或“串流通道异常”。
+*在 任务管理器 > 进程 > 后台进程 中，没有 "ps_server" 进程。
+*在 任务管理器 > 服务 中，存在 "ps_service" 服务，但其状态为 “已停止”。
+修复该问题的步骤如下：
+*查看 PC 端上安装的安全防护软件，确保未对 "ps_service" 服务进行任何限制，例如禁止开机自启动、禁止进行服务优化等。
+*在 任务管理器 > 服务 标签页下，右键单击 ps_service 一行，选择 开始，使该服务为“正在运行”的状态。
+*串流服务冲突
+使用 ”PICO互联“ 软件会导致 PDC 串流服务冲突。因此，启动 PDC 工具前，请确保 PC 端和头戴端都已关闭 ”PICO互联“ 软件。PICO 4 Ultra 系列设备不存在该问题。
+*Live Preview 实时预览问题
+*你可能会在使用 PDC 工具预览应用场景时遇到以下问题。
+*实时预览时画面抖动
+通常情况下，显卡性能低于 NVIDIA GeForce GTX 1060 6GB 或 AMD Radeon RX480 8G （或其它同性能水平的显卡）将有可能导致预览时画面抖动。如果你的 3D 应用场景渲染复杂度较高，则更可能导致画面抖动。
+*点击 Play 按钮后，Unity 编辑器闪退
+*实时预览功能目前仅支持 DirectX 11 (DX11) 图形接口。你可以前往 Edit > Project Settings > Player > Other Settings，检查 Graphic APIs for Windows 是否被设置为 Direct3D11 或其他图形接口。此外，也需检查是否在 Command Line Arguments 中强制使用了非 DX11 的图形接口。
+ 
+*点击 Play 按钮后，无法预览场景
+*前往 Edit > Project Settings > XR Plug-in Management > PC Settings，检查是否勾选了除 PICO Live Preview 之外的其他插件选项。若有，取消勾选其余选项。
+ 
+*点击 Play 按钮后，预览画面十分卡顿
+*点击 Game 视图下的 Stats 按钮，查看当前的帧率是否高于 72 FPS。
+* 
+*若高于 72 FPS，则需要进行限帧操作，在 Awake 或者 Start 里调用Application.targetFrameRate = 72;。若上述方式限帧失败，可以尝试在 Game 视图中勾选 VSync (Game view only)。
+* 
+*若低于 72 FPS，但依旧卡顿，参考通用信息文档获取日志，然后进行分析。
+*头戴中预览画面的亮度低于 Game 视图
+*由于 DirectX 11 不支持 Linear，需前往 Edit > Project Settings > Player > PC Settings > Other Settings，然后将 Color Space 修改为 Gamma。
+ 
+*预览画面黑屏
+前往 “设备管理器” 和 “显示适配器”，查看 PC 中是否存在虚拟显卡。若存在，需要禁用虚拟显卡。
+
+
+
+
+操作系统
+
+日志路径
+
+Windows
+
+*PDC：C:\Users\${user}\AppData\Roaming\PICO Developer Center\logs
+*串流服务：
+*Project Swan 设备：C:\ProgramData\PICO\PICO Streaming Service
+*其他设备型号：C:\Program Files\Streaming Service\ps_server.log 
+
+macOS
+
+*PDC：~/Library/Application Support/PICO Developer Center/logs
+*串流服务：
+*Project Swan 设备：~/Library/Application Support/PICO Streaming Service/swan
+*其他设备型号：~/Library/Application Support/PICO Streaming Service/
+
+**
+
+* 
+
+* 
+
+
+
+设备
+
+说明
+
+PICO Composite ADB Interface
+
+开发者调试功能接口。为 PICO 设备开启 “开发者” 模式后将出现该设备。
+
+PICO Composite Streaming Interface
+
+串流服务功能接口。另一名称为 PICO Accessory Interface。
+
+PICO 4
+
+表示可以进行文件传输。将 PICO 设备的 USB 连接方式切换至“传输文件”后将出现该设备。
+
+pnputil /enum-devices /ids /connected | select-string "VID_2D40|VID_05C6"

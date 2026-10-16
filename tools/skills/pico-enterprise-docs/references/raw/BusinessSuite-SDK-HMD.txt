@@ -1,0 +1,163 @@
+*功能概述
+*企业套件头戴端SDK为三方业务提供了消息通路，消息通路两端为企业套件控制端和三方业务apk。可以通过企业套件头戴端SDK，实现三方业务apk和企业套件控制端消息的收发。消息的内容是String类型的字符串。消息通道是支持传递json，需要将json转换成字符串传递。
+*接入方法
+*拷贝头戴端SDK的aar到libs下
+将下面的aar放在工程相应module的libs下，如果是主module，则放在app/libs下。如示例demo中放在app/libs下
+ 
+
+* 
+*在对应module的build.gradle下添加配置
+ 
+*接口方法
+ 
+*使用示例
+ 
+*验证demo
+暂时无法在飞书文档外展示此内容
+*将企业套件头戴端设置成服务模式
+将企业套件头戴端设置成服务模式，并保证头戴端与控制端正常连接，企业套件头戴端切换至后台。
+*安装apk，打开demo
+* 
+*按步骤操作，实现信息收发
+*点击绑定服务按钮
+ 
+*点击发送指令按钮
+ 
+如demo中的示例是向控制端发送电量信息，接收到头戴端的电量信息后，控制端会更新设备的电量百分比。
+*点击注册接收指令按钮
+ 
+*接收到的控制端信息
+ 
+
+dependencies {
+    implementation fileTree(dir: 'libs', include: ['*.jar', '*.aar'])
+    implementation 'androidx.appcompat:appcompat:1.3.1'
+    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.3.4"
+}
+/*需要先绑定头戴SDK的服务，再通过头戴SDK发送/接收消息*/
+//绑定服务
+public void bindService() {
+    EAClientServiceManager.Companion.getInstance(mContext).bindService();
+}
+
+//解绑服务
+public void unbindService() {
+    EAClientServiceManager.Companion.getInstance(mContext).unbindService();
+}
+
+//发送消息
+public void sendMsg(String msg) {
+    EAClientServiceManager.Companion.getInstance(mContext).sendMsg(msg);
+}
+
+//注册接收消息
+public void setMsgReceiver(ICmdReceiver receiver) {
+    EAClientServiceManager.Companion.getInstance(mContext).setMsgReceiver(receiver);
+}
+
+//其中，ICmdReceiver可以通过下面方法
+ICmdReceiver receiver = new ICmdReceiver.Stub() {
+    @Override
+    public void receiveData(RevCmdModel revCmdModel) {
+        if (revCmdModel != null) {
+            String result = revCmdModel.getParamsContent();
+            //获取到控制端传来的消息内容
+        }
+    }
+
+    @Override
+    public IBinder asBinder() {
+        return this;
+    }
+};
+import android.app.Activity;
+import android.os.Bundle;
+import android.os.IBinder;
+import android.text.method.ScrollingMovementMethod;
+import android.util.Log;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.TextView;
+import com.picoxr.clientservice.common.server.model.RevCmdModel;
+import com.picoxr.clientservice.service.ICmdReceiver;
+
+
+public class MainActivity extends Activity {
+    private static final String TAG = "EASDKDemo MainActivity";
+    private String results = "";
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        Log.i(TAG, "onCreate");
+        setContentView(R.layout.activity_main);
+
+        Button bindButton = findViewById(R.id.bind_btn);
+        bindButton.setClickable(true);
+        bindButton.setOnClickListener(v -> {
+            Log.i(TAG, "click bindButton");
+            EASDKManager.getInstance(this).bindService();
+        });
+
+        Button unbindButton = findViewById(R.id.unbind_btn);
+        unbindButton.setClickable(true);
+        unbindButton.setOnClickListener(v -> {
+            Log.i(TAG, "click unbindButton");
+            EASDKManager.getInstance(this).unbindService();
+        });
+
+        EditText cmdParamsET = findViewById(R.id.send_controller_cmd_params);
+        Button sendControllerButton = findViewById(R.id.send_controller_cmd);
+        sendControllerButton.setClickable(true);
+        sendControllerButton.setOnClickListener(v -> {
+            Log.i(TAG, "click send to controller Button");
+            String params = cmdParamsET.getText().toString();
+            EASDKManager.getInstance(this).sendMsg(params);
+        });
+
+        TextView receiveControllerTV = findViewById(R.id.receive_controller_msg);
+        Button setReceiverButton = findViewById(R.id.set_controller_receiver);
+        setReceiverButton.setClickable(true);
+        setReceiverButton.setOnClickListener(v -> {
+            Log.i(TAG, "click setReceiverButton");
+            ICmdReceiver receiver = new ICmdReceiver.Stub() {
+                @Override
+                public void receiveData(RevCmdModel revCmdModel) {
+                    if (revCmdModel != null) {
+                        String msg = revCmdModel.getParamsContent();
+                        if (!"".equals(results)) {
+                            results = msg + "\n";
+                        }
+                        results = results + msg;
+                        runOnUiThread(() -> receiveControllerTV.setText(results));
+                    }
+                }
+
+                @Override
+                public IBinder asBinder() {
+                    return this;
+                }
+            };
+            EASDKManager.getInstance(this).setMsgReceiver(receiver);
+        });
+    }
+}
+ //demo中会调用如下代码
+ EAClientServiceManager.Companion.getInstance(mContext).bindService();
+//demo中会调用如下代码
+EAClientServiceManager.Companion.getInstance(this).sendMsg(msg);
+ //demo中会调用如下代码
+ EAClientServiceManager.Companion.getInstance(this).setMsgReceiver(receiver);
+//demo中会调用如下代码
+            ICmdReceiver receiver = new ICmdReceiver.Stub() {
+                @Override
+                public void receiveData(RevCmdModel revCmdModel) {
+                    if (revCmdModel != null) {
+                        String msg = revCmdModel.getParamsContent();
+                    }
+                }
+
+                @Override
+                public IBinder asBinder() {
+                    return this;
+                }
+            };

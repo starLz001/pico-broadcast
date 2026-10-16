@@ -1,0 +1,75 @@
+查询设备信息&设置设备
+========================================
+你可通过调用 UE 所提供的接口以及由 PICO 插件提供的接口，查询与设置 PICO 设备。
+*相关 OpenXR 扩展
+PICO OpenXR 使用了 XR_EXT_performance_settings 扩展来设置 PICO 设备性能。
+*环境要求
+*设备型号为 PICO Neo3 系列、PICO 4 系列、PICO 4 Ultra 系列、PICO G3 或 Project Swan（PICO OS 6）
+*前提条件
+*你已在引擎中安装并启用了 PICO Unreal OpenXR 插件。详情参考 PICO Unreal OpenXR 快速开始。
+*使用 UE 内置接口
+*以下内置接口均由 Unreal 官方提供。 
+*UOptionalMobileFeaturesBPLibrary
+通过开启 Plugin 中的 OptionalMobileFeaturesBlueprintLibrary 蓝图库，即可使用 Unreal 内置的相关接口，实现查询耳机是否插入、电池电量与温度等功能。
+* 
+* 
+*GetHMDDeviceName
+查询设备型号，返回值如 PICO 4 HMD 等。
+* 
+*GetHMDData
+查询当前 HMD 的信息，例如设备名称等。
+* 
+*ResetOrientationAndPosition
+实现软件层面的居中校准，效果类似长按 Home 键校准。
+* 
+*GetVRFocusState
+在应用运行过程中按 Home 键会弹出 2D 弹框，此时应用将失去 Input Focus，即应用接收不到输入事件。
+*通过 GetVRFocusState 该接口，你可以检测用户 Input Focus 状态，从而根据返回结果处理该情况。
+* 
+*SetPerformanceSettings
+设置 PICO 设备的 CPU 和 GPU 性能。
+* 
+*SetHMDColorScaleAndBias
+设置头戴全屏颜色的缩放与偏移。
+* 
+*使用 PICO 提供的接口
+*GetDevicePoseForTimePICO
+*查询带预测时间的头部与手部的位置数据，包含线速度及角速度，但暂不支持查询加速度。
+ 
+*GetHMDWornStatePICO
+查询用户是否佩戴了 PICO 头戴。该接口功能目前仅支持 PICO 4 Ultra 系列设备。返回值中， Result Valid 代表接口是否调用成功。Return Value 则在接口调用成功后，用于表示当前的头戴的佩戴状态。
+* 
+*GetFieldOfViewPICO
+查询当前画面渲染的水平和垂直 FOV。
+* 
+*GetInterpupillaryDistancePICO
+查询瞳孔间距（单位为厘米）。
+* 
+*SetPerformanceSettingsPICO
+设置当前应用的性能模式，目前PICO设备上暂时无回调数据返回。相关参数可参考：XR_EXT_performance_settings。
+* 
+*SetBaseRotationAndBaseOffsetPICO
+设置当前追踪参考系的偏移。通过该接口可以实现手动添加一个软件层面的参考系偏移。
+* 
+*GetBaseRotationAndBaseOffsetPICO
+查询当前的追踪参考系的偏移。
+* 
+*GetDisplayTimePICO
+获取下一次渲染画面点亮到屏幕上的未来时刻。紧挨的两帧调用的间隔约为1000 毫秒除以刷新率。
+* 
+*GetDefaultRenderTargetSizePICO
+查询 Runtime 默认推荐的 Render Target 尺寸，该尺寸并非屏幕物理尺寸。同一设备通过调用该接口获取的返回值为定值。
+* 
+*GetCurrentRenderTargetSizePICO
+查询当前 Render Target 的尺寸。
+* 
+*SetProjectionLayerColorMatrix3x3fPICO
+*设置全屏颜色矩阵。相关参数可参考：https://docs.rainmeter.net/tips/colormatrix-guide/。
+ 
+*GetControllerBatteryLevelPICO
+*查询手柄电量。
+ 
+*GetBatteryStateDisplayPICO
+*查询 HMD 电量。
+ 
+

@@ -1,0 +1,26 @@
+如何查询 PICO ROM 是中国大陆版/海外版？
+========================================
+你可以通过 ro.pvr.product.global 字段获取 ROM 版本。若该字段存在且取值为 overseas，表示 PICO ROM 为海外版；若该字段不存在，则 ROM 为中国大陆版。
+* 
+
+你可以在 PC 端执行命令行或在 C# 中反射 Java 代码来获取字段取值。
+*PC 端执行命令行获取
+使用 USB 数据线连接 PICO 设备和 PC 端后，可在 PC 端使用 ADB 查询 ROM 版本。执行以下两条指令其一：
+*adb shell getprop ro.pvr.product.global
+*adb shell getprop | grep global
+*之后打印全部属性并执行 grep 命令。
+*C# 反射 Java 代码获取
+你可以在 C# 中反射 Java 代码获取系统属性。
+ 
+
+
+string getSysProp(string propName)
+{
+    var obj = new AndroidJavaClass("android.os.SystemProperties");
+    return obj.CallStatic<string>("get", propName);
+}
+
+bool isOversea()
+{
+    return getSysProp("ro.pvr.product.global").Trim().ToLower().Equals("overseas");
+}

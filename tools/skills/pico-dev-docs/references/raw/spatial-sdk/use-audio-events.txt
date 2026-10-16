@@ -1,0 +1,120 @@
+使用音频事件
+========================================
+音频事件（Audio Events）用于在音频播放的特定时间点触发自定义逻辑。你可以通过订阅目标事件并定义回调函数来实现音频事件。音频播放过程中，当检测到事件被触发时，系统会自动执行你注册的回调。
+*音频事件概览
+*PICO Spatial SDK 的 AudioEvents 类定义了以下音频事件：
+**
+*订阅音频事件
+你可以通过场景（适用于通过实体订阅）或 SpatialViewContent（适用于通过 SpatialView 的 content 订阅）进行音频事件的订阅。此外，你还需要定义事件被触发时所需执行的逻辑。
+*以下代码实现了在 Jetpack Compose 环境中创建一个带有实体的 SpatialView，并通过订阅 AudioEvents.PlaybackCompleted 事件，在音频播放完成时触发自定义逻辑。
+ 
+*管理音频事件
+当需要处理大量事件时，你可以自定义一个 EventManager 来统一管理事件的订阅、取消订阅以及触发时的回调。以下代码示例中定义了一个 EventManager，用于集中管理所有与音频事件相关的逻辑。
+ 
+*API 参考
+AudioEvents 类提供了音频相关的事件，详情参阅 API 参考。根据你所处的地理位置选择合适的文档链接：
+*中国大陆：https://developer-cn.picoxr.com/spatial-api/index.html
+*非中国大陆：https://developer.picoxr.com/spatial-api/index.html
+
+
+
+
+音频事件
+
+触发条件
+
+AudioEvents.PlaybackStarted
+
+音频开始播放。
+
+AudioEvents.PlaybackPaused
+
+音频暂停播放。
+
+AudioEvents.PlaybackStopped
+
+音频被终止播放，即调用 stop() 方法时被触发。
+
+AudioEvents.PlaybackCompleted
+
+音频播放完并停止，调用 stop() 方法时不会被触发。
+
+AudioEvents.PlaybackSeekCompleted
+
+音频成功被定位到某个特定时刻，即调用 seekTo() 方法并完成定位时被触发。
+
+AudioEvents.PlaybackUnknown
+
+音频播放过程中遇到错误，如解码错误、I/O错误等。
+
+@Composable
+fun AudioPlaybackCompletedEventExample() {
+    val subscription = remember { mutableStateOf<Cancellable?>(null) }
+    DisposableEffect(Unit) {
+        onDispose {
+            subscription.value?.cancel()
+            subscription.value = null
+        }
+    }
+    
+    // 创建 SpatialView 并初始化内容
+    SpatialView(
+        initial = { content, _ ->
+            // 创建一个实体并添加到场景中
+            val entity = Entity().apply { setName("Entity for AudioPlaybackCompleted") }
+            content.addEntity(entity)
+            // 订阅音频播放完成事件
+            content.subscribe(AudioEvents.PlaybackCompleted::class.java) {
+                Log.d("AudioPlaybackCompleted", "Audio playback completed for entity: $$entity")
+                // 音频播放完成后，执行自定义逻辑
+            }
+        },
+    )
+}
+
+object EventManager {
+    // 当前订阅的事件对象，用于后续取消订阅
+    private var subscription: Cancellable? = null
+
+    // 根据传入的音频事件类型，订阅对应的音频事件
+    fun <T : Event> subscribeAudioEvent(content: SpatialViewContent, audioEvent: Class<T>) {
+        when (audioEvent) {
+            // 音频开始播放事件
+            AudioEvents.PlaybackStarted::class.java -> {
+                subscription =
+                    content.subscribe(audioEvent) {
+                        Log.d("EventManager", "Audio Started!")
+                        // 实现自定义逻辑
+                    }
+            }
+  
+            // 音频暂停事件
+            AudioEvents.PlaybackPaused::class.java -> {
+                subscription =
+                    content.subscribe(audioEvent) {
+                        Log.d("EventManager", "Audio Paused!")
+                        // 实现自定义逻辑
+                    }
+            }
+
+            // 音频播放完成事件
+            AudioEvents.PlaybackCompleted::class.java -> {
+                subscription =
+                    content.subscribe(audioEvent) {
+                        Log.d("EventManager", "Audio Completed!")
+                        // 实现自定义逻辑
+                    }
+            }
+            
+            // 未匹配到已知的音频事件类型
+            else -> {
+                Log.e("EventManager", "No Matching Audio Event Found!")
+            }
+        }
+    }
+
+    // 取消所有音频事件的订阅
+    fun unsubscribeAllAudioEvents() {
+        subscription?.cancel()
+    }
+}

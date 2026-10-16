@@ -1,0 +1,72 @@
+排行榜-接口列表
+========================================
+本文罗列 “排行榜” 服务涉及的接口，包括客户端接口和服务端接口，并提供功能说明。若想了解各个接口的入参和返回说明，请阅读 API 参考。
+*客户端接口
+*PICO SDK 的排行榜服务提供了 PICO 框架和 UE 框架两套客户端接口。其中，PICO 框架接口封装在 FPicoLeaderboardsInterface 类中，UE 框架封装在 FOnlineLeaderboardPico 类中。下文列出 PICO 框架和 UE 框架下排行榜服务模块下的所有接口。要了解更多关于 PICO 框架和 UE 框架信息，参考注意事项。
+*PICO 框架接口
+*推荐你使用 PICO 框架接口开发新应用。下表列出封装在 FPicoLeaderboardsInterface 类中的接口及其功能说明。
+*
+*UE 框架接口
+*若你已使用 UE 接口开发了 VR 应用，你可使用 PICO 提供的 UE 框架使你的应用适配 PICO 设备。下表列出封装在 FOnlineLeaderboardPico 类中的接口及其功能说明。
+*
+*服务端接口
+*创建或更新排行榜
+*查询排行榜基础信息
+*获取应用内的所有排行榜
+*删除排行榜
+*创建或更新排行榜条目
+*查询排行榜条目
+*删除排行榜中的指定条目
+*删除排行榜中的所有条目
+
+
+
+接口
+
+功能
+
+Leaderboards->Get
+
+获取指定排行榜的 API Name、排行榜 ID、与排行榜关联的 Destination、排行榜的条目总数。
+
+Leaderboards->GetEntries
+
+获取指定排行榜的条目列表，可定义条目列和条目数量。
+
+Leaderboards->GetEntriesAfterRank
+
+获取指定排行榜中排序为 N 之后的条目数据。
+
+Leaderboards->GetEntriesByIds
+
+获取指定排行榜中指定用户的条目数据。
+
+Leaderboards->WriteEntry
+
+写入用户的排行榜数据。
+
+Leaderboards->WriteEntryWithSupplementaryMetric
+
+写入用户的排行榜数据，并传入用于决胜局的指标参数。
+
+
+
+接口
+
+功能
+
+ReadLeaderboards
+
+获取指定的排行榜所有条目数据。
+
+ReadLeaderboardsForFriends
+
+获取当前登录用户的好友在排行榜上的条目数据。
+
+WriteLeaderboards
+
+写入当前登录用户的排行榜数据。
+
+FlushLeaderboards
+
+执行已有的自定义回调函数。

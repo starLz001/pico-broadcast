@@ -1,0 +1,100 @@
+创建实体
+========================================
+你可以直接创建空的实体或通过加载模型创建实体。
+*实现方法
+*直接创建空实体
+*你可以直接创建空的实体。这种不可视的实体可作为虚拟父节点或者标记的查询节点，以便控制或查找子节点。所有创建的空实体默认包含 TransformComponent。代码示例如下：
+ 
+*通过模型创建实体
+Entity 提供了多种模型加载入口，加载成功后会返回“加载结果的根实体”。常见加载来源包括：
+*asset://（应用包内资源）
+*file://（本地存储文件）
+*content://（系统/三方应用提供的 ContentProvider）
+*InputStream + ModelFormat
+*AssetBundle（资源包）
+*你可以通过 Entity.load() 或 Entity.loadSuspend() 加载模型，得到 Entity 实例。加载过程中，模型的每一个节点都会被转换为一个 Entity 对象，并且这些对象会依据模型的层级关系构建出相应的树状结构。
+*Entity.load() 或 Entity.loadSuspend()返回的是一个包含了整个模型层级结构的根实体，是原模型的父节点，所有子实体都按照模型的层级关系挂载在它之下。这些子实体都会默认拥有 TransformComponent，而具有网格数据（Mesh）的子实体还会额外挂载 ModelComponent，你可以从该组件获取 MeshResource 和材质列表。
+* 
+*通过模型加载实体的代码示例如下：
+* 
+此外，当你使用 Spatial Editor 添加了组件之后，也可以通过所加载的模型实体获取到对应的组件，进而做一些运行时的参数修改。
+*下面的示例代码展示了如何把不同加载方式统一放到 Dispatchers.IO 执行。
+ 
+下面的示例代码展示了如何从网络流加载模型。
+ 
+下面的示例代码展示了如何通过 AssetBundle 加载模型，并把加载出的实体挂到当前节点下。
+ 
+*更多信息参阅《模型》。
+*注意事项
+*load(uriString: String) 支持 asset:// 与 file:// 等 scheme；当你的来源是 content:// 时，应使用 load(contentResolver, uri) / loadSuspend(contentResolver, uri)。
+*同步 load(...) 会做阻塞式 I/O，可能造成卡顿甚至 ANR。更推荐使用 loadSuspend(...)，或者把同步 load(...) 放到 withContext(Dispatchers.IO) 等不会阻塞 UI 的上下文中。
+*性能与资源建议：大模型加载成本高；纹理建议预压缩（如 ASTC/ETC2）；单张纹理内存上限为 256 MB（含 mipmaps）。
+*API 参考
+Entity和Scene  类中提供了用于管理实体的接口，详情参阅 API 参考。根据你所处的地理位置选择合适的文档链接：
+*中国大陆：https://developer-cn.picoxr.com/spatial-api/index.html
+*非中国大陆：https://developer.picoxr.com/spatial-api/index.html
+
+
+
+val emptyEntity = Entity()
+
+**
+
+比如，一个模型的层级结构如下：
+ 
+
+则加载后的实体（假设名为 "model"）层级结构如下：
+ 
+
+val model = Entity.load("asset://alarm.usdz")
+
+viewModelScope.launch {
+    sharedData.loadState =
+        try {
+            sharedData.currentEntity = withContext(Dispatchers.IO) { block() }
+            ModelLoadState.Success(
+                Transform(
+                    position = Vector3(posX, posY, posZ),
+                    rotation = Quat(),
+                    scale = Vector3(scale),
+                )
+            )
+        } catch (e: Exception) {
+            ModelLoadState.Error(errorPrefix + e.stackTraceToString())
+        }
+}
+
+URL(config.uriString).openStream().use { stream ->
+    // The following also works:
+    // Entity.load(stream, config.format!!)
+    Entity.loadSuspend(stream, config.format!!)
+}
+
+val bundle =
+    withContext(Dispatchers.IO) {
+        AssetBundle.load("asset://Bundle/SpatialPackContent.bundle")
+    }
+val entity = withContext(Dispatchers.IO) { bundle.loadModel("Sweet") }
+addChild(entity)
+
+model
+├── Dynamic_Group
+│   ├── SM_Picodesklamp_001
+│   │   ├── SM_Picodesklamp_001 (has ModelComponent)
+│   ├── SM_Picoearphone_001
+│   │   ├── SM_Picoearphone_001 (has ModelComponent)
+│   ├── SM_Picoequipment_001
+│   │   ├── SM_Picoequipment_001 (has ModelComponent)
+│   ├── SM_PicoPainting_001
+│   │   ├── SM_PicoPainting_001 (has ModelComponent)
+│   └── SM_Picovase_001
+│       ├── SM_Picovase_001 (has ModelComponent)
+└── Static_Group
+    ├── SM_PicoRoominterior_Splite_001
+    │   ├── SM_PicoRoominterior_Splite_001 (has ModelComponent)
+    ├── SM_PicoRoominterior_Splite_002
+    │   ├── SM_PicoRoominterior_Splite_002 (has ModelComponent)
+    ├── SM_PicoRoominterior_Splite_003
+    │   ├── SM_PicoRoominterior_Splite_003 (has ModelComponent)
+    └── SM_PicoRoominterior_Splite_004
+        └── SM_PicoRoominterior_Splite_004 (has ModelComponent)

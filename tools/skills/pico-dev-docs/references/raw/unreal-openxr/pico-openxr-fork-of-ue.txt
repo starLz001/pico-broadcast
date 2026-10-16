@@ -1,0 +1,70 @@
+虚幻引擎 - PICO 分支使用指南
+========================================
+虚幻引擎 - PICO OpenXR 是 PICO 基于 Epic Games 虚幻引擎仓库 Fork 的分支仓库。该分支集成了最新版本的 PICO OpenXR 插件。
+*新特性 
+*虚幻引擎 - PICO OpenXR 分支相对于 Epic Games 官方分支，新增了以下特性： 
+**
+*环境要求
+*PICO 设备系统版本：5.13.0 或以上版本
+*Visual Studio：确保勾选 使用 C++ 的游戏开发。在右侧的 "安装详细信息" 部分，选择以下组件：
+*C++ 分析工具
+*C++ AddressSanitizer（可选）
+*Windows 10 SDK（10.0.18362 或更高版本）
+*Unreal Engine 安装程序
+*使用 PICO OpenXR 分支
+*完成相关配置，确保你可以在 GitHub 上访问虚幻引擎源代码。具体步骤，参考在 GitHub 上访问虚幻引擎源代码。
+*在虚幻引擎 - PICO 分支仓库中，Fork 并克隆 PICO-5.6 Branch。你也可以选择直接下载该 Branch 的 ZIP 压缩包。
+*前往源码工程根目录，运行 Setup.bat 文件以下载引擎所需要的二进制文件，并安装引擎运行的先决条件。
+* 
+*运行 GenerateProjectFiles.bat 文件，以创建引擎所需的工程文件。
+*双击 UE5.sln 文件打开 Visual Studio 工程。
+*在 Visual Studio 中，将解决方案的配置设置为 Development Editor，解决方案的平台设置为 Win64。
+*右击解决方案管理器中的 解决方案 'UE5'，然后单击 生成解决方案，开始引擎编译。
+* 
+*(可选) 编译完成后，你可在 Visual Studio 中将启动项目设置为 UE5，然后按 F5 键调试 Unreal 编辑器。
+*使用 SetupAndroid_AGDE 工具
+SetupAndroid_AGDE.bat 是基于 Android Game Development Extension（AGDE）的批处理工具，可以帮助你快速配置 UE5 的 Android 开发环境，而无需安装 Android Studio。
+使用 SetupAndroid_AGDE.bat 工具自动配置 UE5 的 Android 开发环境的步骤如下：
+*参考虚幻引擎文档下载和安装 AGDE 扩展。
+*在 PICO-5.6 Branch 的 UnrealEngine/Engine/Extras/Android 目录下，下载并运行 SetupAndroid_AGDE.bat 文件。
+*系统将自动配置 UE5 的 Android 开发环境。
+
+
+
+
+特性
+
+描述
+
+*应用空间扭曲（Application SpaceWarp） 
+
+以实际屏幕刷新率的一半刷新率来渲染画面，而不会影响显示质量。可降低渲染延迟。
+
+*延迟锁定（Late Latching） 
+
+可降低运动到光子延迟（Motion-to-Photon Latency）。 
+
+眼动追踪注视点渲染（Eye Tracked Foveated Rendering） 
+
+根据眼球的注视方向动态调整注视点，以全分辨率渲染眼球注视区域的图像，以低分辨率渲染边缘区域图像。
+
+自适应分辨率（Adaptive Resolution）
+
+根据 GPU 性能动态调整渲染分辨率，以维持稳定的帧率。
+
+色调映射特效（Tone Mapping Effects）
+
+PICO 支持部分虚幻引擎提供的 色调映射（Tone mapping）特效，包括颜色分级（Color Grading）、晕映（Vignette）效果、电影（Film）等。由于 PICO 是基于 Vulkan 子通道（Vulkan subpasses）而不是一个额外的渲染通道来渲染特效，因此使用这些特效可降低性能开销和耗时。
+
+贴花特效（Decal Effect）支持多视图模式
+
+虚幻引擎的贴花特效（Decal Effect）是一种可以在场景中添加细节和效果的技术，它可以在模型或角色的表面上投射贴花材质，比如血迹、弹孔、裂痕等。
+
+延迟着色（Deferred Shading）支持多视图模式
+
+
+*虚幻引擎的延迟着色（Deferred Shading）是一种渲染技术，它将渲染过程分为两个步骤：几何处理和光照处理。通过将光照和几何处理分开，提供了更高效的材质和高级光照特性的实现。
+*PICO OpenXR 分支已支持在多视图（Multiview）模式下开启延迟着色（Mobile Deferred Shading），并且实现了支持 Multiview 的 FXAA 抗锯齿，在 Deferred Shading 不支持 MSAA 的情况下，可以开启 FXAA。
+提示：Deferred Shading 与 MSAA 抗锯齿不兼容，因此在开启了 Deferred Shading 后，建议选用 FXAA 抗锯齿。
+
+若提示路径或文件名太长，移动文件夹至较短路径即可。

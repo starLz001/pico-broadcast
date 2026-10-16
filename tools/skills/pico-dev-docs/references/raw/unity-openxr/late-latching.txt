@@ -1,0 +1,104 @@
+延迟锁定
+========================================
+延迟锁定（Late Latching）是一种降低运动的光子延迟（motion-to-photon latency，MTP）的技术。运动的光子延迟是指从用户开始运动，一直到对应的图像发生变化、并通过头显映射到人眼上面的全部时间。在画面传输过程中，Late Latching 可以帮助应用消除 1 帧的头戴和手柄动作延迟。若你既需要保证画面渲染质量，又需要尽可能地降低画面延迟，则可以为应用开启 Late Latching。
+*环境要求
+*设备型号：PICO Neo3 系列、PICO 4 系列、PICO 4 Ultra 系列
+*PICO 设备系统版本：5.11.0 及以上
+*Unity OpenXR Plugin 版本：1.9.1 及以上
+*原理简述
+Late Latching 将获取动作输入的时间尽可能延后，即在渲染开始前的最后一刻给 GPU 提供头戴和手柄动作输入，从而尽可能减少 MTP 延迟。
+* 
+*功能优势
+Late latching 功能可为你的应用带来以下提升：
+*减少方向预测延迟，从而减少因方向扭曲而导致的黑影。
+*减少位置预测延迟，从而减轻近距离对象的晃动。
+*使手柄的运动更加精确。
+*前提条件
+*PICO Unity OpenXR SDK 提供的 Late Latching 功能依赖通用渲染管线（URP）。因此，确保项目使用的模板为 Universal 3D。
+* 
+*Late Latching 仅支持 Vulkan 图形接口，确保项目中使用的图形接口为 Vulkan。若不是，需前往 Edit > Project Settings > Player > Android Settings > Other Settings > Graphics API，取消勾选 Auto Graphics API 选框，然后在 Graphics APIs 处添加 Vulkan 并将其置于列表顶部。
+* 
+*开启 Late Latching
+*前往 Window > Package Manager > In Project (或 Unity Registry) > OpenXR Plugin > Samples，然后点击 Import，导入 Controller 示例。
+* 
+*选中 XR Origin 下的左手柄和右手柄对象，然后在 Inspector 窗口中完成以下配置：
+*为左右手柄对象添加 Mark Late Latch Node 脚本（脚本位于 /Assets/Samples/OpenXR Plugin/{version_number}/Controller/Scripts 目录）。
+*设置 Late Latch Node 参数：左手柄对象设置为 Left Hand；右手柄对象设置为 Right Hand。
+*按需设置 Action Reference 参数（可参考 /Assets/Samples/OpenXR Plugin/{version}/Controller/ControllerSample 中的设置）。
+*前往 Project 窗口，在 Assets 目录下新建 Editor 文件夹，在 Editor 文件夹中新建一个脚本，然后将以下代码复制至该脚本。
+* 
+*调试 Late Latching
+开启 Late Latching 调试模式后，系统会打印 Late Latching 相关信息或错误，帮助你验证 Late Latching 是否在正常运行。 
+ 
+调试 Late Latching 的步骤如下：
+*前往 File > Build Settings，然后勾选 Development Build 选框。 
+*打开 Late Latching 相关代码所在的脚本，然后在 LateLatchingBuildHooks > OnProcessBootConfigExt 中添加 builder.SetBootConfigBoolean(kLateLatchingDebug, true)。
+* 
+*打包应用并在 PICO 设备上运行。 
+*使用 adb logcat -s Unity 命令获取日志。 
+*示例日志：
+* 
+*已知问题 
+若同时使用 Late Latching 和 Overlay/Underlay 层，会导致 Overlay/Underlay 层显示异常。
+*示例
+关于 Late Latching 的相关设置，可参考 /Assets/Samples/OpenXR Plugin/{version}/Controller 目录下的 ControllerSample。
+ 
+
+
+
+using System;
+using Unity.XR.OpenXR.Features.PICOSupport;
+using UnityEditor;
+using UnityEditor.Build.Reporting;
+using UnityEditor.XR.OpenXR.Features;
+using UnityEngine;
+
+// 自定义的构建钩子类，继承自 OpenXRFeatureBuildHooks
+public class LateLatchingBuildHooks : OpenXRFeatureBuildHooks
+{
+    // 常量，用于表示 Late Latching 支持的配置项
+    private const string kLateLatchingSupported = "xr-latelatching-enabled";
+    // 常量，用于表示 Late Latching 调试的配置项
+    private const string kLateLatchingDebug = "xr-latelatchingdebug-enabled";
+
+    // 在构建之前执行的扩展方法
+    protected override void OnPreprocessBuildExt(BuildReport report)
+    {
+        // 在此处添加构建前的逻辑
+    }
+
+    // 在生成 Android Gradle 项目后执行的扩展方法
+    protected override void OnPostGenerateGradleAndroidProjectExt(string path)
+    {
+        // 在此处添加生成 Gradle 项目后的逻辑
+    }
+
+    // 在构建后执行的扩展方法
+    protected override void OnPostprocessBuildExt(BuildReport report)
+    {
+        // 在此处添加构建后的逻辑
+    }
+
+    // 定义回调的执行顺序
+    public override int callbackOrder => 1;
+
+    // 指定特性类型为 PICOFeature
+    public override Type featureType => typeof(PICOFeature);
+    
+    // 处理启动配置的扩展方法
+    protected override void OnProcessBootConfigExt(BuildReport report, BootConfigBuilder builder)
+    {
+        // 更新启动配置
+        builder.SetBootConfigBoolean(kLateLatchingSupported, true); // 开启 Late Latching
+        builder.SetBootConfigBoolean(kLateLatchingDebug, false);    // 关闭 Late Latching 调试
+    }
+}
+
+Late Latching 调试模式仅支持 Development Build。
+
+protected override void OnProcessBootConfigExt(BuildReport report, BootConfigBuilder builder)
+    {
+        // 更新启动配置
+        builder.SetBootConfigBoolean(kLateLatchingSupported, true); // 开启 Late Latching
+        builder.SetBootConfigBoolean(kLateLatchingDebug, true);    // 开启 Late Latching 调试
+    }

@@ -1,0 +1,89 @@
+PSO 缓存
+========================================
+本文介绍管线状态对象（Pipeline State Object, PSO）缓存相关信息和设置。
+*什么是 PSO？
+PSO 是在运行时（Runtime）编译生成的二进制代码。PSO 的生成流程如下：
+*在打包阶段，着色器编译简单地将不同的着色器语言转换为相应的字节码。
+*当应用程序运行时，相应的硬件运行时（Runtime）会将字节码编译成 GPU 使用的二进制代码。
+*用于设置渲染管线和切换渲染管线状态的指令和依赖信息也需要被转换成 GPU 在运行时（驱动程序）可以使用的二进制代码。
+上述 3 个步骤被称为 PSO，其中包含了管线状态代码的二进制以及管线使用的着色器的哈希索引。因此，在需要创建 PSO 时，相应的着色器也会被编译成二进制代码。
+*为什么需要 PSO 缓存？
+基于 PSO 的生成流程，对象或材质的首次渲染或切换渲染会导致卡顿、首次启动缓慢以及首次剪裁级别慢的问题。
+这些运行时编译的二进制代码会被读取回应用程序并缓存为 PSO 缓存。当运行时再次尝试生成相应的 PSO 时，可以直接从 PSO 缓存中进行反序列化读取和加载，从而节省了运行时的编译过程耗时。
+即使存在 PSO 缓存，着色器字节码仍然需要输入到应用程序中，因为如果没有 PSO 缓存，仍然需要字节码来生成 GPU 所需的 PSO 二进制代码。
+*PSO 缓存流程
+* 
+*对工程进行一次烘焙，并在 .shk 文件中记录全局着色器和材质着色器。
+*在目标机器上运行应用程序时，运行时将离线编译的着色器字节码编译成机器码，并将其他管线状态生成的二进制文件读回本地存储的 .upipelinecache 文件中。
+*将步骤 1 中的 .shk 文件和步骤 2 中的 .upipelinecache 文件合并，生成一个 *.stablepcsv 文件。
+*将步骤 3 中的 *.stablepcsv 文件添加到工程中进行烘焙打包，并在应用程序中生成一个新的 *.stable.upipelinecache (PSO 缓存) 缓存文件。
+*运行 APK 时，将使用缓存的 *.stable.upipelinecache 数据来生成 PSO 对象。
+*PSO 缓存数据的编译和使用
+*提前生成 PSO 缓存，用于记录与管线状态和依赖着色器信息相关的参数。
+* 
+*当带有 PSO 缓存的应用程序在目标机器上首次运行时，将预先编译着色器和 PSO 对象。
+* 
+若想了解更多信息，参考 Unreal 官方文档。
+*使用示例
+此部分以 UE 4.27 版本为例，介绍 PSO 缓存的设置步骤。示例中涉及的示例工程名称为 PicoXR_Unreal。
+*前往 Edit > Project Settings > Project > Packaging。
+*勾选 Share Material Shader Code 和 Shared Material Native Libraries 选框。
+* 
+*“DefaultEngine.ini” 文件被添加至 D:\ UE \ UE20 \ XRSDK_Unreal \ {工程名称} \ Config 路径下。
+* 
+*在 “DefaultDeviceProfiles” 文件中添加 CVar。该文件位于 D:\ UE \ UE20 \ XRSDK_Unreal \ {工程名称} \ Config 路径下。
+* 
+* 
+*在工程的本地路径 D:\ UE \ UE20 \ XRSDK_Unreal \ {工程名称} 路径下创建 “PSOCaching” 文件夹。
+* 
+*打包应用程序，烘焙所有相关地图，然后在 D:\ UE \ UE20 \ XRSDK_Unreal \ {工程名称} \ Saved \ Cooked \ Android_ASTC \ PicoXR_Unreal \ Metadata \ PipelineCaches 路径下找到两个 .shk 文件并拷贝。
+* 
+* 
+*在 PICO 设备上安装 APK 文件。
+*在 PC 端创建一个名为 “UE4CommandLine.txt” 的文件并写入以下内容，然后将该文件添加至 \ PICO internal storage \ UE4Game \ PicoXR_Unreal \ {工程名称} 路径下。
+* 
+* 
+*运行该 APK，体验每一个关卡。
+*生成的 PSO 缓存将被存储至 \ PICO internal storage \ UE4Game \ {工程名称} \ Saved \ CollectedPSOs 路径下，然后被拷贝至步骤 4 中所创建的 PSOCaching 文件夹内。
+* 
+*编写一个 CreateStableCSV.bat 文件，然后执行它以生成最终打包所需的 *.stablepcsv 文件。
+* 
+* 
+*将 * .stablepcsv 文件添加至 D:\ UE \ UE20 \ XRSDK_Unreal \ {工程名称} \ Build \ Android \ PipelineCaches 路径下，然后将其重新打包。对应 “PSO 缓存流程” 中的第四步。
+* 
+* 
+*新的 PSO 缓存（* .stable.upipelinecache）位于 D:\ UE \ UE20 \ XRSDK_Unreal \ {工程名称} \ Saved \ Cooked \ Android_ASTC \ {工程名称} \ Content \ PipelineCaches \ Android 路径下。
+*至此，你已完成安装和操作。
+*通过日志查看加载的 PSO 缓存。
+* 
+
+
+[DevOptions.Shaders]
+NeedsShaderStableKeys=true
+
+[Android DeviceProfile]
+DeviceType=Android
+BaseProfileName=
++CVars=r.ProgramBinaryCache.RestartAndroidAfterPrecompile=0 
++CVars=r.ShaderPipelineCache.Enabled=1 
++CVars=r.ShaderPipelineCache.ReportPSO=1 
++CVars=r.ShaderPipelineCache.StartupMode=1 
++CVars=r.ShaderPipelineCache.GameFileMaskEnabled=0 
++Cvars=r.ShaderPipelineCache.LazyLoadShadersWhenPSOCacheIsPresent=1 
++CVars=r.ShaderPipelineCache.BatchSize=10 
++CVars=r.ShaderPipelineCache.BatchTime=0.0 
++CVars=r.Vulkan.PipelineCacheFromShaderPipelineCache=1
+
+-logPSO -psocache
+
+"D:\program files\Epic Games\UE_4.27\Engine\Binaries\Win64\UE4Editor-Cmd.exe" "D:\UE\UE20\XRSDK_Unreal\PicoXR_Unreal\PicoXR_Unreal.uproject" -run=ShaderPipelineCacheTools expand "D:\UE\UE20\XRSDK_Unreal\PicoXR_Unreal\PSOCaching\*.rec.upipelinecache" "D:\UE\UE20\XRSDK_Unreal\PicoXR_Unreal\PSOCaching\*.shk" "D:\UE\UE20\XRSDK_Unreal\PicoXR_Unreal\PSOCaching\PicoXR_Unreal_GLSL_ES3_1_ANDROID.stablepc.csv"
+
+该缓存不是 PSO 对象，而是一个列表集合，用于加快编译、加载和生成 PSO 对象的过程。
+
+编译只会在首次运行时开始一次。只要不卸载并重新启动应用程序，就不会再次编译。因此，预先编译会更耗时，并且可能会被添加 UI 所阻塞。
+
+此步骤对应 “PSO 缓存流程” 中的步骤 1。
+
+此步骤对应 “PSO 缓存流程” 中的第 3 步。
+
+此步骤对应 “PSO 缓存流程” 中的第 4 步。

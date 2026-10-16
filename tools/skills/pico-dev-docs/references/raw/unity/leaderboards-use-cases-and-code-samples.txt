@@ -1,0 +1,116 @@
+场景教学 & 代码示例
+========================================
+本文档具体介绍 “排行榜” 服务的使用场景并提供对应的代码示例。
+*获取排行榜信息
+你可以调用 LeaderboardService.Get 接口获取应用内的排行榜信息，返回数据包括排行榜的 API Name、与排行榜关联的 Destination、排行榜的条目总数。
+ 
+*获取排行榜条目
+条目记录了用户在应用中获得的成绩，你可以获取排行榜的条目数据、某个排名之后的条目数据、指定用户的条目数据。filter、startAt、pageSize 和 pageIdx 是获取排行耪条目时需要传入的参数，参数定义以及不同枚举组合所带来的不同返回结果可参考 《参数详解》文档。
+ 
+*更新排行榜条目
+每个用户在一个排行榜中仅拥有一个条目，条目默认保留和展示用户的最好成绩。因此，在默认情况下，当用户成绩提升时，为其更新条目数据，否则放弃更新。此外，你也可以设置强制更新逻辑，即无论用户的新成绩是提升还是下降，都为其写入最新的成绩。
+你可以调用 LeaderboardService.WriteEntry 和 LeaderboardService.WriteEntryWithSupplementaryMetric 接口来为排行榜写入条目数据。其中，LeaderboardService.WriteEntryWithSupplementaryMetric 接口中可以传入在决胜局中使用的额外指标。
+ 
+*为指定排名的用户解锁成就
+若用户在排行榜内获得指定排名，例如 Top 3 和 Top5，则为其解锁相关成就。关于创建成就的详细步骤，参考此文档。
+ 
+
+LeaderboardService.Get("排行榜的 API Name").OnComplete(OnLeaderboardGet);
+
+void OnLeaderboardGet(Message<LeaderboardList> message)
+{
+    if (!message.IsError)
+    {
+        Debug.Log($$"LeaderboardService.Get success");
+        // 处理 message.Data 回包数据。
+    }
+    else
+    {
+        var error = message.GetError();
+        Debug.Log($$"LeaderboardService.Get error: {error.Message}");
+    }
+}
+
+// 获取排行榜的条目数据，包括总条目数、条目的显示分数、条目的补充数据、条目 ID、条目排位等。
+LeaderboardService.GetEntries("排行榜的 API Name", 5, 0, LeaderboardFilterType.None, LeaderboardStartAt.Top).OnComplete(OnLeaderboardGetEntries);
+
+void OnLeaderboardGetEntries(Message<LeaderboardEntryList> message)
+{
+    if (!message.IsError)
+    {
+        Debug.Log($$"LeaderboardService.GetEntries success");
+        // 处理 message.Data 回包数据。
+    }
+    else
+    {
+        var error = message.GetError();
+        Debug.Log($$"LeaderboardService.GetEntries error: {error.Message}");
+    }
+}
+
+// 获取排行榜中某个排名之后的条目数据。OnLeaderboardGetEntriesAfterRank 和 OnLeaderboardGetEntries 类似。
+LeaderboardService.GetEntriesAfterRank("排行榜的 API Name", 5, 0, 2).OnComplete(OnLeaderboardGetEntriesAfterRank);
+
+// 获取某个排行榜中指定用户的条目数据。OnLeaderboardGetEntriesByIds 和 OnLeaderboardGetEntries 类似。
+string[] userIds = new[] { "123" };
+LeaderboardService.GetEntriesByIds("排行榜的 API Name", 5, 0, LeaderboardStartAt.Top, userIds).OnComplete(OnLeaderboardGetEntriesByIds);
+
+// 为排行榜写入一条条目。默认非强制更新，即保留最好成绩。
+LeaderboardService.WriteEntry("排行榜的 API Name", 100, null).OnComplete(OnLeaderboardWriteEntry);
+
+// 为排行榜写入一条条目。强制更新，即保留最新写入的成绩。
+LeaderboardService.WriteEntry("排行榜的 API Name", 100, null, true).OnComplete(OnLeaderboardWriteEntry);
+void OnLeaderboardWriteEntry(Message<bool> message)
+{
+    if (!message.IsError)
+    {
+        Debug.Log($$"LeaderboardService.WriteEntry success");
+        // 处理 message.Data 回包数据。
+    }
+    else
+    {
+        var error = message.GetError();
+        Debug.Log($$"LeaderboardService.WriteEntry error: {error.Message}");
+    }
+}
+
+// 为排行榜写入一条条目，条目内包含用于决胜局的额外指标。OnLeaderboardWriteEntryWithSupplementaryMetric 和 OnLeaderboardWriteEntry 类似。   
+LeaderboardService.WriteEntryWithSupplementaryMetric("排行榜的 API Name", 100, 123, null, true).OnComplete(OnLeaderboardWriteEntryWithSupplementaryMetric);
+
+public void CheckUnlockAchievementByLeaderboardRank(string yourUserID)
+{
+    LeaderboardService.GetEntries(
+        "yourLeaderboardName", 
+        0, 
+        5, 
+        LeaderboardFilterType.None, 
+        LeaderboardStartAt.Top)
+        .OnComplete((message)=>{ // Message 类型为 Message<LeaderboardEntryList>。
+            if (!message.IsError)
+            {
+                var entryList = message.Data;
+                var list = entryList.GetEnumerator();
+                while (list.MoveNext())
+                {
+                    var item = list.Current;
+                    if (item.User.ID == yourUserID)
+                    {
+                        UnlockAchievement("yourAchievementName");
+                        break;
+                    }
+                }
+            }
+        });
+}
+
+public void UnlockAchievement(string yourAchievementName)
+{
+    AchievementsService.Unlock(yourAchievementName, null).OnComplete(OnAchievementUnlockComplete);
+    void OnAchievementUnlockComplete(Message<AchievementUpdate> message)
+    {
+        if (!message.IsError)
+        {
+            Debug.Log($$"{message.Data.Name} unlock success");
+        }
+    }
+}

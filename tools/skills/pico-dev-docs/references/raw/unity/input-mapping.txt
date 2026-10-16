@@ -1,0 +1,225 @@
+手柄&头戴输入映射
+========================================
+手柄和头戴是用户与应用交互的媒介。通过操作手柄或头戴，用户可在系统或应用内完成一系列操作，例如：按下返回键，退出当前场景；点击按钮，确认相关设置。每个手柄/头戴操作都会被映射为输入事件。PICO Unity Integration SDK 使用 Unity 官方键值进行手柄和头戴的输入事件映射。
+*手柄映射
+目前手柄按键映射使用的是 Unity XR 输入系统提供的键值。
+*PICO 4 Ultra
+以下为 PICO 4 Ultra 手柄按键示意图：
+* 
+你可以调用 InputDevice.TryGetFeatureValue，传入 Unity XR 键值，获取对应按键的状态信息。下表为手柄实体按键与 Unity XR 键值的对应关系：
+*
+*PICO 4
+以下为 PICO 4 手柄按键示意图：
+* 
+* 
+下表为手柄物理按键与 Unity XR 键值的对应关系（具体说明参考 PICO Neo3 键值说明表）：
+*
+*PICO Neo3
+手柄按键示意图如下：
+* 
+* 
+下表为手柄物理按键与 Unity XR 键值的对应关系：
+*
+*获取手柄的 InputDevice
+*通过 InputDevices.GetDeviceAtXRNode 获取手柄的 InputDevice。
+ 
+*获取按键的状态输入值
+在 InputDevice.TryGetFeatureValue接口中传入 Unity XR 键值，从而获取对应物理按键的状态输入值。以下为调用示例：
+ 
+*头戴映射
+*PICO 4 Ultra
+头戴按键示意图如下：
+* 
+下表为头戴按键与键值之间的映射关系：
+*
+*PICO 4
+头戴按键示意图如下：
+* 
+下表为头戴按键与键值之间的映射关系：
+**
+*PICO Neo3
+头戴按键示意图如下：
+* 
+* 
+下表为头戴按键与键值之间的映射关系：
+*
+在新的 Unity 输入系统中，获取 KeyCode.JoystickButton0 会报错且无法识别确认键。若仍想使用旧的输入系统来获取确认键事件，可按以下步骤操作：
+*前往 Edit > Project Settings > Player > Other Settings > Configuration。
+*将 Active Input Handling* 设置为 Both 或 Input Manager (Old)。
+* 
+*添加手柄模型
+PICO Unity Integration SDK 提供标准手柄模型，位于 Packages/PICO Integration/Assets/Resources/Prefabs 目录下。应用正式运行时，标准手柄模型可根据设备型号展示对应的手柄模型。
+结合实际应用类型，你也可以使用自定义手柄模型，例如手枪、弹弓、魔杖等，从而为用户带来更加逼真的应用体验。
+*(推荐) 升级 XR Interaction Toolkit
+推荐将项目中的 XR Interaction Toolkit 升级至 2.1.1 及以上版本，以使用最新的 Unity 交互系统。升级步骤可参考《快速开始》指南，交互系统说明可参考 Unity 官方文档。
+*了解更多
+*若想获取更多 Unity XR 输入相关信息，参考此文档。
+*若想获取更多 Unity XR 键值相关信息，参考此文档。
+
+
+
+按键
+
+Unity XR 键值
+
+菜单键
+
+CommonUsages.menuButton
+
+扳机键
+
+*CommonUsages.triggerButton
+*CommonUsages.trigger
+
+抓握键
+
+*CommonUsages.gripButton
+*CommonUsages.grip
+
+截屏键
+
+无开放键值。
+注：若为应用开启了内容保护，用户将无法在应用内截屏。
+
+摇杆
+
+*CommonUsages.primary2DAxisClick
+*CommonUsages.primary2DAxis
+
+X/A
+
+CommonUsages.primaryButton
+
+Y/B
+
+CommonUsages.secondaryButton
+
+
+
+按键
+Unity XR 键值
+菜单键
+CommonUsages.menuButton：表示菜单键的激活状态（即是否被按下）。
+扳机键
+*CommonUsages.triggerButton：表示扳机键的激活状态。
+*CommonUsages.trigger：表示扳机键被按下的程度。例如，在射箭类游戏中，可以表示弓箭的拉满程度。
+
+抓握键
+*CommonUsages.gripButton：表示抓握键的激活状态。
+*CommonUsages.grip：表示抓握键被按下的程度。例如，在射箭类游戏中，可以表示弓箭的拉满程度。
+
+摇杆
+*CommonUsages.primary2DAxisClick：表示摇杆是否被按下。
+*CommonUsages.primary2DAxis：表示摇杆的上下左右拨动情况。
+
+X/A
+CommonUsages.primaryButton：表示 X/A 键的激活状态。
+Y/B
+CommonUsages.secondaryButton：表示 Y/B 键的激活状态。
+// 获取左手柄的 InputDevice
+var leftHandDevice = UnityEngine.XR.InputDevices.GetDeviceAtXRNode(UnityEngine.XR.XRNode.LeftHand);
+
+// 获取扳机键是否被按下
+bool triggerValue;
+if (device.TryGetFeatureValue(UnityEngine.XR.CommonUsages.triggerButton, out triggerValue) && triggerValue)
+{
+    Debug.Log("Trigger button is pressed.");
+}
+
+
+
+按键
+
+键值
+
+备注
+
+音量增加键
+
+VOLUME_UP
+
+安卓标准键值。系统占用，默认不开放。
+
+音量减小键
+
+VOLUME_DOWN
+
+安卓标准键值。系统占用，默认不开放。
+
+
+
+按键
+键值
+备注
+返回键
+KeyCode.Escape
+N/A
+确认键
+KeyCode.JoystickButton0
+N/A
+Home 键
+KeyCode.Home
+系统占用，默认不开放。
+音量增加键
+VOLUME_UP
+安卓标准按键。系统占用，默认不开放。
+音量减小键
+VOLUME_DOWN
+安卓标准按键。系统占用，默认不开放。
+
+
+按键
+
+Unity XR 键值
+注：具体说明参考 PICO Neo3 按键映射说明表。
+
+菜单键
+
+CommonUsages.menuButton
+
+扳机键
+
+*CommonUsages.triggerButton
+*CommonUsages.trigger
+
+抓握键
+
+*CommonUsages.gripButton
+*CommonUsages.grip
+
+截/录屏键
+
+无开放键值。
+
+摇杆
+
+*CommonUsages.primary2DAxisClick
+*CommonUsages.primary2DAxis
+
+X/A
+
+CommonUsages.primaryButton
+
+Y/B
+
+CommonUsages.secondaryButton
+
+
+
+按键
+
+键值
+
+备注
+
+音量增加键
+
+VOLUME_UP
+
+安卓标准键值。系统占用，默认不开放。
+
+音量减小键
+
+VOLUME_DOWN
+
+安卓标准键值。系统占用，默认不开放。

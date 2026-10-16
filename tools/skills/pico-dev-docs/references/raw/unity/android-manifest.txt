@@ -1,0 +1,89 @@
+Android Manifest 文件
+========================================
+由于 PICO 设备基于安卓系统，所以任何运行在设备上的应用都必须包含安卓清单文件（AndroidManifest.xml）。该文件包含安卓应用的重要元信息，包括配置信息、权限、软硬件支持、安卓版本支持等。 
+若使用 Unity 引擎来生成 PICO 应用，APK 文件内会自动生成安卓清单文件。基于你的应用配置，安卓清单文件内会自动生成相应的配置内容。
+本文档介绍如何为 PICO 应用添加额外所需的 metadata 和权限。
+*特殊 metadata
+你需要手动为应用添加以下特殊 metadata，否则会导致 Activity 显示异常。
+*<meta-data android:name=" pvr.app.type " android:value="vr"/>
+*<meta-data android:name=" pvr.display.orientation " android:value="180"/>
+*安卓标准权限
+若使用以下功能，需要手动在 AndroidManifest.xml 文件中写入安卓标准权限。
+*
+*可选 metadata 和权限
+启用 SDK 提供的特定功能后，SDK 会自动在 AndroidManifest.xml 文件中写入相关 metadata 和权限声明。
+* 
+*眼动追踪
+启用眼动追踪后，SDK 会自动在 AndroidManifest.xml 文件中写入以下 metadata 和权限声明：
+*<meta-data android:name="picovr.software.eye_tracking" android:value="1" /> 
+*<uses-permission android:name="com.picovr.permission.EYE_TRACKING" /> 
+*面部追踪
+根据所启用的面部追踪模式，SDK 会自动在 AndroidManifest.xml 文件中写入相关 metadata 和权限声明。
+*
+*自定义 AndroidManifest.xml 文件
+*如果想自定义 AndroidManifest.xml 文件，可以前往 Edit > Project Settings > Player > Publishing Settings > Build，然后勾选 Custom Main Manifest。
+ 
+勾选后，将在 /Assets/Plugins/Android 路径下生成 AndroidManifest.xml 文件。你可以打开文件并添加自定义配置。
+ 
+若想了解更多安卓清单文件相关信息，可参考安卓官方文档。
+*AndroidManifest.xml 文件示例
+*以下 AndroidManifest.xml 文件示例可供参考。
+ 
+
+
+
+
+功能
+
+权限声明
+
+读取外部存储
+
+<uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" /> 
+
+蓝牙
+
+*<uses-permission android:name="android.permission.BLUETOOTH" />
+*<uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
+*<uses-permission android:name="android.permission.INJECT_EVENTS" /> 
+
+互联网
+
+*<uses-permission android:name="android.permission.INTERNET" />
+*<uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+
+震动
+
+<uses-permission android:name="android.permission.VIBRATE"/>
+
+写入配置
+
+<uses-permission android:name="android.permission.WRITE_SETTINGS" />
+
+更改配置
+
+<uses-permission android:name="android.permission.CHANGE_CONFIGURATION" />
+
+若非必要，请不要修改相关的权限声明内容。如果使用自定义 Manifest，请根据相应功能添加对应的权限声明。
+
+
+
+模式
+
+权限声明
+
+Hybrid 
+
+*<meta-data android:name="picovr.software.face_tracking" android:value="false/true" /> 
+*<uses-permission android:name="com.picovr.permission.FACE_TRACKING" /> 
+*<uses-permission android:name="android.permission.RECORD_AUDIO" /> 
+
+Face Only 
+
+*<meta-data android:name="picovr.software.face_tracking" android:value="false/true" /> 
+*<uses-permission android:name="com.picovr.permission.FACE_TRACKING" /> 
+
+Lipsync Only 
+
+*<meta-data android:name="picovr.software.face_tracking" android:value="false/true" /> 
+*<uses-permission android:name="android.permission.RECORD_AUDIO" /> 

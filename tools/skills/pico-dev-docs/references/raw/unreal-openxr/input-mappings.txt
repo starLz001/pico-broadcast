@@ -1,0 +1,320 @@
+手柄输入映射
+========================================
+*本文档介绍如何使用 PICO Unreal OpenXR Plugin 在 UE 编辑器中设置手柄输入映射。
+*设备要求
+*PICO 设备：PICO Neo3、PICO 4、PICO 4 Pro、PICO 4 Enterprise、PICO G3、PICO 4 Ultra 或 Project Swan（PICO OS 6）
+*前提条件
+你已在引擎中安装并启用了 PICO Unreal OpenXR 插件。详情参考 PICO Unreal OpenXR 快速开始。
+*配置步骤
+参考以下步骤配置 Enhanced Input 插件后，再进行 PICO 手柄的按键映射。
+*前往 编辑 >  插件 > 内置 >Input，勾选 Enhanced Input 插件。
+* 
+*前往 内容浏览器 > 内容 > VRTemplate > Input，根据场景需要，对输入映射上下文的数据资产进行 PICO 手柄的按键映射。 
+* 
+*你可参考下表示例添加 PICO 手柄的按键映射，也可以自定义你的按键映射。
+*IMC_Default
+**
+*IMC_Hands
+**
+*IMC_Menu
+**
+*IMC_Weapon_Left
+**
+*IMC_Weapon_Right
+**
+*效果展示
+以下为在 UE5.1 中完成按键输入映射后，打包至 PICO 设备的效果。
+ 
+*相关接口
+*你可以使用以下接口分辨手柄、触发手柄震动效果或查询手柄电量。
+**
+*相关 OpenXR 扩展
+PICO OpenXR 使用了 XR_BD_controller_interaction 扩展来实现手柄的按键输入映射。
+
+
+
+字段
+
+PICO Neo3 设备按键映射
+
+PICO 4 设备按键映射
+
+PICO G3 设备按键映射
+
+*PICO Ultra 设备按键映射
+
+IA_Move 
+
+PICO Neo3 (R) Thumbstick Y
+
+PICO 4 (R) Thumbstick Y
+
+PICO G3 (R) Thumbstick Y
+
+*PICO Ultra (R) Thumbstick Y
+
+IA_Turn 
+
+PICO Neo3 (R) Thumbstick X 
+
+PICO 4 (R) Thumbstick X 
+
+PICO G3 (R) Thumbstick X
+
+*PICO Ultra  (R) Thumbstick X 
+
+IA_Grab_Left 
+
+PICO Neo3 (L) Grip Axis 
+
+PICO 4 (L) Grip Axis 
+
+无
+
+*PICO Ultra  (L) Grip Axis 
+
+IA_Grab_Right 
+
+PICO Neo3 (R) Grip Axis 
+
+PICO 4 (R) Grip Axis 
+
+无
+
+*PICO Ultra  (R) Grip Axis 
+
+IA_Menu_Toggle_Left 
+
+PICO Neo3 (L) Menu 
+
+PICO 4 (L) Menu 
+
+PICO G3 (L) Menu 
+
+*PICO Ultra  (L) Menu 
+
+IA_Menu_Toggle_Right 
+
+PICO Neo3 (R) Menu 
+
+无
+
+PICO G3 (R) Menu 
+
+无
+
+
+
+字段
+
+PICO Neo3 设备按键映射
+
+PICO 4 设备按键映射
+
+*PICO Ultra 设备按键映射
+
+IA_Hand_Point_Left 
+
+PICO Neo3 (L) Trigger Touch 
+
+PICO 4 (L) Trigger Touch 
+
+*PICO Ultra (L) Trigger Touch 
+
+IA_Hand_Point_Right 
+
+PICO Neo3 (R) Trigger Touch 
+
+PICO 4 (R) Trigger Touch 
+
+*PICO Ultra (R) Trigger Touch 
+
+IA_Hand_ThumbUp_Left 
+
+PICO Neo3 (L) X Touch 
+PICO Neo3 (L) Y Touch 
+
+PICO 4 (L) X Touch 
+PICO 4 (L) Y Touch 
+
+*PICO Ultra (L) X Touch 
+*PICO Ultra (L) Y Touch 
+
+IA_Hand_ThumbUp_Right 
+
+PICO Neo3 (R) A Touch 
+PICO Neo3 (R) B Touch 
+
+PICO 4 (R) A Touch 
+PICO 4 (R) B Touch 
+
+*PICO Ultra (R) A Touch 
+*PICO Ultra (R) B Touch 
+
+IA_Hand_Grasp_Left 
+
+PICO Neo3 (L) Grip Axis 
+
+PICO 4 (L) Grip Axis 
+
+*PICO Ultra (L) Grip Axis 
+
+IA_Hand_Grasp_Right 
+
+PICO Neo3 (R) Grip Axis 
+
+PICO 4 (R) Grip Axis 
+
+*PICO Ultra (R) Grip Axis 
+
+IA_Hand_IndexCurl_Left 
+
+PICO Neo3 (L) Trigger Axis 
+
+PICO 4 (L) Trigger Axis 
+
+*PICO Ultra (L) Trigger Axis 
+
+IA_Hand_IndexCurl_Right 
+
+PICO Neo3 (R) Trigger Axis 
+
+PICO 4 (R) Trigger Axis 
+
+*PICO Ultra (R) Trigger Axis 
+
+
+
+字段
+
+PICO Neo3 设备按键映射
+
+PICO 4 设备按键映射
+
+*PICO G3 设备按键映射
+
+*PICO Ultra 设备按键映射
+
+IA_Menu_Interact_Left 
+
+PICO Neo3 (L) Trigger Axis 
+
+PICO 4 (L) Trigger Axis 
+
+PICO G3 (L) Trigger Axis 
+
+*PICO Ultra (L) Trigger Axis 
+
+IA_Menu_Interact_Right 
+
+PICO Neo3 (R) Trigger Axis 
+
+PICO 4 (R) Trigger Axis 
+
+PICO G3 (R) Trigger Axis 
+
+*PICO Ultra (R) Trigger Axis 
+
+IA_Menu_Cursor_Left 
+
+PICO Neo3 (L) Thumbstick 2D-Axis 
+
+PICO 4 (L) Thumbstick 2D-Axis 
+
+PICO G3 (L) Thumbstick 2D-Axis 
+
+*PICO Ultra (L) Thumbstick 2D-Axis 
+
+IA_Menu_Cursor_Right
+
+PICO Neo3 (R) Thumbstick 2D-Axis 
+
+PICO 4 (R) Thumbstick 2D-Axis 
+
+PICO G3 (R) Thumbstick 2D-Axis 
+
+*PICO Ultra (R) Thumbstick 2D-Axis 
+
+
+
+字段
+
+PICO Neo3 按键映射
+
+PICO 4 设备按键映射
+
+*PICO G3 设备按键映射
+
+*PICO Ultra 设备按键映射
+
+IA_Shoot_Left 
+
+PICO Neo3 (L) Trigger Axis 
+
+PICO 4 (L) Trigger Axis 
+
+PICO G3 (L) Trigger Axis
+
+*PICO Ultra (L) Trigger Axis 
+
+
+
+字段
+
+PICO Neo3 按键映射
+
+PICO 4 设备按键映射
+
+*PICO G3 设备按键映射
+
+*PICO Ultra 设备按键映射
+
+IA_Shoot_Right 
+
+PICO Neo3 (R) Trigger Axis 
+
+PICO 4 (R) Trigger Axis 
+
+PICO G3 (R) Trigger Axis 
+
+*PICO Ultra (R) Trigger Axis 
+
+
+
+接口
+
+说明
+
+示例
+
+Get Current Interaction Profile
+
+你可以根据返回值 Interaction Profile分辨 PICO Neo3、PICO 4、PICO G3 和 PICO 4 Ultra 手柄。
+
+
+ 
+
+
+*Get Motion Controller Data 
+
+你可以根据返回值 Device Name分辨 PICO Neo3、PICO 4、PICO G3 和 PICO 4 Ultra 手柄。
+
+
+ 
+
+
+PlayHapticEffect
+
+触发手柄震动效果。
+
+
+ 
+
+
+GetControllerBatteryLevelPICO
+
+查询手柄电量。
+
+
+* 
+

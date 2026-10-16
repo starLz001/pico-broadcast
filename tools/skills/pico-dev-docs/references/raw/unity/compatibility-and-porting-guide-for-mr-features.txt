@@ -1,0 +1,205 @@
+MR 功能兼容性和迁移说明
+========================================
+本文为 MR 功能兼容性和迁移说明。你可以参考本文档将项目中 2.5.0 及更早版本的 MR 接口升级为 3.0.0 版本。
+*相关提示
+由于 SDK 3.0.0 版本中的 MR 功能重构不涉及视频透视，所以本文不讨论视频透视功能的兼容性。
+*兼容性说明
+以下为 PICO 4 和 PICO 4 Ultra 设备对 SDK 2.5.0 或更早版本及 3.0.0 版本中 MR 接口的支持情况。
+*
+*空间锚点功能迁移说明
+以下为空间锚点功能的迁移说明。功能使用说明参考以下文档：
+*2.5.0 及更早版本：空间锚点指南、API 参考
+*3.0.0 版本：空间锚点指南、API 参考
+*启用空间锚点能力
+*
+*接口对比
+*
+*场景标定功能迁移说明
+以下为场景标定功能的迁移说明。功能使用说明参考以下文档：
+*2.5.0 及更早版本：场景标定指南、API 参考
+*3.0.0 版本：场景标定指南、API 参考
+*启用场景标定能力
+*
+*接口对比
+*
+
+
+
+*SDK 版本
+
+*PICO 4
+
+*PICO 4 Ultra
+
+2.5.0 及更早版本
+
+*支持
+
+*不支持
+
+*3.0.0
+
+*仅支持空间锚点（不包含共享空间锚点）和场景标定相关接口
+
+*全部支持
+
+
+
+*2.5.0 及更早版本
+
+*3.0.0
+
+在 PXR_Manager (Script) 面板上，勾选 Anchor 选框。
+* 
+
+在 PXR_Manager (Script) 面板上，勾选 Spatial Anchor 选框。
+* 
+
+
+
+
+操作
+
+*2.5.0 及更早版本
+
+*3.0.0
+
+开始/停止空间锚点功能
+
+无
+
+
+调用其他空间锚点接口进行相关操作前，需要调用 StartSenseDataProvider 接口，开始空间锚点功能。操作完成后，调用 StopSenseDataProvider 接口，停止空间锚点功能。
+
+创建锚点
+
+*调用 CreateAnchorEntity。
+*监听 AnchorEntityCreated 事件。
+
+CreateSpatialAnchorAsync
+
+
+销毁应用内存中的锚点
+
+DestroyAnchorEntity
+
+DestroyAnchor
+
+存储锚点
+
+*调用 PersistAnchorEntity。
+*监听 AnchorEntityPersisted 事件。
+
+PersistSpatialAnchorAsync
+
+删除设备本地存储的锚点
+
+*调用 UnPersistAnchorEntity。
+*监听 AnchorEntityUnPersisted 事件。
+
+UnPersistSpatialAnchorAsync
+
+加载锚点
+
+*调用 LoadAnchorEntityByUuidFilter。
+*监听 AnchorEntityLoaded 事件。
+*调用 GetAnchorEntityLoadResults。
+
+QuerySpatialAnchorAsync
+
+获取锚点的 UUID
+
+GetAnchorEntityUuid
+
+GetAnchorUuid
+
+获取锚点的姿态
+
+GetAnchorPose
+
+LocateAnchor
+
+
+
+*2.5.0 及更早版本
+
+*3.0.0
+
+无
+
+在 PXR_Manager (Script) 面板上，勾选 Scene Capture 选框。
+* 
+
+
+
+*操作
+
+*2.5.0 及更早版本
+
+*3.0.0
+
+开始/停止场景标定
+
+
+无
+
+调用其他场景标定接口进行相关操作前，需要调用 StartSenseDataProvider 接口，开始场景标定功能。
+操作完成后，调用 StopSenseDataProvider 接口，停止场景标定功能。
+
+启动 Room Capture 应用
+
+*调用 StartSpatialSceneCapture。
+*监听 SpatialSceneCaptured 事件。
+
+StartSceneCaptureAsync
+
+加载场景锚点
+
+*调用 LoadAnchorEntityBySceneFilter。
+*监听 AnchorEntityLoaded 事件。
+*调用 GetAnchorEntityLoadResults。
+
+QuerySceneAnchorAsync
+
+
+获取锚点的语义
+
+GetAnchorSceneLabel
+
+GetSceneSemanticLabel
+
+获取锚点支持的组件
+
+GetAnchorComponentFlags
+
+GetSceneAnchorComponentTypes
+
+获取锚点的立方体数据
+
+GetAnchorVolumeInfo
+
+GetSceneBox3DData
+
+获取锚点的矩形平面数据
+
+GetAnchorPlaneBoundaryInfo
+
+GetSceneBox2DData
+
+获取锚点的非矩形平面数据
+
+GetAnchorPlanePolygonInfo
+
+GetScenePolygonData
+
+获取锚点的 UUID
+
+GetAnchorEntityUuid
+
+GetAnchorUuid
+
+获取锚点的姿态
+
+GetAnchorPose
+
+LocateAnchor

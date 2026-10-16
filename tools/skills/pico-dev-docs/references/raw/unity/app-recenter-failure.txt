@@ -1,0 +1,11 @@
+为什么集成了 SDK 的应用无法通过长按 Home 键校准（Recenter）？
+========================================
+解决步骤如下：
+*为场景添加 XR Origin。
+*选中 XR Origin。
+*在 Inspector 窗口中，完成以下操作：
+*点击底部的 Add Component 按钮，为 XR Origin 添加 PXR_Manager 脚本。
+*在 XR Origin 设置面板处，将 Tracking Origin Mode 设置为 Device 或 Floor。
+* 
+
+

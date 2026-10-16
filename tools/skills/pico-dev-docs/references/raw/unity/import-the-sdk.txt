@@ -1,0 +1,63 @@
+3. 导入 SDK
+========================================
+*预计阅读和完成时间：4 分钟
+*PICO Unity Integration SDK 是 PICO 官方基于 Unity XR 提供的开发工具，其中包含开发 PICO XR 应用所需的功能、组件、插件和脚本。本文档介绍如何在 Unity Hub 中创建项目，然后在项目中导入 SDK。
+*第一步：创建项目
+导入 SDK 前，需要在 Unity Hub 中创建项目。步骤如下：
+*在 Unity Hub 主页，点击 Projects > New Project。
+*你将进入创建项目页。
+*选择一个 Unity 提供的模板。在这个入门教程中，选择 3D (Built-In Render Pipeline)。
+* 
+*设置项目名称和存储目录。
+* 
+*点击 Create project。
+*项目初始化完毕后，你将进入 Unity 编辑器页面。
+* 
+*第二步：导入 PICO Unity Integration SDK
+*你可以从以下方式中任选其一，导入 PICO Unity Integration SDK 至你的项目。
+*
+在 SDK 导入过程中：
+*如果 Unity 弹出一个警告窗口，提醒你项目已经用了新输入系统，但需要重启 Unity Editor 开启。点击 Yes 即可。这是因为项目中已经设置了输入系统，但 PICO Unity Integration SDK 需要新的输入系统。
+* 
+*在 macOS 系统中，首次导入或运行项目时，会出现类似 “未打开 libPicoAmbisonicDecoder.dylib” 的系统提示。这是因为当前 SDK 中的 .dylib 动态库文件尚未进行 Apple 签名/公证，触发了 macOS 的安全校验机制。
+*要解决此问题，请在终端中执行以下命令。你需要把 "/path/to/PICO Unity Integration SDK" 替换成 SDK 所在目录的路径。
+**
+* 
+*后续操作
+*参考《完成项目配置》中的说明，对你的项目进行必要配置。
+
+
+为了避免编译错误，项目名称和存储目录不能包含空格或中文字符。
+
+
+
+方式
+
+步骤
+
+导入本地的 SDK 包
+
+*从 PICO 开发者官网下载 PICO Unity Integration SDK。根据你所处的地理位置选择合适的下载链接：
+*中国大陆：https://developer-cn.picoxr.com/resources/?platform=unity
+*非中国大陆：https://developer.picoxr.com/resources/?platform=unity
+*解压所下载的 SDK 压缩包。
+*你将会得到一个包含 package.json 文件的文件夹。
+*返回 Unity 编辑器页面。
+*在上方菜单栏处，选择 Windows > Package Manager。
+*在 Package Manager 窗口中，点击 + > Add package from disk。
+* 
+*选择 package.json 文件并导入。
+
+导入 Git URL
+
+*前往 PICO-Unity-Integration-SDK 仓库。
+*点击 <> Code 按钮，然后复制仓库的 HTTPS 地址。
+* 
+*返回 Unity 编辑器页面。
+*在上方菜单栏处，选择 Windows > Package Manager。
+*在 Package Manager 窗口中，点击 + > Add package from git URL。
+* 
+*输入仓库的 HTTPS 地址，然后点击 Add。
+*Unity 编辑器开始从 Git URL 中导入 SDK。
+
+sudo xattr -r -d com.apple.quarantine "/path/to/PICO Unity Integration SDK"

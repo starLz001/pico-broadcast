@@ -1,0 +1,56 @@
+挑战示例
+========================================
+你可以在 PICO GitHub 上获取 Chanllenges Demo，然后在 Unity 编辑器中打开 Demo，调试 “挑战” 服务接口。Demo 说明如下：
+* 
+*
+
+
+
+
+编号
+
+说明
+
+1
+
+用于定义 pageIndex 和 pageSize 参数。在此处可输入想查询的挑战页。
+
+2（ChallengeOption）
+
+用于配置查询筛选条件，包括挑战所属的排行榜名称、挑战名称、挑战可见性等。
+
+3（ChallengeList）
+
+用于展示挑战。配置完 pageIndex、pageSize 和 ChallengeOption 后，点击 GetList。系统将执行 ChallengesService.GetList 接口，获取符合条件的挑战，并在 ChallengeList 列表中以挑战 ID 的形式展示。同时， Log Message 面板中将展示得到的所有详细数据。
+点击列表中的某条挑战后，系统将执行 ChallengesService.Get 接口，获取该挑战的详细信息并在 Log Message 面板中展示。
+点击 Join，加入指定挑战；点击 Leave，退出指定挑战。
+
+4（Invite）
+
+用于邀请好友加入挑战。步骤如下：
+*点击 ChallengeList 中的某个挑战。
+*在输入框中输入好友的 ID，支持输入多个。
+*点击 Invite。
+系统将执行 ChallengesService.SendInvites 接口向指定好友发送邀请。
+
+5（SearchParams)
+
+用于配置挑战条目查询条件。步骤如下：
+*点击 ChallengeList 中的某个挑战。
+*配置查询条件。
+*若配置了 afterRank，则执行 ChallengesService.GetEntriesAfterRank，获取某个排名后的条目。
+*若配置了 userIds，则执行 ChallengesService.GetEntriesByUserIds，获取指定用户的条目。
+*若未配置 afterRank 和 userIds，则执行 ChallengesService.GetEntries，获取所有条目。
+*点击放大镜按钮。ChallengeEntryList 中将展示符合条件的条目。
+
+6（ChallengeEntryList）
+
+用于展示符合条件的挑战条目。点击任一条目后，Log Message 面板中将展示该条目的详细信息。
+
+7（Log Message）
+
+用于展示接口调用信息、挑战详情和条目详情。
+
+8（Debug Info）
+
+用于展示调试信息。点击 Log Message 面板中的某条记录后，Debug Info 面板中将展示该记录的详细调试信息。

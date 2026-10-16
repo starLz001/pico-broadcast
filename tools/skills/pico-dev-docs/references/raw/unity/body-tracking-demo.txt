@@ -1,0 +1,27 @@
+人体追踪示例
+========================================
+Pico-Body-Tracking-Demo 是 SDK 人体追踪功能的示例项目。
+*开发环境
+*SDK 版本：2.1.5
+*PICO 设备型号：
+*PICO 设备系统版本：5.7.0
+*”体感追踪器“ 应用版本：1.3.0
+*Unity 编辑器版本：2021.3.17f1
+*主要功能
+*唤起 ”体感追踪器“ 应用（Motion Tracker Calibration），进行人体校准。
+*同步基于臀部节点的 Avatar 位置信息，以及腿部关节点姿态数据。
+*镜像功能，你可以在镜子中查看 Avatar 的姿态和移动。
+*展示 PICO 体感追踪器的步行检测能力。
+*APK 安装包
+*将 Demo 的 APK 文件安装到 PICO 设备上进行体验。
+ 
+*GitHub 仓库
+克隆 Demo 的 GitHub 仓库，查看代码示例、图形资产、脚本文件等。
+*地址：https://github.com/picoxr/Pico-Body-Tracking-Demo
+*体验流程
+*正确佩戴 PICO 体感追踪器。
+*设置安全区的地面高度（与真实环境保持一致）。
+*打开 SwiftTestLegTrackingMode 应用。
+*点击 Start Calibration 按钮，启动 ”体感追踪器“ 应用。
+*按照  ”体感追踪器“  应用的提示，完成人体校准。
+*返回示例应用，体验 Avatar 驱动效果。

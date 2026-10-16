@@ -1,0 +1,111 @@
+图像锐化
+========================================
+图像锐化（Image Sharpening）是一种图像处理方法，可通过增强图像中高频信息，增强图像细节边缘和轮廓，减少图像的模糊程度，使图像更有质感。
+*实现原理
+PICO 使用基于微分的空域滤波算法实现图像锐化。该算法可以根据当前像素与周边像素的颜色对比度来决定对当前像素锐化的程度，一般来说，当前像素与周边像素的颜色差值越小，则锐化程度越小；反之越大。下图展示使用图像锐化处理方法前后的对比。
+* 
+针对文字的锐化效果展示如下：
+* 
+*环境要求 
+*SDK 版本：1.5.0 及以上版本 
+*PICO 设备：PICO Neo3、PICO 4 系列或 Project Swan（PICO OS 6）
+*PICO 设备系统版本：5.8.0 及以上版本
+*应用场景
+若你的图像在采集和处理的过程中，其边缘和细节看上去较模糊，对比度较差，你可考虑使用锐化这一图像增强技术来突出图像的重要特征和细节，使图像信息更加凸显。
+*注意事项
+*图像锐化功能增加了采样次数和计算量，会增加 GPU 功耗。
+*图像锐化功能可能会导致图像噪点或摩尔纹更明显。
+*超分与锐化不能在同一个 Eye Buffer 内同时开启。若你通过控制台命令同时动态设置了超分与锐化能力，将只开启超分能力。
+*锐化与下采样暂时不支持同时开启。
+*操作步骤
+你可参考以下步骤启用图像锐化功能。
+*方式一：在 UE 编辑器中启用
+*在 UE 编辑器中打开项目。 
+*在上方工具栏，点击 编辑（Edit） > 项目设置（Project Settings） > 插件（Plugins） > PICO OpenXR。
+*移动到 Feature 选项卡下，在 Sharpening Setting 字段右侧，选择 Normal Sharpening 或者 Quality Sharpening 开启锐化功能。选项描述如下：
+**
+* 
+*若你要进一步开启锐化增强模式以降低功耗，提升应用性能，可在 EnhanceMode Setting 字段右侧，选择 Fixed Foveated、Adaptive、或 Both，选项描述如下：
+* 
+**
+*方式二：使用蓝图动态启用
+锐化功能可以由控制台变量 r.Mobile.PICO.SharpeningSetting 动态控制启停。以下为该控制台变量的定义和参数说明：
+ 
+启用锐化功能的蓝图示例如下，其中：
+*0 表示关闭锐化功能
+*1 表示普通锐化
+*2 表示高质锐化
+* 
+设置锐化增强模式的蓝图示例如下，其中：
+*0 表示关闭锐化增强模式
+*1 表示开启注视点锐化模式
+*2 表示开启自适应锐化模式
+*3 表示同时开启注视点锐化模式和自适应锐化模式
+* 
+*使用建议
+在使用图像锐化功能时，建议你同时开启注视点锐化模式和自适应锐化模式。
+下面两张图分别展示只开启注视点锐化模式后锐化的像素区域，与同时开启注视点锐化模式和自适应锐化模式后，锐化的像素区域（红色区域）。从对比中可看出，同时开启注视点锐化模式和自适应锐化模式可明显降低功耗，同时可保持较好的视觉效果。
+ 
+*只开启注视点锐化模式后锐化的像素区域
+ 
+同时开启注视点锐化模式和自适应锐化模式后锐化的像素区域
+*常见问题
+*超分和锐化的区别是什么？可以同时使用吗？
+*图像锐化可以提升图像中的高频信息，但仅增强图像中已有的高频成分，增强细节边缘和轮廓；超分辨率技术可估算并补充原始图像中没有表现出的图像细节。它们都可以提升图像的清晰度。
+*超分与锐化不能在同一个 Eye Buffer 内同时开启。若你通过控制台命令同时动态设置了超分与锐化能力，SDK 将只开启超分能力。
+*了解超分相关内容，参考图像超分辨率。
+
+
+
+选项
+
+说明
+
+Normal Sharpening（普通锐化）
+
+普通锐化渲染单个像素共计需采样 3 次，锐化功耗较低。
+
+Quality Sharpening（高质锐化）
+
+高质锐化渲染单个像素共计需采样 5 次，锐化效果更好。
+
+锐化增强模式必须基于普通锐化或高质锐化使用，不可单独开启使用，否则锐化功能无效。
+
+
+
+选项
+
+说明
+
+None
+
+不开启锐化增强模式。
+
+Fixed Foveated
+
+静态注视点渲染锐化模式。开启该模式后，应用只对用户视野中心注视点区域的图像像素进行锐化，对四周图像像素不做锐化。
+
+Adaptive
+
+自适应锐化模式。开启该模式后，应用只对当前像素与周边像素的颜色对比度超过一定阈值的像素进行锐化，以此减少锐化的像素数，降低功耗。
+
+Both
+
+同时开启静态注视点渲染锐化模式和自适应锐化模式。
+
+static TAutoConsoleVariable<int32> CVarPICOSharpeningSetting(
+        TEXT("r.Mobile.PICO.SharpeningSetting"),
+        0,
+        TEXT("0: Disable Sharpening (Default)\n")                     // 关闭锐化
+        TEXT("1: Enable NormalSharpening on supported platforms\n")    // 开启普通锐化
+        TEXT("2: Enable QualitySharpening on supported platforms\n"), // 开启高质锐化
+        ECVF_Scalability | ECVF_RenderThreadSafe);
+
+static TAutoConsoleVariable<int32> CVarPICOSharpeningEnhanceMode(
+        TEXT("r.Mobile.PICO.SharpeningEnhanceMode"),
+        0,
+        TEXT("0: Disable Sharpening EnhanceMode (Default)\n")                  // 关闭锐化增强模式
+        TEXT("1: Enable Fixed Foveated on supported platforms\n")              // 开启注视点锐化模式
+        TEXT("2: Enable Adaptive on supported platforms\n")                    // 开启自适应锐化模式
+        TEXT("3: Enable FixedFoveated and Adaptive on supported platforms\n"), // 同时开启注视点锐化和自适应锐化模式
+        ECVF_Scalability | ECVF_RenderThreadSafe);

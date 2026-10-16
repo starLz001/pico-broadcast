@@ -1,0 +1,23 @@
+*该方案可将任一应用，无需任何代码修改，就设置为launcher。
+*适用产品及版本：
+此方案适用于Neo3 系列企业设备、G3、PICO 4 Enterprise(简称PICO4E)及PICO 4 Ultra Enterprise（简称PICO4UE）；
+*1.手动修改配置文件
+*适用于Neo3 系列企业设备、G3、PICO 4 Enterprise，不适用于PICO 4 Ultra Enterprise。
+方法如下：
+*下载配置文件：https://lf-picoent.picovr.com/obj/pico-tob-wan/config.txt
+*修改配置文件
+*open_guide字段：1为启动；0位不启动；默认不要更改；
+*home_pkg：配置需要设置为主launcher应用的包名；
+*home_pkg字段修改完成后，将config.txt文件拷贝至设备的系统根目录下；
+*重启设备
+备注：open_guide字段和home_pkg两个字段下方的“———”请切勿删除、修改。
+
+*2.企业设置修改
+*适用于上述所有的PICO企业设备
+*打开企业设置：
+*Neo3 系列设备、G3、PICO4E：进入“设置-通用-关于本机”，找到“软件版号”，光标对准点击8次，直到左侧导航栏下方出现“开发者”；点击进入“开发者”，后，进入“企业设置”；
+*PICO4UE：进入“设置-关于本机”，找到“软件版号”，光标对准点击8次，直到左侧导航栏下方出现“开发者选项”；点击进入“开发者”，后，进入“企业设置”；
+*进入企业设置后，选择“设置主屏幕”，选择自己已经安装的需要设置的应用，并选中，重启设备即可。
+*3.通过SDK接口实现
+*适用于上述所有的PICO企业设备
+https://developer-cn.picoxr.com/reference/unity/client-api/PXR_Enterprise/#SetAPPAsHome

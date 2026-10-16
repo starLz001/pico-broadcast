@@ -1,0 +1,255 @@
+空间音频
+========================================
+本文档介绍如何在虚幻引擎中使用 PicoSpatialAudio 插件，即 PICO 空间音频渲染器（Spatial Audio Renderer）。该渲染器提供一系列空间音频功能，如：点声源空间化、声源体积模拟、环境声学模拟等。你可以将该插件无缝集成到 PICO 应用的开发流程中，实现声音与虚拟环境的交互，创造具有沉浸感的听觉体验。 
+*体验 Demo
+PICO 提供空间音频 PICOSpatialAudioDev Demo。你可基于虚幻引擎 4.27 在编辑器中打开 Demo，进行直观的空间音频效果体验。
+PicoSpatialAudioDev 包含若干个测试场景。参考以下步骤体验这些场景：
+*前往该 Demo 的 GitHub 仓库下载该 Demo 的工程文件。
+*将该文件解压至 Unreal Projects 文件夹下。
+*在 Demo 文件夹内，双击 PICOSpatialAudioDev.uproject。
+*你将在 UE 编辑器中，打开该工程，进入到 FreeField 关卡。
+*在 UE 编辑器左下角 Content Browser/Maps 文件夹下，你可找到 Demo 提供的以下几个关卡场景：
+* 
+*场景的具体描述如下。你可戴上耳机，点击不同关卡，再点击 播放（Play），配合鼠标或键盘控制，体验相应的空间音频效果。
+**
+*自定义空间音频效果
+在 VR 应用中，实现空间音频的目标是重现现实中的声音。想象有人在音乐厅里演奏，要实现该效果，你需要放置声源（例如，演奏者）、定义声音的反射面（例如，演奏厅的墙壁）等。下文介绍具体的实现步骤。
+*环境要求
+*SDK 版本：3.0.0 及以上版本
+*PICO 设备：PICO Neo3、PICO 4 及 PICO 4 Ultra 系列
+*PICO 设备系统版本：5.11.0 及以上版本
+*前提条件
+确保你的项目中已成功导入 PICOSpatialAudio 插件并在 UE 编辑器 编辑（Edit）> 插件（Plugin）> 项目（Project）下，勾选导入的 PICOSpatialAudio 插件。了解更多，参考导入 PICO SDK。
+* 
+*开发建议
+空间音频最适合以双耳音频的形式呈现。因此：
+*项目开发阶段，建议戴上耳机，来体验空间化的音频效果。
+*实机测试阶段，建议戴上头戴显示器，来感受玩家的真实体验。
+*注意事项
+*在对声源的指向性（Directivity）可视化时，PICO SDK 会自动在声源所在 Actor 的层级下创建一个受声源参数控制的 Visualizer，因此会修改你的 map，此时你需要保存该 map。否则你再次打开该 map 时，会发现 Visualize Polar Pattern == true，但声源指向性却没有可视化的情况。
+*测试或打包项目前，请务必 Build 一下所有要用到的地图，确保烘焙了最新的空间音频信息。
+*导入音频文件
+在编辑器左下角的 内容浏览器（Content Browser） 下，导入音频文件。详细步骤，参考如何导入音频文件。
+ 
+*设置要渲染的声源
+*设置音频插件
+*在编辑器左上方，点击 编辑（Edit） > 项目设置（Project Settings） > 平台（Platforms） > [对应的开发平台] 。
+* 
+*移动到 音频（Audio） 选卡下，将 空间化插件（Spatialization Plugin） 和 混响插件（Reverb Plugin） 设置为 Pico Spatial Audio。
+* 
+* 
+*（可选）在编辑器左上方，点击 编辑（Edit）> 项目设置（Project Settings）> 插件（Plugins）> Pico Spatial Audio。
+* 
+*在 Audio Routing 选卡下，点击 Output Submix 右侧下拉按钮，选择输出 Submix。若不选择输出 Submix，插件会为你创建一个匿名的 Submix。
+*在 Rendering Quality 选卡下，点击 Rendering Mode 右侧下拉菜单，选择全局音频渲染质量。
+* 
+*实现空间化
+接下来，你需要创建一个声源物体，实现音频的空间化渲染，然后将音频资产挂载至声源物体上。具体步骤如下：
+*在编辑器左下角的 内容浏览器（Content Browser） 下，点击 Add/Import ，选择 蓝图类（Blueprint Class）> Actor。
+*将这个 Actor 拖入场景中。
+*选中新建的 Actor，点击 + Add Component > Audio。
+* 
+*选中新增的 Audio component，在其 细节（Details） 面板的 Attenuation 选项下，勾选 Override Attenuation。
+* 
+*  你将展开以下选项： 
+*Attenuation (Volume) 
+*Attenuation (Spatialization) 
+*Attenuation （Occlusion）：勿勾选启用
+*Attenuation (Submix) 
+*Attenuation （Reverb）：使用渲染器时，勾选启用不生效
+*Attenuation （Focus）：使用渲染器时，勾选启用不生效
+*Attenuation (Priority) 
+*Attenuation （Air Absorption）：勿勾选启用
+*在 Attenuation （Spatialization） 选卡下： 
+*勾选 Enable Spatialization，以启用音效空间化。 
+*将 Spatialization Method 设置为 Binaural，以实现双耳道音频空间化。 
+*点击 Spatialization Plugin Settings 右侧 + 号，选择 Pico Spatial Audio Spatialization Settings > PicoSpatialAudio Content > Save。
+* 
+*（可选）双击新建的 Pico Spatial Audio Spatialization Settings。
+* 
+*你可在打开的 Details 面板下，配置更多的声源属性。该设置适用于所有共享了该 Pico Spatial Audio Spatialization Settings 的声源资产。
+* 
+*具体说明如下：
+**
+*回到 Audio component 的 细节（Details）面板下，在 Sound 选卡下，点击 Sound 右侧下拉菜单，选择已导入的音频文件。
+* 
+*回到编辑器主界面，点击界面工具栏中的 Play，并配合鼠标移动和键盘操作。 
+*你可以听到你的声源被空间化了。
+*模拟环境声学 
+在完成声源的空间化渲染之后，你可以实现环境声学模拟功能。它可根据实际使用场景，实时计算并渲染出声源传播至听者处所带来的反射声和混响。 
+下文介绍了如何新建一个用于反射声音的场景物体 Actor，并使用该 Actor 下的静态网格体组件（Static Mesh Component），可以是墙壁、地板等，来模拟环境声。目前，渲染器还不支持动态场景物体（可移动的 Static Mesh），如：开门/关门、可移动的路障、陷阱等等的环境声模拟。 
+*在编辑器左下角的 内容浏览器（Content Browser） 下，点击 Add/Import，选择 蓝图类（Blueprint Class ）> Actor。
+*将这个 Actor 拖入场景中。
+*双击新建的 Actor，然后在打开界面的左上角，点击 + Add Component > Static Mesh。在 DefaultSceneRoot 下新建一个 Static Mesh。
+* 
+*选中 StaticMesh ，点击 + Add Component > Pico spatial Audio Scene Geometry，这个 Geometry 可用来模拟声音的反射面。
+* 
+*选中 PicoSpatialAudioSceneGeometry ，在界面右侧，展开 Details > Settings，进行如下操作：
+* 
+*勾选 Include Children Actor，让这个场景物体下的子物体的静态网格体组件都属于这个反射面。 
+*勾选 Include Children Component，从这个反射面的父组件开始，所有子组件的静态网格体组件都属于这个反射面（若不属于其他反射面）。 
+*点击 Material Settings 右侧下拉按钮，选择或创建一个 Material Settings，让这个反射面具有一定的声学特性的材质。 
+*双击 Material Settings，可以配置材质的声学属性：
+* 
+*若你在 Presets 下，将 Material Preset 设置为 Custom ，可以选择我们为你准备的材质预设。
+* 
+*Absorption 为材质在 4 个由低到高的频段（Band 1000 ～ 8000 Hz）的吸收率。吸收率越高，材质反射的能量越少，往往意味着场景的混响/回声更小声。 
+*Scattering 代表着材质反射声音时的散射率。房间表面的散射率越高，往往意味着房间的混响音量越是大于回声音量。 
+*Transmission 代表着材质透射率。在物体遮挡直达声时，透射率会和散射率共同决定让多少声波能量穿透它： 
+*散射率 Scattering 越高，透传能量越低； 
+*透射率 Transmission 越高，透传能量越高。 
+*在 Mesh Baking Utilities 下：
+* 
+*若单击 Bake Mesh ，则会对这个 Geometry 所拥有的静态网格体组件中，bAllowCPUAccess == false 的部分进行预烘焙； 
+*若单击 Clear Baked Mesh ，则会清除这个 Geometry 的所有预烘焙数据。
+* 
+*设计完成后，在编辑器工具栏，点击 Build 它在烘焙当前地图的光照信息时，也会一起烘焙当前场景中所有需要烘焙的 Geometry。
+* 
+*点击 Play，并配合鼠标/键盘操作。 
+*此时你可以听到带环境声的双耳信号了。 
+*Ambisonic 回放
+PICO 空间音频渲染器可以将 ambisonic 信号实时转换成双耳信号，一并输出到玩家的耳中。你可参考虚幻引擎文档原生声场环境立体声渲染提供的步骤来配置。
+要使用 PICO 空间音频渲染器，在配置步骤中，你需在新建的 声场副路混合（Soundfield Submix）中，将 音效域编码格式（Soundfield Encoding Format）设置为 Pico Spatial Audio Ambisonic Renderer。
+* 
+*故障排查
+*若 PicoSpatialAudio 插件导入后项目无法编辑，可尝试如下措施：
+*下载安装时 Visual Studio，确保安装了如下模块：
+*使用 C++ 的桌面开发
+*使用 C++ 的游戏开发
+*下载 。NET Framework 开发者 SDK
+*如果你使用 UE 5.2 引擎，在纯蓝图工程中打包安卓包时，你可能无法打包插件的动态库。该问题会导致 PICO 空间音频能力、甚至引擎自带的 OpenXR 能力失效。你可通过将蓝图工程转换为 C++ 工程解决该问题：
+*在编辑器左上角，点击工具（Tools）>新建 C++ 类（New C++ Class）。
+* 
+*在添加 C++类（Add C++ Class）弹窗中，直接点击下一步（Next）> 创建类（Create Class）。
+* 
+*你已将该项目转换为 C++ 项目。所有的蓝图仍然会正常工作。
+*最佳实践
+*打开点声源的多普勒效应（Doppler）可以真实地模拟声源到听者的传播延迟，但是会消耗大量的 CPU 计算时间，导致可实时同时渲染的声源数量减少。
+* 
+*测试 / 打包项目前，请务必 Build 所有要用到的地图，确保烘焙了最新的空间音频信息。
+
+
+
+场景
+
+说明
+
+Ambisonics
+
+展示环境立体声的效果。展示如何将 ambisonic 信号实时转换成双耳信号，一并输出到玩家耳中。
+
+EnvAcoustics 和 EnvAcousticsBP 
+
+
+展示声源空间化 & 环境声学模拟的能力。此场景提供带有方位感以及回声效果的“广播”，以不同的方式展示如何设计环境声学：
+*EnvAcoustics 在地图中直接搭建声学场景。 
+*EnvAcousticsBP 在蓝图中搭建声学场景，并将其用于地图中。 
+
+FreeField
+
+无环境声学的场景，展示了声源空间化的能力。此场景提供带有方位感的语音信号。 
+
+提示
+导入的音频资产需为单声道信号，这样才能用渲染器对其进行空间化处理。你可以将鼠标悬停在内容浏览器下的音频资产上来查看文件属性，如下图：
+* 
+
+提示
+[对应的开发平台] 包括你的项目开发平台和应用最终运行的平台。若你的项目在 Mac 上开发，最终运行到 PICO 设备上，你需要分别选择 Mac、Android 平台选项，然后在各自的平台下对 Audio 选项进行设置。
+
+提示
+*即便你不需要使用混响，也需要将 混响插件 （ Reverb Plugin） 设置为 Pico Spatial Audio。 
+*请勿设置 遮挡插件（Occlusion Plugin）。渲染器提供的 空间化插件、混响插件 会自行处理声音遮挡。
+
+提示
+建议从 Medium Quality 开始尝试。渲染质量越高，声源定位精度越高，环境声学计算速度越快，CPU 占用越高，反之亦然。
+
+
+
+选卡
+
+参数
+
+说明
+
+空间化设置（Spatialization Settings）
+
+
+源声音增益分贝（Source Gain Db）
+
+设置该声源的增益，单位是分贝（dB）。
+
+
+
+反射声音增益分贝（Reflection Gain Db）
+
+设置该声源反射声的增益，单位是分贝（dB）。
+
+
+
+体积尺寸（Volumetric Size）
+
+设置该声源的半径长度，单位是米。
+
+
+
+启用多普勒效应（Enable Doppler）
+
+在编译时，设置该声源是否打开多普勒效应模拟。启用此选项将使声源直达声和反射声更加真实，但音频线程 CPU 消耗略大。
+
+衰减（Attenuation）
+
+
+衰减模式（Attenuation Mode）
+
+设置该声源的音量随距离衰减的特性：
+*无（None）: 声源的音量不随着距离的增加而衰减，即保持恒定音量。适用于不受距离影响的声音，如全局音效。
+*固定（Fixed）: 与 None 选项一致，声源的音量不随着距离的增加而衰减。
+*平方反比（Inverse Square）: 声源音量的衰减与距离的平方成反比。
+*自定义（Custom）: 请勿使用。
+
+
+
+最小衰减范围（Min Attenuation Range）
+
+该声源开始衰减的最小距离，超过这个距离，音量不再增加，即衰减 = 0dB。请勿输入大于 Max Attenuation Range 的数值，否则会形成错误的音量衰减曲线。
+
+
+
+最大衰减范围（Max Attenuation Range）
+
+该声源完全消失的最大距离。超过这个距离，用户将听不见声音。请勿输入小于 Min Attenuation Range 的数值，否则会形成错误的音量衰减曲线。
+
+指向性（Directivity）
+
+指向性 Alpha（Directivity Alpha）
+
+声源向四周散发的声波能量不是各向同性的，而是用一个与声波出射角相关的极坐标函数表示，该极坐标函数被称之为声源的 polar pattern。在该 polar pattern 中，坐标原点在声源处，0 度方向为声源正方向。
+Directivity Alpha 决定了 polar pattern 的形状，包括全向形、心向形、八字形，及所有中间过渡形状。下图展示了当指向性阶数（Directivity Order）= 1 时，Alpha 值对 polar pattern 的影响。
+* 
+
+
+
+指向性阶数（Directivity Order）
+
+Directivity Order 决定了 polar pattern 的尖锐程度。下图展示了当 Alpha = 0.5 时，Order 值对 polar pattern 的影响。
+* 
+
+
+
+*可视化极坐标图案（Visualize Polar Pattern）
+
+在声源坐标原点，显示声源指向性的 polar pattern。该 polar pattern 在打包的游戏中不会显示。
+注意：
+在对声源的指向性（Directivity）可视化时，PICO SDK 会自动在声源所在 Actor 的层级下创建一个受声源参数控制的 Visualizer，因此会修改你的 map，此时你需要保存该 map。否则你再次打开该 map 时，会发现 Visualize Polar Pattern == true，但声源指向性却没有可视化的情况。
+
+
+
+*极坐标图案材质（Polar Pattern Material）
+
+
+
+提示
+建议从预设上手来设计你的场景的声学属性。
+
+提示
+蓝图界面的 Bake Mesh 和 Clear Baked Mesh 按钮会消失。当编辑好的 Blueprint 类被放置于地图中后，点击 Build 按钮，就可以对当前地图中所有的 Geometry 进行烘焙了。

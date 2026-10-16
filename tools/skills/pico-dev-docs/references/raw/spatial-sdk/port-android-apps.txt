@@ -1,0 +1,432 @@
+迁移 Android 应用
+========================================
+如果你已有一款成熟的 Android 应用，并计划将其迁移到 PICO OS 6，需要对 Android 相关配置进行升级，以确保应用在 PICO OS 6 上正常运行。
+你可以沿用熟悉的 Android 开发流程：使用 Android Studio 作为 IDE，Gradle 作为构建工具，Kotlin 作为主要开发语言，快速上手基于 PICO OS 6 的应用开发。
+在保持原有开发习惯的基础上，为了让应用在 PICO OS 6 上顺利运行，可能需要在以下方面做一些调整：
+*升级构建工具链（Gradle、AGP、Kotlin）至兼容版本
+*添加 PICO Spatial SDK 的依赖
+*使用 Jetpack Compose 构建应用界面
+*修改应用启动入口和窗口声明方式
+*前置条件
+*已按照 快速开始 描述的内容，安装好所有空间应用开发工具。
+*已将 Android Studio 升级到 2025.1.x 版本。
+* 
+*第一步：升级 Android 相关配置
+*升级构建工具链（Gradle、AGP、Kotlin）
+为 PICO OS 6 开发应用时，需要使用 Android Studio 2025.1.x 版本，并保证 Gradle、AGP（Android Gradle Plugin）与 Kotlin 三者版本相互兼容。版本选取原则如下：
+*Kotlin 至少为 2.0 或更高版本（PICO Spatial SDK 与 SpatialUI 的最低要求）。
+*AGP 推荐使用 8.8.0 或更高版本。Kotlin 2.0 官方最低支持的 AGP 版本为 8.5，但实际构建验证表明，低于 8.8.0 的 AGP 在 release 构建阶段存在兼容性问题。
+*Gradle 需满足所选 AGP 版本的最低要求，并与 Android Studio 2025.1.x 兼容。
+具体的版本对应关系，可参考：
+*Android Gradle Plugin 发布说明
+*Android Gradle Plugin 历史版本
+*升级项目配置
+*完成 Gradle、AGP 和 Kotlin 升级后，如果之前使用的 AGP 版本较低（例如低于 8.0），你的项目可能需要进行一些配置调整。常见问题包括但不限于：BuildConfig 生成问题、Namespace 配置问题、R 文件的级联问题。更多关于配置升级的信息，可以参考 AGP 8.0 发布声明。
+同时，推荐使用 Android Studio 自带的 AGP 升级助手来自动解决由于升级 AGP 引起的各种项目调整。
+*升级 Android SDK 编译配置
+由于 PICO Spatial SDK 使用了较新的 Android Jetpack 组件，这些组件对 Android SDK 版本有一定要求。因此，在使用之前，你可能需要对项目的 Android SDK 版本进行升级：
+*compileSdk：升级到 35 或以上版本
+*minSdk：升级到 35 或以上版本
+如果需要进行这项调整，可以在各个项目模块对应的 build.gradle 文件中进行如下配置：
+ 
+*第二步：添加 PICO Spatial SDK 的依赖
+你需要根据自己应用的需求添加相应的依赖。为了简化 PICO Spatial SDK 的依赖管理，你可以使用 BOM 文件。
+*你只需要指定 BOM 的版本，其他相关模块会自动下载对应的版本。你需要在对应项目模块的 build.gradle 文件中加入以下内容：
+ 
+需要注意的是，由于空间应用的 SpatialUI 组件使用了 Jetpack Compose 作为基础的 UI 框架，因此你需要在使用了 SpatialUI 的模块中通过 Compose 编译器 Gradle 插件 org.jetbrains.kotlin.plugin.compose启用 Jetpack Compose。
+同时，因为 PICO Spatial SDK 增加了对各种空间特性进行操作的能力，PICO 对原有 Jetpack Compose 的代码进行了修改和升级。如果你的应用需要使用并且包含了 SpatialUI 相关的组件，则需移除项目中原有的部分 Android Jetpack Compose 依赖。你可以在使用 SpatialUI 组件的模块的 build.gradle 文件中加入以下内容：
+ 
+*第三步：调整应用的入口
+*此时，你的应用已经具备了空间应用的基础能力，但仍以 2D 应用的兼容模式运行。若希望充分利用空间能力，需要对部分接口进行调整。具体而言，你需要对原有的主 Application 和主 Activity 进行改造，同时声明并注册所需的空间容器。这些操作需要在现有代码基础上进行修改，并额外添加必要的内容。
+*声明空间容器
+*每个空间应用若要使用空间能力，都必须声明自己的空间容器。空间容器的声明需要在 SpatialAppScope 中完成，你应在合适的位置进行此操作。为便于后续修改和维护，推荐为其创建一个独立的文件。
+* 
+假设应用包名为 com.example.myapp，你可以在该包下创建一个名为 Main.kt 的文件，作为空间容器声明的入口，并在其中放入如下代码，声明默认空间容器。
+ 
+*假设你原有应用的启动页面 Activity 也位于 com.example.myapp 包下，文件名为 MainActivity.kt，那可能会遇到以下情况：
+*如果你的应用界面已经使用 Jetpack Compose 构建，那么 MainActivity.kt 文件中的代码可能如下所示：
+* 
+*在这种情况下，你需要将原 onCreate() 中对 setContent 的调用移除，并将其包含的全部内容放入 DefaultWindowContainer 的声明中。MainActivity 中的其他内容保持不变。最终，Main.kt 文件的内容应如下所示：
+* 
+*如果你的应用界面仍然使用 Android View 和 XML 构建，那么启动界面的 MainActivity.kt 文件中的代码可能如下所示：
+* 
+*在这种情况下，你无需对原有 Activity 的内容进行任何迁移或修改，保持原有代码不变。同时，在 DefaultWindowContainer 的声明中也无需添加任何内容。最终，Main.kt 文件的内容应如下所示：
+* 
+*设置入口函数
+*完成空间容器声明后，还需要在应用启动时进行调用。在应用主 Application 类的 onCreate() 中调用之前定义的 mainApp() 函数，即可完成空间容器的注册。
+假设你的主 Application 类名为 MyApplication，位于 com.example.myapp 包下，文件名为 MyApplication.kt。如果尚未创建，需要先创建该类。然后在其中放入如下代码：
+ 
+*这样一来，你在 mainApp() 中声明的空间容器就能在系统中正确注册，并在应用程序的后续代码中被正常使用。
+*修改默认空间容器中的 Activity
+*上文中，你已经声明并注册了应用的默认空间容器，它对应传统 Android 应用中的启动页面 Activity。为了让该 Activity 能使用空间应用组件，需要让它继承 PICO Spatial SDK 提供的统一基类 SpatialLaunchActivity。因此，你需要对应用启动页面的 Activity 进行如下修改：
+ 
+*修改 AndroidManifest.xml 文件
+*为了使之前的修改生效，需要确认 AndroidManifest.xml 文件中的相关设置，包括：
+*应用使用了修改后的主 Application 类。
+*应用使用了修改后的启动页面 Activity。
+*默认空间容器的配置正确。
+ 
+*第四步：使用空间能力
+完成上述步骤后，启动应用。此时，应用已从原有的 2D 兼容模式切换为空间应用模式，你可以在支持空间能力的 Activity 中使用 PICO Spatial SDK 的组件。
+* 
+*如果你的应用界面是通过 Jetpack Compose 构建的，可以在任意 @Composable 函数中使用 PICO Spatial SDK 的组件，例如 SpatialView：
+* 
+*如果你的应用界面仍使用传统 Android View 构建，可以在 XML 布局中添加 ComposeView，作为 PICO Spatial SDK 组件的入口：
+* 
+*然后，在对应的 MainActivity 里，把需要的组件加入到 ComposeView 中，例如 SpatialView：
+* 
+至此，你已经成功将原有的 Android 应用迁移至 PICO OS 6。
+*常见问题
+*在应用迁移过程中，如遇问题，可参考以下常见问题与解决方案。若以下内容无法涵盖你的情况，请访问官网社区寻求帮助，或通过点击下面的链接提交工单，联系技术支持团队获取进一步支持：
+*https://picodevsupport.freshdesk.com/support/home
+*
+*Gradle 版本较低
+当你看到下面其中任何一个错误信息，说明你的 Gradle 版本过低。按照提示升级你的 Gradle 版本。
+* 
+*Kotlin 版本过低
+以下错误信息说明你当前的 Kotlin 版本过低，需要升级 Kotlin 版本。
+* 
+*BuildConfig 生成问题
+以下错误信息说明 BuildConfig 未打开。
+* 
+*在 AGP 8.0 及更高版本中，BuildConfig 类不再默认生成。这意味着，如果你的项目中使用了自定义的 buildConfigField，或者依赖 BuildConfig.DEBUG 等常量，在升级到 AGP 8.0 或更高版本后，若未显式启用 BuildConfig 功能，就可能出现编译错误或警告。
+要解决此问题，需要在受影响模块的 build.gradle 文件中添加如下配置：
+ 
+*Namespace 配置问题
+以下错误信息说明你的模块没有正确配置 Namespace。
+* 
+*在 Gradle 构建文件中，namespace 用于定义模块的 Java/Kotlin 源代码的顶级包名，以及生成的 R 类的包名。它与 AndroidManifest.xml 文件中的 package 属性密切相关。自 AGP 7.0 起，namespace 在 Gradle 文件中的作用愈发重要，并逐渐取代了 AndroidManifest.xml 文件中的 package 属性的主要作用。
+要解决相关问题，需要在受影响模块的 build.gradle 文件中添加如下内容：
+ 
+*R 文件的级联问题
+*在 AGP 8.0 之前，Gradle 默认会生成级联的 R 类。这意味着，如果 ModuleA 依赖 ModuleB，ModuleA 可以直接访问 ModuleB 中定义的所有资源（例如通过 ModuleB.R.id.some_id 或直接 R.id.some_id）。
+升级到 AGP 8.0 及更高版本后，若项目仍沿用级联 R 类的旧行为，可能会出现编译错误，提示找不到某些资源。
+为解决此问题，需要修改 R 文件的引用方式，分别引用各自模块中的资源，例如：
+ 
+*组件冲突
+以下错误信息说明你没有剔除 Android Jetpack Compose 中和 PICO Spatial SDK 的组件冲突的类。需要参考上文，使用 resolutionStrategy 来剔除重复组件。
+* 
+*空间应用崩溃
+*该问题通常出现在使用 SpatialUI 组件时，但未启用 Jetpack Compose Compiler，导致 @Composable 注解的代码无法被正确解析。
+* 
+*确保在使用 SpatialUI 的模块的 build.gradle 文件中包含如下配置：
+ 
+*Google Play Services 不被支持
+如果你的应用使用了 Google Mobile Services (GMS) 或 Firebase 相关功能，运行时可能会出现如下类似错误信息：
+ 
+需要注意的是，目前 PICO OS 6 并未集成 GMS 组件，也不支持 Google Play Services。你需要自行寻找替代方案，以确保应用能够正常运行。
+
+
+若需判断当前应用是否运行在 PICO OS 6 空间平台上，可以使用 SpatialBuild.isSpatialPlatform() 接口。该接口可帮助你区分 PICO 空间设备与普通 Android 手机或模拟器，从而实现针对性的逻辑兼容。
+
+android {
+    compileSdk 35
+
+    defaultConfig {
+        minSdkVersion 35
+        ...
+    }
+    
+}
+
+// PICO Spatial SDK 的版本
+implementation platform("com.pico.spatial:bom:6.1.9")
+
+// PICO Spatial Pack 的依赖（核心，必需）
+implementation("com.pico.spatial.core:core")
+
+// SpatialUI 的依赖（使用 Compose 构建空间 UI 时必需）
+implementation("com.pico.spatial.ui:platform")
+implementation("com.pico.spatial.ui:foundation")
+implementation("com.pico.spatial.ui:design")
+
+// 以下为可选模块，按需引入：
+implementation("com.pico.spatial.sense:sense")
+implementation("com.pico.spatial.tracking:tracking")
+implementation("com.pico.spatial.ml:securemr")
+implementation("com.pico.spatial.ml:readback")
+
+configurations.all {
+    resolutionStrategy {
+        exclude group: 'androidx.compose.ui', module: 'ui'
+        exclude group: 'androidx.compose.ui', module: 'ui-graphics'
+        exclude group: 'androidx.compose.ui', module: 'ui-text'
+        exclude group: 'androidx.compose.foundation', module: 'foundation'
+    }
+}
+
+迁移项目时需要注意，PICO Spatial SDK 的一个空间容器（Container）对应一个 Activity，且通常运行于不同的 task 中。如果你的业务原先使用单 Activity 架构，且需要将不同界面映射到多个空间容器中，则需要对 Activity 进行适当拆分。
+
+package com.example.myapp
+
+import com.pico.spatial.ui.foundation.dsl.DefaultWindowContainer
+import com.pico.spatial.ui.foundation.dsl.SpatialAppScope
+
+fun mainApp(scope: SpatialAppScope) = with(scope) {
+    DefaultWindowContainer {
+         // 默认空间容器所展示的内容
+    }
+}
+
+package com.example.myapp
+
+import android.os.Bundle
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import com.example.myapp.ui.Home
+import com.example.myapp.ui.theme.MyAppTheme
+...
+
+class MainActivity : ComponentActivity() {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+
+        ...
+
+        setContent {
+            MyAppTheme {
+                Home()
+            }
+        }
+    }
+}
+
+package com.example.myapp
+
+import com.pico.spatial.ui.foundation.dsl.DefaultWindowContainer
+import com.pico.spatial.ui.foundation.dsl.SpatialAppScope
+import com.example.myapp.ui.Home
+import com.example.myapp.ui.theme.MyAppTheme
+...
+
+fun mainApp(scope: SpatialAppScope) = with(scope) {
+    DefaultWindowContainer {
+        MyAppTheme {
+            Home()
+        }
+    }
+}
+
+package com.example.myapp
+
+import android.os.Bundle
+import androidx.activity.ComponentActivity
+import com.example.myapp.R
+...
+
+class MainActivity : ComponentActivity() {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+
+        ...
+
+        setContentView(R.layout.activity_main)
+    }
+}
+
+package com.example.myapp
+
+import com.pico.spatial.ui.foundation.dsl.DefaultWindowContainer
+import com.pico.spatial.ui.foundation.dsl.SpatialAppScope
+
+fun mainApp(scope: SpatialAppScope) = with(scope) {
+    DefaultWindowContainer {
+        /* Leave this area empty */
+    }
+}
+
+package com.example.myapp
+
+import android.app.Application
+...
+
+class MyApplication : Application() {
+    override fun onCreate() {
+        super.onCreate()
+
+        ...
+
+        // 调用入口函数，注册空间容器
+*        launch(::mainApp)
+    }
+}
+
+package com.example.myapp
+
+...
+
+class MainActivity : SpatialLaunchActivity() {
+    ...
+}
+
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+    ...
+    
+    <!-- Use MyApplication as the main application entry -->
+    <application
+        android:name=".MyApplication">
+
+        <!-- 
+            Use MainActivity as the launcher activity and 
+            default window container of the spatial app
+        -->
+        <activity android:name=".MainActivity"
+            android:exported="true"
+            android:label="@string/app_name"
+            android:theme="@style/AppTheme">
+
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+
+            <!-- Default window container settings -->
+            <meta-data android:name="pico.spatial.windowcontainer.id"
+                android:value="MyAppHome" />
+            <meta-data android:name="pico.spatial.windowcontainer.style"
+                android:value="1" />
+            <meta-data android:name="pico.spatial.windowcontainer.defaultsize"
+                android:value="1080x720" />
+            <meta-data
+                android:name="pico.spatial.windowcontainer.defaultsize.unit"
+                android:value="dp" />
+            <meta-data
+                android:name="pico.spatial.windowcontainer.materialbackground"
+                android:value="0" />
+
+            <!-- 以下为可选配置，按需声明 -->
+            <!-- 是否允许用户调整窗口大小 -->
+            <meta-data android:name="pico.spatial.windowcontainer.resizetype"
+                android:value="0" />
+            <!-- 调整窗口大小时的限制策略 -->
+            <meta-data
+                android:name="pico.spatial.windowcontainer.resizerestriction"
+                android:value="0" />
+            <!-- 世界缩放类型 -->
+            <meta-data
+                android:name="pico.spatial.windowcontainer.worldscaletype"
+                android:value="0" />
+            <!-- 是否显示标题栏 -->
+            <meta-data android:name="pico.spatial.windowcontainer.captionbar"
+                android:value="1" />
+        </activity>
+        
+        ...
+        
+  </application>
+
+由于 PICO 设备缺少物理返回键及全面屏手势，应用迁移后需通过 UI 按钮、NavHost 导航或手势交互等方式显式触发“回退（Back）”操作，以确保导航逻辑完整，防止兼容模式下出现用户无法返回上一级页面的体验中断。
+
+package com.example.myapp.screens
+
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import com.pico.spatial.core.ecs.Entity
+import com.pico.spatial.core.ecs.resource.AssetBundle
+import com.pico.spatial.core.ecs.resource.ResourceLoadingException
+import com.pico.spatial.ui.foundation.content.SpatialView
+...
+
+@Composable
+fun Home(modifier: Modifier) {
+    ...
+
+    Column(modifier = modifier.fillMaxSize()) {
+        SpatialView(
+            initial = { content, _ ->
+                try {
+                    val entity = Entity.loadSuspend(
+                        modelName = "Hi",
+                        bundle = AssetBundle.load("asset://hi.bundle"),
+                    )
+                    content.addEntity(entity)
+                } catch (e: ResourceLoadingException) {
+                    // 加载失败处理
+                }
+            },
+        )
+    }
+}
+
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/view_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".MainActivity">
+    
+    ...
+    
+    <androidx.compose.ui.platform.ComposeView
+        android:id="@+id/compose_view"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"/>
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout>
+
+*...
+class MainActivity : SpatialLaunchActivity() {
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+
+        ...
+
+        findViewById<ComposeView>(R.id.compose_view)?.let { composeView ->
+            composeView.setContent {
+                SpatialView(
+                    modifier = Modifier
+                        .width(200.dp)
+                        .height(200.dp),
+                    initial = { content, _ ->
+                        val entity = Entity.loadSuspend("asset://example.usdz")
+                        content.addEntity(entity)
+                    },
+                )
+            }
+        }
+    }
+}
+
+**
+
+ 
+
+ 
+
+android {
+    ...
+    
+    buildFeatures {
+        buildConfig true
+    }
+}
+
+android {
+    namespace "com.example.myapp"
+
+    defaultConfig {
+        ...
+    }
+}
+
+import com.example.myapp.R
+import com.example.myapp.core.R as coreR
+
+textView = findViewById(R.id.text)
+textView.text = getString(coreR.string.hello)
+
+android {
+    ...
+    
+    buildFeatures {
+        compose true
+    }
+ 
+}

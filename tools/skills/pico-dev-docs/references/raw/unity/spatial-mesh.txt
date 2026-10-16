@@ -1,0 +1,179 @@
+空间网格
+========================================
+空间网格功能可以实时动态扫描现实场景，然后将场景中的内容转换成空间网格。
+*什么是空间网格？
+空间网格是对于空间表面信息的捕捉和重建。应用开始网格扫描后，将在用户看过的地方逐步生成三角网格。空间网格数据中还包含网格包围盒、语义等信息。
+* 
+空间网格主要用于在混合现实体验中提供应用对现实环境的理解。将物理世界重构为空间网格后，可以更好地实现虚拟物体与现实物体之间的交互。例如，撞向现实墙面的虚拟小球能够被弹回。此外，结合深度感知技术，可以实现虚拟物体和现实物体之间的遮挡关系。
+你可以通过 SDK 实时获取空间网格的顶点、索引、语义等信息，并且可以根据应用的需求设置不同的细节层次（Level of Detail，LOD）来获取不同粗细程度的网格。此外，你也可以使用 SDK 内置的网格绘制组件实现网格的可视化显示。
+*技术原理
+创建空间网格 Provider 后，PICO 设备将对当前场景进行扫描。用户在场景中移动时，算法会实时感知用户视野前方的深度和语义信息，并将这些信息融合到空间网格中。如果视野范围内的扫描区域发生变化，空间网格会相应地更新，以保持与真实环境状态的一致性。
+目前，实时读取网格时，仅加载以头戴为中心半径约 5 米范围内的网格的信息。应用层如需记录更大范围的网格的信息，需要存储相应数据。
+*使用建议
+建议针对应用场景合理使用空间网格功能，以降低系统开销。应用如果需要使用一个空间的完整网格信息，建议首先引导用户看向空间各处，使得该空间能够被完全扫描。生成相应的空间网格数据后，再继续体验应用的其余内容。
+如果在创建空间网格后不需要实时更新网格信息，建议存储当前网格数据并继续使用，同时关闭空间网格 Provider，以节省资源开销。此外，可以考虑使用较低的 LOD 来减少网格数量。
+*环境要求
+*PICO 设备型号：PICO 4 系列、PICO 4 Ultra 系列
+*PICO 设备系统版本：5.14.0 及以上
+*启用空间网格能力
+使用空间网格数据前，需要在 Unity 编辑器内为应用启用空间网格能力。
+*在场景内添加 XR Origin 对象，并为其添加 PXR_Manager (Script) 组件。
+*在 Inspector 窗口中的 PXR_Manager (Script) 面板上，勾选 Spatial Mesh 选框。
+*根据实际需求，设置 LOD 参数。
+*LOD 影响空间网格的数量和精度：等级越低，单位表面积上的三角形数量越少，相应的精度也会下降。
+**
+* 
+*配置空间网格
+你可以使用 SDK 提供的 PXR_Spatial Mesh Manager (Script) 组件来显示网格。如果使用该方式，可直接将 PXR_Spatial Mesh Manager (Script) 组件添加到指定 GameObject 上，然后添加 Mesh Prefab 即可显示网格。此外，你还可以为空间网格事件配置回调函数，自定义空间网格的颜色。
+* 
+*配置空间网格预制体
+*Mesh Prefab 参数用于配置空间网格预制体。预制体至少需要包含 Mesh Filter 组件。如果想显示扫描到的网格，则还需包含 Mesh Renderer 组件，如下图所示：
+* 
+*配置 Unity Event 的回调函数
+SDK 在原有的空间网格事件（Action）的基础上提供了 Unity Event。借助 UnityEvent 可让用户驱动的回调从编辑时间一直持续到运行时，无需进行额外的编程和脚本配置。你可以为以下 Unity Event 配置回调函数：
+*On Spatial Mesh Added (Guid, GameObject)：当新的空间网格被检测并添加到场景中时，触发该事件。
+*On Spatial Mesh Updated (Guid, GameObject)：当已有的空间网格更新时（例如，形状或位置发生变化），触发该事件。
+*On Spatial Mesh Removed (Guid, GameObject)：当空间网格被移除时，触发该事件。
+*配置空间网格的颜色
+*在 Custom Mesh Color 部分，你可以为各个语义下的空间网格配置自定义颜色， 丰富场景的视觉效果。
+*管理空间网格 Provider 的生命周期
+如果使用了 PXR_Spatial Mesh Manager (Script) 组件，则可以通过监听以下事件来获取网格的处理结果：
+ 
+如果你想自行控制网格的显示和隐藏，则可以监听 SpatialMeshDataUpdated 事件来得知网格数据的变化。该事件接收 PxrSpatialMeshInfo 结构体，其中包含了更新后的空间网格信息。订阅该事件的对象收到信息后可以执行相应的更新操作，如更新UI、重新渲染场景等。
+ 
+代码示例如下：
+ 
+
+***
+
+ 
+
+ 
+
+ 
+
+
+
+LOD 等级
+
+网格数量
+
+High
+
+平均每平米 250 个三角网格。
+
+Medium
+
+平均每平米 125 个三角网格。
+
+Low
+
+平均每平米 80 个三角网格。
+
+// Guid 为网格对象的唯一标识；GameObject 为网格对象实例
+public static Action<Guid, GameObject> MeshAdded; // 新增的网格绘制完成
+public static Action<Guid, GameObject> MeshUpdated; // 更新的网格绘制完成
+public static Action<Guid> MeshRemoved; // 消失的网格删除完成
+
+var subsystem = XRGeneralSettings.Instance.Manager.ActiveLoaderAs<PXR_Loader>().meshSubsystem;
+
+// 开始扫描网格
+subsystem.Start();
+
+// 停止扫描网格
+subsystem.Stop();
+
+Action<List<PxrSpatialMeshInfo>> SpatialMeshDataUpdated;
+
+public struct PxrSpatialMeshInfo
+{
+    public Guid uuid; // 网格的 UUID，即网格的唯一标识
+    public MeshChangeState state; // 网格的变化，与上次事件推送时的状态相比
+    public Vector3 position; // 网格的位置
+    public Quaternion rotation; // 网格的旋转
+    public ushort[] indices; // 网格的索引数组
+    public Vector3[] vertices; // 网格的顶点数组
+    public PxrSemanticLabel[] labels; // 网格的语义标签数组
+}
+
+public enum MeshChangeState
+{
+    Added, // 新增网格
+    Updated, // 更新网格
+    Removed, // 删除网格
+    Unchanged, // 网格未发生变化
+}
+
+// 处理空间网格的变化，包括添加、更新和删除网格
+void SpatialMeshDataUpdated(List<PxrSpatialMeshInfo> meshInfos)
+{
+    // 遍历网格信息列表
+    for (int i = 0; i < meshInfos.Count; i++)
+    {
+        // 获取当前的网格信息对象
+        PxrSpatialMeshInfo meshInfo = meshInfos[i];
+
+        // 根据网格的状态进行不同的处理
+        switch (meshInfo.state)
+        {
+            // 新增网格
+            case MeshChangeState.Added:
+                {
+                    // 将网格信息添加到需要绘制的网格列表中
+                    spatialMeshNeedingDraw.Add(meshInfo.uuid, meshInfo);
+                }
+                break;
+            // 网格被更新
+            case MeshChangeState.Updated:
+                {
+                    // 如果该网格不在需要绘制的网格列表中，则添加进去
+                    if (!spatialMeshNeedingDraw.ContainsKey(meshInfo.uuid))
+                    {
+                        spatialMeshNeedingDraw.Add(meshInfo.uuid, meshInfo);
+                    }
+                    // 否则，更新已存在的网格信息
+                    else
+                    {
+                        spatialMeshNeedingDraw[meshInfo.uuid] = meshInfo;
+                    }
+                }
+                break;
+            // 网格被删除
+            case MeshChangeState.Removed:
+                {
+                    // 从需要绘制的网格列表中移除该网格信息
+                    spatialMeshNeedingDraw.Remove(meshInfo.uuid);
+
+                    // 获取与删除的网格关联的游戏对象
+                    GameObject removedGo;
+                    if (meshIDToGameobject.TryGetValue(meshInfo.uuid, out removedGo))
+                    {
+                        // 如果对象池有空间，将游戏对象停用并加入池中
+                        if (meshObjectsPool.Count < objectPoolMaxSize)
+                        {
+                            removedGo.SetActive(false);
+                            meshObjectsPool.Enqueue(removedGo);
+                        }
+                        // 否则，销毁游戏对象
+                        else
+                        {
+                            Destroy(removedGo);
+                        }
+                        // 移除网格 ID 到游戏对象的映射
+                        meshIDToGameobject.Remove(meshInfo.uuid);
+                    }
+                }
+                break;
+            // 网格状态未发生变化
+            case MeshChangeState.Unchanged:
+                {
+                    // 从需要绘制的网格列表中移除该网格信息
+                    spatialMeshNeedingDraw.Remove(meshInfo.uuid);
+                }
+                break;
+            // 网格状态无效
+            default:
+                throw new ArgumentOutOfRangeException();
+        }
+    }
+}

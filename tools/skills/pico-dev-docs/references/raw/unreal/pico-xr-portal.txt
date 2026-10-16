@@ -1,0 +1,109 @@
+PICO XR Portal
+========================================
+PICO XR Portal 是一个兼具设置向导和项目配置检测功能的开发者门户，包含 Configs、Tools、Samples 和 About 四个功能模块。通过该门户，你可以快速访问开发者文档、社区、Samples 和 GitHub 开源代码资源，基于自身的开发需求勾选项目设置选项，并完成项目配置检测，从而确保打包的应用能够顺利运行。
+* 
+*Configs 模块
+*通过 Configs 模块，你可以了解使用 SDK 所需的 UE 引擎版本信息，修复和验证使用 SDK 必备的配置项，并快速完成常用的 PICO 项目配置。
+* 
+*相关功能介绍：
+*
+*Tools 模块
+*通过 Tools 模块，你可以获取 SDK 提供的各类编辑器和开发者工具。
+ 
+*相关功能介绍：
+*
+*Samples 模块
+*Samples 模块介绍了 SDK 为开发者提供的快速入门（GetStartedSample）、平台服务（PlatformSample）和空间音频（SpatialAudioSample）示例。点击 Documentation 会跳转到对应示例在 PICO 开发者网站的详细介绍文档；点击 GitHub 会跳转到对应示例在 GitHub 上的下载页面。
+ 
+*About 模块
+*通过 About 模块，你可以了解 PICO Unreal Integration SDK 的基本信息，包括 SDK 的功能、文档和安装说明。
+ 
+*相关功能介绍：
+*
+
+
+在 UE 项目中成功导入 PICO XR SDK 后，PICO XR Portal 主界面将在每次项目启动时自动弹出。若无需重复显示，可以勾选”不再弹出“选项。
+
+
+
+功能
+
+说明
+
+Information
+
+SDK 支持 UE 5.4 及以上的版本。
+
+*Configuarion
+
+项目配置必须满足以下要求。对于不符合要求的配置，可以点击 Fix 进行修复。
+*PICO XR 插件必须是唯一启用的 XR 插件。
+*Vulkan 是当前唯一支持的图形接口。
+*必须启用 Multiview 作为当前渲染设置。
+*当前要求的安卓软件开发工具包版本号（AndroidSDKVersion）必须是 29 及以上。
+
+*PICO Project Settings
+
+点击 Open PICO Project Settings 可以打开 PICO 项目设置界面，以快速完成常用的 PICO 项目配置。
+* 
+
+
+
+功能
+
+说明
+
+*Project Verification
+
+点击 Open Project Verification 可以打开检测工具界面，以检测项目配置是否符合 SDK 要求。
+* 
+*配置规则分为两类：
+*Required Rules：必需规则。若关闭，项目将无法正常运行。
+*Careful Rules：需要注意的规则。开启后可能造成高性能消耗等负面影响。若有意开启，则可以无视。
+*主要检测项介绍：
+*Enable MSAA：仅在 Forward shading 下支持，建议开启。
+*Enable MultiView：UE 5 要求必须开启 MultiView。
+*Vulkan Rendering Backend：UE 5 要求必须使用 Vulkan API。
+*HalfPrecision Float：使用半精度浮点数以提升性能。
+*Disable Ambient Occlusion：环境光遮蔽存在性能问题，建议关闭。
+*Disable OpenXR Plugin：OpenXR 插件与 PICO XR 插件冲突，必须关闭。
+*Android SDK Minimum Version：29 及以上。
+*Android SDK Target Version：29 及以上。
+*Arm64 CPU Architecture：应用商店要求 64 位应用。
+*Disable Touch Interface：触摸界面与 VR 输入不完全兼容。
+*Disable MobileHDR：关闭 MobileHDR 可提升性能。
+*DisableMovableSpotlightShadows：开启可移动聚光灯阴影会导致渲染错误。
+
+PICO Developer Center
+
+点击 Download 可以跳转到 PICO 开发者中心。
+
+*PICO Emulator
+
+点击 Download 可以跳转到 PICO 模拟器。
+
+More Developer Tools
+
+PICO 提供一系列开发者工具，涵盖应用调试、性能监测、触觉编辑等功能。欲了解更多详情，请访问开发者工具文档页面。
+
+
+
+功能
+
+说明
+
+*About the SDK
+
+PICO Unreal Integration SDK 是PICO 官方提供的虚幻引擎工具包，用于为 PICO XR 头显及设备开发应用程序。
+
+*Features
+
+SDK 提供的功能涵盖渲染、输入与交互、混合现实、空间音频、运动追踪、平台服务以及企业级特性等。
+
+*Document
+
+点击 PICO Developer Website 可以跳转到PICO 开发者网站，以获取最新文档及示例。
+
+*Installation
+
+提供安装 SDK 的三个快捷链接，包括从 PICO 官方网站下载 SDK、从 Unreal Fab 下载 SDK，以及 UE 引擎的 PICO 分支。

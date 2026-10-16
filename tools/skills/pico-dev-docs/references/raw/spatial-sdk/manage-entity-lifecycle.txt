@@ -1,0 +1,31 @@
+管理实体的生命周期
+========================================
+本文介绍如何管理实体的生命周期。
+*实现方法
+*你可以使用 Entity 对象的以下属性和函数管理实体的生命周期：
+*enabled：控制实体是否参与渲染/更新；默认 true。
+*valid：用于判断实体是否仍然有效；销毁后会变为 false。
+*destroy(recursively)：显式销毁实体（默认递归销毁子实体）。
+*示例代码
+*以下代码展示了如何在 ViewModel 清理时销毁当前加载的实体。
+ 
+*注意事项
+*enabled 属性默认为 true。当一个父实体被禁用时，其所有子实体也将表现为被禁用状态，即使子实体自身的 enabled 属性为 true。
+*被禁用的实体不会被渲染且不可见，但它仍然存在于场景中，可以被遍历或查询。因此，禁用一个实体并不等同于销毁它。
+*destroy() 方法默认会递归销毁其下的整个子实体树。如果你传入 recursively = false，则只会销毁当前实体，其子实体会被从父子关系中移除，并且父引用会被置空。
+*即使你不显式调用 destroy()，当对象不再有任何强引用时，其相关资源也会在垃圾回收（GC）期间自动释放。但在实际业务中，为了更精确地控制释放时机，仍建议你在合适的生命周期节点显式调用 destroy()。
+*API 参考
+对于Entity 类中有关实体生命周期的属性，详情参阅 API 参考。根据你所处的地理位置选择合适的文档链接：
+*中国大陆：https://developer-cn.picoxr.com/spatial-api/index.html
+*非中国大陆：https://developer.picoxr.com/spatial-api/index.html
+
+class EntityLoadScopedData {
+    var currentEntity by mutableStateOf<Entity?>(null)
+        internal set
+
+    fun clear() {
+        currentEntity?.destroy()
+        currentEntity = null
+        loadState = ModelLoadState.Idle
+    }
+}

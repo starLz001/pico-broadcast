@@ -1,0 +1,198 @@
+粒子
+========================================
+粒子是一种模拟自然或抽象现象的实时图形技术，可用于增强沉浸感、表达交互反馈等。常见的粒子包括烟雾、雨雪、火花、尘埃、光晕等。
+*前置条件
+*项目中已添加 Spatial Tools 依赖。详情参考《项目结构与依赖配置》。
+*项目中已有 Spatial Editor 工程。关于如何在 Spatial Editor 中创建工程，参考《新建项目》。
+*创建粒子
+*在 Spatial Editor 中，为需要添加粒子特效的 entity 添加 Particle Component，并在 Inspector 窗口中调整 Emitter 和 Particles 相关的参数，实现想要的效果，可配置参数的详细说明参阅《通用组件》中的 “Particle“ 部分。
+ 
+此外，Spatial Editor 中的 Asset Library 提供了一些预设的粒子，你可以直接使用或修改已有配置。
+* 
+*播放粒子
+*使用 PICO Spatial SDK 成功加载模型后，粒子特效便会自动播放。
+*例如，为 PICO 机器人添加云雾（同时添加了光照），场景在 Spatial Editor 中的结构如下：
+ 
+使用 PICO Spatial SDK 提供的 Entity.loadSuspend 或 AssetBundle.load 接口将 PICO 机器人、粒子和光照加载到一个 Full 样式的 Stage 中：
+ 
+*预期的播放效果如下：
+* 
+*在运行时动态更新粒子
+*粒子的大部分随时间变化的属性可以在 Spatial Editor 中通过编辑变量曲线实现；运行时动态修改属性主要适用于以下场景:
+*事件触发响应：根据用户交互或特定应用事件动态调整参数；
+*条件逻辑控制：基于应用状态或条件判断修改属性值；
+*程序化生成：通过代码算法动态计算和设置参数；
+*实时调试优化：在运行时快速调整参数以测试不同效果。
+*若要在运行时动态修改粒子的属性，则需要通过 PICO Spatial SDK 实现。目前，ParticleComponent 类提供以下可在运行时动态修改的属性：
+*
+例如，在场景内添加一个按钮，每次点击按钮后，烟雾的 startColor 就会随机变为另一种颜色。
+ 
+预期效果如下：
+ 
+以上只是一个简单的示例，你可以按照应用的实际设计，在需要时更改相应的属性，以实现符合预期的效果。
+需要注意的是，在获取 ParticleComponent 之前，以上代码使用 findEntity("cloud") 来查找目标 entity，因为在 Spatial Editor 中，真正包含 ParticleComponent 的是名为 "cloud" 的节点。
+并且，示例中仅改变了 startColor，所以在粒子的整个生命周期中，其颜色会介于 startColor 和白色之间，按照系数 t 进行插值：t = (t_current - t_birth)/T_life，其中 T_life 为生命周期。因此你也会看到其他颜色。
+*了解更多：关于 ParticleColorVaryingProperty 类
+ParticleColorVaryingProperty 类用于描述粒子的颜色，其实例可以为粒子的 startColor 属性赋值。ParticleColorVaryingProperty 类的三个属性分别为 type、value 和 range。根据 type 的不同，value 和 range 的含义也不同，startColor 显示的颜色也有所区别：
+*当 type = ParticleVaryingPropertyType.CONSTANT 时，颜色为固定值，每个粒子的 startColor 由 value 决定，range 被忽略。
+*当 type = ParticleVaryingPropertyType.RANDOM 时，颜色为随机值，每个粒子的 startColor 都会在 [value, range] 范围内随机取值。
+*当 type = ParticleVaryingPropertyType.VARYING 时，颜色为变化值，每个粒子的 startColor 根据归一化的发射时刻进行插值：t_emit/T_emit，其中 T_emit 为发射持续时间（Emission Duration），value 是 t_emit = 0 时的颜色，range 是 t_emit = T_emit 的颜色。
+以下三个示例中，仅为粒子设置了 startColor，T_emit = 4，生命周期 = 3；你可以观察 type、value 和 range 的设置不同时，粒子的颜色变化。
+* 
+*注意事项
+*在使用代码获取 ParticleComponent 时，确保其所作用的 entity 是在 Spatial Editor 中已经添加了Particle Component 的 entity。你可以通过节点名称使用 findEntity(name) 函数定位正确的 entity。
+*对于 ParticleColorVaryingProperty 类型的实例，其属性不支持使用 setter 直接修改。如果需要调整其中任一属性的值，必须创建一个全新的实例。
+*此外，ParticleColorVaryingProperty 的 getter 返回的属性值并不是对原属性的引用；修改这些值不会影响实例内部的实际属性。
+*使用 getter 获取到的 startColor 属性，不是对 ParticleComponent 的原属性的引用，修改这个属性的值不会自动影响 ParticleComponent 中的原属性。如果要修改这个属性，需要构造新的 ParticleColorVaryingProperty 实例，并通过 setter 将新的值设置给这两个属性。
+*API 参考
+*ParticleComponent 和 ParticleColorVaryingProperty 类提供了粒子相关的属性和函数，详情参阅 API 参考。根据你所处的地理位置选择合适的文档链接：
+*中国大陆：https://developer-cn.picoxr.com/spatial-api/index.html
+*非中国大陆：https://developer.picoxr.com/spatial-api/index.html
+
+fun mainApp(scope: SpatialAppScope) =
+    with(scope) {
+        DefaultStage { ParticleExample() }
+    }
+
+@Composable
+fun ParticleExample() {
+    SpatialView(
+        initial = { content, _ ->
+            val scene =
+                Entity.loadSuspend(
+                    modelName = SCENE_NAME_PARTICLE,
+                    bundle = AssetBundle.load("asset://$$BUNDLE_NAME.bundle")
+                )
+            scene.components[TransformComponent::class.java]?.apply {
+                setPosition(Vector3(0f, 1.0f, -2f))
+            }
+            content.addEntity(scene)
+        }
+    )
+}
+
+
+
+*SDK 提供的属性
+
+*Spatial Editor 中的对应属性
+
+*描述
+
+*isEmitting
+
+*Is Emitting
+
+*是否发射粒子。
+
+*startColor
+
+*Start Color
+
+*粒子的生命周期开始时的初始颜色。
+
+*isAttractorEnabled
+
+*Attractor Enabled
+
+*是否开启引力场。
+
+*attractorStrength
+
+*Attractor Strength
+
+*将粒子吸引到引力场中心的强度，仅在 isAttractorEnabled = true 时可以设置。
+
+*isVortexEnabled
+
+*Vortex Enabled
+
+*是否开启漩涡力场。
+
+*vortexStrength
+
+*Vortex Strength
+
+*漩涡的强度，仅在 isVortexEnabled = true 时可以设置。
+
+@Composable
+fun ParticleExample() {
+    var color by remember { mutableStateOf(Color4.WHITE) }
+    var particleComponent by remember { mutableStateOf<ParticleComponent?>(null) }
+    SpatialView(
+        initial = { content, attachments ->
+            // 处理当前场景
+            val scene =
+                Entity.loadSuspend(
+                    modelName = SCENE_NAME_PARTICLE,
+                    bundle = AssetBundle.load("asset://$$BUNDLE_NAME.bundle")
+                )
+            scene.apply {
+                components[TransformComponent::class.java]?.apply {
+                    setPosition(Vector3(0f, 1.0f, -2f))
+                }
+                // 在 Spatial Editor 中，已将 ParticleComponent 添加到名为 "cloud" 的 entity，因此需要先找到该 entity
+                val particleEntity = this.findEntity("cloud")
+                particleEntity?.components?.get(ParticleComponent::class.java)?.apply {
+                    particleComponent = this
+                }
+                content.addEntity(this)
+            }
+            // 处理 button attachment
+            val buttonAttachment = attachments.entity("button")
+            buttonAttachment?.apply {
+                scene.addChild(this)
+                components[TransformComponent::class.java]?.apply {
+                    setPosition(Vector3(0f, 1.2f, 0.8f))
+                    scaleBy(2f)
+                }
+            }
+        },
+        attachments = {
+            AttachmentPanel(id = "button") {
+                Button(
+                    modifier = Modifier.clip(RoundedCornerShape(12.dp)),
+                    onClick = {
+                        color = randomColor4()
+                        particleComponent?.startColor =
+                            ParticleColorVaryingProperty(
+                                type = ParticleVaryingPropertyType.CONSTANT,
+                                value = color,
+                            )
+                    }
+                ) {
+                    Text(text = "Change Color", color = Color(color.red, color.green, color.blue))
+                }
+            }
+        }
+    )
+}
+
+// 用于生成随机颜色的函数
+private fun randomColor4(): Color4 {
+    val maxAlpha = 1f
+    val minAlpha = 0.3f
+    return Color4(
+        Random.nextFloat(),
+        Random.nextFloat(),
+        Random.nextFloat(),
+        Random.nextFloat() * (maxAlpha - minAlpha) + minAlpha
+    )
+}
+
+***
+
+*type = CONSTANT
+*value = #5943ff
+*range：无 
+* 
+
+*type = RANDOM
+*value = #5943ff
+*range = #ffffff
+ 
+
+*type = VARYING
+*value = #5943ff
+*range = #ffffff
+ 

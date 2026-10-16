@@ -1,0 +1,32 @@
+在不支持 Spatial Editor 的开发环境中如何跳过 editor-asset 模块编译
+========================================
+一个 Spatial 项目可以包含一个或多个 editor-asset 模块。editor-asset 模块需要 Spatial Editor 才能编译为 .bundle 文件。
+*如果你的开发环境（例如 Linux）无法运行 Spatial Editor，包含 editor-asset 模块的 Spatial 项目会编译失败。你可以通过修改 Spatial 项目跳过 editor-asset 模块编译，从而让包含 editor-asset 模块的 Spatial 项目仍然可以成功编译。 
+*跳过 editor-asset 模块编译
+*在支持 Spatial Editor 的开发环境中，点击 Android Studio 的运行按钮，编译并运行 Spatial 项目，确保在 editor-asset/build/spatial/build/ 下生成对应的 .bundle 文件。
+* 
+*复制 editor-asset/build/spatial/build/ 下生成对应的 .bundle 文件到 app 模块的 assets 目录。
+* 
+*在 app 模块的 build.gradle.kts 文件中，注释掉以下依赖项。
+* 
+* 
+*选择 File > Sync Project with Gradle Files 以确保新的 Gradle 配置生效。
+* 
+*此时，你可以在不支持 Spatial Editor 的环境下编译 Spatial 项目。在编译过程中，editor-asset 模块的编译会被跳过。
+*恢复 editor-asset 模块编译
+*如果你需要恢复 Spatial 项目的 editor-asset 模块的编译，参考以下步骤。
+*删除 app 模块下的 src/main/assets/ 目录。
+* 
+* 
+*在 app 模块的 build.gradle.kts 中，取消注释这一行依赖： 
+* 
+* 
+*选择 File > Sync Project with Gradle Files 以确保新的 Gradle 配置生效。
+* 
+*此时，在编译过程中，editor-asset 模块会恢复编译。
+
+implementation(project(":editor-asset"))
+
+务必删除该目录。否则，旧的 .bundle 文件可能会覆盖 editor-asset 模块新生成的文件，导致更新不生效。
+
+implementation(project(":editor-asset"))

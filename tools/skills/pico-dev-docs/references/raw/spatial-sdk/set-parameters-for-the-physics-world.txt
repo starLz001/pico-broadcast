@@ -1,0 +1,238 @@
+设置物理世界的参数
+========================================
+在某些场景中，你可能希望覆盖默认的全局物理设置，以实现独特或非类地的物理效果。例如，你可能想模拟不同于典型的 Vector3(0f, -9.81f, 0f) 方向上的重力，就像置身于太空中一样。或者，你可能想通过自定义模拟时钟来控制时间流逝，该时钟可以调整物理更新之间的时间速度或时间步长。为了在模拟精度和性能之间取得平衡，你还可能需要通过调整约束求解中的位置和速度迭代次数，来微调求解器的行为。
+*关于 PhysicsWorldComponent
+*PhysicsWorldComponent 组件允许你定义一个具有本地化模拟参数的自定义物理世界。通过将实体分配到特定的 PhysicsWorldComponent，你可以独立于全局物理环境来控制它们的物理行为。PhysicsWorldComponent 支持的属性如下：
+**
+*创建物理世界
+若要为一组实体创建一个自定义物理世界，使用以下步骤：
+* 向一个 rootEntity 添加一个 PhysicsWorldComponent。
+* 将 entity1 和 entity2 添加为 rootEntity 的子节点。
+在这个层级结构下（即 entity1 和 entity2），这些实体将共享同一个本地化的物理环境。你可以为该物理世界配置自定义的重力向量、用于约束求解的迭代次数、专用的模拟时钟，以及运动学刚体的碰撞报告行为。这一切都可以独立于全局物理设置进行配置。这种设置对于模拟具有不同物理属性的隔离区域非常有用，例如空间站、水下环境，或场景中的慢动作区域。
+* 
+*代码示例
+*以下代码创建了一个新的环面实体，并为其分配了一个 PhysicsWorldComponent。重力为 Vector3(0f, -1f, 0f)，以模拟重力较弱的行星环境；物理模拟的时间速度为 0.5，使物理系统以真实时间一半的速度运行。
+* 
+*需要注意的是，即使环面实体正确配置了碰撞组件（CollisionComponent）和刚体模式（RigidBodyMode.DYNAMIC），它仍会穿过静态平面且不会产生预期的碰撞反应。原因在于给环面实体添加 PhysicsWorldComponent 后，它被置于一个独立的物理世界中，与静态平面（以及球体）所在的物理世界不同。因此，它们处于不同的模拟环境，无法进行物理交互。
+ 
+*关于 kinematicCollisionReportMode
+*kinematicCollisionReportMode 的作用
+kinematicCollisionReportMode 用于控制当前物理世界中，RigidBodyMode.KINEMATIC 的实体在发生碰撞时，是否会触发 CollisionEvents（Enter/Update/Exit）。默认值为 KinematicCollisionReportMode.NONE，即：当碰撞对里没有 DYNAMIC 刚体时，系统不会因为 KINEMATIC 的接触而额外产生碰撞事件消息。
+为什么默认是 NONE
+KINEMATIC 常用于交互/逻辑驱动（不受力、通常由业务直接更新位姿或速度）。若默认对所有 KINEMATIC 开启碰撞汇报，会带来更高的碰撞事件触发频率（尤其是 CollisionEvents.Update 的每帧回调）和更大的数据量开销。因此建议保持默认值，并在确有需要的局部场景中显式开启。
+生效范围与使用方式
+*这是一个“物理世界级别”的配置：它对该 PhysicsWorldComponent 管理的物理世界内的所有 KINEMATIC 生效。
+*要让多个实体发生碰撞，它们必须处于同一个物理世界（页面已有提示）。因此，当你需要让两个 KINEMATIC 的互撞也触发事件时，推荐将它们挂到同一个父实体下，并在父实体上添加 PhysicsWorldComponent。
+配置建议
+*两个 KINEMATIC 互撞要回调：WITH_KINEMATIC_ONLY
+*KINEMATIC 撞静态要回调：WITH_STATIC_ONLY
+*都要：ALL
+*最简代码示例
+*以下展示了如何通过最简代码实现上述物理世界配置，以满足不同碰撞情况的回调需求，同时若只需要“碰到就回调、不要实体反弹/阻挡”，请在 CollisionComponent 上选择 CollisionResponseMode.TRIGGER_LITE/TRIGGER_FULL。 
+ 
+*API 参考
+PhysicsWorldComponent 类提供了物理世界相关的属性和函数，详情参阅 API 参考。根据你所处的地理位置选择合适的文档链接：
+*中国大陆：https://developer-cn.picoxr.com/spatial-api/index.html
+*非中国大陆：https://developer.picoxr.com/spatial-api/index.html
+
+
+
+*属性
+
+*描述
+
+*gravity
+
+*定义在此物理世界中施加的局部重力向量。
+
+*kinematicCollisionReportMode
+
+*可以设置当前运动学物体（kinematic bodies）在与不同类型的物体（如运动学或静态物体）发生碰撞时，是否触发碰撞事件消息，默认为 NONE。
+
+*solverIterations
+
+*设置物理引擎在求解位置约束或速度约束时的迭代次数。该设置会直接影响求解的精度与性能：
+* 迭代次数越多：结果更准确，但计算开销更大，影响运行效率。
+* 迭代次数较少：性能更高，但可能导致物理行为不稳定或不精确。
+
+*simulationClock
+
+* 指定一个本地时钟，用于独立驱动物理模拟。包括：
+*fixedTimestep：用于控制物理系统中计算更新的固定时间间隔。数值越小，计算越精确，但对性能影响越大；数值越大，计算越粗糙，可能会增加“瞬间更新到一个错误位置”的风险。
+*maxTimeStep：允许的最大时间步长。用于限制帧与帧之间物理更新的最大时间间隔，防止在帧率较低时由于累计过多的 FixedUpdate 调用而引发性能问题。
+*timeSpeed：控制时间流逝的速度。值越大，模拟越快。
+
+为了确保碰撞发生，所有参与碰撞的对象必须属于同一个物理世界。换句话说，要么都不给它们添加 PhysicsWorldComponent，要么它们必须共享一个拥有 PhysicsWorldComponent 的祖先实体。
+
+@Composable
+fun PhysicsWorldExample() {
+    SpatialView(
+        modifier = Modifier.fillMaxSize(),
+        initial = { content, _ ->
+            content.addEntity(setUpStaticPlane())
+            content.addEntity(setUpDynamicSphere())
+            content.addEntity(setUpDynamicTorus())
+        }
+    )
+}
+
+fun setUpStaticPlane(): Entity {
+    val planeSize = Vector3(1.2f, 0.07f, 0.7f)
+    val planePos = Vector3(0f, -0.3f, 0.35f)
+    // 创建平面实例
+    val staticPlane = createPlaneEntity(planeSize, planePos)
+    // 设置碰撞组件
+    addCollisionComponent(staticPlane, ShapeResource.createBox(size = planeSize))
+    return staticPlane
+}
+
+fun createPlaneEntity(planeSize: Vector3, planePos: Vector3): Entity {
+    // 创建一个网格
+    val mesh = MeshResource.createBox(size = planeSize, cornerRadius = 0.02f)
+    // 创建一个材质
+    val material =
+        PhysicallyBasedMaterial.create(BlendingMode.OPAQUE).apply {
+            setBaseColor(Color4.fromLinearHex("0x65697cff"))
+        }
+    // 创建一个平面实体
+    val plane = ModelEntity(mesh, material).apply { setName("plane") }
+    // 调整平面的位置
+    plane.components[TransformComponent::class.java]!!.position = planePos
+    return plane
+}
+
+fun setUpDynamicSphere(): Entity {
+    val sphereRadius = 0.06f
+    val spherePos = Vector3(0f, 1.2f, 0.3f)
+    // 创建球体实体
+    val dynamicSphere = createSphereEntity(sphereRadius, spherePos)
+    // 设置碰撞组件
+    addCollisionComponent(dynamicSphere, ShapeResource.createSphere(radius = sphereRadius))
+    // 设置刚体组件
+    addRigidBodyComponent(dynamicSphere)
+    return dynamicSphere
+}
+
+fun createSphereEntity(sphereRadius: Float, spherePos: Vector3): Entity {
+    // 创建一个网格
+    val mesh = MeshResource.createSphere(radius = sphereRadius)
+    // 创建一个材质
+    val material =
+        PhysicallyBasedMaterial.create(BlendingMode.OPAQUE).apply {
+            setBaseColor(Color4.fromLinearHex("0xa9bbd3ff"))
+        }
+    // 创建一个球实体
+    val sphere = ModelEntity(mesh, material).apply { setName("sphere") }
+    // 调整球体的位置
+    sphere.components[TransformComponent::class.java]!!.position = spherePos
+    return sphere
+}
+
+fun setUpDynamicTorus(): Entity {
+    val torusOuterRingRadius = 0.15f
+    val torusInnerRingRadius = 0.06f
+    val torusPos = Vector3(-0.3f, 1.2f, 0.3f)
+    // 创建环面网格
+    val mesh =
+        MeshResource.createTorus(
+            outerRingRadius = torusOuterRingRadius,
+            innerRingRadius = torusInnerRingRadius
+        )
+    // 创建环面实体
+    val torus = createTorusEntity(mesh, torusPos)
+    // 设置碰撞组件
+    addCollisionComponent(torus, ShapeResource.createConvexMesh(mesh))
+    // 设置刚体组件
+    addRigidBodyComponent(torus)
+    // 设置物理世界组件
+    addPhysicsWorldComponent(torus)
+    return torus
+}
+
+fun createTorusEntity(mesh: MeshResource, torusPos: Vector3): Entity {
+    // 创建一个材质
+    val material = 
+        PhysicallyBasedMaterial.create(BlendingMode.OPAQUE).apply {
+            setBaseColor(Color4.fromLinearHex("0x9ad3c5ff"))
+        }
+    // 创建环面实体
+    val torus = ModelEntity(mesh, material).apply { setName("torus") }
+    // 调整环面的位置
+    torus.components[TransformComponent::class.java]!!.position = torusPos
+    return torus
+}
+
+fun addCollisionComponent(entity: Entity, shapeResource: ShapeResource) {
+    entity.components.set(
+        CollisionComponent(
+            collisionShape = listOf(shapeResource),
+            physicsMaterial =
+                PhysicsMaterialResource(
+                    staticFriction = 0.6f,
+                    dynamicFriction = 0.6f,
+                    restitution = 0.8f,
+                ),
+            collisionResponseMode = CollisionResponseMode.COLLIDER_FULL,
+            collisionFilter = CollisionFilter.COLLISION_FILTER_DEFAULT,
+            collisionInfoDetailLevel = CollisionInfoDetailLevel.BRIEF
+        )
+    )
+}
+
+fun addRigidBodyComponent(entity: Entity) {
+    entity.components.set(
+        RigidBodyComponent().apply {
+            massProperties =
+                MassProperties(
+                    mass = 1f,
+                    centerOfMass = Vector3.ZERO,
+                    inertia = Vector3(0.1f),
+                    orientationOfInertia = Quat.identity()
+                )
+            rigidBodyMode = RigidBodyMode.DYNAMIC
+            isAffectedByGravity = true
+            collisionDetectionMode = CollisionDetectionMode.CONTINUOUS
+        }
+    )
+}
+
+fun addPhysicsWorldComponent(entity: Entity) {
+    entity.components.set(
+        PhysicsWorldComponent(
+            gravity = Vector3(0f, -1f, 0f),
+            simulationClock = SimulationClock(timeSpeed = 0.5f)
+        )
+    )
+}
+
+val physicsRoot = Entity().apply {
+    components.set(
+        PhysicsWorldComponent().apply {
+            // 两个 kinematic 物体互撞能触发回调：用 WITH_KINEMATIC_ONLY
+            // kinematic 物体撞静态物体能触发回调：用 WITH_STATIC_ONLY
+            // 和 kinematic 物体以及静态物体碰撞都能触发回调：用 ALL
+            kinematicCollisionReportMode = KinematicCollisionReportMode.WITH_KINEMATIC_ONLY
+        }
+    )
+}
+
+val a = Entity().apply {
+    components.set(CollisionComponent(/* ... */).apply {
+        // 只要事件，不要物理碰撞效果：用 TRIGGER_* 
+        collisionResponseMode = CollisionResponseMode.TRIGGER_LITE
+    })
+    components.set(RigidBodyComponent().apply { rigidBodyMode = RigidBodyMode.KINEMATIC })
+}
+
+val b = Entity().apply {
+    components.set(CollisionComponent(/* ... */).apply {
+        collisionResponseMode = CollisionResponseMode.TRIGGER_LITE
+    })
+    components.set(RigidBodyComponent().apply { rigidBodyMode = RigidBodyMode.KINEMATIC })
+}
+
+physicsRoot.addChild(a)
+physicsRoot.addChild(b)
+
+// 订阅 CollisionEvents.Enter / Update / Exit
+// （建议只在需要持续接触回调时才用 Update）

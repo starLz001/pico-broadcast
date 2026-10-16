@@ -1,0 +1,87 @@
+实现流程
+========================================
+*本文档介绍如何为你的应用实现社交互动体验。
+*前提条件
+*已在项目中导入 PICO Unity Integration SDK 并完成项目配置。若未完成，参考以下文档完成该任务：
+*导入 SDK
+*完成项目配置
+*实现流程
+*第一步：创建 Destination
+你可以在开发者平台中为应用创建多个 Destination，并配置图片、描述、Deeplink 等。
+*登录 PICO 开发者平台。
+*在左侧导航栏中，点击 我的应用。
+*你将前往 我的应用 页。
+*点击目标应用，进入其 概览 页。
+*在左侧导航栏中，点击 平台服务。
+*你将前往 PPS 开发平台。
+*在左侧导航栏中，点击 Destinations。
+*在 Destinations 管理面板中，点击 创建 Destination。
+*你将进入 新建 Destination 面板。
+* 
+*配置 Destination：
+*选择 Destination 的应用地区。
+*配置 Destination 信息，包括 基础信息 和 开发者信息。
+*下表为基础信息填写说明：
+**
+*下表为开发者信息填写说明：
+**
+*点击 保存 或 保存并提交。
+*若点击 保存，Destination 将进入“草稿”状态。
+*若点击 保存并提交，Destination 将进入“审核中”状态。
+*第二步：上传应用
+用户接受邀请后，设备将解析邀请通知中携带的包名参数，然后唤起相关应用。因此，创建 Destination 后，你还需要在 PICO 开发者平台上传应用包。具体步骤参考此文档。
+*第三步：初始化平台服务
+*全局初始化平台服务。你可以调用 CoreService.Initialize() 接口同步初始化平台服务，或调用 CoreService.AsyncInitialize() 接口异步初始化平台服务。详细说明和代码示例参考《初始化》一文。
+*第四步：实现社交互动体验
+调用接口，在应用内实现社交互动体验，包括邀请、应用间跳转、内容分享等。
+*场景教学和代码示例参考此文档。
+*接口列表参考此文档。
+
+
+
+字段
+
+说明
+
++ 管理语言
+
+设置 Destination 在应用内的展示语言。
+
+显示名称
+
+Destination 的显示名称，用于在应用内向用户展示。
+
+简介
+
+Destination 的描述内容，用于在应用内向用户展示。
+
+图片信息
+
+Destination 的图片，用于在应用内向用户展示。
+
+
+
+字段
+
+说明
+
+API Name
+
+Destination 的唯一标识。
+
+DeepLink Message
+
+用于存放动态配置。示例如下：
+ 
+
+是否启用DeepLink
+
+开启后，用户可通过 Deeplink 能力跳转至目标位置。
+
+可见范围
+
+Destination 的可见范围。选项有：
+*仅开发者：Destination 仅对你自己可见
+*所有人：对所有 PICO 用户可见
+
+{"room_name":"sports game","game_type":"pingpong","game_level":"easy"}

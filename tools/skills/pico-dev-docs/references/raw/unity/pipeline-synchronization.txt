@@ -1,0 +1,7 @@
+Pipeline 同步
+========================================
+要创建一个 SecureMR 应用，你需要使用 Pipeline 运行一些 Operator，并进行数据输入和输出。如果需要运行多个 Pipeline，你可以通过使用全局 Tensor 来在不同 Piepline 之间传输数据，存储一个 Pipeline 的输出，然后将其用作下一个 Pipeline 的输入。
+在此过程中，全局 Tensor 中存储的数据采用“无锁”机制进行访问同步，包括读和写。因此，当一个 Pipeline 正在运行并要访问全局 Tensor 作为输入或输出时，其他访问该 Tensor 的 Pipeline 将不会运行，而是会等待第一个 Pipeline 完成后再继续。在这个意义上，Tensor 数据本身不需要被锁定，因为已防止多个 Pipeline 同时访问这些数据。由于每个 Pipeline 都是在单个任务线程中运行的，因此无需锁定来自一个 Pipeline 的任何访问。
+ 
+*基于这一认知，假设你有一个运行时间较长的 Pipeline，该 Pipeline 将生成一个全局张量输出（Output Global Tensor）。但由于其执行耗时较长，后续依赖此全局 Tensor 的 Pipeline 也会因等待首个 Pipeline 完成而被拖慢速度。若你允许第二个 Pipeline 在生产者 Pipeline 完成最新值计算前继续使用该全局 Tensor 的缓存值，则可通过以下方法加速第二个 Pipeline 的运行：创建一个中间 Pipeline 来"锁存"全局 Tensor 的值，该中间 Pipeline 会等待生产者 Pipeline 完成其全局 Tensor 的更新，随后将新生成的值复制到另一个全局 Tensor 中——这个副本 Tensor 在下次更新前不会被访问。如此一来，当第二个 Pipeline 转为依赖此副本 Tensor 时，其运行速度便不再受生产者 Pipeline 的制约。
+* 

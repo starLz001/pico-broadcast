@@ -1,0 +1,29 @@
+单通道（多视图）渲染
+========================================
+单通道渲染（Single Pass Instanced / Multi-view）模式下，可使用单个摄像机完成双目图像渲染，即：先将场景内容渲染至左眼纹理，然后将场景内容自动复制到右眼纹理上，同时自动修正顶点位置等相关参数。该模式可减少一半的绘制调用和遮罩剔除，明显提升复杂场景的帧率，十分适用于对性能要求高的应用。
+*环境要求
+*PICO 设备型号：PICO Neo3 系列、PICO 4 系列、PICO 4 Ultra 系列
+*PICO 设备系统版本：5.7.0 及以上
+*普通渲染 vs 单通道（多视图）渲染
+*
+*图片来源：Unity 官网
+*开启单通道（多视图）渲染
+*在 Unity 编辑器中打开项目。
+*从上方菜单栏处，选择 Edit > Project Settings。
+*在 Project Settings 弹窗中，点击 OpenXR > Android Settings。
+*将 Render Mode 设置为 Single Pass Instanced / Multi-view。
+* 
+*了解 Multi-pass 模式相关问题
+在 Multi-pass 模式下，PICO Unity Integration SDK 会比 PICO Unity OpenXR SDK 的帧率高一些。主要原因是 PICO Unity Integration SDK 在 Multi-pass 模式下开启了共享 Shadow Map 功能，而 PICO Unity OpenXR SDK 所依赖的 Unity OpenXR Plugin 未开启该功能，所以相同场景下 PICO Unity OpenXR SDK 的渲染压力会比 PICO Unity Integration SDK 大，造成帧率较低的问题。
+
+
+
+*普通渲染
+
+*单通道（多视图）渲染
+
+左侧是左眼图像；右侧是右眼图像。 
+ 
+
+左眼和右眼图像打包在一起。 
+ 

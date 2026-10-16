@@ -1,0 +1,209 @@
+内置组件
+========================================
+PICO Spatial SDK 提供了一系列内置组件（Component），可通过实体挂载来实现变换、渲染、光照、交互、物理、音频、视频、传送门等功能。内置组件配合资源、系统以及自定义组件，可用于快速搭建复杂的空间场景。
+*变换组件
+*变换组件用于确定实体在空间中的位置、方向以及与其他实体或用户之间的相对关系。
+*TransformComponent：描述实体在父节点 / 世界坐标系下的位置、旋转与缩放，是几乎所有可视或可交互实体的基础组件。
+*LookAtComponent：让实体自动朝向 Viewer（用户头显）或另一个指定实体，可选择是否与世界“上方向”对齐，常用于 UI 面板、名牌、看板类内容。详见《控制实体的朝向》。
+*AnchorComponent：将实体锚定到相机或空间锚点，可用于随头运动、空间对齐或位置持久化。仅在 Full Space 场景下生效。参见《空间锚点》。
+*模型组件
+*模型组件是空间应用中最常用的可视化入口，用于把《网格》与《材质》组合呈现为可见的 3D 内容。
+*ModelComponent：使用一个《MeshResource》和一个或多个《Material》来渲染 3D 模型；支持替换材质、控制可见性、以及通过 MeshInstances 做批量绘制。详见《在 SpatialModelView 和 SpatialView 中添加 3D 内容》。
+*交互相关的组件
+*交互组件让实体能够响应用户输入、附着 UI 面板或提供悬停反馈。
+*InteractableComponent：把实体标记为可交互，用于接收射线、点击、抓取等输入事件。通常需要与CollisionComponent一同使用。详见《3D 物体的基础交互》。
+*HoverEffectComponent：为可交互实体添加悬停高亮的视觉反馈。需要搭配 CollisionComponent 和InteractableComponent 才有效。详见《3D 悬停高亮》。
+*AttachmentPanelComponent：把 Android 的 2D View 作为空间面板挂载到实体上，让常规 Android UI 能在 3D 空间中定位与跟随。详见《将 2D 面板挂载至 3D 实体》。
+*渲染相关的组件
+* 
+*外观与效果
+*OpacityControllerComponent：控制实体及其所有子孙节点的整体透明度，层级之间会相乘。适合做整组内容的淡入淡出。详见《透明度》。
+*BlendShapeControllerComponent：控制模型的 Blend Shape 权重，实现面部表情、口型或形变过渡。挂载的实体需要有含 Blend Shape 数据的 ModelComponent。详见《Blend Shape 动画》。
+*GroundShadowComponent：为实体开启地面阴影投射或接收，让虚拟物体在现实 / 虚拟地面上落下更真实的阴影。详见《动态投影》。
+*GaussianSplattingComponent：渲染高斯泼溅（Gaussian Splatting）资源，适合真实感三维扫描或点云内容。该组件属于渲染主体，与其他渲染主体互斥。详见《3D 高斯泼溅》。
+*绘制排序
+*DrawOrderGroupComponent：为可渲染实体指定绘制顺序组（Group + Order），解决透明物体、共面几何或叠加图层的排序问题。详见《实体渲染顺序》。
+*SortAsUIElementComponent：把 3D 可渲染物纳入与视角无关的“UI 元素”排序系统，让 3D 内容与 2D UI 面板保持稳定的层次关系。SortAsUIElementComponent 与 DrawOrderGroupComponent 互斥（两者共存时后者被忽略）。详见《实体与 2D UI 的渲染顺序》。
+*传送门
+传送门通过一个“窗口面片 + 目标世界”的方式呈现异空间视图，需与 PortalMaterial 材质一起使用。
+*PortalComponent：让一块 Mesh 表面成为通向目标世界的“窗口”。必须与 ModelComponent 和 PortalMaterial 搭配；同时最多可显示 8 对 Portal-World。详见《传送门》。
+*PortalWorldComponent：声明“传送门内的世界”根节点。挂到某实体上后，其所有子孙都会被视为通过 Portal 才能看到的独立世界。详见《传送门》。
+*PortalCrossableComponent：挂在 PortalWorld 的子节点上，允许该实体在越过 Portal 边界后仍然被正确渲染，用于跨门实体或飞出的物件。详见《传送门》。
+*光源
+*DirectionalLightComponent：平行光，沿实体本地 -Z 方向发射，用于模拟阳光；可选择投射阴影。详见《动态光照》。
+*PointLightComponent：点光源，模拟灯泡，从实体位置向四周衰减发光；不支持阴影。详见《动态光照》。
+*SpotLightComponent：聚光灯，锥形光源，可控制内外角度、衰减半径与阴影。详见《动态光照》。
+ 
+*基于图像的光照
+*ImageBasedLightComponent：使用 HDR cubemap（仅支持 .ktx）为特定接收者提供局部 IBL 光照源。详见《基于图像的光照》。
+*ImageBasedLightReceiverComponent：让实体接收来自某个源实体的 IBL 光照，通常与 ImageBasedLightComponent 搭配使用。详见《基于图像的光照》。
+*EnvironmentLightingSettingsComponent：全局环境 IBL 的强度缩放开关，取值为 0 时表示关闭环境 IBL。详见《基于图像的光照》。
+*StageEnvironmentLightingComponent：通过环境贴图为整个 Stage 提供 PBR 环境光照，效果会随 StageStyle（Full / Mixed / Progressive）不同而变化。详见《基于图像的光照》。
+*物理相关的组件
+物理组件用于让实体参与碰撞检测、刚体运动，或形成一个独立的物理世界。
+*CollisionComponent：定义碰撞形状、物理材质、过滤条件与响应模式，是所有物理与拾取交互的基础。详见《添加碰撞和外部作用》。
+*RigidBodyComponent：声明实体为刚体，可选择 STATIC、KINEMATIC 或 DYNAMIC 模式，可设置质量、阻尼、重力、轴锁定等。未挂时视为 STATIC。详见《添加碰撞和外部作用》。
+*PhysicsForceComponent：为动态刚体施加持续的力与扭矩（N、N·m），可实现推动、旋转、自定义重力等效果。详见《添加碰撞和外部作用》。
+*PhysicsVelocityComponent：一次性设置刚体的线速度或角速度（脉冲式），适合抛掷、爆发力等一次性运动。详见《添加碰撞和外部作用》。
+*PhysicsWorldComponent：在其所在子树中创建一个独立的物理世界，控制重力、solver 迭代、仿真时钟等；只有同一物理世界内的实体才会互相碰撞。详见《添加碰撞和外部作用》。
+*环境感知相关的组件
+环境感知组件让虚拟内容与真实空间对齐并保持一致。
+*AnchorComponent：参考“变换组件”。将实体锚定到相机或空间锚点，实现虚实对齐或持久化跟随。参见《空间锚点》。
+*PortalComponent、PortalWorldComponent 和 PortalCrossableComponent：参见《传送门》。传送门本质上是空间层的裁剪与切换机制，可与真实环境融合展示异空间。
+*音频相关的组件
+音频组件用于让实体成为声音的发出者，同时提供音频资源与混音组的集中管理。
+* 
+*AmbientAudioComponent：沉浸式环境音，只考虑相对朝向、不做严格空间定位，适合背景氛围声。详见《使用 AmbientAudioComponent》。
+*ChannelAudioComponent：通道音，不考虑位置和朝向，按左右声道直接播放，适合 BGM 或旁白。详见《使用 ChannelAudioComponent》。
+*ObjectAudioComponent：空间音源，考虑位置与朝向，支持距离衰减和指向性；仅支持单声道（多声道会被 downmix）。详见《使用 ObjectAudioComponent》。
+*AudioMixerGroupsComponent：管理挂在实体上的一组 AudioMixerGroupResource，按名称分组统一控制音量。详见《使用音频混合组》。
+*AudioResourceLibraryComponent：以“名称 → 资源”的字典形式集中管理 AudioResource 和 AudioGroupResource，方便通过名字查找与播放。详见《使用音频组资源》。
+*视频相关的组件
+视频组件用于将视频画面呈现在指定 Mesh 表面，常用于电影、直播、大屏等空间场景。属于渲染主体，与其他渲染主体（
+*ModelComponent、GaussianSplattingComponent和ParticleComponent）互斥。
+*VideoComponent：使用外部 android.view.Surface 在指定的 MeshResource 表面渲染视频，支持采样模式、显示模式、立体视差、边界裁剪等设置，适合自定义播放器接入。详见《使用 VideoComponent》。
+*VideoPlayerComponent：VideoComponent 的高层封装版本，直接对接 SDK 内建的 CypressMediaPlayer，无需手动管理 Surface，即可播放 2D 或 3D 视频。详见《使用 VideoPlayerComponent》。
+*动画相关的组件
+动画组件用于集中管理动画资源，配合实体动画播放接口一起使用。
+*AnimationResourceLibraryComponent：以“名字 → 资源”的字典形式管理 AnimationResource，配合 entity.playAnimation(...) 可以通过名字取用动画。详见《动画系统》。
+*粒子相关的组件
+*ParticleComponent：播放从 AssetBundle 加载的粒子节点，用于烟雾、火焰、法术特效等。此组件不能手动实例化，只能通过加载 AssetBundle 时自动挂载，随后修改现有属性（发射开关、起始颜色、吸引子、漩涡强度等）。属于渲染主体，与其他渲染主体互斥。详见《粒子》。
+*组件常用组合速查表
+* 
+*
+*更多信息
+*你可以阅读以下文档，了解更多关于 PICO Spatial SDK 内置组件的信息。
+*了解 ECS 基础：《了解 ECS 架构》
+*实体使用与管理：
+*《实体概览》 
+*《创建实体》
+*《查询实体》
+*《管理实体的生命周期》
+*《管理实体层级》
+*《为实体挂载组件》
+*空间容器：《了解空间容器 & 空间状态》
+*资源管理：
+*《资源概览》
+*《网格》
+*《纹理》
+*《材质》
+*自定义扩展：《自定义系统和组件》
+
+
+下列渲染主体组件在一个 Entity 上是互斥的，每个 Entity 只能挂其中一个：
+*ModelComponent
+*GaussianSplattingComponent
+*VideoComponent
+*VideoPlayerComponent
+*ParticleComponent
+若在同一个 Entity 上同时挂多个渲染主体，可能出现：其中一个组件被忽略、显示为空、材质异常、深度 / 排序错乱，或者依赖它的外观控制类组件（如 OpacityController、BlendShapeController、DrawOrderGroup、SortAsUIElement、GroundShadow 等）无法生效。如需在同一位置组合多种视觉效果，你需要通过父子实体拆分，让每个子实体各自只承担一种渲染主体。
+
+光源仅对支持光照的材质（如 PhysicallyBasedMaterial）生效，使用 UnlitMaterial 的模型不会被光源影响。
+
+同一实体上的 AmbientAudioComponent、ChannelAudioComponent 和 ObjectAudioComponent 三者互斥，且必须在 prepareAudio 或 playAudio 之前挂载。
+
+下表中出现多个渲染主体（ModelComponent 、GaussianSplattingComponent 、VideoComponent 、VideoPlayerComponent 或ParticleComponent）时，需要分别挂载在不同的 Entity 上，避免在同一个 Entity 上共存导致失效。
+
+
+
+*目标功能
+
+*推荐组件组合
+
+*说明
+
+*显示 3D 模型
+
+*TransformComponent + ModelComponent
+
+*TransformComponent 用于控制模型的位置、旋转和缩放；ModelComponent 用于渲染模型。
+
+*悬停高亮
+
+*CollisionComponent + InteractableComponent + HoverEffectComponent
+
+*实体需要具有碰撞体和交互能力，才能响应悬停并显示高亮效果。
+
+*抓取或点击
+
+*CollisionComponent + InteractableComponent
+
+*CollisionComponent 定义可交互区域，InteractableComponent 提供交互能力。
+
+*传送门效果
+
+*传送门表面实体：ModelComponent（使用 PortalMaterial）+ PortalComponent
+*传送门世界实体：PortalWorldComponent
+*可穿越实体：PortalCrossableComponent
+
+*不同类型的组件应挂载到各自对应的实体上。
+
+*动态刚体
+
+*CollisionComponent + RigidBodyComponent(DYNAMIC)
+*可选：PhysicsForceComponent、PhysicsVelocityComponent
+
+*使用力或速度控制刚体时，可按需添加对应的可选组件。
+
+*独立物理世界
+
+*PhysicsWorldComponent
+
+*将该组件挂载到目标实体子树的根实体上，为该子树创建独立的物理世界。
+
+*空间音效
+
+*ObjectAudioComponent
+*可选：AudioResourceLibraryComponent
+
+*ObjectAudioComponent 用于播放空间音频；AudioResourceLibraryComponent 可用于集中管理音频资源。
+
+*视频面板
+
+*显示实体：ModelComponent（使用 VideoMaterial）
+*播放实体：VideoComponent 或 VideoPlayerComponent
+
+*视频播放组件应单独挂载在一个 Entity 上，并通过视频材质将画面显示到模型表面。
+
+*BlendShape 表情
+
+*ModelComponent（Mesh 包含 BlendShape）+ BlendShapeControllerComponent
+
+*模型的 Mesh 必须包含 BlendShape 数据。
+
+*局部 IBL 反射
+
+*光照源实体：ImageBasedLightComponent
+*接收实体：ImageBasedLightReceiverComponent
+
+*光照源组件与接收组件应分别挂载在对应的实体上。
+
+*空间 UI 面板
+
+*AttachmentPanelComponent
+
+*用于将 2D 面板挂载到 3D 实体。详见《将 2D 面板挂载至 3D 实体》
+
+*空间锚定
+
+*AnchorComponent
+
+*仅适用于 Full Space 模式。
+
+*朝向跟随
+
+*LookAtComponent
+
+*用于使实体持续朝向指定目标。
+
+*高斯泼溅内容
+
+*GaussianSplattingComponent
+
+*应单独挂载在一个 Entity 上，不应与 ModelComponent 等渲染组件共存。
+
+*粒子特效
+
+*ParticleComponent
+
+*随 AssetBundle 加载时自动挂载；应使用独立的 Entity。

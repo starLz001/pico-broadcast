@@ -1,0 +1,212 @@
+头戴端性能监测工具 (Metrics HUD)
+========================================
+你可以使用 Metrics HUD 在头戴端实时监测设备的性能指标。
+*环境要求
+设备的系统版本为 5.4.0 及以上。
+*准备工作
+*为设备开启 “开发者” 模式，详细步骤可参考此文档。
+*启用 Metrics HUD
+*启动 VR 一体机。
+*前往 设置 > 开发者。
+*打开 开启 Metrics HUD 开关。
+*参数配置
+*基础设置
+在 SETTINGS 面板处，设置 Metrics HUD 显示相关参数：
+*
+*选择监控指标
+在 STATS 面板处，选择需监控的应用性能指标。可用指标和说明可参考 “监控指标说明” 部分。你可以为每个指标配置 Enable 和 Graph 选项。
+*
+*监控指标说明
+*
+*是否支持导出原始性能数据？
+*Metrics HUD 仅支持在头戴端实时查看应用的性能数据，不支持导出原始数据。
+
+
+
+
+参数
+
+说明
+
+Quick-set Enabled Stats
+
+NONE：不显示性能指标数据
+BASIC：显示基础性能指标数据
+
+Display Stats on Overlay
+
+选择是否显示所选监控指标的实时统计信息（下图红框所示）。
+* 
+
+Display Graph on Overlay
+
+选择是否显示所选监控指标的实时统计图表（下图红框所示）。
+* 
+
+Scale
+
+设置 HUD 的缩放比例。
+
+Distance
+
+设置 HUD 与眼睛的距离。
+
+Pitch
+
+设置 HUD 沿 X 轴的旋转角度。
+
+Yaw
+
+设置 HUD 沿 Y 轴的旋转角度。
+
+
+
+选项
+
+说明
+
+Enable
+
+勾选后，HUD 将展示对应指标的实时统计信息。
+
+Graph
+
+勾选后，HUD 将展示对应指标的实时统计图表。
+
+
+
+指标名称
+
+说明
+
+GPU Utilization (GPU U)
+
+总 GPU 占用率（单位：%）。
+
+CPU Utilization (CPU U)
+
+总 CPU 占用率（单位：%）。
+
+FPS (FPS)
+
+帧速率（单位：帧/每秒）。
+提示：正常情况下，应用的帧速率应等于屏幕刷新率。
+
+Available Memory (A MEM)
+
+剩余可用内存（单位：MB）。
+
+Performance Score (Perf S)
+
+
+设备当前的整体性能状况：
+*<80：性能良好
+*[80,100]：某些情况下可能会降帧，例如：长时间运行、部分重载场景、低电量场景限频、断电等
+*>100：频繁降帧
+
+Foveation Level (FRL)
+
+注视点渲染等级。等级越高，GPU 占用率越低，但是周围的模糊程度越明显。取值范围为 -1 至 3：
+*-1：关闭
+*0：Low
+*1：Medium
+*2：High
+*3：TopHigh
+
+Eye Buffer Width (EBW) 
+
+引擎所渲染的纹理的宽度。
+分辨率对 GPU 渲染时间有直接影响。在碎片着色器中，分辨率要求越高（即像素越多），渲染时间越长。
+
+Eye Buffer Height (EBH)
+
+引擎所渲染的纹理的高度。
+分辨率对 GPU 渲染时间有直接影响。在碎片着色器中，分辨率要求越高（即像素越多），渲染时间越长。
+
+Used Memory (U MEM)
+
+已使用的内存（单位：MB）。
+
+Singlepass
+
+是否开启多视图渲染（Multiview）：
+*0：未开启
+*1：开启
+
+CPU Temperature
+
+设备 CPU 的温度（单位：°C）。
+
+GPU Temperature
+
+设备 GPU 的温度（单位：°C）。
+
+CPU Level (CPU L)
+
+为应用设置的 CPU 级别。级别越高，CPU 占用越高。默认值为 0，表示系统自动调节应用的 CPU 等级。
+
+GPU Level (GPU L)
+
+为应用设置的 GPU 级别。级别越高，GPU 占用越高。默认值为 0，表示系统自动调节应用的 GPU 等级。
+
+Display Refresh Rate (DRR)
+
+设备的屏幕刷新率。
+
+Battery Level (BAT)
+
+设备的剩余电量（单位：%）。
+
+Battery Temperature (B TEM)
+
+设备的电池温度（单位：°C）。
+
+Power Voltage (POW V)
+
+设备电压（单位：毫伏）。
+
+App VSS (VSS)
+
+应用向系统申请的虚拟内存。
+
+App PSS (PSS)
+
+*应用实际使用的物理内存。
+
+App RSS (RSS)
+
+应用实际保存的物理内存。
+
+Battery Current ( BAT C)
+
+来自电池的电流（单位：毫安）。
+
+GPU Frequency ( GPU F)
+
+GPU 时钟速度。时钟速度越高，GPU 运行速度越快。
+
+CPU Frequency ( 0-7 核数据，包括：CPU0 F、CPU1 F、CPU2 F、CPU3 F、CPU4 F、CPU5 F、CPU6 F、CPU7 F)
+
+单个 CPU 内核的时钟速度。时钟速度越高，CPU 运行速度越快。应用运行于内核 5、6 和 7 上。
+
+
+CPU Utilization（0-7 核数据，包括：GPU0 U、GPU1 U、GPU2 U、GPU3 U、GPU4 U、GPU5 U、GPU6 U、GPU7 U）
+
+单个 CPU 内核的利用率。应用运行于内核 5、6 和 7 上。
+
+
+Current Now (CUR)
+
+当前实时电流。
+
+Scene Average Current (SAC)
+
+场景平均电流。
+
+GPU Frequency Proportion (GFP)
+
+当前场景 GPU 频率占比。
+
+CPU User Average Load (CUAL)
+
+前台应用进程的 CPU 平均负载。

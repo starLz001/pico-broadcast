@@ -1,0 +1,219 @@
+事件系统
+========================================
+*事件系统可以让你监听特定的内置事件，并在事件被触发时执行你定义的回调逻辑。你也可以实现自定义事件，并用 EventBus 订阅和分发事件。
+*内置事件概览
+*PICO Spatial SDK 提供以下内置事件：
+*
+*使用内置事件
+*内置事件的通用使用流程如下：
+*订阅事件。
+*定义回调。
+*触发事件。SDK 会自动分发事件，并执行你所定义的回调。
+*取消订阅（按需进行）。
+*你可以通过有效的 scene （可通过 entity.scene 获取该 scene 实例）或 content:SpatialViewContent 来订阅事件，并在函数体内定义事件触发时需要执行的回调逻辑。当不再需要监听事件时，可以通过 cancel 取消订阅。两种方式的接口形式一致：
+ 
+下文以组件添加事件（ComponentAddedEvent）为例，演示如何在代码中实现上述流程。
+*第一步：订阅事件
+*在 SpatialView 的 initial {} 块中，通过以下代码订阅组件添加事件 ComponentEvents.ComponentAddedEvent：
+ 
+*第二步：定义回调
+*事件触发时的回调可以通过以下两种方式定义：
+*在 subscribe 中定义回调
+*直接在 subscribe 的函数体中指定事件触发时要执行的逻辑。
+* 
+*在 lambda 中封装回调
+*将回调逻辑封装成类型为 (ComponentEvents.ComponentAddedEvent) -> Unit 的 lambda，然后将该 lambda 名称作为参数传入 subscribe 函数。尤其推荐在回调逻辑较复杂或需要复用时使用该方式。
+* 
+*第三步：触发事件
+*当组件被添加到 targetEntity 时，组件添加事件会被自动触发，并执行你所定义的回调。你可以向 Entity 添加任意组件来触发该事件。
+*第四步：取消订阅
+当你不需要再使用某一事件时，建议取消订阅该事件。你可以在定义一个变量 subscription 来记录事件的订阅，并在 onDispose 函数中取消订阅：
+ 
+*自定义 EventManager
+*你可以自定义一个 EventManager 来管理事件的订阅。代码示例如下：
+ 
+*API 参考
+*事件系统涉及的类如下，关于其中包含的具体事件及说明，参阅 API 参考。
+*SceneEvents 
+*ComponentEvents
+*AnimationEvents
+*CollisionEvents
+*AudioEvents
+*AnchorUpdate
+*Scene
+*SpatialViewContent
+
+*根据你所处的地理位置选择合适的 API 参考文档链接：
+*中国大陆：https://developer-cn.picoxr.com/spatial-api/index.html
+*非中国大陆：https://developer.picoxr.com/spatial-api/index.html
+
+
+
+事件类型
+
+描述
+
+ECS 事件
+
+*相关类为 SceneEvents 和 ComponentEvents，包括 Entity 添加至场景、添加组件、删除组件等事件。
+
+动画事件
+
+*相关类为 AnimationEvents，包括动画的开始、暂停、恢复等。详见《动画事件》。
+
+碰撞事件
+
+*相关类为  CollisionEvents，包括物体开始碰撞、保持接触、碰撞结束等。详见《添加碰撞和外部作用》。
+
+音频事件
+
+*相关类为 AudioEvents，包括音频的播放、暂停、停止等。详见《使用音频事件》。
+
+锚点更新事件
+
+*相关类为 AnchorUpdate，包括锚点创建、信息更新、加载完成等。详见《空间锚点》。
+
+/**
+ * 订阅指定类型的事件。
+ *
+ * @param T 要订阅的事件类型，必须继承自 BaseEvent。
+ * @param eventType 要订阅的事件的类的类型。
+ * @param on （可选）事件来源。如果为 null，则订阅所有来源。
+ * @param componentType （可选）与事件关联的组件类型。如果为 null，则适用于所有组件类型。
+ * @param subscriber 事件发生时的回调处理函数。
+ * @return 一个可取消对象，用于取消事件订阅。
+ */
+fun <T : Event> subscribe(
+    eventType: Class<T>,
+    on: EventSource? = null,
+    componentType: Class<out Component>? = null,
+    subscriber: EventSubscriber<T>
+): Cancellable
+
+SpatialView(
+    initial = { content, _ ->
+        val entity = Entity().apply { setName("Entity for ComponentAddedEvent") }
+        content.addEntity(entity)
+        content.subscribe(ComponentEvents.ComponentAddedEvent::class.java) {
+            val targetEntity = it.entity
+            Log.d(
+                "ComponentAddedEvent",
+                "Added Component(name: $${it.componentType}, Target Entity: $${targetEntity.getName()})"
+            )
+        }
+    },
+)
+
+SpatialView(
+    initial = { content, _ ->
+        val entity = Entity().apply { setName("Entity for ComponentAddedEvent") }
+        content.addEntity(entity)
+        content.subscribe(ComponentEvents.ComponentAddedEvent::class.java) {
+            // 回调函数
+            val targetEntity = it.entity
+            Log.d(
+                "ComponentAddedEvent",
+                "Added Component(name: $${it.componentType}, Target Entity: $${targetEntity.getName()})"
+            )
+        }
+    },
+)
+
+// Define the callback
+private val componentAddedCallback: (ComponentEvents.ComponentAddedEvent) -> Unit = {
+    val targetEntity = it.entity
+    Log.d(
+        "ComponentAddedEvent",
+        "Added Component(name: $${it.componentType}, Target Entity: $${targetEntity.getName()})"
+    )
+}
+
+// In SpatialView's initial{}
+content.subscribe(ComponentEvents.ComponentAddedEvent::class.java, subscriber = componentAddedCallback)
+
+@Composable
+fun ComponentAddedEventExample() {
+    val subscription = remember { mutableStateOf<Cancellable?>(null) }
+    DisposableEffect(Unit) {
+        onDispose {
+            subscription.value?.cancel()
+            subscription.value = null
+        }
+    }
+    SpatialView(
+        initial = { content, _ ->
+            val entity = Entity().apply { setName("Entity for ComponentAddedEvent") }
+            content.addEntity(entity)
+            // callback as lambda
+            subscription.value =
+                content.subscribe(
+                    ComponentEvents.ComponentAddedEvent::class.java,
+                    subscriber = componentAddedCallback
+                )
+        },
+    )
+}
+
+object EventManager {
+    private val subscriptions = mutableMapOf<Class<*>, Cancellable>()
+
+    /**
+     * Subscribe to an event of a given type, using a given [Scene], and a given subscriber.
+     *
+     * @param scene The [Scene] to subscribe to.
+     * @param eventType The type of event to subscribe to.
+     * @param on The event source to filter events by.
+     * @param componentType The type of component to filter events by.
+     * @param subscriber The subscriber to call when the event is received.
+     */
+    fun <T : Event> subscribe(
+        scene: Scene,
+        eventType: Class<T>,
+        on: EventSource? = null,
+        componentType: Class<out Component>? = null,
+        subscriber: EventSubscriber<T>
+    ): Cancellable {
+        val subscription = scene.subscribe(eventType, on, componentType, subscriber)
+        subscriptions[eventType] = subscription
+        return subscription
+    }
+
+    /**
+     * Subscribe to an event of a given type, using a given [SpatialViewContent], and a given subscriber.
+     *
+     * @param content The [SpatialViewContent] to subscribe to.
+     * @param eventType The type of event to subscribe to.
+     * @param on The event source to filter events by.
+     * @param componentType The type of component to filter events by.
+     * @param subscriber The subscriber to call when the event is received.
+     */
+    fun <T : Event> subscribe(
+        content: SpatialViewContent,
+        eventType: Class<T>,
+        on: EventSource? = null,
+        componentType: Class<out Component>? = null,
+        subscriber: EventSubscriber<T>
+    ): Cancellable {
+        val subscription = content.subscribe(eventType, on, componentType, subscriber)
+        subscriptions[eventType] = subscription
+        return subscription
+    }
+
+    /**
+     * Unsubscribe an event of a given type.
+     *
+     * @param eventType The type of event to unsubscribe.
+     */
+    fun unsubscribe(eventType: Class<*>) {
+        subscriptions[eventType]?.cancel()
+        subscriptions.remove(eventType)
+    }
+
+    /**
+     * Unsubscribe all events.
+     */
+    fun unsubscribeAll() {
+        subscriptions.values.forEach { it.cancel() }
+        subscriptions.clear()
+    }
+}

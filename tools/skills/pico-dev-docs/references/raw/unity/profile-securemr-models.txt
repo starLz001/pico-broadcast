@@ -1,0 +1,103 @@
+转换并调试 SecureMR 模型
+========================================
+*本文介绍如何将你的模型转换为 SecureMR 模型并获取模型的性能分析数据用于调试。
+*安装 Docker 桌面程序
+*Windows
+*启用 wsl2。详细说明参考此页面。
+*安装终端。详细说明参考此页面。
+*安装 Docker。详细说明参考此页面。
+*在 Docker 中启用 wsl2。
+* 
+*macOS
+*从此页面安装 Docker 桌面程序。
+*运行 Docker 桌面程序。
+*Linux
+*安装 Docker 桌面程序。详细说明参考此页面。
+*运行 Docker 桌面程序。
+*获取待转换的模型
+*下载以下 SecureMRTools 安装包并解压，内含一个 convert_model.sh 脚本。
+* 
+*将 /pth/tflite/onnx 模型移动至 convert_model.sh 脚本所在的目录。
+*将模型转换为二进制文件
+*运行转换脚本以生成 QNN 二进制文件。
+*转换 pth 模型：
+* 
+*转换 tflite 模型：
+* 
+*转换 onnx 模型：
+* 
+*(可选) 使用 custom_io 转换模型：
+* 
+* 
+*custom_io.yaml 示例如下：
+* 
+*获取模型的性能分析数据
+*为你的 PICO 设备开启 “开发者“ 模式并将其连接至 PC。详细说明参考此页面。
+*运行 Docker 环境。
+* 
+*获取模型的性能分析数据。
+* 
+*你将从 qnn-net-run 处获取日志，包含基本的模型性能分析数据（如下）。
+* 
+
+./convert_model.sh --input /path/to/pth_model
+
+./convert_model.sh --input /path/to/tilte_model
+
+./convert_model.sh --input /path/to/onnx_model    
+
+在转换模型时，QNN 支持通过 custom_io 指定输入/输出布局。转换脚本也集成了该功能。有详情参考此页面。
+
+./convert_model.sh --input /path/to/onnx_model --custom_io /path/to/custmo_io.yaml
+
+IOName: images
+  Layout:
+    Model: NCHW
+    Custom: NHWC
+- IOName: output0
+  Layout:
+    Model: NFC
+    Custom: NCF
+
+./run_docker_container.sh
+
+./profile_model.sh -m /path/to/model.serialized.bin -i 000000.raw 
+
+Execute Stats (Average): 
+------------------------ 
+Total Inference Time:  
+--------------------- 
+Graph 0 (yolo11n): 
+    NetRun: 20828 us 
+    Backend (Number of HVX threads used): 4 count 
+    Backend (RPC (execute) time): 18906 us 
+    Backend (QNN accelerator (execute) time): 18378 us 
+    Backend (Accelerator (execute) time): 18126 us 
+    Backend (Accelerator (execute excluding wait) time): 17927 us 
+    Backend (QNN (execute) time): 20417 us 
+ 
+Execute Stats (Min): 
+------------------------ 
+Total Inference Time:  
+--------------------- 
+Graph 0 (yolo11n): 
+    NetRun: 19288 us 
+    Backend (Number of HVX threads used): 4 count 
+    Backend (RPC (execute) time): 18599 us 
+    Backend (QNN accelerator (execute) time): 18142 us 
+    Backend (Accelerator (execute) time): 17879 us 
+    Backend (Accelerator (execute excluding wait) time): 17772 us 
+    Backend (QNN (execute) time): 19067 us 
+ 
+Execute Stats (Max): 
+------------------------ 
+Total Inference Time:  
+--------------------- 
+Graph 0 (yolo11n): 
+    NetRun: 26170 us 
+    Backend (Number of HVX threads used): 4 count 
+    Backend (RPC (execute) time): 20134 us 
+    Backend (QNN accelerator (execute) time): 19374 us 
+    Backend (Accelerator (execute) time): 19178 us 
+    Backend (Accelerator (execute excluding wait) time): 18236 us 
+    Backend (QNN (execute) time): 25944 us 

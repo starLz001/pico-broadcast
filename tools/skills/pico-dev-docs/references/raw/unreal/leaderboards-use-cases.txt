@@ -1,0 +1,203 @@
+排行榜-场景教学
+========================================
+本文档介绍 PICO Unreal Integration SDK 提供的排行榜服务中具体的场景及其代码示例。你可根据场景需求，参考代码示例和 API 参考，在你的应用中开发更多丰富的场景。
+*使用 PICO 框架接口
+PICO SDK 的排行榜服务提供了 PICO 框架和 UE 框架两套接口，在使用排行榜服务开发新应用时，建议你使用功能更完善的 PICO 框架。以下为使用 PICO 框架的排行榜接口代码示例。更多信息参考UE 框架与 PICO 框架说明。
+*获取排行榜信息
+你可以调用 Get() 接口获取排行榜的 API Name、显示名称、排序方式、数据统计周期、总条目数等。
+*蓝图示例如下：
+* 
+*C++ 示例如下：
+* 
+*获取排行榜条目数据
+每个排行榜都由一系列条目数据组成。单个条目对应单个玩家在应用中的排名、最佳成绩等数据。你可调用以下接口来获取排行榜条目数据。
+*GetEntries：获取排行榜条目的显示分数、补充数据、ID、排位等。蓝图示例如下：
+* 
+*GetEntriesAfterRank：获取某个排行榜中排序为 N 之后的条目数据。蓝图示例如下：
+* 
+*GetEntriesByIds：获取某个排行榜中某个或某些玩家的分数、补充数据、ID、排位等数据，如排行前100 玩家的排行数据、当前玩家及其排名相邻玩家的排行数据、当前玩家好友的条目数据等。
+*蓝图示例如下：
+* 
+*调用以上三个接口的 C++ 示例如下：
+* 
+*更新排行榜条目数据
+每个玩家在一个排行榜中有且仅有一个条目保留其最佳成绩。当玩家在游戏内获得新的最佳成绩时，可更新该玩家在排行榜中的条目数据，否则不更新。在某些情况下，你也可以绕过该默认规则，设置强制更新。更新条目数据时，你可附加自定义内容，如游戏的回放视频等。
+排行榜提供两种可配置的写入权限：（默认）客户端和服务端都可写入；仅服务端可写入。你可在开发者平台创建排行榜时选择。
+你可以调用以下接口来更新排行榜条目数据：
+*WriteEntry：修改排行榜数据。蓝图示例如下：
+* 
+*C++ 示例如下：
+* 
+*WriteEntryWithSupplementaryMetric：修改排行榜数据并额外传入用于决胜局的指标参数。蓝图如下：
+* 
+*C++ 示例如下：
+* 
+*为指定排名的用户解锁成就
+若用户在排行榜内获得指定排名，例如 Top 1，则为其解锁相关成就。代码示例如下：
+ 
+*使用 UE 框架接口
+PICO SDK 的排行榜服务提供了 PICO 框架和 UE 框架两套接口，若你已使用 UE 接口开发了 VR 应用，你可使用 PICO 提供的 UE 框架使你的应用适配 PICO 设备。以下为使用 UE 框架的排行榜接口代码示例。
+*获取排行榜条目数据
+每个排行榜都由一系列条目数据组成。单个条目对应单个玩家在应用中的排名、最佳成绩等数据。你可调用以下接口来获取排行榜条目数据。
+*ReadLeaderboards：获取排行榜所有条目。蓝图如下：
+* 
+  你可使用派生类指针调用 ReadLeaderboards 接口。示例如下：
+* 
+*ReadLeaderboardsForFriends：获取当前登录玩家的好友在排行榜上的条目。
+*当你为接口传入所需参数后，开始读取排行榜条目数据。获得查询结果前，ReadObject 会维护一个读取状态 ReadObject.ReadState。获得查询结果后，返回的条目会存在 ReadObject 中。 返回的条目存储在 ReadObject 的 Rows 数组中，你需要使用 UserID 对每一个 Row 进行初始化： 
+*条目的排名（Rank）存储在 Row.Rank 中； 
+*条目的分数（Score）存储在 Row.Colums 中。
+*蓝图如下：
+* 
+*调用以上接口的代码示例如下：
+* 
+*更新排行榜条目数据
+每个玩家在一个排行榜中有且仅有一个条目保留其最佳成绩。当玩家在游戏内获得新的最佳成绩时，可更新该玩家在排行榜中的条目数据，否则不更新。在某些情况下，你也可以绕过该默认规则，设置强制更新。更新条目数据时，你可附加自定义内容，如游戏的回放视频等。
+排行榜提供两种可配置的写入权限：（默认）客户端和服务端都可写入；仅服务端可写入。你可在开发者平台创建排行榜时选择。
+你可以调用 WriteLeaderboards 来更新排行榜条目数据。蓝图示例如下：
+* 
+使用派生类指针调用 WriteLeaderboards 接口示例：
+ 
+使用基类指针调用 WriteLeaderboards 接口：
+ 
+
+// PicoSubsystem 为 FOnlineSubsystemPico*
+auto interface = new FPicoLeaderboardsInterface(*PicoSubsystem);
+FGet Get;
+interface->Get(LeaderboardName, Get);
+
+// 获取排行榜每页 5 条，第 0 页的条目列表
+auto interface = new FPicoLeaderboardsInterface(*PicoSubsystem);
+FGetEntries GetEntries;
+GetEntries.BindUFunction(this, "OnLeaderboardGetEntries");
+interface->GetEntries(YourLeaderboardName, 0, 5, ppfLeaderboard_FilterNone, ppfLeaderboard_StartAtTop, GetEntries);
+
+// 获取排行榜条目的显示分数、补充数据、ID、排位等
+void Test::OnLeaderboardGetEntries(bool bIsError, const FString& ErrorMessage, UPico_LeaderboardEntryArray* LeaderboardEntryList)
+{
+    if (!bIsError)
+    {
+        UPico_LeaderboardEntry* entry = LeaderboardEntryList->GetElement(0);
+        auto rank = entry->GetRank();
+        auto score = entry->GetScore();
+        auto extraData = entry->GetExtraDataString();
+    }
+}
+
+// 获取某个排行榜中排序为 N 之后的条目数据
+auto interface = new FPicoLeaderboardsInterface(*PicoSubsystem);
+FGetEntriesAfterRank GetEntriesAfterRank;
+GetEntriesAfterRank.BindUFunction(this, "OnLeaderboardGetEntriesAfterRank");
+interface->GetEntriesAfterRank(YourLeaderboardName, 0, 5, N, GetEntriesAfterRank);
+
+// 获取某个排行榜中指定玩家的条目数据
+auto interface = new FPicoLeaderboardsInterface(*PicoSubsystem);
+FGetEntriesByIds GetEntriesByIds;
+GetEntriesByIds.BindUFunction(this, "OnLeaderboardGetEntriesByIds");
+TArray<FString> UserIds;
+UserIds.Add(YourUserId);
+interface->GetEntriesByIds(YourLeaderboardName, 0, 5, ppfLeaderboard_StartAtTop, UserIds, GetEntriesByIds);
+
+// PicoSubsystem为FOnlineSubsystemPico*
+auto interface = new FPicoLeaderboardsInterface(*PicoSubsystem);
+FWriteEntry WriteEntry;
+WriteEntry.BindUFunction(this, "TestWriteEntryDelegate");
+interface->WriteEntry(LeaderboardName, ValueToWrite, "测试", true, WriteEntry);
+
+auto interface = new FPicoLeaderboardsInterface(*PicoSubsystem);
+FWriteEntryWithSupplementaryMetric WriteEntryWithSupplementaryMetric;
+WriteEntryWithSupplementaryMetric.BindUFunction(this, "OnWriteEntryWithSupplementaryMetric");
+interface->WriteEntryWithSupplementaryMetric(YourLeaderboardName, 50, 1, FString(), true, WriteEntryWithSupplementaryMetric);
+
+auto interface = new FPicoLeaderboardsInterface(*PicoSubsystem);
+FGetEntries GetEntries;
+GetEntries.BindUFunction(this, "OnLeaderboardGetEntries");
+interface->GetEntries(YourLeaderboardName, 0, 5, ppfLeaderboard_FilterNone, ppfLeaderboard_StartAtTop, GetEntries);
+
+void Test::OnLeaderboardGetEntries(bool bIsError, const FString& ErrorMessage, UPico_LeaderboardEntryArray* LeaderboardEntryList)
+{
+    if (!bIsError)
+    {
+        for (int32 i = 0; i < LeaderboardEntryList->GetSize(); i++)
+        {
+            UPico_LeaderboardEntry* entry = LeaderboardEntryList->GetElement(i);
+            auto rank = entry->GetRank();
+            auto userId = entry->GetUser()->GetID();
+            if (rank == 1 && userId == YourUserId)
+            {
+                auto achievementsInterface = new FPicoAchievementsInterface(*PicoSubsystem);
+                FUnlock UnlockDelegate;
+                UnlockDelegate.BindUFunction(this, "OnAchievementUnlock");
+                achievementsInterface->Unlock(YourAchievementName, FString(), UnlockDelegate);
+            }
+        }
+    }
+}
+
+PicoLeaderboardReadPtr = new Pico_OnlineLeaderboardRead(LeaderboardName, PageIndex, PageSize); 
+auto PicoRef = new FOnlineLeaderboardReadRef(PicoLeaderboardReadPtr);
+auto Result = LeaderboardInterface->ReadLeaderboards(LeaderboardPlayers, *PicoRef);
+
+// 获取指定页的排行榜条目
+void UPicoGameInstance::ReadLeaderboardsWithPicoObject(TArray<FString> Players, const FString& LeaderboardName, int PageIndex, int PageSize)
+{
+    TArray<TSharedRef<const FUniqueNetId>> LeaderboardPlayers;
+    for (int i = 0; i < Players.Num(); i++)
+    {
+        auto UniqueNetIdRef = Online::GetIdentityInterface()->CreateUniquePlayerId(Players[i]).ToSharedRef();
+        LeaderboardPlayers.Add(UniqueNetIdRef);
+    }
+    LeaderboardInterface->ClearOnLeaderboardReadCompleteDelegates(this);
+    if (!OnLeaderboardReadWithPicoObjectCompleteDelegate.IsBound())
+    {
+        OnLeaderboardReadWithPicoObjectCompleteDelegate = FOnLeaderboardReadCompleteDelegate::CreateUObject(this, &UPicoGameInstance::OnLeaderboardReadWithPicoObjectComplete);
+    }
+    LeaderboardInterface->AddOnLeaderboardReadCompleteDelegate_Handle(OnLeaderboardReadWithPicoObjectCompleteDelegate);
+    
+    PicoLeaderboardReadPtr = new Pico_OnlineLeaderboardRead(LeaderboardName, PageIndex, PageSize);
+    const auto PicoRef = new FOnlineLeaderboardReadRef(PicoLeaderboardReadPtr);
+    const auto Result = LeaderboardInterface->ReadLeaderboards(LeaderboardPlayers, *PicoRef);
+    OnGameSessionStateChanged(FString::Printf(TEXT("ReadLeaderboardDataWithPicoObject Result: %s"), Result ? TEXT("true") : TEXT("false")));
+}
+
+// 获取当前登录玩家的好友在排行榜上的条目
+void UPicoGameInstance::ReadLeaderboardsForFriendsWithPicoObject(const FString& LeaderboardName, int PageIndex, int PageSize)
+{
+    PicoLeaderboardReadPtr = new Pico_OnlineLeaderboardRead(LeaderboardName, PageIndex, PageSize);
+    const auto PicoRef = new FOnlineLeaderboardReadRef(PicoLeaderboardReadPtr);
+    
+    LeaderboardInterface->ClearOnLeaderboardReadCompleteDelegates(this);
+    if (!OnLeaderboardReadWithPicoObjectCompleteDelegate.IsBound())
+    {
+        OnLeaderboardReadWithPicoObjectCompleteDelegate = FOnLeaderboardReadCompleteDelegate::CreateUObject(this, &UPicoGameInstance::OnLeaderboardReadWithPicoObjectComplete);
+    }
+    LeaderboardInterface->AddOnLeaderboardReadCompleteDelegate_Handle(OnLeaderboardReadWithPicoObjectCompleteDelegate);
+    
+    const auto Result = LeaderboardInterface->ReadLeaderboardsForFriends(0, *PicoRef);
+   OnGameSessionStateChanged(FString::Printf(TEXT("ReadLeaderboardsForFriendsWithPicoObject ExecuteResult: %d"), Result));
+}
+
+auto UserId = IdentityInterface->GetUniquePlayerId(0);
+Pico_OnlineLeaderboardWrite LeaderboardWriteObj;
+TArray<FString> LBNames;
+LBNames.Add("1");
+LeaderboardWriteObj.PicoLeaderboardNames = LBNames;
+LeaderboardWriteObj.RatedStat = FName(TEXT("SCORE"));
+LeaderboardWriteObj.SetIntStat(TEXT("SCORE"), ValueToWrite);
+LeaderboardWriteObj.UpdateMethod = ELeaderboardUpdateMethod::KeepBest;
+auto Result = LeaderboardInterface->WriteLeaderboards(TEXT("test"), *UserId, LeaderboardWriteObj);
+
+auto UserId = IdentityInterface->GetUniquePlayerId(0); 
+FOnlineLeaderboardWrite WriteObj; 
+WriteObj.LeaderboardNames.Add(FName(LeaderboardName)); 
+WriteObj.RatedStat = FName(LeaderboardName); 
+WriteObj.UpdateMethod = ELeaderboardUpdateMethod::KeepBest; 
+WriteObj.SetIntStat(FName(LeaderboardName), 777); 
+if (IOnlineSubsystem* const OnlineSub = IOnlineSubsystem::IsLoaded() ? IOnlineSubsystem::Get() : nullptr) 
+{ 
+    IOnlineLeaderboardsPtr Leaderboards = OnlineSub->GetLeaderboardsInterface(); 
+    if (Leaderboards.IsValid()) 
+    { 
+        bool bResult = Leaderboards->WriteLeaderboards(TEXT("test"), *UserId, WriteObj); 
+    } 
+} 

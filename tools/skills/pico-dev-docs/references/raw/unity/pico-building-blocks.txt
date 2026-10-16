@@ -1,0 +1,441 @@
+PICO Building Blocks
+========================================
+PICO Building Blocks 系统可以帮助你在项目里一键完成功能配置，包括 PICO Unity Integration SDK 和 Unity 官方提供的功能。
+*XR Interaction Toolkit 版本
+*3.x.x
+*支持配置的功能
+PICO Building Blocks 支持配置以下功能。
+*
+*打开 PICO Building Blocks
+*
+*使用 PICO Buidling Blocks 配置功能
+你可以使用 PICO Building Blocks 系统一键配置所需的功能。
+*PICO 手柄追踪（PICO Controller Tracking）
+在场景中配置 PICO Unity Integration SDK 提供的手柄模型预制体和输入事件。预期效果如下：
+* 
+在 XR Building Blocks 菜单或 PICO Building Blocks 菜单中，选择 PICO Controller > PICO Controller Tracking，以下操作将被自动完成：
+*检测项目内是否已安装 XR Interaction Toolkit 提供的 Starter Assets 示例。若未安装，则自动安装。
+*检查场景中是否已添加 XR Origin 对象。若未添加，则自动生成 [Building Block] XR Origin (XR Rig) 对象。
+*为 XR Origin 对象挂载 PXR_Manager (Script) 组件。
+*找到 XR Origin 对象下的 Left Controller 和 Right Controller 对象，为它们挂载的 XR Controller (Action-based) 组件配置输入事件（XRI Default Input Actions）且分别在 Model Prefab 参数处配置对应的 PICO 手柄模型预制体（LeftControllerModel 和 RightControllerModel）。
+*为 XR Origin 对象挂载的 Input Action Manager 组件的 Action Assets 参数添加 Element 0 对象，并将其设置为 XRI Default Input Actions。
+若想了解如何手动配置 PICO 手柄追踪，参考此文档。
+*手柄&画布交互（Controller Canvas Interaction）
+ 
+将场景中的 Canvas 配置成可以在 PICO 设备上显示的 3D Canvas，并配置交互事件。预期效果如下：
+* 
+在 XR Building Blocks 菜单或 PICO Building Blocks 菜单中，选择 PICO Controller > Controller Canvas Interaction，以下操作将被自动完成：
+*检查场景中是否已添加 XR Origin 对象。若未添加，则自动生成 [Building Block] XR Origin (XR Rig) 对象。
+*为 XR Origin 对象挂载 PXR_Manager (Script) 组件。
+*配置 EventSystem。
+*添加 Building Block Controller Canvas Interaction Canvas 对象，将它的 Event Camera 设置为主摄像机，并配置 Tracker Device Graphic Raycast 组件。
+*如果 Canvas 的 RenderMode 非 WorldSpace，则将其设置为 RenderMode.WorldSpace，并根据主摄像机的位置设置 Canvas 的显示位置。确保手柄射线可以和画布正常交互。
+此外，你可以在 Canvas 对象下添加 Button - TextMeshPro 和 Dropdown - TextMeshPro 等 UI 对象，然后配置 PICO Controller Tracking 功能，以体验手柄与画布间的交互效果。
+若想了解如何手动配置手柄和画布交互，参考此文档。
+*PICO 手势追踪（PICO Hand Tracking）
+在场景内添加 PICO 提供的手部模型预制体，并启用手势追踪。预期效果如下：
+* 
+在 XR Building Blocks 菜单或 PICO Building Blocks 菜单中，选择 PICO Hand > PICO Hand Tracking，以下操作将被自动完成：
+*检查场景中是否已添加 XR Origin 对象。若未添加，则自动生成 [Building Block] XR Origin (XR Rig) 对象。
+*在 XR Origin 对象下添加 PICO 提供的手柄模型.
+*为 XR Origin 对象挂载 PXR_Manager (Script) 组件。
+*勾选 PXR_Manager (Script) 组件面板上的 Hand Tracking 选框，启用手势追踪能力。
+若想了解如何手动配置 PICO 手势追踪，参考此文档。
+*XR 手势追踪（XR Hand Tracking）
+在场景内添加 Unity XR Hands 套件提供的手部模型，并启用手势追踪。预期效果如下：
+* 
+在 XR Building Blocks 菜单或 PICO Building Blocks 菜单中，选择 PICO Hand > XR Hand Tracking，以下操作将被自动完成：
+*检查项目内是否已导入 XR Hands 套件提供的 HandVisualizer 示例。若未导入，则自动导入。
+*检查场景中是否已添加 XR Origin 对象。若未添加，则自动生成 [Building Block] XR Origin (XR Rig) 对象 。
+*在主相机下添加 XR Hands 套件提供的左右手模型。
+*为 XR Origin 对象挂载 PXR_Manager (Script) 组件。
+*勾选 PXR_Manager (Script) 组件面板上的 Hand Tracking 选框，启用手势追踪能力。
+若想了解如何手动配置 XR 手势交互，参考此文档。
+*XRI 手势交互（XRI Hand Interaction）
+使用 XR Interaction Toolkit 实现手和 3D 物体间的交互。预期效果如下：
+* 
+在 XR Building Blocks 菜单或 PICO Building Blocks 菜单中，选择 PICO Hand > XRI Hand Interaction，以下操作将被自动完成：
+*检查项目内是否已导入 XR Hands 套件提供的 HandVisualizer 示例。若未导入，则自动导入。
+*检查项目内是否已导入 XR Interaction Toolkit 提供的 Starter Assets 和 Hands Interaction Demo 示例。若未导入，则自动导入。
+*为 XRI LeftHand 和 XRI RightHand 设置默认输入动作。
+此后，你需要手动打开 HandsDemoScene 场景并为应用和 PICO 设备启用手势追踪能力，以使用完整的手部交互能力。
+*XRI 抓握交互（XRI Grab Interaction）
+使用 XRI Interaction Toolkit 实现用手或者手柄抓握如下。预期效果如下：
+* 
+配置步骤如下：
+*参考上文，完成 XRI Hand Interaction 配置。
+*在 XR Building Blocks 菜单或 PICO Building Blocks 菜单中，选择 PICO Hand > XRI Grab Interaction，以下操作将被自动完成：
+*在场景内添加并配置 Building Blocks XRI Hand Interaction 对象。
+*在场景内添加并配置 Building Blocks XRI Hand Grab Interactable。
+*XRI 点戳交互（XRI Poke Interaction）
+使用 XR Interaction Toolkit 实现用手或者手柄点戳物体。预期效果如下：
+* 
+配置步骤如下：
+*参考上文，完成 XRI Hand Interaction 配置。
+*在 XR Building Blocks 菜单或 PICO Building Blocks 菜单中，选择 PICO Hand > XRI Poke Interaction，以下操作将被自动完成：
+*在场景内添加并配置 Building Blocks XRI Hand Interaction 对象。
+*在场景内添加并配置 Building Blocks XRI Hand Poke Interactable。
+*PICO 视频透视（PICO Video Seethrough）
+配置 PICO 提供的视频透视功能。
+在 XR Building Blocks 菜单或 PICO Building Blocks 菜单中，选择 PICO Video Seethrough > PICO Video Seethrough，以下操作将被自动完成：
+*检查场景中是否已添加 XR Origin 对象。若未添加，则自动生成 [Building Block] XR Origin (XR Rig) 对象 。
+*为 XR Origin 对象挂载 PXR_Manager (Script) 组件。
+*勾选 PXR_Manager (Script) 组件面板上的 Video Seethrough 选框，启用视频透视能力。
+*将主相机的 Clear Flags 参数设置为 Solid Color，并将 Background 参数的 RGBA 值都设置为 0。
+*在 CameraEffectTest.cs 脚本中添加以下代码：
+* 
+若想了解如何手动配置 PICO 视频透视，参考此文档。
+*PICO 视频透视特效（PICO Video Seethrough Effect）
+配置 PICO 的视频透视特效参数。
+在 XR Building Blocks 菜单或 PICO Building Blocks 菜单中，选择 PICO Video Seethrough > PICO Video Seethrough Effect，以下操作将被自动完成：
+*配置视频透视功能，具体自动化操作参考上文。
+*在 CameraEffectTest.cs 脚本中调用 SetVideoSeeThroughEffect 接口，用于配置视频透视特效参数，包括 ColorMap、Brightness、Saturation 和 Contrast。同时，调用 SetVideoSeeThroughLut 接口，设置 LUT 纹理的行数和列数。代码如下：
+* 
+若需要完整使用视频透视特效，你还需要添加并配置 LUT 纹理。若想了解如何手动配置 PICO 视频透视特效，参考此文档。
+*PICO 全身动捕（PICO Body Tracking）
+配置全身动捕功能，并使用 24 个立方体（Cube）实时显示 24 个人体关节点的追踪状态。预期效果如下：
+* 
+在 XR Building Blocks 菜单或 PICO Building Blocks 菜单中，选择 PICO Motion Tracking > PICO Body Tracking，以下操作将被自动完成：
+*检查场景中是否已添加 XR Origin 对象。若未添加，则自动生成 [Building Block] XR Origin (XR Rig) 对象 。
+*为 XR Origin 对象挂载 PXR_Manager (Script) 组件。
+*勾选 PXR_Manager (Script) 面板上的 Body Tracking 选框。
+*创建 Building Block PICO Body Tracking 对象，并添加 BodyTracking.prefab 作为其子对象。
+*BodyTracking.prefab 上挂载的 PXR_BodyTrackingBlock.cs 脚本实现了完整的人体追踪功能，并使用 24 个 Cube 代表 PICO 设备追踪的 24 个人体关节点。
+若想了解如何手动配置 PICO 全身动捕，参考此文档。
+*PICO 全身动捕调试（PICO Body Tracking Debug）
+配置全身动捕功能，使用 24 个 Cube 实时显示 24 个人体关节点的追踪状态。此外，可以选择指定关节点并旋转其关节数据（X、Y 和 Z），从而适配不同的 Avatar 模型。预期效果如下：
+* 
+在 XR Building Blocks 菜单或 PICO Building Blocks 菜单中，选择 PICO Motion Tracking > PICO Body Tracking Debug，以下操作将被自动完成：
+*检查场景中是否已添加 XR Origin 对象。若未添加，则自动生成 [Building Block] XR Origin (XR Rig) 对象。
+*为 XR Origin 对象挂载 PXR_Manager (Script) 组件。
+*勾选 PXR_Manager (Script) 面板上的 Body Tracking 选框。
+*创建 Building Block PICO Body Tracking Debug 对象，并添加 BodyTrackingDebug.prefab 作为其子对象。
+*BodyTracking.prefab 包含两个功能：显示人体节点、选择并修改指定节点。
+*PICO 独立追踪（PICO Object Tracking）
+配置独立追踪功能，并使用 0.1 立方米的 Cube 显示 PICO 体感追踪器的运动。预期效果如下：
+* 
+在 XR Building Blocks 菜单或 PICO Building Blocks 菜单中，选择 PICO Motion Tracking > PICO Object Tracking，以下操作将被自动完成：
+*检查场景中是否已添加 XR Origin 对象。若未添加，则自动生成 [Building Block] XR Origin (XR Rig) 对象。
+*为 XR Origin 对象挂载 PXR_Manager (Script) 组件。
+*勾选 PXR_Manager (Script) 面板上的 Body Tracking 选框。
+*创建 Building Block PICO Object Tracking 对象，并放到与 Main Camera 对象的同一父对象下。
+*在 Building Block PICO Object Tracking 对象上，挂载 PXR_ObjectTrackingBlock.cs 脚本。此脚本包含完整的独立追踪功能。
+若想了解如何配置 PICO 独立追踪，参考此文档。
+*PICO 空间音频：自由声场（PICO Spatial Audio Free Field）
+*完成自由声场（Free Field）相关配置。自由声场指仅模拟声源位置，同时忽略所有环境声学现象的声场。预期效果如下：
+* 
+在 XR Building Blocks 菜单或 PICO Building Blocks 菜单中，选择 PICO Spatial Audio > PICO Spatial Audio Free Field，以下操作将被自动完成：
+*检查场景中是否已添加 XR Origin 对象。若未添加，则自动生成 [Building Block] XR Origin (XR Rig) 。
+*添加 XR Interaction Manager 对象。
+*添加 [Building Block] PICO Spatial Audio Free Field 对象，并为该对象添加 SpatialAudioFreeField 和 SoundSphere 两个子对象。
+*在 SptialAudioFreeField 和 SoundShpere 子对象中，完成自由声场所需配置。具体配置参考此文档。
+*PICO 空间音频：环绕声（PICO Spatial Audio Ambisonics）
+*完成环绕声（Ambisonics）相关配置。环绕声是一种全球体环绕声格式，可覆盖水平面以及听众上下方的声源，为听众带来高度沉浸式的声音体验。预期效果如下：
+* 
+*在 XR Building Blocks 菜单或 PICO Building Blocks 菜单中，选择 PICO Spatial Audio > PICO Spatial Audio Ambisonics，以下操作将被自动完成：
+*检查场景中是否已添加 XR Origin 对象。若未添加，则自动生成 [Building Block] XR Origin (XR Rig) 。
+*添加 XR Interaction Manager 对象。
+*添加 [Building Block] PICO Spatial Audio Ambisonics 对象，并为该对象添加 SpatialAudioAmbisonics 和 Sphere 两个子对象。
+*在 SptialAudioAmbisonics 和 Shpere 子对象中，完成环绕声所需配置。具体配置参考此文档。
+*PICO 空间锚点示例（PICO Spatial Anchor Sample）
+*在场景中，配置空间锚点的创建、持久化、销毁操作的示例。
+*在 XR Building Blocks 菜单或 PICO Building Blocks 菜单中，选择 PICO Sense Pack > PICO Spatial Anchor Sample，以下操作将被自动完成：
+*检查项目中是否已导入 Starter Assets。
+*检查场景中是否已添加 XR Origin 对象。若未添加，则添加 [Building Block] XR Origin (XR Rig)  XRI300 对象，继续为该对象添加 XR Origin (XR Rig) 子对象，为该子对象添加 PXR_Manager (Script)  组件，并勾选 PXR_Manager (Script) 面板上的 Video Seethrough、Spatial Anchor 和 Scene Capture 选框。
+*为 XR Origin (XR Rig) 对象添加 Camera Offset 和 Locomotion 两个子对象，并在这两个子对象下添加空间锚点所需的配置。
+*PICO 空间网格（PICO Spatial Mesh）
+*配置空间网格功能并自动启动。
+*在 XR Building Blocks 菜单或 PICO Building Blocks 菜单中，选择 PICO Sense Pack > PICO Spatial Mesh，以下操作将被自动完成：
+*添加 XR Interaction Manager 对象。
+*检查场景中是否已添加 XR Origin 对象。若未添加，则添加 [Building Block] XR Origin (XR Rig) 对象。
+*为 [Building Block] XR Origin (XR Rig) 对象添加 PXR_Manager (Script)  组件，并勾选 PXR_Manager (Script) 面板上的 Video Seethrough 和 Spatial Mesh 选框。
+*添加 [Building Block] PICO Spatial Mesh 对象，并配置 MeshPrefab。
+*PICO 场景标定（PICO Scene Capture）
+*配置场景标定功能并自动启动。
+*在 XR Building Blocks 菜单或 PICO Building Blocks 菜单中，选择 PICO Sense Pack > PICO Scene Capture，以下操作将被自动完成：
+*添加 XR Interaction Manager 对象。
+*检查场景中是否已添加 XR Origin 对象。若未添加，则添加 [Building Block] XR Origin (XR Rig) 对象。
+*为 [Building Block] XR Origin (XR Rig) 对象添加 PXR_Manager (Script)  组件，并勾选 PXR_Manager (Script) 面板上的 Video Seethrough 和 Scene Capture 选框。
+*为添加 [Building Block] XR Origin (XR Rig) 对象添加 PXR_Scene Capture Manager (Script)  组，并配置 Box 2D Prefab 和 Box 3D Prefab。
+*PICO 合成层：Overlay（PICO Composition Layer Overlay）
+*配置 Overlay，并将其设置为 Cylinder 类型。预期效果如下：
+* 
+*在 XR Building Blocks 菜单或 PICO Building Blocks 菜单中，选择 PICO Composition Layer > PICO Composition Layer Overlay，以下操作将被自动完成：
+*添加 XR Interaction Manager 对象。
+*检查场景中是否已添加 XR Origin 对象。若未添加，则添加 [Building Block] XR Origin (XR Rig) 对象，并为其添加 PXR_Manager (Script)  组件。
+*添加 [Building Block] PICO Composition Layer Overlay 对象，为其挂载 PXR_Composition Layer (Script) 组件，然后在该组件上完成 Overlay 相关配置。
+*PICO 合成层：Underlay（PICO Composition Layer Underlay）
+*配置 Underlay，并将其设置为 Quad 类型。预期效果如下：
+* 
+*在 XR Building Blocks 菜单或 PICO Building Blocks 菜单中，选择 PICO Composition Layer > PICO Composition Layer Underlay，以下操作将被自动完成：
+*添加 XR Interaction Manager 对象。
+*检查场景中是否已添加 XR Origin 对象。若未添加，则添加 [Building Block] XR Origin (XR Rig) 对象，并为其添加 PXR_Manager (Script)  组件。
+*添加 [Building Block] PICO Composition Layer Underlay 对象。
+*为 [Building Block] PICO Composition Layer Underlay 对象添加 UnderlayHole 子对象，并为该子对象添加 PXR_SDK/PXR_UnderlayHole 着色器，用于创建一个 “洞” 来透出 Underlay 层。
+*为 UnderlayHole 对象添加 Underlay 子对象，为该子对象挂载 PXR_Composition Layer (Script) 组件，并在该组件上完成 Underlay 相关配置。
+*XR Interaction Toolkit 3.x.x 带来的变更及解决方案
+PICO Unity Integration SDK 3.1.0 及更高版本中的 PICO Building Blocks 系统基于 XR Interaction Toolkit 3.x.x 版本开发。与基于 XR Interaction Toolkit 2.x.x 版本开发的 Building Blocks 系统相比，发生以下变更。
+*XR Origin 不再包含左右手柄。
+ 
+*因此，手柄配置以及依赖手柄射线的 PICO Controller Tracking 和 Controller Canvas Interaction 项会受到影响，需使用 XR Interaction Toolkit 3.x.x 中的 XR Origin (XR Rig).prefab 替换原先的 XR Origin。XR Origin (XR Rig).prefab 位于 /Assets/XR Interaction Toolkit/{version}/prefabs 目录下。
+*XRI DefaultInputActions.inputactions 中的 Action Maps 的名称去掉了 “Hand” 字样。
+**
+ 
+*需将手势相关功能使用的主相机 XR Interaction Hands Setup 替换为XR Origin Hands (XR Rig)。
+ 
+*在 XR Interaction Toolkit 3.x.x 中使用 Canvas 并与手柄进行交互时，需隐藏 EventSystem。
+
+
+
+模块
+
+功能
+
+说明
+
+*手柄（PICO Controller）
+
+PICO 手柄追踪（PICO Controller Tracking）
+
+在场景内添加 PICO SDK 提供的手柄模型并配置交互事件。
+
+
+
+手柄&画布交互（Controller Canvas Interaction）
+
+配置手柄射线和画布间的交互。
+
+*手势（PICO Hand）
+*
+
+PICO 手势追踪（PICO Hand Tracking）
+
+在场景内添加 PICO SDK 提供的手部模型并启用手势追踪。
+
+
+
+XR 手势追踪（XR Hand Tracking）
+
+在场景内添加 Unity XR Hands 套件提供的手部模型并启用手势追踪。
+
+
+
+XRI 手势交互（XRI Hand Interaction）
+
+使用 XRI Interaction Toolkit (XRI) 实现手和 3D 物体交互。
+
+
+
+XRI 抓握交互（XRI Grab Interaction）
+
+使用 XRI 实现用手或者手柄抓握物体。
+
+
+
+XRI 点戳交互（XRI Poke Interaction）
+
+使用 XRI 实现用手或者手柄点戳物体。
+
+*视频透视（PICO Video Seethrough）
+
+PICO 视频透视（PICO Video Seethrough）
+
+配置 PICO SDK 提供的视频透视功能。
+
+
+
+PICO 视频透视特效（PICO Video Seethrough Effect）
+
+配置 PICO SDK 的视频透视特效参数。
+
+运动追踪（PICO Motion Tracking）
+
+PICO 全身动捕（PICO Body Tracking）
+
+配置全身动捕功能，并使用 24 个立方体（Cube）实时显示 24 个人体关节点的追踪状态。
+
+
+
+PICO 全身动捕调试（PICO Body Tracking Debug）
+
+配置全身动捕功能，使用 24 个 Cube 实时显示 24 个人体关节点的追踪状态。此外，可以选择指定关节点并旋转其关节数据（X、Y 和 Z），从而适配不同的 Avatar 模型。
+
+
+
+PICO 独立追踪（PICO Object Tracking）
+
+配置独立追踪功能，并使用 0.1 立方米的 Cube 显示 PICO 体感追踪器的运动。
+
+*空间音频（PICO Spatial Audio）
+
+PICO 空间音频：自由声场（PICO Spatial Audio Free Field）
+
+完成自由声场（Free Field）相关配置。自由声场指仅模拟声源位置，同时忽略所有环境声学现象的声场。
+
+
+
+PICO 空间音频：环绕声（PICO Spatial Audio Ambisonics）
+
+完成环绕声（Ambisonics）相关配置。环绕声是一种全球体环绕声格式，可覆盖水平面以及听众上下方的声源，为听众带来高度沉浸式的声音体验。
+
+*环境感知（PICO Sense Pack）
+
+PICO 空间锚点示例（PICO Spatial Anchor Sample）
+
+在场景中，配置空间锚点的创建、持久化、销毁操作的示例。
+
+
+
+PICO 空间网格（PICO Spatial Mesh）
+
+配置空间网格功能并自动启动。
+
+
+
+PICO 场景标定（PICO Scene Capture）
+
+配置场景标定功能并自动启动。
+
+*合成层（PICO Composition Layer）
+
+PICO 合成层：Overlay（PICO Composition Layer Overlay）
+
+配置 Overlay，并将其设置为 Cylinder 类型。
+
+
+
+PICO 合成层：Underlay（PICO Composition Layer Underlay）
+
+配置 Underlay，并将其设置为 Quad 类型。
+
+
+
+入口
+
+支持的 Unity 版本
+
+操作说明
+
+Overlay 菜单
+
+*Unity 2022
+*Unity 2023
+
+在 Scene 或 Game 视图的右上角，点击 ··· > Overlay Menu，然后在菜单中选择 XR Building Blocks，视图中将显示 XR Building Blocks 菜单。
+* 
+
+Hierarchy 窗口
+
+*Unity 2020
+*Unity 2021
+*Unity 2022
+*Unity 2023
+
+在 Hierarchy 窗口中，点击 + > PICO Building Blocks。
+* 
+
+GameObject 菜单
+
+*Unity 2020
+*Unity 2021
+*Unity 2022
+*Unity 2023
+
+在顶部菜单栏中，选择 GameObject > PICO Building Blocks。
+* 
+
+提示
+此功能需要配合 PICO Controller Tracking 功能使用。
+
+// 开启视频透视
+PXR_Manager.EnableVideoSeeThrough = true;
+// 开启视频透视特效
+PXR_MixedReality.EnableVideoSeeThroughEffect(true);
+
+public void SetColortemp(float x)
+{
+    PXR_MixedReality.SetVideoSeeThroughEffect(PxrLayerEffect.Colortemp, x, 0);
+}
+public void SetBrightness(float x)
+{
+    PXR_MixedReality.SetVideoSeeThroughEffect(PxrLayerEffect.Brightness, x, 0);
+}
+public void SetSaturation(float x)
+{
+    PXR_MixedReality.SetVideoSeeThroughEffect(PxrLayerEffect.Saturation, x, 0);
+}
+public void SetContrast(float x)
+{
+    PXR_MixedReality.SetVideoSeeThroughEffect(PxrLayerEffect.Contrast, x, 0);
+}
+public void SetLutRow(float x)
+{
+    if (lutTex)
+    {
+        row = (int)(lutTex.width * x);
+        PXR_MixedReality.SetVideoSeeThroughLut(lutTex, row, col);
+    }
+}
+public void SetLutCol(float x)
+{
+    if (lutTex)
+    {
+        col = (int)(lutTex.height * x);
+        PXR_MixedReality.SetVideoSeeThroughLut(lutTex, row, col);
+    }
+}
+
+**
+
+*XR Interaction Toolkit 2.x.x：
+* 
+
+*XR Interaction Toolkit 3.x.x：
+* 
+
+
+
+前
+
+后
+
+XRI LeftHand
+
+XRI Left
+
+XRI LeftHand Interaction
+
+XRI Left Interaction
+
+XRI LeftHand Locomotion
+
+XRI Left Locomotion
+
+XRI RightHand
+
+XRI Right
+
+XRI RightHand Interaction
+
+XRI Right Interaction
+
+XRI RightHand Locomotion
+
+XRI Right Locomotion
+
+**
+
+*XR Interaction Toolkit 2.x.x：
+* 
+
+
+*XR Interaction Toolkit 3.x.x：
+* 
+
+**
+
+*XR Interaction Toolkit 2.x.x：
+* 
+
+*XR Interaction Toolkit 3.x.x：
+* 

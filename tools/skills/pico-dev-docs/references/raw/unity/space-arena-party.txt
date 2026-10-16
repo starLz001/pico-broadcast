@@ -1,0 +1,279 @@
+太空竞技场
+========================================
+Space Arena Party 是一个多人社交游戏 Demo，集成了 PICO 平台服务中的 “好友” 服务、“社交互动” 服务以及 “房间&匹配” 服务。你可以在 Demo 中体验以下能力：
+*Avatar 和角色移动
+*创建和加入虚拟房间
+*实时多人互动
+*好友系统，包括查看好友列表、邀请好友
+*视频展示
+以下为 Demo 展示视频。你可以通过视频浏览 Demo 场景并了解 Demo 的主要功能。
+* 
+*环境要求
+Unity 编辑器为 2021.3.22 版本，2022 版本暂不支持。
+*APK 安装包
+使用 USB 数据线连接 PICO 设备和你的 PC，然后使用以下 ADB 命令将 APK 文件安装至设备进行体验。
+ 
+ 
+若你想了解如何在 Unity 编辑器内通过 PICO SDK 提供的 PC 调试工具体验 Demo，或将 Demo 场景构建至 PICO 设备上体验，可参考 “完整体验流程” 部分。
+*细节说明
+*主要模块
+Demo 主要由以下功能模块组成：Avatar、虚拟房间、控制面板、多人游戏、社交系统。
+*
+*游戏流程
+游戏中的主流程实现如下：
+ 
+*游戏中的邀请好友和加入房间流程实现如下：
+ 
+*完整体验流程
+跟随本节内容，完成必要配置，然后在 Unity 编辑器内通过 PICO SDK 提供的 PC 调试工具体验 Demo，或将 Demo 场景构建至 PICO 设备上体验。
+*第一步：获取 Demo
+你可以从 PICO GitHub 获取 Demo。
+*首先，运行以下命令来确保 Git LFS 已启用。
+ 
+然后，运行 git clone 命令将 Demo 仓库拉到本地。拉到本地的 Demo 项目文件夹为 PlatformSamples-Unity-SpaceArenaParty。
+* 
+*第二步：创建开发者帐号、组织和应用
+*注册 PICO 开发者帐号
+*创建组织
+*创建应用（将应用名称设置为 PICO Space Arena Party）
+*第三步：开通匹配服务并创建匹配池
+点击应用卡片，进入其 概览 页，然后点击左侧导航栏处的 平台服务 > 匹配服务，为应用开通匹配服务并创建匹配池。匹配池的“名称”和 “Key” 字段皆设置为 Lobby，其他字段保留系统默认配置，如下图所示：
+ 
+*第四步：创建 Destinations
+点击左侧导航栏处的 平台服务 > Destinations，为应用创建三个 Destination，配置见下表：
+*
+ 
+*第五步：设置 App ID
+*在 PICO 开发者平台上，前往先前所创建应用的 API 页面，获取该应用的 APP ID。
+* 
+*在 Unity 编辑器中，打开 PlatformSamples-Unity-SpaceArenaParty 项目。
+*点击上方菜单栏处的 PXR_SDK > Platform Settings。
+*你将看到 PICO Platform Settings 窗口。
+*填入 APP ID，然后关闭窗口。
+* 
+*第六步：完成 PC 调试配置
+借助 PC 调试工具的能力，你可以直接在 Unity 编辑器中体验 Demo。为此，需要完成 PC 调试配置。
+*在 授权管理 字段处，选择图示中的授权项，然后点击 获取Access Token，获取该应用的访问令牌。
+* 
+*在编辑器上方菜单栏处，点击 PXR_SDK > PC Debug Settings。
+*Inspector 窗口中将展示 PC 调试配置项.
+* 
+*在 Region 字段处，选择应用所在地区。
+*在 Access Token 字段处，填入应用的访问令牌。
+*第七步：开始体验
+你可以直接在 Unity 编辑器中体验 Demo，也可以将 Demo 场景构建至 PICO 设备上体验。
+编辑器内体验
+*打开 StartUp 场景。场景位于 \Assets\Scenes 目录下。
+*场景在 Game 视图中展示如下：
+* 
+*点击 Game 视图上方的 Play 按钮。
+*Unity 编辑器开始运行该场景。场景在 Game 视图中的展示如下：
+* 
+*在 Unity 编辑器内运行场景时，XR Device Simulator 将被启用，你可以通过以下操作体验不同的效果。
+**
+*更多操作可参考 Unity 文档。 
+上机体验
+*使用 USB 数据线连接头戴和 PC。
+*在编辑器上方的菜单栏中，选择 File > Build Settings。
+*Build Settings 窗口弹出，待运行场景已自动添加至 Scenes In Build 列表。
+* 
+*在 Platform 列表中，选择 Android 作为构建平台。
+*点击窗口右下角的 Build And Run。
+*Unity 编辑器开始编译场景，编译过程耗时约 25 分钟。编译完成后，头戴端将运行该场景。用户进入游戏后，默认自动加入私人大厅（下图所示）。
+* 
+*操作手柄上的按键和摇杆，实现不同效果。
+**
+*第八步：探索 LaunchPad
+LaunchPad 上有三个标签页：World，Room 和 Friends。你可以在 LaunchPad 上创建房间、加入房间、查看房间信息、查看好友列表、邀请好友等。
+*
+*调试多人游戏能力
+本节介绍多人游戏能力调试方案。
+*使用 Unity 编辑器和 PICO 设备
+在 Unity 编辑器中运行 Demo 场景，同时将 Demo 的 APK 文件安装至 PICO 设备并运行。需确保编辑器端和设备端登录的是两个不同的 PICO 帐号，且已在 “好友” APP 中添加对方为好友。
+*使用多台 PICO 设备
+在多台设备上登录 PICO 帐号，并确保各帐号已在 “好友” APP 中互相添加好友。将 Demo 的 APK 文件安装至这些设备，然后运行 APK 文件进行测试。
+
+adb install {APK 文件名}
+
+
+
+*模块
+
+*说明
+
+Avatar
+
+Avatar 为用户在游戏内展示的虚拟形象。在 Demo 中，Avatar 可根据头戴和手柄的数据输入来展示不同的姿态，例如抬起手臂、转动头部等。此外，你也可以改变 Avatar 的皮肤颜色。
+* 
+
+虚拟房间
+
+虚拟房间通过调用 RoomService.CreateAndJoinPrivate2 接口进行创建。Demo 提供三个房间场景，分别是 Lobby、Blue Room 和 Orange Room，三个房间场景仅颜色不同，其他配置均相同。其中，Lobby 为启动游戏后用户默认加入的私人大厅，用户在体验过程中可加入或创建不同的房间。
+*Lobby
+* 
+*Blue Room
+* 
+*Orange Room
+* 
+
+控制面板
+
+在游戏内，用户可通过 A/X 键唤起控制面板（LaunchPad），然后在 LaunchPad 上创建房间、加入房间、查看好友列表等。
+
+多人游戏
+
+用户可以在 Demo 内体验多人游戏能力，例如加入好友所在房间。
+* 
+
+社交系统
+
+Demo 接入了 PICO “好友” 服务。用户登录后，可在 LaunchPad 上查看好友列表、查看好友在线状态、邀请好友。
+
+git lfs install
+
+git clone https://github.com/Pico-Developer/PlatformSamples-Unity-SpaceArenaParty.git
+
+
+
+显示名称
+
+简介
+
+API Name
+
+DeepLink Message
+
+启用DeepLink
+
+可见范围
+
+Lobby
+
+Lobby
+
+Lobby
+
+{}
+
+启用
+
+所有人
+
+Blue Room
+
+Blue Room
+
+BlueRoom
+
+{}
+
+启用
+
+所有人
+
+Orange Room
+
+Orange Room
+
+OrangeRoom
+
+{}
+
+启用
+
+所有人
+
+
+
+效果
+
+操作
+
+移动头显
+
+按住鼠标右键，然后移动鼠标。
+
+控制头显前进和后退
+
+按住鼠标右键，然后滚动鼠标滚轮。
+
+旋转头显
+
+同时按住鼠标右键与鼠标滚轮，然后移动鼠标。
+
+控制角色移动
+
+按住 Shift 键，然后按下 W (前) / S (后) / A (左) / D (右) 键。
+
+更换 Avatar 皮肤颜色
+
+按下 C 键。
+
+移动左/右手柄
+
+*左手柄：按住 Shift 键，然后移动鼠标。
+*右手柄：按住 Space 键，然后移动鼠标。
+
+旋转左/右手柄
+
+*左手柄：按住 Shift 键与鼠标滚轮，然后移动鼠标。
+*右手柄：按住 Space 键与鼠标滚轮，然后移动鼠标。
+
+唤起 LaunchPad
+
+按下 L 键。
+
+点击 UI 元素
+
+在 LaunchPad 内，使用鼠标点击 UI 元素。
+
+
+
+效果
+
+操作
+
+移动
+
+以下两种方式皆可实现角色移动：
+*手柄指向地面，然后按下扳机键（Trigger）
+*移动左手柄摇杆
+
+转身
+
+移动右手柄摇杆。
+
+唤起 LaunchPad
+
+按下左手柄上的 X 键或右手柄上的 A 键。
+
+更换 Avatar 皮肤颜色
+
+按下左手柄上的 Y 键或右手柄上的 B 键。
+
+
+
+标签页
+
+支持操作
+
+World
+
+
+*点击 Create Room 按钮创建房间。
+* 
+*查看好友所在房间并加入。
+* 
+
+Room
+
+*查看当前房间内的用户
+*点击 设置 图标，查看房间信息。
+*点击 Invite，邀请好友加入。
+*点击 Quit Room，离开房间。
+* 
+
+Friends
+
+查看好友列表，列表中会展示好友的在线状态。
+* 

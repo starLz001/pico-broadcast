@@ -1,0 +1,59 @@
+扩展外设
+========================================
+扩展外设功能支持用户连接自己的硬件外设，以获得更丰富的 VR 体验。该功能需要结合 PICO 体感追踪器进行使用。
+*环境要求
+*设备型号须为 PICO Neo3、PICO 4 系列或 Project Swan（PICO OS 6）。
+*接入扩展外设功能
+*在 UE 编辑器中打开项目。 
+*在上方工具栏，点击 编辑（Edit） > 项目设置（Project Settings） > 插件（Plugins） > PICO OpenXR。
+*移动到 Movements 选项卡下，勾选 Enable Expand Devices EXT 选框。
+* 
+*扩展外设拓展能力已启用。
+*调用扩展外设接口，在应用中实现扩展外设功能。
+*可用接口如下：
+**
+*
+
+
+
+接口
+
+说明
+
+示例
+
+EnumerateExpandDevicePICO
+
+查询所有独立外设的 ID。
+
+* 
+
+SetExpandDeviceMotorVibratePICO
+
+控制独立外设振动。
+
+* 
+
+GetExpandDeviceBatteryStatePICO
+
+获取扩展外设的电量状态。
+
+* 
+
+SetExpandDeviceCustomDataCapabilityPICO
+
+设置扩展外设自定义数据功能。
+
+* 
+
+SetExpandDeviceCustomDataPICO
+
+发送扩展外设自定义数据。
+
+* 
+
+GetExpandDeviceCustomDataPICO
+
+获取扩展外设自定义数据。
+
+* 

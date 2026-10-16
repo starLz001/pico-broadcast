@@ -1,0 +1,161 @@
+手部追踪
+========================================
+手部追踪 （Hand Tracking） 可以获得用户手部的位姿信息，包括手掌、手腕以及各手指关节的位置和旋转。你可用这些数据来识别用户当前的手势，并根据手势或手部位置与虚拟场景中的对象进行交互。
+*推荐阅读
+*建议阅读《DataProvider 使用说明》一文，了解如何使用 DataProvider 获取追踪数据、判断数据的可用性以及 DataProvider 的状态。
+*使用限制
+*仅当应用的模式为 Full Space 时，才可以获取手部追踪数据。
+*开发流程
+*通过手部追踪可以实时获取用户手部的位姿数据，并将其设置给虚拟场景中的实体，实现真实手部与虚拟手部之间的运动的同步。整个开发流程如下：
+*创建 HandTrackingProvider 实例。
+* 
+*调用 start() 启动 HandTrackingProvider，并在不再需要时调用 stop()。
+* 
+*使用 dataFlow 获取手部的位姿数据。
+* 
+* 
+*读取右手食指指尖的位姿数据，转换数据的坐标系，然后将结果设置给实体。
+* 
+*完整代码示例
+*以下代码展示了如何将右手食指尖的实时手部追踪数据设置给虚拟场景中的 rightIndexTipEntity，使 rightIndexTipEntity 在每帧的渲染中与真实手指尖同步移动和旋转。
+ 
+*其他功能
+*获取捏合与指向数据
+除了各关节的位姿数据外，HandTrackingData 还提供捏合（Pinch）与指向（Aim）数据，便于你实现基于手势的射线交互与选择操作。你可通过以下字段获取左右手的捏合与指向状态：
+*leftPinch / rightPinch：HandPinch 类型，描述手部的捏合状态，包含：
+*pinchPose：PinchPose 类型，提供捏合点的位置 (position) 与朝向 (rotation)。
+*pinchValue：Float 类型，表示捏合的程度（0 表示未捏合，1 表示完全捏合）。
+*isReady：Boolean 类型，表示当前捏合数据是否可用。
+*leftAim / rightAim：HandAim 类型，描述手部的指向状态，包含：
+*aimPose：AimPose 类型，提供指向射线的起点位置 (position) 与朝向 (rotation)。
+*aimValue：Float 类型，表示指向手势的触发程度。
+*isReady：Boolean 类型，表示当前指向数据是否可用。
+以下代码展示了如何读取右手的捏合与指向数据：
+ 
+ 
+*手部关节参考图
+*手部追踪功能支持追踪两只手的 26 个关节，如下图所示：
+ 
+*API 参考
+HandTrackingProvider 类提供手部追踪的相关接口，详情参阅 API 参考。根据你所处的地理位置选择合适的文档链接：
+*中国大陆：https://developer-cn.picoxr.com/spatial-api/index.html
+*非中国大陆：https://developer.picoxr.com/spatial-api/index.html
+
+
+@Composable
+fun HandTrackingSample() {
+    val handTrackingProvider = remember { HandTrackingProvider() }
+    // ...
+}
+
+@Composable
+fun HandTrackingSample() {
+    // ...
+    DisposableEffect(handTrackingProvider) {
+        handTrackingProvider.start()
+        onDispose { handTrackingProvider.stop() }
+    }
+    // ...
+}
+
+你可以根据具体场景选择不同的获取方式。此处，在 Composable 函数中，可以使用 dataFlow 获取数据；在 ECS 中，可以通过 latestData 获取最新数据。
+
+@Composable
+fun HandTrackingSample() {
+    // ...
+    val handTrackingData by
+        handTrackingProvider.dataFlow.collectAsState(initial = HandTrackingData(null, null, 0L))
+    // ...
+}
+
+@Composable
+fun HandTrackingSample() {
+    // ...
+    val rootEntity: Entity = remember { Entity() }
+    val rightIndexTipEntity: Entity = remember { Entity() }
+    
+    SpatialView(
+        update = { _, _ ->
+            handTrackingData.right?.let { right ->
+                val indexTipJoint = right[HandJoint.Index.INDEX_TIP]
+                val transformComponent = rightIndexTipEntity.components[TransformComponent::class.java]
+                transformComponent?.apply {
+                    val position = rootEntity.convertPositionFrom(indexTipJoint.position, null)
+                    val rotation = rootEntity.convertRotationFrom(indexTipJoint.rotation, null)
+                    setPosition(position)
+                    setQuaternion(rotation)
+                }
+            }
+        }
+    ) { content, _ ->
+        rootEntity.addChild(rightIndexTipEntity)
+        content.addEntity(rootEntity)
+    }
+    // ...
+}
+
+@Composable
+fun HandTrackingSample() {
+    // 创建 HandTrackingProvider
+    val handTrackingProvider = remember { HandTrackingProvider() }
+
+    // 从 dataFlow 中获得实时追踪数据
+    val handTrackingData by
+        handTrackingProvider.dataFlow.collectAsState(initial = HandTrackingData(null, null, 0L))
+
+    // 在 Composable 生命周期内使用追踪数据
+    DisposableEffect(handTrackingProvider) {
+        handTrackingProvider.start()
+        onDispose { handTrackingProvider.stop() }
+    }
+    
+    // 创建场景中的两个实体：根节点和右手食指尖节点
+    val rootEntity: Entity = remember { Entity() }
+    val rightIndexTipEntity: Entity = remember { Entity() }
+
+    SpatialView(
+        update = { _, _ ->
+            handTrackingData.right?.let { right ->
+                // 获取右手食指尖关节的数据
+                val indexTipJoint = right[HandJoint.Index.INDEX_TIP]
+                val transformComponent = rightIndexTipEntity.components[TransformComponent::class.java]
+                transformComponent?.apply {
+                    // 将追踪数据的数据转换到根节点坐标系下，并设置给右手食指尖节点
+                    val position = rootEntity.convertPositionFrom(indexTipJoint.position, null)
+                    val rotation = rootEntity.convertRotationFrom(indexTipJoint.rotation, null)
+                    setPosition(position)
+                    setQuaternion(rotation)
+                }
+            }
+        }
+    ) { content, _ ->
+        rootEntity.addChild(rightIndexTipEntity)
+        content.addEntity(rootEntity)
+    }
+}
+
+SpatialView(
+    update = { _, _ ->
+        // 读取右手捏合数据
+        handTrackingData.rightPinch?.let { pinch ->
+            if (pinch.isReady && pinch.pinchValue > 0.9f) {
+                val pinchPosition = pinch.pinchPose.position
+                val pinchRotation = pinch.pinchPose.rotation
+                // 根据捏合位姿执行交互逻辑
+            }
+        }
+
+        // 读取右手指向数据
+        handTrackingData.rightAim?.let { aim ->
+            if (aim.isReady) {
+                val aimPosition = aim.aimPose.position
+                val aimRotation = aim.aimPose.rotation
+                // 根据指向射线执行射线拾取等交互逻辑
+            }
+        }
+    }
+) { content, _ ->
+    // ...
+}
+
+使用 HandTrackingData(left, right, timestamp) 构造函数时，捏合（Pinch）与指向（Aim）字段的默认值为 null。由于系统仅在识别出相应手势时才会提供捏合与指向数据，因此在使用前，你需要通过 isReady 字段检查数据是否可用。

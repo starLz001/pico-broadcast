@@ -1,0 +1,85 @@
+自定义空间容器的 Activity
+========================================
+空间容器内部将 Android Activity 作为 UI 载体。通常情况下，你无需关注此细节，因为 SpatialUI 与 Compose 开发生态已支持在 Compose 上下文中完成绝大部分逻辑开发。
+*为了满足传统 Android 开发者的需求，PICO Spatial SDK 提供了自定义空间容器的 Activity 的能力。你可以在 Activity 中处理诸如权限申请、依赖注入等业务逻辑。空间容器启动时会加载你所指定的 Activity。
+*开发流程
+*第一步：自定义 Activity
+*你可以通过以下两种方式自定义 Activity：
+*继承自 SpatialStubActvity。这种方式更简单。
+* 
+*使用 SpatialActivityDelegate，将普通 Activity 改造成 SpatialActvity。使用该方式时，则必须按照规范调用相关代码。
+* 
+*第二步：在 Manifest 中注册 Activity
+*在 AndroidManifest.xml 文件中注册自定义的 Activity，如下所示：
+ 
+*第三步：在 DSL 中，指定空间容器的 Activity
+*在 DSL 中，指定空间容器的 Activity，从而控制空间容器内部的 UI 承载和业务逻辑。
+* 
+*代码示例如下：
+ 
+*第四步：检查自定义 Activity 是否生效
+*通过 Compose 的 LocalContext.current 获取 Context 并启动对应的空间容器，然后确认自定义 Activity 是否已加载。
+ 
+*注意事项
+*对于自定义 Activity，请勿使用 Activity.setContentView()、ComponentActivity.setContent() 等方法设置 2D UI。应该使用 SpatialActivityDelegate 来代理 Activity 的内容。
+*勿在 AndroidManifest.xml 文件中为自定义 Activity 配置 launchMode 属性，否则应用的表现可能不符合预期。
+* 
+
+
+// 继承自 SpatialStubActivity，在复写方法时，需要先调用 `Super` 方法
+class MyActivity: SpatialStubActivity() {
+}
+
+// 普通 Activity：基于 Compose 的要求，其父类至少应为 ComponentActivity
+// 父 Activity：可以是 ComponentActivity 及任意子类（如 FragmentActivity）
+class MyActivity : androidx.activity.ComponentActivity() {
+    // 定义 SpatialActivityDelegate，然后在对应的生命周期里调用其方法，缺一不可
+    private val spatialDelegate: SpatialActivityDelegate by spatialActivityDelegate()
+    // 也可以使用 SpatialActivityDelegate.newInstance(this)
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        // 这里类似于 Activity 的 setContentView 或 Compose 的 setContent
+        // 注意：自定义 SpatialActivity 时，不能再调用 setContentView 等方法，否则会导致 SpatialUI 无法正确加载
+        spatialDelegate.setSpatialContent()
+    }
+}
+
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+    <application>
+        ...
+        <activity android:name=".activities.MyActivity"/>
+        ...
+    </application>
+</manifest>
+
+不同空间容器的 Activity 可以相同。
+
+fun SpatialAppScope.mainApp() {
+    // 为 WindowContainer 注册 Activity
+    WindowContainer(
+        id = "MyWindowContainer",
+        targetActivity = MyActivity::class.java,
+    ) {
+        Content()
+    }
+    
+    // 为 Stage 注册 Activity
+    Stage(
+        id = StageWithCustomActivity,
+        immersion = Immersion.Default,
+        targetActivity = MyActivity::class.java
+    ) {
+         Content()
+    }
+}
+
+@Composable
+fun Content() {
+    val context = LocalContext.current
+    Text("actvity: $$context")
+}
+
+<activity android:name=".activities.MyActivity"
+    android:launchMode="xxx"/>

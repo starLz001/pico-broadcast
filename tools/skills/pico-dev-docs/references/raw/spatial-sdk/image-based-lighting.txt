@@ -1,0 +1,90 @@
+基于图像的光照
+========================================
+基于图像的光照（Image-Based Lighting，IBL）是一种先进的光照技术，它利用环境贴图（Environment Map）或全景图像来模拟来自现实世界环境的光线，从而为虚拟物体提供更加真实、自然的光照和反射效果。
+*IBL 类型
+*
+*相关组件
+*
+*为指定物体添加局部 IBL
+*首先，通过 ImageBasedLightComponent 定义一个局部 IBL，并将该组件挂载到指定 Entity 上。
+ 
+然后，为该 Entity 挂载 ImageBasedLightReceiverComponent。
+ 
+*为场景添加环境 IBL
+* 
+在场景内的任一 Entity 上添加 StageEnvironmentLightingComponent 即可：
+ 
+默认情况下，环境 IBL 和局部 IBL 会混合显示。如果你想要自定义混合比例，可以使用 EnvironmentLightingSettingsComponent：
+ 
+*API 参考
+*ImageBasedLightComponent、ImageBasedLightReceiverComponent、StageEnvironmentLightingComponent 和 EnvironmentLightingSettingsComponent 类提供了 IBL 相关的属性和函数。详细说明参阅 API 参考。根据你所处的地理位置选择合适的文档链接：
+*中国大陆：https://developer-cn.picoxr.com/spatial-api/index.html
+*非中国大陆：https://developer.picoxr.com/spatial-api/index.html
+
+
+
+
+类型
+
+描述
+
+局部 IBL
+
+对场景内的特定物体生效的光照，可以与环境 IBL 叠加。
+
+环境 IBL
+
+对整个场景生效的光照。
+*提示：只有在 Stage 中，你才能自定义环境 IBL 的贴图，否则默认使用系统提供的贴图。
+
+
+
+组件名称
+
+描述
+
+ImageBasedLightComponent
+
+用于设置局部 IBL 的旋转角度、图像源和光照强度。
+
+ImageBasedLightReceiverComponent
+
+用于设置接收局部 IBL 的 Entity。
+
+StageEnvironmentLightingComponent 
+
+用于设置环境 IBL 的旋转角度、图像源和光照强度。
+*提示：
+*该组件的行为会根据当前的 StageStyle 而有所不同：
+* 在 StageStyle.Full 模式下，该组件会提供完整的环境光照，用于定义虚拟世界的氛围。
+* 在 StageStyle.Mixed 模式下，舞台环境光照处于未激活状态。为确保视觉效果的一致性，系统会优先采用从真实世界环境派生的 IBL。
+*在 StageStyle.Progressive 模式下，光照效果是舞台环境光照与系统 IBL 的混合，其混合比例由当前的沉浸度决定。
+
+EnvironmentLightingSettingsComponent 
+
+局部 IBL 和 环境 IBL 混合时，设置环境 IBL 所占的比重。不添加该组件时，默认比重为 0.5。
+
+val iblEntity = Entity().apply {
+    val iblSource = ImageBasedLightSource.Single(iblTexture)
+    val iblComponent = ImageBasedLightComponent(iblSource, 8f)
+    components.set(iblComponent)
+}
+// 记得将挂载了 IBL 的 Entity 加入场景中
+content.add(iblEntity)
+
+val iblReceiverComponent = ImageBasedLightReceiverComponent(iblEntity) 
+modelEntity.components.set(iblReceiverComponent)
+
+自定义的环境 IBL 仅在 Stage 内生效。
+
+val environmentEntity = Entity().apply {
+    val iblSource = ImageBasedLightSource.Single(iblTexture)
+    val environmentLightingComponent = StageEnvironmentLightingComponent(iblSource, 8f)
+    components.set(environmentLightingComponent)
+}
+// 记得将挂载了环境 IBL 的 Entity 加入场景中
+content.add(iblEntity)
+
+val environmentLightingSettingsComponent =
+    EnvironmentLightingSettingsComponent(0.0f) // 只显示局部 IBL
+modelEntity.components.set(environmentLightingSettingsComponent)

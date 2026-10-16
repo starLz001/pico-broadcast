@@ -1,0 +1,84 @@
+视频透视
+========================================
+视频透视（Video Seethrough, VST）技术可以打破 VR 头显提供的全封闭式虚拟环境。该技术可通过头显上的摄像机实时采集周围环境的视图，然后通过图像处理算法将真实场景画面呈现在头显屏幕上，给用户一种可以直接通过头显屏幕浏览现实场景的感觉。最终，透视画面可以与应用内的虚拟场景融合，呈现混合现实效果。 
+透视画面由 PICO 系统直接处理并上屏展示，应用程序无法获取用户的任何物理环境信息。 
+* 
+*环境要求 
+*PICO 设备：PICO Neo3 系列、PICO 4 系列、PICO 4 Ultra 系列和 Project Swan（PICO OS 6）。在不同型号的设备上，视频透视画面的色调和清晰度不同：
+**
+*PICO 设备系统版本：5.11.0 或以上版本 
+*前提条件 
+你已在引擎中安装并启用了 PICO Unreal OpenXR 插件。详情参考 PICO Unreal OpenXR 快速开始。
+*使用步骤 
+你可参考以下步骤使用视频透视功能。 
+*第一步：在编辑器中启用 
+*在 UE 编辑器中创建一个项目或打开已有项目。 
+*在编辑器左上角，点击 编辑（Edit） > 项目设置（Project Settings） > 插件（Plugin） > PICO OpenXR。 
+*移动到 Mixed Reality 选项卡下，勾选 Enable Video Seethrough 选项。 
+* 
+*第二步：使用蓝图动态启用 
+*目前有设置环境混合模式、添加透视层组件两种方法启用视频透视。其中，添加透视层组件具备更多特效。
+* 
+*选项一：设置环境混合模式
+*你可以调用 SetEnvironmentBlendMode 接口，将环境混合模式设为 3 ，以启用视频透视功能。环境混合模式 1 表示 Opaque（即关闭视频透视），2 表示 Additive，3 表示 Alpha Blend（即启用视频透视）。是否设置成功可以从 Log 中查看。
+ 
+*选项二：添加透视层组件
+你可以添加 PassthroughLayerComponentPICO 蓝图节点配置相关参数使用透视功能。
+* 
+ 
+* 
+*第三步：设置透视部分的背景材质
+*选项一：设置背景透视
+*将整个背景作为透视层。现实世界作为背景实时显示在 PICO 头显屏幕上，场景中的虚拟物体将覆盖在背景图上。
+在 UE 编辑器右上方 世界大纲视图 中，选择以下两种方式中的一种对 Sky Sphere 进行操作：
+*删除或停用 Sky Sphere。
+* 
+*改变 Sky Sphere 材质，步骤如下： 
+*点击 编辑 BP_Sky_Sphere。
+* 
+*在 创建动态 材质实例 > Source Material 下拉菜单中，搜索并选择 UnderlayMaterial。
+* 
+*点击窗口左上角 编译。
+*选项二：设置窗口透视 
+为选定区域添加 Underlay Material 材质，并调用 SetSeeThroughBackground 接口，使该区域在 PICO 头显中呈现透视效果。 具体操作步骤如下： 
+*在需要开启透视效果的区域放置 Actor，如一个平面。 
+*在 Unreal 编辑器右上角的 世界大纲视图 中，选择刚才放置的 Actor。 
+*在 细节 > 材质 选项卡的下拉菜单中，选择 Underlay Material。
+* 
+* 
+*VST 背景渲染
+具体步骤可参考官方文档：视频透视 - PICO 开发者平台
+*相关 OpenXR 扩展 
+*XR_FB_passthrough
+*XR_FB_triangle_mesh
+*XR_FB_composition_layer_alpha_blend
+
+
+
+
+型号
+
+透视画面色调
+
+清晰度
+
+PICO Neo3 系列
+
+黑白 
+
+低 
+
+PICO 4 系列、PICO 4 Ultra 系列和 Project Swan（PICO OS 6）
+
+彩色 
+
+高 
+
+UE 5.6 及以后的版本，需要添加以下控制台变量到 DefaultEngine.ini：
+*[/Script/Engine.RendererSettings]
+*r.Mobile.PropagateAlpha=True
+*r.PostProcess.PropagateAlpha=True
+
+如果遇到申请权限弹窗或者亮灭屏导致 VST 不可见时，开发者可监听相关回调或延迟对 VST 进行恢复，具体步骤参考下图：
+
+*Underlay Material 位于 Content Browser 下 的 \PICO Open XR 内容\Materials 文件中，你也可以直接拖动该材质至选定区域。需要根据更新后的 Underlay Material 位置进行修改。

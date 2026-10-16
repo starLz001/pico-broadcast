@@ -1,0 +1,13 @@
+面向 AI 的大语言模型资源
+========================================
+为了方便将完整的 PICO 官方文档提供给大语言模型（LLM），我们提供了一套专为 AI 优化的精简版 Markdown 文档。相比 HTML，Markdown 结构更清晰，更适合模型解析；同时也无需再通过脚本抓取网页内容，在一定程度上可以节省时间与 token 成本。
+*llms.txt 路径
+*中国大陆
+*中文：https://developer-cn.picoxr.com/llmstxt/document/spatial/zh/llms.txt
+*英文：https://developer-cn.picoxr.com/llmstxt/document/spatial/en/llms.txt
+*非中国大陆
+*中文：https://developer.picoxr.com/llmstxt/document/spatial/zh/llms.txt
+*英文：https://developer.picoxr.com/llmstxt/document/spatial/en/llms.txt
+*使用建议
+*在为大语言模型提供上下文时，建议直接提供 llms.txt 文件的 URL。
+这样做的优势在于，模型可以基于该索引自动获取其所指向的所有 .md 文档，从而获得更完整、最新的官方信息。相比逐个提供单独的 .md 页面，或解析包含冗余结构与干扰元素的 HTML 页面，这种方式在信息覆盖度、稳定性与效率上都更优。

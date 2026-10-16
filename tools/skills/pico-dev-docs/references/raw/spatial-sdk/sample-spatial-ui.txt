@@ -1,0 +1,605 @@
+示例：创建空间 UI 应用
+========================================
+该示例演示如何基于 PICO Spatial SDK 提供的 Spatial UI 组件构建一个完整的 2D 空间应用。重点覆盖以下能力：
+*在 DefaultWindowContainer 中以 Compose Navigation 组织"推荐流、搜索、用户中心和内容详情"四类典型页面。
+*使用 TabBar + followViewpoints 让导航栏跟随头显视角呈现在主窗口外侧。
+*以 Subwindow、PageControl、SegmentControl、SideNavigation、Toolbar、Menu、SpatialPopup 等 Design System 组件构建空间化 UI，并通过 HorizontalPager + PageControl 组合实现自定义 Banner 轮播。
+*通过 Coachmark 提供首次使用引导，并用单例 CoachMarkManager 控制每个引导项的展示状态。
+*借助 spatialHoverEffect、tooltip 等 Foundation 工具增强空间交互的可发现性与反馈。
+*使用 Vibrant 颜色体系适配亮 / 暗与多种 Material 背景。
+* 
+*前提条件
+*参阅《准备开发环境》配置 PICO Spatial SDK 开发环境。
+*准备一台 PICO 设备或启动 PICO Emulator。
+*获取示例项目
+前往《PICO Spatial SDK 示例》下载 构建空间 UI 应用 示例项目。
+*运行示例项目
+*把示例项目拉取到本地，然后用 Android Studio 打开示例项目。
+*连接 PICO 设备或启动 PICO Emulator。
+*运行 app 模块。
+运行示例后，你会看到一个 Planar DefaultWindowContainer，包含三个主页面与一个详情页：
+*推荐流（Feeds）：顶部 Banner 自动轮播 + 2×2 固定网格 + 推荐用户行 + 瀑布流卡片，点击卡片进入详情。
+*搜索（Search）：左侧搜索词、推荐词、热搜建议；右侧分类筛选与搜索结果网格。
+*用户中心（User）：左侧 SideNavigation + 右侧 Crossfade 切换关系链 / 设置 / 反馈等子内容。
+*内容详情（Detail）：沉浸式背景 + 顶部返回按钮 + 底部 Toolbar（包含 SpatialPopup、Menu、Snackbar 等弹层）。
+ 
+页面之间的导航关系如下：
+ 
+
+DefaultWindowContainer 的关键 meta-data 配置在 AndroidManifest.xml 中：
+ 
+*style=1：Planar 形态，承载常规 2D 内容。
+*defaultsize=1280x720：窗口默认尺寸（dp）。
+*resizetype=2：ContentSize，受根视图 minSize / maxSize 双向约束。
+*worldscaletype=1：Dynamic 缩放，远近自适应保证可读性。
+*materialbackground=1：启用 Material 背景，供 Vibrant 颜色体系正确呈现。
+*示例项目结构说明
+核心代码在 app/src/main/java/com/pico/spatialui/sample/ 下，按职责拆分为：
+*Main.kt：声明 DefaultWindowContainer 并把 HomePage 装入根 Compose 树。
+*app/
+*LaunchActivity.kt：继承 SpatialLaunchActivity，作为 Manifest 注册的 Spatial 入口 Activity。
+*SpatialApplication.kt：在 Application.onCreate 中调用 launch(::mainApp)，并实现 ImageLoaderFactory 以提供全局 Coil ImageLoader。
+*model/DataModel.kt：CardData、UserData、User、Suggestion、Category 等数据模型。
+*pages/
+*HomePage.kt：NavHost + AppTabBar，定义 Feeds / Search / User / Detail 四条路由。
+*FeedsPage.kt：推荐流页（Banner / 固定网格 / 推荐用户 / 瀑布流卡片 / 用户详情 Subwindow）。
+*SearchPage.kt：搜索页（SearchField / RemovableChip / ButtonChip / ToggleableChip / 结果网格）。
+*ContentDetailPage.kt：内容详情页（背景 + TitleBar + Toolbar + SpatialPopup + Menu + Snackbar）。
+*userpage/UserPage.kt：SideNavigation + TitleBar + Crossfade 子内容容器。
+*userpage/RelationshipContent.kt：SegmentControl + LazyColumn 关系链页。
+*userpage/SettingContent.kt：Switch、Slider、DatePicker（Sheet）、AlertDialog 等设置项。
+*userpage/FeedbackContent.kt：TextField / TextArea / Option 表单。
+*router/AppGraphRouter.kt：集中声明 feeds / search / user / detail/{itemId} 路由常量与 buildDetailRoute() 工具方法。
+*viewmodel/
+*FeedsViewModel.kt：以 MutableStateFlow 暴露 Banner / 固定网格 / 推荐用户 / 瀑布流卡片数据。
+*SearchViewModel.kt：搜索词、推荐词、热搜建议、分类、结果数据。
+*RelationshipViewModel.kt：互关 / 关注 / 粉丝 / 推荐四个 Tab 的 User 列表。
+*CoachMarkManager.kt：单例 + mutableStateMapOf<String, Boolean>，按 id 记录每个引导项是否已展示。
+*实现一个完整的空间 UI 应用
+下面以示例项目为主线，分步骤说明如何把容器声明、导航、内容页面、空间组件与交互反馈组织在一起。
+*步骤一：声明 Planar 容器并装入根 Compose 树
+应用入口位于 SpatialApplication，在 onCreate 中调用 launch(::mainApp) 启动 Spatial UI 渲染：
+ 
+mainApp 中只声明一个 DefaultWindowContainer，并通过 windowConstraints(minWidth, minHeight) 给根视图设置最小尺寸，让 Manifest 中 resizetype=2 的 ContentSize 约束生效：
+ 
+要点：
+*PicoTheme { ... } 是主题入口，必须包裹根内容才能正确取到 PicoTheme.typography、PicoTheme.colorScheme 等主题对象。
+*实现 ImageLoaderFactory 后，所有 AsyncImage / coil.ImageLoader 都会复用同一个加载器，避免重复创建。
+*步骤二：用 NavHost + AppTabBar 组织主导航
+HomePage 用 rememberNavController() 创建 NavHost，并以 AppGraphRouter 中定义的常量声明各路由：
+ 
+ 
+要点：
+*详情路由 detail/{itemId} 通过 backStackEntry.arguments?.getString(ARG_ITEM_ID) 取参，使主流程与详情页之间形成可回退的历史。
+*popUpTo(graph.startDestinationId) { saveState = true } + restoreState = true 让多 Tab 之间切换时保留滚动位置与 ViewModel 状态。
+*showTabBar 仅在三个主路由命中时才显示，进入详情页后会自动隐藏 TabBar，把整个窗口让给沉浸式内容。
+*步骤三：用 TabBar + followViewpoints 把主导航贴在窗口外侧
+PICO Spatial SDK 的 TabBar 是一个独立的 Window，可通过 followViewpoints 配置自动悬挂到主窗口的指定方向上：
+ 
+要点：
+*ViewPoint.Front + ViewPoint.Left/Right 同时声明两个吸附点：在用户正面看时显示在主窗口左侧（RTL 语言下镜像到右侧），既保留可见性又避免遮挡内容。
+*第 3 个 Tab（用户中心）使用彩色图标资源，因此 tint = Color.Unspecified 保留原图色彩；其它 Tab 走 LocalContentColor.current 与主题联动。
+*步骤四：在推荐流页用 Banner、网格、Subwindow 组合呈现内容
+FeedsPage 把 LazyVerticalGrid 当作整页骨架，将 Banner、固定网格、推荐用户、瀑布流卡片以 GridItemSpan(columnsCount) 拼接进同一个滚动容器：
+ 
+*Banner：HorizontalPager + PageControl 的"无限"轮播
+Banner 用 Int.MAX_VALUE 作为虚拟页数并以 totalPages / 2 作为初始页，再用 pageIndex % imageItems.size 取实际索引，实现视觉无缝循环：
+ 
+*Subwindow：把用户详情挂在主页面之外
+点击推荐用户后弹出的 UserDetail 用 Subwindow { ... } 承载，这是 PICO Spatial SDK 提供的"次级窗口"组件，会自动布局在主窗口的合适位置：
+ 
+通过 selectedUser?.let { UserDetail(it) { selectedUser = null } } 即可把它当成一个普通的 Compose 状态来打开 / 关闭。
+*推荐用户行：spatialHoverEffect + Vibrant 按钮
+RecommendedUser 行整体加 spatialHoverEffect() 提供空间悬停反馈，关注按钮用 Vibrant.Neutral / Darkest 在 Material 背景上表现为高对比度的中性按钮：
+ 
+*步骤五：用 Coachmark 提供首次使用引导
+页面标题 PageTitleWithCoachMark 用 CoachmarkBox 包裹一个普通的 Text 节点，第一次进入时会弹出 RichCoachmark 指向标题：
+ 
+详情页底部 Toolbar 的 Coachmark 用 CoachMarkManager 保证全局只展示一次：
+ 
+ 
+mutableStateMapOf 让"已展示"集合本身就是 Compose 可观察的状态，避免再额外维护 LiveData 或 StateFlow。
+*步骤六：在搜索页用 Chip 家族 + SearchField 组合多种筛选
+SearchPage 把整页拆分为左右两栏：左侧是搜索输入与建议词，右侧是分类筛选与结果网格：
+ 
+要点：
+*三种 Chip 各有用途：RemovableChip 用于可删除的搜索历史；ButtonChip 用于一次性触发的"猜你想搜"；ToggleableChip 用于结果区的多选分类。
+*key(...) 包裹是为了让 Compose 在列表项删除 / 切换时能正确复用动画与状态。
+*步骤七：在用户中心用 SideNavigation + Crossfade 切换子内容
+UserPage 的左侧使用 SideNavigation + SideNavigationItem 构建可分组的侧边栏，右侧用 androidx.compose.animation.Crossfade 在多个内容子页之间切换：
+ 
+侧边栏分组在 getNavigationItemDataGroupList() 中显式声明：
+ 
+UserDetailDispatcher 根据当前 key 分发到 RelationshipContent / SettingContent / FeedbackContent，未实现的项统一回落到 PlaceHolderContent，保持页面结构稳定。
+*关系链：SegmentControl + LazyColumn
+RelationshipContent 用 SegmentControl 提供 4 个 Tab，并根据当前 Tab 从 RelationshipViewModel 拿到对应 User 列表：
+ 
+*设置：Switch / Slider / DatePicker / AlertDialog 组合
+SettingContent 集中演示了多种 Form 类组件：
+*Switch + AlertDialog：青少年模式开关，开启时弹出 AlertDialog 二次确认。
+*Slider + SliderDefaults.Small：字号缩放滑杆。
+*DatePicker + Sheet：生日选择，封装在 DatePickerSheet，由 Sheet 提供底部抽屉容器和确认 / 取消按钮。
+*Checkbox + Link：在 AlertDialog 内同时用 Checkbox 与 Link 组件。
+ 
+*步骤八：在内容详情页用 Toolbar + Popup + Menu + Snackbar 组合工具栏
+ContentDetailPage 整体由 SnackbarHost { ... } 包裹，让所有 LocalSnackbarHostState.current 提交的消息都能浮现：
+ 
+Toolbar 自身也是一个 Window，会自动显示在主窗口底部。其上挂载的工具按钮分三种典型形态：
+*ToolbarItem：纯按钮，可用 Modifier.tooltip(...) 提示文案。
+*ToolbarItemWithPopupView：点击后弹出 SpatialPopup，内部承载自定义 Compose 内容（如 NumberField）。
+ 
+*ToolbarItemWithMenu：点击后弹出 Menu，配合 MenuItem 列出操作项：
+ 
+要点：
+*rememberSpatialPopupPositionProvider / rememberMenuPositionProvider 把 Popup / Menu 的水平和垂直锚点声明为可组合状态，便于按工具栏的实际位置自动避让。
+*Modifier.tooltip(text = ...) 是 Foundation 提供的悬停提示扩展，可以与任意 Compose 节点组合使用。
+*Snackbar 通过 LocalSnackbarHostState.current.show(...) 提交，在 SnackbarHost 内部显示，并支持 leadingIcon 自定义图标（示例里使用了 CircularProgressIndicator 表达"转换中"状态）。
+*步骤九：用 Vibrant 颜色体系适配 Material 背景
+整个示例都基于 com.pico.spatial.ui.foundation.vibrant 提供的 Vibrant 体系来取色，例如：
+ 
+要点：
+*Color.Vibrant.withVibrant(level) 不直接返回固定色值，而是声明"在 Material 背景上希望表现为 X 级亮度"，由系统在不同光照与背景下自动适配实际颜色。
+*当需要保持原图色彩或固定颜色时（例如热门火焰图标），可以使用 Color.Red.withVibrant(Vibrant.None) 显式禁用 Vibrant 调整。
+*这一套体系与 AndroidManifest.xml 中 materialbackground=1 配合，是空间应用呈现"半透明玻璃"风格 UI 的关键。
+*延伸阅读
+*《Spatial UI 主题和组件》
+*《Spatial UI 概览》
+
+
+<!-- file: app/src/main/AndroidManifest.xml -->
+<meta-data android:name="pico.spatial.windowcontainer.style" android:value="1" />
+<meta-data android:name="pico.spatial.windowcontainer.defaultsize" android:value="1280x720" />
+<meta-data android:name="pico.spatial.windowcontainer.resizetype" android:value="2" />
+<meta-data android:name="pico.spatial.windowcontainer.worldscaletype" android:value="1" />
+<meta-data android:name="pico.spatial.windowcontainer.materialbackground" android:value="1" />
+
+// file:app/src/main/java/com/pico/spatialui/sample/app/SpatialApplication.kt
+class SpatialApplication : Application(), ImageLoaderFactory {
+    override fun onCreate() {
+        super.onCreate()
+        launch(::mainApp)
+    }
+
+    override fun newImageLoader(): ImageLoader {
+        return ImageLoader.Builder(this).crossfade(true).build()
+    }
+}
+
+// file:app/src/main/java/com/pico/spatialui/sample/Main.kt
+fun mainApp(scope: SpatialAppScope) =
+    with(scope) {
+        DefaultWindowContainer {
+            PicoTheme {
+                HomePage(Modifier.windowConstraints(minWidth = 1280.dp, minHeight = 720.dp))
+            }
+        }
+    }
+
+// file:app/src/main/java/com/pico/spatialui/sample/router/AppGraphRouter.kt
+object AppGraphRouter {
+    const val FEEDS = "feeds"
+    const val SEARCH = "search"
+    const val USER = "user"
+    const val ARG_ITEM_ID = "itemId"
+    const val DETAIL = "detail/{$$ARG_ITEM_ID}"
+
+    fun buildDetailRoute(itemId: String) = "detail/$$itemId"
+}
+
+// file:app/src/main/java/com/pico/spatialui/sample/pages/HomePage.kt
+@Composable
+fun HomePage(modifier: Modifier) {
+    val navController = rememberNavController()
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
+    val currentRoute = navBackStackEntry?.destination?.route ?: AppGraphRouter.FEEDS
+
+    val tabDataList = remember(LocalContext.current) { buildTabDataList(LocalContext.current) }
+    val showTabBar = remember(currentRoute, tabDataList) {
+        tabDataList.any { it.route == currentRoute }
+    }
+
+    Box(modifier = modifier.fillMaxSize()) {
+        NavHost(navController = navController, startDestination = AppGraphRouter.FEEDS) {
+            composable(AppGraphRouter.FEEDS) {
+                FeedsPage(feedsViewModel = viewModel()) { id ->
+                    navController.navigate(buildDetailRoute(id))
+                }
+            }
+            composable(AppGraphRouter.SEARCH) { SearchPage(searchViewModel = viewModel()) }
+            composable(AppGraphRouter.USER) { UserPage() }
+            composable(AppGraphRouter.DETAIL) { backStackEntry ->
+                val itemId = backStackEntry.arguments?.getString(AppGraphRouter.ARG_ITEM_ID) ?: ""
+                ContentDetailPage(itemId) {
+                    if (navController.previousBackStackEntry != null) navController.popBackStack()
+                }
+            }
+        }
+
+        if (showTabBar) {
+            AppTabBar(list = tabDataList, currentRoute = currentRoute, isRTL = isRTL) { target ->
+                if (currentRoute != target) {
+                    navController.navigate(target) {
+                        popUpTo(navController.graph.startDestinationId) { saveState = true }
+                        launchSingleTop = true
+                        restoreState = true
+                    }
+                }
+            }
+        }
+    }
+}
+
+// file:app/src/main/java/com/pico/spatialui/sample/pages/HomePage.kt
+@Composable
+fun AppTabBar(
+    list: List<TabData>,
+    currentRoute: String,
+    isRTL: Boolean,
+    onItemClick: (targetRoute: String) -> Unit
+) {
+    TabBar(
+        followViewpoints = setOf(
+            ViewPoint.Front,
+            if (isRTL) ViewPoint.Right else ViewPoint.Left
+        )
+    ) {
+        list.forEachIndexed { index, itemData ->
+            item(
+                selected = (currentRoute == itemData.route),
+                onClick = { onItemClick(itemData.route) },
+                mainContent = {
+                    Icon(
+                        painter = painterResource(itemData.iconId),
+                        contentDescription = itemData.text,
+                        tint = if (index == 2) Color.Unspecified else LocalContentColor.current
+                    )
+                },
+                supportContent = { Text(text = itemData.text) }
+            )
+        }
+    }
+}
+
+// file:app/src/main/java/com/pico/spatialui/sample/pages/FeedsPage.kt
+LazyVerticalGrid(
+    columns = GridCells.Fixed(columnsCount),
+    modifier = Modifier.fillMaxWidth().weight(1f),
+    contentPadding = PaddingValues(bottom = 32.dp),
+    verticalArrangement = Arrangement.spacedBy(20.dp),
+    horizontalArrangement = Arrangement.spacedBy(20.dp)
+) {
+    item(span = { GridItemSpan(columnsCount) }) {
+        // 顶部 Banner + 2x2 固定网格
+    }
+    item(span = { GridItemSpan(columnsCount) }) {
+        // 三个推荐用户行
+    }
+    items(items = cardList, key = { it.id }) { cardData ->
+        AsyncImage(
+            model = cardData.imageId,
+            modifier = Modifier.fillMaxWidth().aspectRatio(289f / 385f)
+                .clip(RoundedCornerShape(8.dp))
+                .spatialHoverEffect()
+                .clickable { onNavigateToDetail("$${cardData.imageId}") },
+            contentScale = ContentScale.Crop,
+            contentDescription = cardData.imageDescription
+        )
+    }
+}
+
+// file:app/src/main/java/com/pico/spatialui/sample/pages/FeedsPage.kt
+val totalPages = Int.MAX_VALUE
+val initialPage = totalPages / 2
+val pagerState = rememberPagerState(initialPage = initialPage, pageCount = { totalPages })
+
+if (autoLoop) {
+    LaunchedEffect(pagerState) {
+        while (true) {
+            delay(loopDuration)
+            if (!pagerState.isScrollInProgress) {
+                pagerState.animateScrollToPage(pagerState.currentPage + 1)
+            }
+        }
+    }
+}
+
+HorizontalPager(state = pagerState, pageSpacing = 10.dp) { pageIndex ->
+    val realIndex = pageIndex % imageItems.size
+    AsyncImage(
+        model = imageItems[realIndex].imageId,
+        modifier = Modifier.fillMaxSize().clip(RoundedCornerShape(8.dp))
+            .spatialHoverEffect()
+            .clickable { onNavigateToDetail("$${imageItems[realIndex].imageId}") },
+        contentScale = ContentScale.Crop,
+        contentDescription = imageItems[realIndex].imageDescription
+    )
+}
+
+PageControl(
+    modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 12.dp),
+    currentIndex = pagerState.currentPage % imageItems.size,
+    onClickAction = { index ->
+        scope.launch {
+            val target = pagerState.currentPage + (index - (pagerState.currentPage % imageItems.size))
+            pagerState.animateScrollToPage(target)
+        }
+    },
+    colors = PageControlDefaults.pageControlColors().copy(normalColor = Color(0x4dffffff)),
+    maxDisplayCount = maxDisplayCount,
+    totalDots = imageItems.size,
+    pageControlSpec = PageControlDefaults.Spec.copy(dotSpace = 6.dp)
+)
+
+// file:app/src/main/java/com/pico/spatialui/sample/pages/FeedsPage.kt
+@Composable
+fun UserDetail(userData: UserData, closeHandler: () -> Unit) {
+    Subwindow {
+        Column(modifier = Modifier.fillMaxSize().clip(RoundedCornerShape(16.dp))) {
+            AsyncImage(model = R.drawable.img_subwindow_bg_new, ... )
+            Text(text = stringResource(userData.nameRes), style = PicoTheme.typography.headlineLarge)
+            Button(onClick = {}) { Text(stringResource(R.string.sui_sample_follow)) }
+        }
+        IconButton(
+            onClick = closeHandler,
+            colors = ButtonDefaults.buttonColors(
+                contentColor = Color.Vibrant.withVibrant(Vibrant.Darkest),
+                containerColor = Color.Vibrant.withVibrant(Vibrant.Neutral)
+            ),
+        ) {
+            Icon(painter = painterResource(id = R.drawable.cancel), contentDescription = null)
+        }
+    }
+}
+
+// file:app/src/main/java/com/pico/spatialui/sample/pages/FeedsPage.kt
+Row(modifier = modifier.clip(RoundedCornerShape(8.dp)).spatialHoverEffect().clickable { clickHandler() }) {
+    Image(painter = painterResource(userData.imageId), ...)
+    Column(modifier = Modifier.weight(1f)) {
+        Row { Text(...); if (userData.hot) Badge(...) { Icon(painter = painterResource(R.drawable.fire), ...) } }
+        Text(stringResource(userData.descriptionRes), ...)
+    }
+    Button(
+        onClick = {},
+        size = ButtonDefaults.Min,
+        colors = ButtonDefaults.buttonColors(
+            contentColor = Color.Vibrant.withVibrant(Vibrant.Darkest),
+            containerColor = Color.Vibrant.withVibrant(Vibrant.Neutral)
+        )
+    ) { Text(stringResource(R.string.sui_sample_follow)) }
+}
+
+// file:app/src/main/java/com/pico/spatialui/sample/pages/FeedsPage.kt
+@Composable
+fun PageTitleWithCoachMark(modifier: Modifier = Modifier) {
+    var showCoachMark by rememberSaveable { mutableStateOf(true) }
+
+    CoachmarkBox(
+        showCoachmark = showCoachMark,
+        direction = CoachmarkDirection.Below,
+        modifier = modifier,
+        coachmark = {
+            RichCoachmark(
+                content = {
+                    Text(stringResource(R.string.sui_sample_component_usage_coach_mark),
+                        style = PicoTheme.typography.bodyLarge)
+                },
+                buttons = {
+                    CoachmarkDefaults.CoachmarkButton(onClick = { showCoachMark = false }) {
+                        Text(stringResource(R.string.sui_sample_i_known))
+                    }
+                }
+            )
+        }
+    ) {
+        Text(text = stringResource(R.string.sui_sample_component_usage_sample), ...)
+    }
+}
+
+// file:app/src/main/java/com/pico/spatialui/sample/viewmodel/CoachMarkManager.kt
+object CoachMarkManager {
+    private val shownCoachMarks = mutableStateMapOf<String, Boolean>()
+    fun isCoachMarkShown(id: String): Boolean = shownCoachMarks[id] == true
+    fun setCoachMarkShown(id: String) { shownCoachMarks[id] = true }
+}
+
+// file:app/src/main/java/com/pico/spatialui/sample/pages/ContentDetailPage.kt
+var showCoachMark by rememberSaveable { mutableStateOf(!CoachMarkManager.isCoachMarkShown(id)) }
+
+CoachmarkBox(showCoachmark = showCoachMark, direction = CoachmarkDirection.Above, ...) {
+    Row(...) { content() }
+}
+
+// file:app/src/main/java/com/pico/spatialui/sample/pages/SearchPage.kt
+SearchField(
+    value = searchText,
+    onValueChange = { searchViewModel.onSearchTextChange(it) },
+    onSearch = {},
+    placeholder = { Text(stringResource(R.string.sui_sample_search), style = PicoTheme.typography.bodyLarge) }
+)
+
+FlowRow(...) {
+    for (item in recommendedList) {
+        key(item) {
+            RemovableChip(
+                label = { Text(stringResource(item)) },
+                onLeadingClick = {},
+                onTrailingRemoveClick = { searchViewModel.removeKeyFromRecommendedList(item) },
+                visible = true,
+                enabled = true
+            )
+        }
+    }
+}
+
+FlowRow(...) {
+    for (item in suggestionList) {
+        key(item.valueRes) {
+            ButtonChip(
+                label = { Text(stringResource(item.valueRes)) },
+                onClick = {},
+                leadingIcon = {
+                    if (item.hot) Icon(painter = painterResource(R.drawable.fire), tint = Color.Red.withVibrant(Vibrant.None))
+                }
+            )
+        }
+    }
+}
+
+FlowRow(...) {
+    categoryList.forEach { category ->
+        key(category.nameRes) {
+            ToggleableChip(
+                label = { Text(stringResource(category.nameRes)) },
+                isToggleOn = category.isSelected,
+                onClick = { searchViewModel.toggleCategorySelection(category.nameRes) }
+            )
+        }
+    }
+}
+
+// file:app/src/main/java/com/pico/spatialui/sample/pages/userpage/UserPage.kt
+SideNavigation(
+    modifier = Modifier.fillMaxHeight().width(316.dp),
+    header = {
+        Text(stringResource(R.string.sui_sample_user_name_placeholder), maxLines = 1)
+    }
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        groupList.forEach { group ->
+            Column {
+                group.forEach { itemData ->
+                    key(itemData) {
+                        SideNavigationItem(
+                            selected = currentSelectedItemKey == itemData,
+                            leading = { Icon(painter = painterResource(itemData.iconRes), ...) },
+                            modifier = Modifier.spatialHoverEffect().clickable { clickHandler(itemData) }
+                        ) { Text(text = stringResource(itemData.stringRes), maxLines = 1) }
+                    }
+                }
+            }
+        }
+    }
+}
+
+Column(modifier = Modifier.weight(1f).fillMaxHeight()...) {
+    TitleBar(
+        title = { Text(stringResource(currentSelectedItemKey.stringRes), ...) },
+        titleAlignment = TitleAlignment.CenterInBar
+    )
+    Box(modifier = Modifier.fillMaxWidth().weight(1f)) {
+        Crossfade(targetState = currentSelectedItemKey) { targetKey -> UserDetailDispatcher(targetKey) }
+    }
+}
+
+// file:app/src/main/java/com/pico/spatialui/sample/pages/userpage/UserPage.kt
+fun getNavigationItemDataGroupList() = listOf(
+    listOf(NavigationItemKey.Relationship, NavigationItemKey.Setting, NavigationItemKey.Feedback),
+    listOf(NavigationItemKey.PreferenceAnalysis, NavigationItemKey.BrowserHistory, NavigationItemKey.DownloadHistory),
+    listOf(NavigationItemKey.LegalNotice, NavigationItemKey.About)
+)
+
+// file:app/src/main/java/com/pico/spatialui/sample/pages/userpage/RelationshipContent.kt
+SegmentControl(modifier = Modifier.fillMaxWidth()) {
+    RelationshipTabKey.entries.forEach { tab ->
+        SegmentItem(
+            selected = tab == selectedTab,
+            onClick = { selectedTab = tab },
+            title = { Text(stringResource(tab.stringRes)) }
+        )
+    }
+}
+
+val userList by when (selectedTab) {
+    RelationshipTabKey.Mutual      -> viewModel.mutualList.collectAsStateWithLifecycle()
+    RelationshipTabKey.Followers   -> viewModel.myFollowerList.collectAsStateWithLifecycle()
+    RelationshipTabKey.Following   -> viewModel.myFollowingList.collectAsStateWithLifecycle()
+    RelationshipTabKey.Recommended -> viewModel.recommendedUserList.collectAsStateWithLifecycle()
+}
+
+// file:app/src/main/java/com/pico/spatialui/sample/pages/userpage/SettingContent.kt
+SettingContentRow(72.dp) {
+    SettingItemDefault(icon = R.drawable.youth, title = stringResource(R.string.sui_sample_juvenile_mode_label)) {
+        Switch(
+            checked = isJuvenileMode,
+            onCheckedChange = { checked ->
+                onJuvenileModeChange(checked)
+                if (checked) showJuvenileDialog = true
+            }
+        )
+    }
+}
+
+// file:app/src/main/java/com/pico/spatialui/sample/pages/ContentDetailPage.kt
+SnackbarHost {
+    Box(modifier = Modifier.fillMaxSize()) {
+        AsyncImage(model = R.drawable.img_detail_bg, modifier = Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
+        TitleBar(title = { IconButton(onClick = onBack, ...) { Icon(painter = painterResource(R.drawable.back), ...) } })
+    }
+
+    Toolbar(cornerSize = 37.dp) {
+        ToolbarContentWithCoachMark(itemId) {
+            ToolbarItem(R.drawable.left, enabled = false) {}
+            ToolbarItem(R.drawable.right, enabled = false) {}
+            ToolbarItemDivider()
+
+            ToolbarItem(R.drawable.rotate, enabled = false) {}
+            ToolbarItem(R.drawable.zoom_out, enabled = false) {}
+
+            ToolbarItemWithPopupView(R.drawable.zoom_in) { /* SpatialPopup 内的缩放比例输入框 */ }
+            ToolbarItemDivider()
+
+            ToolbarItem(R.drawable.cube, modifier = Modifier.tooltip(...)) {
+                scope.launch {
+                    snackState.show(message = message, leadingIcon = { CircularProgressIndicator() })
+                }
+            }
+            ToolbarItemWithMenu(R.drawable.more) { /* 分享 / 举报 / 沉浸式 三个 MenuItem */ }
+        }
+    }
+}
+
+// file:app/src/main/java/com/pico/spatialui/sample/pages/ContentDetailPage.kt
+@Composable
+fun ToolbarItemWithPopupView(@DrawableRes iconRes: Int, popupContent: @Composable () -> Unit) {
+    var showPopup by rememberSaveable { mutableStateOf(false) }
+    Box {
+        ToolbarItem(iconRes, modifier = Modifier.tooltip(text = stringResource(...))) { showPopup = !showPopup }
+        if (showPopup) {
+            SpatialPopup(
+                onDismissRequest = { showPopup = false },
+                defaultMinHeight = 64.dp,
+                defaultMinWidth = 128.dp,
+                popupPositionProvider = rememberSpatialPopupPositionProvider(
+                    verticalPlacement = VerticalPlacement.above(offset = (-24).dp)
+                )
+            ) { popupContent() }
+        }
+    }
+}
+
+// file:app/src/main/java/com/pico/spatialui/sample/pages/ContentDetailPage.kt
+@Composable
+fun ToolbarItemWithMenu(@DrawableRes iconRes: Int, content: @Composable (ColumnScope.() -> Unit)) {
+    var showMenu by rememberSaveable { mutableStateOf(false) }
+    Box {
+        ToolbarItem(iconRes, modifier = Modifier.tooltip(text = stringResource(...))) { showMenu = !showMenu }
+        if (showMenu) {
+            Menu(
+                positionProvider = rememberMenuPositionProvider(
+                    horizontalPlacement = HorizontalPlacement.alignStart(),
+                    verticalPlacement = VerticalPlacement.above(offset = (-24).dp)
+                ),
+                onDismissRequest = { showMenu = false }
+            ) { content() }
+        }
+    }
+}
+
+import com.pico.spatial.ui.foundation.vibrant.Vibrant
+import com.pico.spatial.ui.foundation.vibrant.withVibrant
+import com.pico.spatial.ui.graphics.Vibrant
+
+color = Color.Vibrant.withVibrant(Vibrant.UltraDark)            // 主标题
+containerColor = Color.Vibrant.withVibrant(Vibrant.Neutral)    // 中性按钮容器
+contentColor = Color.Vibrant.withVibrant(Vibrant.Darkest)      // 在 Material 背景上保持高对比度
+background = Color.Vibrant.withVibrant(Vibrant.Light)          // 列表底色

@@ -1,0 +1,1105 @@
+使用不同类型的 Operator
+========================================
+*SDK 提供多种类型的 operator。对于不同的 OperatorType，你需要传入不同的参数，有的 operator 还需要传入额外的配置。本文介绍 SDK 提供的所有 operator 以及使用方法。
+*重要提示
+*operator 无法被单独销毁，只能跟随其所在的 pipeline 一同被销毁。
+*所有的 operator 都可以设置输入与输出。
+*operator 相关接口
+*CreateOperator：用于创建 operator。
+* 
+*SetOperand：用于设置 operator 的输入（即 operand）。
+* 
+*SetResult：用于设置 operator 的输出。
+* 
+*operator 使用说明
+*ArithmeticComposeOperator
+*ArithmeticComposeOperator 用于进行算术运算。你可以使用加（+）、减（-）、乘（*）、除（/）、括号和常量自行定义运算。你需要传入字符串形式的运算表达式。在表达式中，{X} 表示序号为 X 的 operand。例如：{0} * 2.0 + ({1} / 6) 表示 operand0 乘以 2.0 加上 operand1 除以 6。
+*使用时，需要满足以下条件：
+*operator 中输入的 operand 数量不可以超过 10 个。
+*凡是在运算表达式里使用的 operand，均为必须，且均须为 Matrix 类型，其余 operand 为可选。
+*各个 operand 的名称为 {X}，其中 X 为 operand 的序号。
+*此 operator 有且仅有一个必须的 result。
+*在创建此 operator 时，需要预先确定好计算步骤。示例如下：
+* 
+*ElementwiseMinOperator
+*ElementwiseMinOperator 用于比较两个元素的最小值。使用时，须满足以下要求：
+*有且仅有两个必填的 operand，名称分别为 operand0 和 operand 1。
+*有且仅有一个必填的 result，名称为 result。
+*在绑定 tensor 时，不校验 operand 和 result 的种类、数据类型和 shape。但是在运行时，如果 operand0、operand1 和 result 的 shape 不一致，或者数据类型的不同，则终止所在 pipeline 并打印错误日志。
+*示例如下：
+ 
+*ElementwiseMaxOperator
+*ElementwiseMaxOperator 用于比较两个元素的最大值。使用时，须满足以下要求：
+*有且仅有两个必填的 operand，名称分别为 operand0 和 operand 1。
+*有且仅有一个必填的 result，名称为 result。
+*在绑定 tensor 时，不校验 operand 和 result 的种类、数据类型和 shape。但是在运行时，如果 operand0、operand1 和 result 的 shape 不一致，或者数据类型的不同，则终止所在 pipeline 并打印错误日志。
+*示例如下：
+ 
+*ElementwiseMultiplyOperator
+*ElementwiseMultiplyOperator 用于计算两个元素的乘积。使用时，须满足以下要求：
+*有且仅有两个必填的 operand，名称分别为 operand0 和 operand 1。
+*有且仅有一个必填的 result，名称为 result。
+*在绑定 tensor 时，不校验 operand 和 result 的种类、数据类型和 shape。但是在运行时，如果 operand0、operand1 和 result 的 shape 不一致，或者数据类型的不同，则终止所在 pipeline 并打印错误日志。
+*示例如下：
+ 
+*CustomizedCompareOperator
+*CustomizedCompareOperator 用于比较两个元素，并将各元素的比较结构的布尔值作为整型写入结果（false 则写入 0，true 则写入 1）。使用时，须满足以下要求：
+*有且仅有两个必填的 operand，名称分别为 operand0 和 operand 1。
+*有且仅有一个必填的 result，名称为 result。
+*创建此 operator 时需要传入希望使用的对比规则。
+*result 的数据类型必须为整型。
+*在绑定 tensor 时，不校验 operand 和 result 的种类、数据类型和 shape。但是在运行时，如果 operand0、operand1 和 result 的 shape 不一致，或者数据类型的 channel 不同，则终止所在 pipeline 并打印错误日志。
+*对比规则 CustomizedComparison 枚举的值如下：
+ 
+*使用示例如下：
+* 
+*ElementwiseOrOperator
+*ElementwiseOrOperator 用于进行 elementwise 的 bool or 运算。使用时，须满足以下要求：
+*有且仅有两个必填的 operand，名称分别为 operand0 和 operand 1。operand 的数据类型必须为整型，会在绑定时校验。
+*有且仅有一个必填的 result，名称为result。result 的数据类型必须为整型，会在绑定时校验。
+*示例如下：
+ 
+*ElementwiseAndOperator 
+*ElementwiseAndOperator 用于进行 elementwise 的 bool and 运算。使用时，须满足以下要求：
+*有且仅有两个必填的 operand，名称分别为 operand0 和 operand 1。operand 的数据类型必须为整型，会在绑定时校验。
+*有且仅有一个必填的 result，名称为result。result 的数据类型必须为整型，会在绑定时校验。
+*示例如下：
+ 
+*AllOperator
+*AllOperator 用于对整个 tensor 进行 ALL 运算。使用时，须满足以下要求：
+*有且仅有一个必填的 operand，名称为 operand。
+*有且仅有一个必填的 result，名称为 result，要求其必须为 Scalar，数据类型必须为 1-channel 整型，shape 必须为 (1,)，会在绑定时校验。
+*示例如下：
+ 
+*AnyOperator
+*AnyOperator 用于对整个 tensor 进行 ANY 运算。使用时，须满足以下要求：
+*有且仅有一个必填的 operand，名称为 operand。
+*有且仅有一个必填的 result，名称为 result，要求其必须为 Scalar，数据类型必须为 1-channel 整型，shape 必须为 (1,)，会在绑定时校验。
+ 
+*NmsOperator
+*NmsOperator 用于对 bounding box 进行非最大值抑制（NMS）。使用时，须满足以下要求：
+*有两个必填的 operand，分别为：
+**
+*有三个可选的 result，分别为：
+**
+*创建此 operator 时，需要传入一个 float threshold，用于指定 NMS 运算时两个 bounding box 重叠比例的阈值。
+*示例如下：
+ 
+*SolvePnPOperator
+*SolvePnPOperator 用于求解 PNP 问题。即用于反解相机的投影过程：给出投影得到的二维点坐标、各个点在世界坐标系下的三维空间坐标、以及相机的投影矩阵，然后求相机坐标系相对于世界坐标系的旋转（rotation）和平移（translation）变换。本 operator 是对 OpenCV 的 solve PnP 函数的封装。使用时，须满足以下要求：
+*有三个必填的 operand，分别为：
+**
+*有两个可选的 result，分别为：
+**
+示例如下：
+ 
+*GetAffineOperator
+*GetAffineOperator 用于获得一个二维空间内的仿射变换矩阵。该 operator 是对 OpenCV 的 getAffineTransform 函数的封装。使用时，须满足以下要求：
+*有两个必填的 operand，分别为：
+**
+*有一个可选的 result，名称为 result，用于存放仿射矩阵，要求种类为 Matrix，数据类型为 1-channel float32/64，shape 必须为(2, 3)。
+*示例如下：
+ 
+*ApplyAffineOperator
+*ApplyAffineOperator 用于将仿射变换作用于图像。该 operator 是对 OpenCV 的 warpAffine 函数的封装。使用时，须满足以下要求：
+*有两个必填的 operand，分别为：
+**
+*有一个可选的 result，名称为 dst image，代表仿射变换的结果，要求种类为 Matrix，数据类型应当与 src image 相兼容。
+*示例如下：
+ 
+*ApplyAffinePointOperator
+*ApplyAffinePointOperator 用于将仿射变换作用于平面上的点。该 operator 是对 OpenCV 的 transform 函数的封装。使用时，须满足以下要求：
+*有两个必填的 operand，分别为：
+**
+*有一个可选的 result，名称为 dst points，代表仿射变换的结果，要求种类为 Point，数据类型和 shape 须与 src points 完全一致。
+*示例如下：
+ 
+*UvTo3DInCameraSpaceOperator
+*UvTo3DInCameraSpaceOperator 用于将左目 RGB 图像上的 UV 坐标转换为左 RGB 相机坐标系下的 3D 坐标。一般和 CAMERA_SPACE_TO_WORLD 一起使用，可以把对左目 RGB 图像做的 AI 计算结果（比如目标检测模型、分割模型等）投影到世界坐标系，用于渲染使用。使用时，须满足以下要求：
+*有五个必填的 operand，分别为：
+**
+*有一个必填的 result，名称为 point_xyz， 代表左 RGB 相机坐标系下的 3D 坐标，类型为 3-channel float32/64 的 Point 或者 shape 为 {1,3} {3,1} 的 Matrix，长度和 UV 坐标一致。
+*示例如下：
+ 
+*AssignmentOperator
+*AssignmentOperator 用于进行拷贝赋值运算。结合不同的 operand 和 result，你可以通过该 operator 实现切片、数据类型转换、tensor 种类转换等操作。使用时，须满足以下要求：
+*有五个 operand，分别为：
+**
+*有一个必填的 result，名称是 dst，表示拷贝的目标 tensor，可以为任何种类、数据类型和 shape。
+*示例如下：
+ 
+*RunModelInferenceOperator 
+*RunModelInferenceOperator 用于封装一个开发者构建的 NPU operator 以供隔离执行。其 operand 和 result 的数量都根据开发者构建的 NPU operator 而动态地决定。开发者应当预先离线地将其算法通过 QNN 编译工具生成一个二进制文件并打包进 APK 文件中，或者直接从网络上下载该文件。使用时，须满足以下要求：
+*创建该 operator 前，须先读取或下载算法二进制文件到内存中。
+*XrSecureMrOperatorCreateInfoPICO 结构体的 operatorInfo 应当指向一个 XrSecureMrOperatorModelPICO 结构体实例。该结构体中的变量如下：
+**
+*NormalizeOperator
+*NormalizeOperator 用来进行数据归一化，比如减去均值并除以方差。使用时，须满足以下要求：
+*有两个 operands：
+**
+*有一个必填的 result，类型（tensor 类型、data 类型、channel 等）需要和 operand0 保持一致。
+*创建此 operator 时需要传入 normalizeType，枚举值如下：
+* 
+*示例如下：
+* 
+*CameraSpaceToWorldOperator
+*CameraSpaceToWorldOperator 用来获得指定时刻 VST 相机坐标系到 OpenXR 下的 Local 世界坐标系的变换矩阵。使用时，须满足以下要求：
+*有一个必填的 operand，名称为 timestamp，用来提供相机时间戳，要求必须是 Timestamp 类型的 tensor。
+*有两个可选的 result：
+**
+示例如下：
+ 
+*RectifiedVstAccessOperator
+*RectifiedVstAccessOperator 用来获得左右眼的 VST 图像，及对应的相机内参矩阵和相机时间戳。
+*此 operator不需要任何 operand，有四个可选的 result：
+**
+示例如下：
+ 
+*ArgmaxOperator
+*ArgmaxOperator 用于找到每一个 channel 的最大值对应的 index。使用时，须满足以下要求：
+*有一个必填的 operand，名称为 operand，为源 tensor，可以为任意类型。
+*有一个必填的 result，名称为 result，用来存放每一个 channel 的最大值的 index，要求数据类型必须为 N-channel 的整型（N 为 operand 的维度），shape 必须为 (C,) 或 (C, 1) 或 (1, C)（C 为 operand的数据类型的 channel 数量）。
+*代码示例如下：
+* 
+*让我们通过下面的具体例子来理解这个 operator：
+*operand 为一个数据类型为 3-channel float 的 (2，2)  Matrix，其 index 与数据的对应关系为：
+*Index[0, 0]: { 3.0, 1.3, 0.68}
+*Index[0, 1]: {5.7, 2.6, 0.52}
+*Index[1, 0]: {2.2, -5.7, 0.01}
+*Index[1, 1]:{6.0, -0.01, 0.30}
+注意，这个 Mat 一共有两行两列共四个数据，每个数据各为一个 3-channel 的浮点数。
+那么它的 argmax 的结果可以为一个 2-channel、shape=(3, 1) 的 Mat。这个 Mat 包含三个数据，每个数据对应 operand 一个 channel 上的最大值的 index，同时因为 operand 的每一个 index 都是由行 index 和列 index 两个整数构成的，所以 result 的数据类型应该为 2-channel 的整型。结果应该为：
+*{1, 1} --- channel 0 上的最大值为 6.0，对应的 index 为 [1, 1]
+*{0, 1}--- channel 1 上的最大值为 2.6，对应的 index 为[0, 1]
+*{0, 0}--- channel 2 上的最大值为 0.68，对应的 index 为[0, 0]
+*ConvertColorOperator
+*ConvertColorOperator 用于转换颜色空间。该 operator 是对 OpenCV 的 cvtColor 函数的封装。使用时，须满足以下要求：
+*有一个必填的 operand，名称为 src，其种类必须为 Matrix，数据类型应当与 OpenCV 对于 cvtColor 函数的输入数据的类型要求一致，shape 应当为(W, H))。
+*有一个必填的 result，名称为 dst，其种类必须为 Matrix，数据类型应当与 OpenCV 对于 cvtColor 函数的输出数据的类型要求一致，shape 应当与 operand src一致，为(W, H)。
+*创建此 operator 时，需要传入对应的颜色转换枚举值的 int 值，具体参考 opencv color conversions。
+*示例如下：
+ 
+*SortVectorOperator
+*SortVectorOperator 用于对一维向量进行排序。使用时，须满足以下要求：
+*有一个必填的 operand，名称为 operand0，用来指定要被排序的 tensor，要求是一个 Scalar，数据类型为 1-channel 的任何类型，shape 必须为(N,)。
+*有两个可选的 result：
+**
+示例如下：
+ 
+*InversionOperator
+*InversionOperator 用于求矩阵的逆矩阵。该 operator 是对 OpenCV 的 Mat::inv  方法的封装。使用时，须满足以下要求：
+*有一个必填的 operand，名称为 operand，其种类必须为 Matrix，数据类型必须为 1-channel float32/64，shape 必须为 (W, W)（即方阵）。
+*有一个必填的 result，名称为 result，其种类必须为 Matrix，数据类型应当与 operand 的数据类型一致，shape 必须为 (W, W)。
+*示例如下：
+ 
+*GetTransformMatrixOperator
+*GetTransformMatrixOperator 用于通过旋转、缩放和平移向量生成 4x4 的变换矩阵。使用时，须满足以下要求：
+*有三个 operand：
+**
+*有一个必填的 result，名为 result，要求种类是 Matrix，数据类型为 1-channel float32/64，shape 为 (4, 4)。
+*示例如下：
+ 
+*SortMatrixOperator
+*SortMatrixOperator 用于按照行或者列来对矩阵进行排序。该 operator 是对 OpenCV 的 sortMat 函数的封装。使用时，须满足以下要求：
+*有一个必填的 operand，名称为 operand，用来指定要被排序的 tensor，要求种类是 Matrix，数据类型为 1-channel 的任何类型，shape 必须为 (W,H)。
+*有两个可选的 result：
+**
+*在创建 operator 时，需要设置按行还是按列排序，枚举值如下：
+* 
+*示例如下：
+* 
+*SwitchGltfRenderStatusOperator
+*SwitchGltfRenderStatusOperator 用于开启或者终止渲染某个 glTF 模型。该 operator 有四个 operand：
+**
+*operand 设置和模型可见性之间的关系如下表所示：
+**
+*示例如下：
+* 
+*UpdateGltfOperator
+*UpdateGltfOperator 用于更新 glTF 模型的某一参数。用于数据驱动动画（data-driven animation）。glTF 模型必须已经通过 SwitchGltfRenderStatusOperator 开始渲染，否则该 operator 不生效。Attribute 枚举和使用说明如下：
+*
+*额外说明：
+*Node ID 是相应的 node 在 glTF 文件中以及 nodes array 中的序号（从 0 开始）。
+*在 glTF 里，node、material 和 texture 的关系如下：
+*一个 glTF 文件可以包含多个 node，每个 node 可以包含多个 mesh primitive。
+*每个 mesh primitive 和一个 material 绑定。material 是预设好的属性集，属性可以是单个 factor（比如 metallic），或者是一个 texture ID（比如 normal map）。
+*目前不支持动态地增、改 mesh primitive 或者 material，但是可以通过上表中的子 operator 更改指定 material 的属性值。
+*material ID 可以在 glTF 文件中找到，是明文写在 glTF 的 meshes array 中的。
+* 
+*RenderTextOperator
+*RenderTextOperator 用于在 glTF 的纹理上绘制文字。该 operator 需要设置以下六个必填的个operand：
+**
+*在创建 operator 的时需要设置字体类型、国家码、canvas 的长和宽。
+ 
+*示例如下：
+* 
+*LoadTextureOperator
+*LoadTextureOperator 用于从 tensor 为 glTF 模型创建新的 texture。使用时，须满足以下要求：
+*有两个必填的 operand，分别为：
+**
+*有一个必填的 result，名称为 texture ID，用来存放新增加到 glTF 模型中的 texture 的 index，从而可以通过 UpdateGltfOperator 将该 texture 绑定为某个 material 的 map。
+*示例如下：
+ 
+*  vd
+*执行矩阵的奇异值分解（singularity value decomposition）。
+*此 operator 需要一个 operand，为必须：
+*src：要求为一个二维 matrix 类型的 tensor。
+*有三个可选的 result，分别是 w、u 和 vt，都需要为二维 matrix 类型的 tensor，对应着 OpenCV 中 SVD 方法的 result。
+*  Norm
+*用于 tensor 的计算机范数（默认为 L2 范数）。
+*此 operator 需要一个 operand，为必须：
+*operand0：要求为除 gltf 之外的任意类型 tensor。
+*有一个 result，名为 result0，要求为除 gltf 之外的任意类型 tensor，只能具有一个 channel，只能包含一个 element。
+*  Swap Hwc Chw
+*将内容从 HWC tensor（即具有 2 维：HxW 和 C 通道的 tensor）转移到 CHWtensor（即具有 3 维：CxHxW 和 1 通道的 tensor），或从 CHWtensor 转移到 HWCtensor。
+*此operator需要一个必须的 operand 和一个必须的 result：
+*operand0
+*result0
+*如果一个是 HWC，则另一个必须是 CHW。HWC 需要是一个 matrix 的 tensor，2 dimensions: (H, W) 和 C channels；CHW 需要是一个 matrix 的 tensor，3 dimensions: (C, H, W) 和 1 channel。
+*此外，CHW 和 HWC tensor 的维数的最后两个数必须匹配。
+*Javascript
+*用于执行开发者提交的 JavaScript 脚本，输入输出由开发者的 JS 脚本定义。
+*示例：
+* 
+注意事项：
+*与其他 operator 不同，其他 operator 的 operand（输入）和 result（输出）的 name 与 index 均为预先定义。而 JavaScript Operator 的 operand 和 result 则由所提交执行的 JavaScript 代码中定义的全局 var 变量决定，其名称和顺序与代码中声明的全局变量保持一致。仅在 JavaScript 中未初始化且非 const 的全局 var 变量，才会被识别为 operand 或 result。
+*例如：在以下示例中，仅 variable1、variable2 和 variable3 可作为 operand 或 result；sum2 由于已被定义，不能作为 operand 或 result。在 JavaScript Operator 中，每一个未被预先定义的全局 var 变量，都可以被映射为 operand、result，或同时作为 operand 和 result。
+* 
+
+
+//创建operator
+var xxxOperator= currentPipeline.CreateOperator<ArithmeticComposeOperator>();
+
+xxxOperator.SetOperand("operand0", operand0);
+xxxOperator.SetOperand("operand1", operand1);
+
+xxxOperator.SetResult("result", result);
+
+var arithmeticComposeConfig = new ArithmeticComposeConfiguration("{0} * 2.0 + ({1} / 6)")
+var arithmeticComposeOp = currentPipeline.CreateOperator<ArithmeticComposeOperator>(arithmeticComposeConfig);
+arithmeticComposeOp.SetOperand("operand0", tensor0);
+arithmeticComposeOp.SetOperand("operand1", tensor1);
+arithmeticComposeOp.SetResult("result", tensorX);
+
+var elementwiseMinOp = currentPipeline.CreateOperator<ElementwiseMinOperator>();
+elementwiseMinOp.SetOperand("operand0", tensor0);
+elementwiseMinOp.SetOperand("operand1", tensor1);
+elementwiseMinOp.SetResult("result", tensorX);
+
+var elementwiseMaxOp = currentPipeline.CreateOperator<ElementwiseMaxOperator>();
+elementwiseMaxOp.SetOperand("operand0", tensor0);
+elementwiseMaxOp.SetOperand("operand1", tensor1);
+elementwiseMaxOp.SetResult("result", tensorX);
+
+var elementwiseMultiplyOp = currentPipeline.CreateOperator<ElementwiseMultiplyOperator>();
+elementwiseMultiplyOp.SetOperand("operand0", tensor0);
+elementwiseMultiplyOp.SetOperand("operand1", tensor1);
+elementwiseMultiplyOp.SetResult("result", tensorX);
+
+public enum CustomizedComparison
+{
+    LargerThan, // operand0 大于 operand1 的对应元素，则为 true
+    SmallerThan, // operand0 小于 operand1 的对应元素，则为 true
+    SmallerOrEqual, // operand0 小于等于 operand1 的对应元素，则为 true
+    LargerOrEqual, // operand0 大于等于 operand1 的对应元素，则为 true
+    EqualTo, // operand0 等于 operand1 的对应元素，则为 true
+    NotEqual, // operand0 不等于 operand1 的对应元素，则为 true
+}
+
+var customizedCompareConfig = new ComparisonOperatorConfiguration(CustomizedComparison.LargerThan)
+var customizedCompareOp = currentPipeline.CreateOperator<CustomizedCompareOperator>(customizedCompareConfig);
+customizedCompareOp.SetOperand("operand0", tensor0);
+customizedCompareOp.SetOperand("operand1", tensor1);
+customizedCompareOp.SetResult("result", tensorX);
+
+var elementwiseOrOp = currentPipeline.CreateOperator<ElementwiseOrOperator>();
+elementwiseOrOp.SetOperand("operand0", tensor0);
+elementwiseOrOp.SetOperand("operand1", tensor1);
+elementwiseOrOp.SetResult("result", tensorX);
+
+var elementwiseAndOp = currentPipeline.CreateOperator<ElementwiseAndOperator>();
+elementwiseAndOp.SetOperand("operand0", tensor0);
+elementwiseAndOp.SetOperand("operand1", tensor1);
+elementwiseAndOp.SetResult("result", tensorX);
+
+var allOp = currentPipeline.CreateOperator<AllOperator>();
+allOp.SetOperand("operand", tensor0);
+allOp.SetResult("result", tensorX);
+
+var anyOp = currentPipeline.CreateOperator<AnyOperator>();
+anyOp.SetOperand("operand", tensor0);
+anyOp.SetResult("result", tensorX);
+
+
+
+Operand
+
+说明
+
+scores
+
+每个 bounding box 的置信度，须是数据类型为 1-channel float32/64 的 Scalar 且 shape 为 (N,)，或者是数据类型为 1-channel float32/64 的 Mat 且 shape 为 (1, N) 或 (N, 1)。N表示输入的 bounding box 的个数。
+
+boxes
+
+每个 bounding box 的 XXYY 格式坐标，须是数据类型为 4-channel float32/64 的 Matrix 且 shape 为 (1, N) 或 (N, 1)，或者是数据类型为 1-channel float32/64 的 Matrix 且 shape 为 (N, 4)。N 表示输入的 bounding box 的个数。
+
+
+
+Result
+
+说明
+
+scores
+
+通过了 NMS 的 bounding box，按照置信度从高到低排列。对应的置信度须是数据类型为 1-channel float32/64 的 Scalar 且 shape 为 (M,)，或是数据类型为 1-channel float32/64 的 Matrix 且 shape 为 (1, M) 或 (M, 1)。M 表示通过 NMS 的 bounding box 的最大数量。
+
+boxes
+
+通过了 NMS 的 bounding box，按照置信度从高到低排列。对应的 XXYY 格式坐标须是数据类型为 4-channel float32/64 的 Matrix 且 shape 为(1, M) 或 (M, 1)，或是数据类型为 1-channel float32/64 的 Matrix 且 shape为 (M, 4)。M 表示通过 NMS 的 bounding box 的最大数量。
+
+indices
+
+通过了 NMS 的 bounding box，按照置信度从高到低排列。对应的顶点在 operand boxes 中的序号须是数据类型为 1-channel 整型的 Scalar 且 shape 为 (M,)，或是数据类型为 1-channel 整型的 Matrix 且 shape 为 (1, M) 或 (M, 1)。M 表示通过 NMS 的 bounding box 的最大数量。
+
+var nmsConfig = new NmsConfiguration(0.85f)
+var nmsOp = currentPipeline.CreateOperator<NmsOperator>(nmsConfig);
+nmsOp.SetOperand("scores", scoresTensor);
+nmsOp.SetOperand("boxes", boxesTensor);
+nmsOp.SetResult("scores", nmsScores);
+nmsOp.SetResult("boxes", nmsBoxes);
+
+
+
+Operand
+
+说明
+
+object points
+
+世界坐标系下的点的三维坐标，要求种类为 Point，数据类型为 3-channel float32/64，shape 为(P,)。
+
+image points
+
+相机投影平面上的点的二维坐标，要求种类为 Point，数据类型为 2-channel float32/64，shape 为 (P,)。
+
+camera matrix
+
+相机投影矩阵，要求种类为 Matrix，数据类型为 1-channel float32/64，shape 为 (3, 3)。
+
+
+
+Result
+
+说明
+
+rotation
+
+旋转向量，采用轴角表示法，要求种类为 Matrix，数据类型为 1-channel float32/64，shape 为 (1, 3) 或 (3, 1)。
+
+translation
+
+平移向量，要求种类为 Matrix，数据类型为 1-channel float32/64，shape 为 (1, 3) 或 (3, 1)。
+
+var solvePnPOp = currentPipeline.CreateOperator<SolvePnPOperator>();
+solvePnPOp.SetOperand("object points", objectPointsTensor);
+solvePnPOp.SetOperand("image points", imagePointsTensor);
+solvePnPOp.SetOperand("camera matrix", cameraMatrixTensor);
+solvePnPOp.SetResult("rotation", rvecTensor);
+solvePnPOp.SetResult("translation", tvecTensor);
+
+
+
+Operand
+
+说明
+
+src
+
+仿射变换的源空间下的三个点的坐标，要求种类为 Point，数据类型为 2-channel float32/64，shape 必须为 (3,)。
+
+dst
+
+仿射变换的目标空间下的三个点的坐标，跟src 的三个点应当一一对应，要求种类为 Point，数据类型为 2-channel float32/64，shape 必须为(3,)。
+
+var getAffineOp = currentPipeline.CreateOperator<GetAffineOperator>();
+getAffineOp.SetOperand("src", srcTensor);
+getAffineOp.SetOperand("dst", dstTensor);
+getAffineOp.SetResult("result", resultTensor);
+
+
+
+Operand
+
+说明
+
+affine
+
+仿射矩阵，要求种类为 Matrix，数据类型为 1-channel float32/64，shape 必须为 (2, 3)。
+
+src image
+
+源图像，要求种类为 Matrix，数据类型不做要求，shape 必须有且仅有两个维度。
+
+var applyAffineOp = currentPipeline.CreateOperator<ApplyAffineOperator>();
+applyAffineOp.SetOperand("affine", affineTensor);
+applyAffineOp.SetOperand("src image", srcTensor);
+applyAffineOp.SetResult("dst image", resultTensor);
+
+
+
+Operand
+
+说明
+
+affine
+
+仿射矩阵，要求种类为 Matrix，数据类型为 1-channel float32/64，shape 必须为 (2, 3)。
+
+src points
+
+源点，要求种类为 Point，数据类型为 2-channel 的任何类型，shape 必须为(N,)（N 为点的个数）。
+
+var applyAffinePointOp = currentPipeline.CreateOperator<ApplyAffinePointOperator>();
+applyAffinePointOp.SetOperand("affine", affineTensor);
+applyAffinePointOp.SetOperand("src points", srcTensor);
+applyAffinePointOp.SetResult("dst points", resultTensor);
+
+
+
+Operand
+
+说明
+
+uv
+
+左目 RGB 图像上的 UV 坐标，类型为 2-channel int32 的 Point。
+
+timestamp
+
+左目图像对应的时间戳，来自 RECTIFIED_VST_ACCESS。
+
+camera intrinsic
+
+左目 RGB 相机的内参，来自 RECTIFIED_VST_ACCESS。
+
+left image
+
+左目 RGB 图像，来自 RECTIFIED_VST_ACCESS。
+
+right image
+
+右目 RGB 图像，来自 RECTIFIED_VST_ACCESS。
+
+var uvTo3DOp = currentPipeline.CreateOperator<UVTo3DInCameraSpaceOperator>();
+uvTo3DOp.SetOperand("uv", uvTensor);
+uvTo3DOp.SetOperand("timestamp", timestampTensor);
+uvTo3DOp.SetOperand("camera intrisic", K_rgbTensor);
+uvTo3DOp.SetOperand("left image", leftImageTensor);
+uvTo3DOp.SetOperand("right image", rightImageTensor);
+uvTo3DOp.SetResult("point_xyz", xyzTensor);
+
+
+
+Operand
+
+是否必填
+
+说明
+
+src
+
+是
+
+拷贝的源 tensor，可以为任何种类、数据类型和 shape。
+
+src slices
+
+否
+
+拷贝的源 tensor 的每个维度上的切片，要求种类为 Slice，数据类型为 2/3-channel 整型，shape 为 (Sn,)（Sn 表示 src 的维度，即 src 的 shape 的尺寸）。如果为空，则表示选择整个源 tensor。
+
+src channel slice
+
+否
+
+拷贝的源 tensor 的 channel 上的切片，要求种类为 Slice，数据类型为 2/3-channel 整型，shape 为 (1,)。如果为空，则表示源 tensor 的选定切片中的每个 channel 都将被拷贝。
+
+dst slices
+
+否
+
+拷贝的目标 tensor 的每个维度上的切片，要求种类为 Slice，数据类型为 2/3-channel 整型，shape 为(Dn,)（Dn 表示 dst 的维度，即 dst 的 shape 的尺寸）。如果为空，则表示整个目标 tensor 都将被作为拷贝的目标。
+
+dst channel slice
+
+否
+
+拷贝的目标 tensor 的 channel 上的切片，要求种类为 Slice，数据类型为 2/3-channel 整型，shape 为 (1,)。如果为空，则表示目标 tensor 的选定切片中的每个 channel 都将被拷贝。
+
+var assignmentOp = currentPipeline.CreateOperator<AssignmentOperator>();
+assignmentOp.SetOperand("src", srcTensor);
+assignmentOp.SetOperand("src slices", srcSlicesTensor);
+assignmentOp.SetOperand("src channel slice", srcChannelSliceTensor);
+assignmentOp.SetOperand("dst slices", dstSlicesTensor);
+assignmentOp.SetOperand("dst channel slice", dstChannelSliceTensor);
+assignmentOp.SetResult("dst", dstTensor);
+
+
+
+变量
+
+说明
+
+buffer
+
+指向内存中加载的二进制文件。
+
+bufferSize
+
+该算法二进制文件在内存中的长度。
+
+modelName
+
+开发者指定的唯一标识字符串。
+
+modelInputs
+
+*指向长度为 modelInputCount 的 XrSecureMrOperatorIOMapPICO 数组，而modelOutputs 指向长度为 modelOutputCount 的 XXrSecureMrOperatorIOMapPICO数组。这两个数组用来告知 SecureMR 服务端：在封装开发者构建的算子时，需要准备的 operand 和 result，及它们在算法二进制文件中对应的节点：
+*XrSecureMrOperatorIOMapPICO 的 encodingType 用来指定该 operand 或 result 接受 FLOAT32 还是 UINT8 数据类型。
+*XrSecureMrOperatorIOMapPICO 的 operatorIOName 用来指定该 operand 或 result 的名字，从而可以通过名字绑定 tensor。
+*XrSecureMrOperatorIOMapPICO 的 nodeName 用来指定该 operand 或 result 在算法二进制文件中对应的节点 ID。
+
+
+
+Operand
+
+是否必填
+
+说明
+
+operand0
+
+是
+
+规范化的源 tensor，无任何要求。
+
+alpha_beta
+
+否
+
+用来指定规范化的 α 和 β 参数，要求种类为 Scalar，数据类型为 1-channel float32/64，shape 为 (2,)。
+
+enum NormalizeType
+{
+    L1,  // 指向 OpenCV 的 L1 规范化
+    L2, //指向 OpenCV 的 L2 规范化
+    Inf, //指向 OpenCV 的 INF 规范化
+    MinMax //指向 OpenCV 的 Min-Max 规范化
+}
+
+var normalizeConfig = new NormalizeConfiguration(NormalizeType.L1)
+var normalizeOp = currentPipeline.CreateOperator<NormalizeOperator>(normalizeConfig);
+normalizeOp.SetOperand("operand0", tensor0);
+normalizeOp.SetOperand("alpha_beta", tensor1);
+normalizeOp.SetResult("result", tensorX);
+
+
+
+Result
+
+说明
+
+right
+
+右眼 VST 相机坐标系到 OpenXR 的 Local 坐标系的变换矩阵，要求种类是 Matrix，数据类型是 1-channel float32/64，shape 必须为 (4, 4)。
+
+left
+
+左眼 VST 相机坐标系到 OpenXR 的 Local 坐标系的变换矩阵，要求种类是 Matrix，数据类型是 1-channel float32/64，shape 必须为 (4, 4)。
+
+var cameraSpaceToWorldOp = currentPipeline.CreateOperator<CameraSpaceToWorldOperator>();
+cameraSpaceToWorldOp.SetOperand("timestamp", timestampTensor);
+cameraSpaceToWorldOp.SetResult("right", rightTensor);
+cameraSpaceToWorldOp.SetResult("left", leftTensor);
+
+
+
+Result
+
+说明
+
+right image
+
+右眼的 VST RGB 图像，要求种类是 Matrix，数据类型是 3-channel UINT8，shape 必须为 (W, H)，其中 W 和 H 必须与创建 framework handle 时所设定的 VST 图像的宽高一致。
+
+left image
+
+左眼的 VST RGB 图像，要求种类是 Matrix，数据类型是 3-channel UINT8，shape 必须为 (W, H)，其中 W 和 H 必须与创建 framework handle 时所设定的 VST 图像的宽高一致。
+
+timestamp
+
+相机时间戳，要求种类是 Timestamp。
+
+camera matrix
+
+*相机的内参矩阵，可以用于 SolvePNP，要求种类是 Matrix，数据类型是 1-channel float32/64，shape 必须为(3, 3)。
+
+var rectifiedVstAccessOp = currentPipeline.CreateOperator<RectifiedVstAccessOperator>();
+rectifiedVstAccessOp.SetResult("right image", rightImageTensor);
+rectifiedVstAccessOp.SetResult("left image", leftImageTensor);
+rectifiedVstAccessOp.SetResult("timestamp", timestampTensor);
+rectifiedVstAccessOp.SetResult("camera matrix", cameraMatrixTensor);
+
+var argmaxOp = currentPipeline.CreateOperator<ArgmaxOperator>();
+argmaxOp.SetOperand("operand", operandTensor);
+argmaxOp.SetResult("result", resultTensor);
+
+var convertColorConfig = new ConvertColorConfiguration(13)
+var convertColorOp = currentPipeline.CreateOperator<ConvertColorOperator>(customizedCompareConfig);
+convertColorOp.SetOperand("src", srcTensor);
+convertColorOp.SetResult("dst", dstTensor);
+
+
+
+Result
+
+说明
+
+sorted
+
+排序好的向量，要求种类是 Scalar，数据类型为 1-channel 的任何类型，shape 必须为 (N,)。
+
+indices
+
+排序好的向量中的每一个元素在 operand0 中的 index，要求种类是 Scalar，数据类型为 1-channel 的整型，shape 必须为 (N,)。
+
+var sortVectorOp = currentPipeline.CreateOperator<SortVectorOperator>();
+sortVectorOp.SetOperand("operand0", operand0Tensor);
+sortVectorOp.SetResult("sorted", sortedTensor);
+sortVectorOp.SetResult("indices", indicesTensor);
+
+var inversionOp = currentPipeline.CreateOperator<InversionOperator>();
+inversionOp.SetOperand("operand", operandTensor);
+inversionOp.SetResult("result", resultTensor);
+
+
+
+Operand
+
+是否必填
+
+说明
+
+rotation
+
+是
+
+旋转向量（轴角表示法），要求种类是 Matrix，数据类型为 1-channel float32/64，shape 为 (1, 3) 或 (3, 1)。
+
+translation
+
+是
+
+平移向量，要求种类是 Matrix，数据类型为 1-channel float32/64，shape 为 (1, 3) 或 (3, 1)。
+
+scale
+
+否
+
+缩放向量，要求种类是 Matrix，数据类型为 1-channel float32/64，shape 为 (1, 3) 或 (3, 1)。
+
+var getTransformMatrixOp = currentPipeline.CreateOperator<GetTransformMatrixOperator>();
+getTransformMatrixOp.SetOperand("rotation", rotationTensor);
+getTransformMatrixOp.SetOperand("translation", translationTensor);
+getTransformMatrixOp.SetOperand("scale", scaleTensor);
+getTransformMatrixOp.SetResult("result", resultTensor);
+
+
+
+Result
+
+说明
+
+sorted
+
+按照行或者列排序好的向量，要求种类是 Matrix，数据类型为 1-channel 的任何类型并且与 operand 一致，shape 必须为 (W,H)。
+
+indices
+
+排序好的向量中每一个元素在 operand 中所在行/列的 index，要求种类是 Matrix，数据类型为 1-channel 的整型，shape 必须为 (W,H)。
+
+public enum MatrixSortType
+{
+    Column, // 按列排序
+    Row, // 按行排列
+}
+
+var sortMatrixOpConfig = new SortMatrixOpConfiguration(MatrixSortType.Row)
+var sortMatrixOp = currentPipeline.CreateOperator<SortMatrixOperator>(sortMatrixOpConfig);
+sortMatrixOp.SetOperand("operand", operandTensor);
+sortMatrixOp.SetResult("sorted", sortedTensor);
+sortMatrixOp.SetResult("indices", indicesTensor);
+
+
+
+Operand
+
+是否必填
+
+说明
+
+gltf
+
+是
+
+目标 glTF 模型 tensor，要求为一个 Gltf 类型的 tensor。
+
+world pose
+
+否
+
+如果不为空，则开始渲染指定的 glTF 模型。此 operand 应当提供 glTF 模型在 OpenXR Local 坐标系下的初始世界坐标。如果为空，则停止渲染 glTF 模型。
+
+visible
+
+否
+
+用来决定 glTF 模型是否可见。如果 tensor 非零，则模型可见并开始渲染，否则模型将被停止渲染。默认为可见。
+
+view locked
+
+否
+
+用来决定 glTF 模型是否跟随 view space。如果 tensor 非零，则模型以 OpenXR 的 view space 为参考系，否则以 OpenXR 的 local space 为参考系。
+
+
+
+*world pose
+
+*visible
+
+*模型可见性
+
+Not null
+
+Null
+
+可见，根据 world pose 指定的位姿渲染。
+
+
+
+非零 tensor
+
+可见，根据 world pose 指定的位姿渲染
+
+
+
+零 tensor
+
+不可见
+
+Null
+
+Null
+
+不可见
+
+
+
+
+非零 tensor
+
+
+
+
+
+零 tensor
+
+
+
+var switchGltfRenderStatusOp = currentPipeline.CreateOperator<SwitchGltfRenderStatusOperator>();
+switchGltfRenderStatusOp.SetOperand("gltf", gltfTensor);
+switchGltfRenderStatusOp.SetOperand("world pose", world poseTensor);
+
+
+
+*Attribute 枚举
+
+*用途说明
+
+
+
+*Operands
+
+TEXTURE
+
+用于更新一个已有 glTF texture 的内容。与 LOAD TEXTURE 相区别，LOAD TEXTURE operator 用于从内存加载一个新的 texture。
+
+
+
+*gltf：目标 glTF 素材，必须为一个 gltf tensor。
+*texture ID：要被更新的 texture 的 ID。必须是一个 1-channel UINT16 的 Scalar 类型的 tensor，shape 要求为 {N, }（N是要被更新的 texture 数）。
+*rgb image：新的 texture 内容。必须是一个 3/4-channel UINT8 的 Matrix 类型的 tensor，shape 要求为 {N, HEIGHT, WIDTh} 或 {HEIGHT, WIDTH}（仅当 N==1 时）。WIDTH 和 HEIGHT 必须与指定 texture 的当前尺寸一致。
+
+ANIMATION
+
+用于控制 glTF 中的预设 animation。
+
+
+
+*gltf：目标 glTF 素材，必须为一个 Gltf 类型的 tensor。
+*animation ID：指定目标 animation 的序号。必须是一个 1-channel UINT16 的 Scalar 类型的 tensor，shape 要求为 {1, }。序号值必须是 glTF 中合法的 animation 序号。
+*animation timer：调整动画的时间。必须是一个 1-channel FLOAT32/64 的 Scalar 类型的 tensor，shape 要求为 {1, }。动画将从 timer 值对动画时长取余的时刻处开始播放。
+
+WORLD_POSE
+
+用于更新 glTF 的世界坐标系位姿。
+
+
+
+*gltf：目标 glTF 素材，必须为一个 Gltf 类型的 tensor。
+*world pose：更新的世界坐标系位姿矩阵，必须为一个 1-channel FLOAT32/64 的 Matrix 类型的 tensor，shape 要求为 {4 ,4}。
+
+LOCAL_TRANSFORM
+
+用于更新 glTF 指定节点（node）的 local 位姿。
+
+
+
+*gltf：目标 glTF 素材，必须为一个 gltf tensor。
+*node ID：需要被更新的节点 ID。必须是一个 1-channel UINT16 的 Scalar 类型的 tensor，shape 要求为 {N, }（N 是要被更新的节点数）。
+*transform：每个节点的新位姿矩阵（4x4）。必须是一个 1-channel FLOAT32/64 的 Matrix 类型的 tensor，shape 要求为 {N, 4, 4} 或 {4 ,4}（仅当 N == 1 时）。
+
+METERIAL_METALLIC_FACTOR
+
+用于修改 glTF 中 material 的属性。
+
+
+修改 metallic 值（float）
+
+*gltf：目标 glTF 素材，必须为一个 gltf tensor。
+*material ID：需要被更新的 material 的 ID。必须是一个 1-channel UINT16 的 Scalar 类型的 tensor，shape 要求为 {N, }（N是要被更新的 material数）。
+*value：新的 material 属性值。shape 要求为 {N, }（N 是要被更新的 material 数）。tensor 类型要求如下：
+*对于左侧标记为 float 的子类型，必须为 1-channel FLOAT32/64 的 Scalar 类型的 tensor。
+*对于左侧标记为 RGBA 的子类型，必须为 4-channel UINT8 的 Color 类型的 tensor。
+*对于左侧标记为 texture ID 的子类型，必须为 1-channel UINT16 的 Scalar 类型的 tensor。
+
+
+METERIAL_ROUGHNESS_FACTOR
+
+
+
+修改 roughness 值（float）
+
+
+
+METERIAL_OCCLUSION_MAP_TEXTURE
+
+
+
+替换用作 occlusion map 的 texture 的 ID
+
+
+
+METERIAL_BASE_COLOR_FACTOR
+
+
+
+修改 base color 颜色（RGBA）
+
+
+
+METERIAL_EMISSIVE_FACTOR
+
+
+
+修改 emissive 颜色（RGBA）
+
+
+
+METERIAL_EMISSIVE_STRENGTH
+
+
+
+修改 emissive 强度值（float）
+
+
+
+METERIAL_EMISSIVE_TEXTURE
+
+
+
+替换用作 emissive map 的 texture 的 ID
+
+
+
+METERIAL_BASE_COLR_TEXTURE
+
+
+
+替换用作 base color 的 texture 的 ID
+
+
+
+METERIAL_NORMAL_MAP_TEXTURE
+
+
+
+替换用作 normal map 的 texture 的 ID
+
+
+
+METERIAL_METALLIC_ROUGHNESS_TEXTURE
+
+
+
+替换用作 metallic-roughness map 的 texture 的 ID
+
+
+
+public enum GltfOperatorAttribute
+{
+    Texture,
+    Animation,
+    WorldPose,
+    LocalTransform,
+    MaterialMetallicFactor,
+    MaterialRoughnessFactor,
+    MaterialOcclusionMapTextureFactor,
+    MaterialBaseColorFactor,
+    MaterialEmissiveFactor,
+    MaterialEmissiveStrengthFactor,
+    MaterialEmissiveTextureFactor,
+    MaterialBaseColorTextureFactor,
+    MaterialNormalMapTextureFactor,
+    MaterialMetallicRoughnessTexture,
+}
+
+
+
+Operand
+
+说明
+
+text
+
+任意 tensor。如果为 1-channel UINT8 或 INT8 类型的 Scalar tensor，则会将 tensor 的内容视为 UTF-8 编码的字符串。如果为其他类型的 tensor，则会将 tensor 的原始值直接打印。例如，如果输入一个 UINT8 类型的 Scalar tensor，其值为 {110, 105, 114, 114, 117}，则最终会渲染字符串 "HELLO"；但如果输入的是一个 Matrix tensor，内容完全一致，则渲染的结果会是 "110 105 114 114 117"。
+
+start
+
+起始的 XY 坐标，根据 Android Canvas 的要求，为第一个字符左下角的 baseline。要求必须为 float32/64 类型的 Point2，shape 为 {1,}。X、Y 应当为在 0~1 范围内对于 canvas 的长、宽的相对值。
+
+colors
+
+文字颜色和背景颜色。必须为一个 4-channel UINT8 类型的 Color tensor，shape 必须为 {2,}（第一个为文字颜色，第二个为背景色）。
+
+gltf
+
+目标 glTF 素材，必须为一个 Gltf tensor。
+
+texture ID
+
+绘制文字的目标 texture 的 ID，必须为一个 1-channel UINT16 类型的 Scalar tensor，shape 要求为 {1, }。必须为 glTF 中已有的（包括通过 LOAD TEXTURE 新增的）texture 的 ID。
+
+font size
+
+字体大小，单位为 pt。必须为一个 1-channel float32/64 类型的 Scalar tensor，shape 要求为 {1, }。
+
+// 字体类型枚举
+public enum FontTypeFace
+{
+    Default,
+    SansSerif,
+    Serif,
+    MonoSpace,
+    Bold,
+    Italic
+}
+
+var renderTextOpConfig = new RenderTextConfiguration(FontTypeFace.Bold,"zh-cn",width,height);
+var renderTextOp = currentPipeline.CreateOperator<RenderTextOperator>(renderTextOpConfig);
+sortMatrixOp.SetOperand("text", textTensor);
+sortMatrixOp.SetOperand("start", startTensor);
+sortMatrixOp.SetOperand("gltf", gltfTensor);
+sortMatrixOp.SetOperand("colors", colorsTensor);
+sortMatrixOp.SetOperand("texture ID", textureIDTensor);
+sortMatrixOp.SetOperand("font size", fontSizeTensor);
+
+
+
+Operand
+
+说明
+
+gltf
+
+目标 glTF 模型 tensor，要求为一个 Gltf 类型的 tensor。
+
+rgb image
+
+glTF 模型的新增 texture 的源图像，要求种类为 Matrix，数据类型为 3/4-channel UINT8（分别对应 RGB 和 RGBA），并且 shape 只能有两个维度。
+
+var loadTextureOp = currentPipeline.CreateOperator<LoadTextureOperator>();
+loadTextureOp.SetOperand("gltf", gltfTensor);
+loadTextureOp.SetOperand("rgb image", rgbImageTensor);
+loadTextureOp.SetResult("texture ID", textureIdTensor);
+
+string script =
+"var in_1;\n"
+"var in_2;\n"
+"var out_result;\n"
+"var sum2 = 0;\n"
+"var multi1 = 1;\n"
+"for(let i = 0; i < in_2.length; i++)\n"
+"{\n"
+"   sum2 += in_2[i];\n"
+"}\n"
+"for(let i = 0; i < in_1.length; i++)\n"
+"{\n"
+"   multi1 *= in_1[i];\n"
+"}\n"
+"if (multi1 < sum2)\n"
+"{\n"
+"   out_result[0] = 2;\n"
+"}\n"
+"else if (multi1 === sum2)\n"
+"{\n"
+"   out_result[0] = 0;\n"
+"}\n"
+"else\n"
+"{\n"
+"   out_result[0] = 1;\n"
+"}";
+
+var javaScriptOpConfig = new JavascriptOperatorConfiguration(script);
+var javaScriptOp = currentPipeline.CreateOperator<JavascriptOperator>(javaScriptOpConfig);
+javaScriptOp.SetOperand("in_1",inputTensor1);
+javaScriptOp.SetOperand("in_2",inputTensor2);
+javaScriptOp.SetOperand("out_result",outputTensor);
+
+var variable1;
+var variable2;
+var variable3;
+var sum2 = 0;
+let multi1 = 1
+for(let i = 0; i < variable2.length; i++)
+{
+   sum2 += variable2[i];
+}
+for(let i = 0; i < variable1.length; i++)
+{
+    multi1 *= variable1[i];
+}
+if (multi1 < sum2)
+{
+    variable3[0] = 2;
+}
+else if (multi1 === sum2)
+{
+    variable3[0] = 0;
+}
+else
+{
+    variable3[0] = 1;
+}

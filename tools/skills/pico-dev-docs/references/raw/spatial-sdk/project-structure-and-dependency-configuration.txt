@@ -1,0 +1,234 @@
+项目结构与依赖配置
+========================================
+在 Android Studio 中使用 Spatial WindowContainer 模板创建项目后，项目内会自动生成默认的目录结构、Application 与启动 Activity 配置，以及相关依赖配置。本文将详细介绍这些默认配置的具体内容。
+*项目结构
+*使用模板创建空间应用之后，Android Studio 中的 Project 视图将展示以下目录结构：
+ 
+其中：
+*/app/src/main/java 包含 Kotlin 和 Java 源代码。
+*/editor-asset/src/main/res3d 包含 Spatial Editor 工程：
+*“SpatialPackContent” 是 Spatial Editor 工程的名字。
+*/Sources 目录默认包含了 Assets 和 Scenes 文件夹。其中， Scenes 文件夹中存放可以被加载的场景（即 .usda 文件）。关于如何加载 Spatial Editor 中的资源，参考《AssetBundle》。
+*Application &  启动 Activity
+*对于使用 PICO Spatial SDK 开发的空间应用，其 Application 和启动 Activity 需要满足：
+*在 Application 类的 onCreate 函数中，调用launch(SpatialAppScope::mainApp)；并在 AndroidManifest.xml 文件中，按照目录层级配置 <application> 的名字。
+*入口函数 mainApp 在 SpatialAppScope 的作用域下，并且在 mainApp 函数中声明所有空间容器。
+*启动 Activity 继承自 SpatialLaunchActivity，在 AndroidManifest.xml 文件中，按照目录层级配置 <activity> 以及 <intent-filter> 的 <action> 和 <category>。
+*模板项目中的默认配置说明如下：
+*在模板项目的 platform 文件夹中，PICO Spatial SDK 定义了一个 AndroidApplication 类和一个 LaunchActivity 类，它们分别对应到 AndroidManifest.xml 文件中的 <application> 和 <activity> 部分。
+* 
+*模板项目中的 AndroidApplication 类继承自 Application 类，PICO Spatial SDK 重写了其 onCreate 方法，在其中调用了 launch(SpatialAppScope::mainApp) 方法，以在应用被创建时就执行 mainApp 函数。
+ 
+*mainApp 函数是空间应用的 “入口函数”，它是一个定义在 SpatialAppScope 作用域下的主函数，空间应用中所有用到的空间容器都需要在 mainApp 中进行声明，包括默认和非默认的空间容器。
+ 
+*LaunchActivity 类继承自 SpatialLaunchActivity 类，是空间应用的启动 Activity，也是默认空间容器对应的 Activity。
+ 
+关于如何声明空间容器，参考《声明 WindowContainer》和《声明 Stage》。
+*依赖配置
+*PICO Spatial SDK
+*PICO Spatial SDK 包含多个独立的功能模块，每个模块都专注于特定的空间能力，你可以根据需要引入相应的模块。建议至少包含 Core 和 UI 模块，以保障基本能力可被使用。 模块的介绍如下：
+**
+*在 settings.gradle.kts 文件的插件管理（pluginManagement）和依赖解析部分（dependencyResolutionManagement），声明了插件和依赖的仓库来源，包括：
+*google()：用于 Android 官方插件；
+*mavenCentral()：标准的公共 Maven 仓库；
+*gradlePluginPortal()：Gradle 官方插件仓库；
+* 自定义 Maven 仓库，从指定的私有制品仓库中获取插件或依赖：
+* 
+*模板项目使用了 Version Catalog 进行版本管理，在其 libs.versions.toml 文件中有以下默认配置：
+*[versions] 部分已添加 SDK 的版本号，你可以根据实际需求修改。
+* 
+*[libraries] 部分已添加以下依赖，你可以根据实际需求删除无需使用的功能模块的依赖。
+* 
+*在模块级 build.gradle.kts 文件中，模板项目也已在 dependencies {} 部分添加了以下依赖，你可以根据实际需求删除无需使用的功能模块的依赖。
+* 
+*此外，如果你不使用 Version Catalog 进行版本管理，可以根据实际需求，在项目的模块级 build.gradle.kts 中，填入你想使用的 SDK 的版本，并删除无需使用的功能模块的依赖。
+ 
+*Spatial Tools
+*Spatial Tools 是 PICO Spatial Plugin 包含的一个编译工具。在项目构建过程中，它通过 Gradle 构建系统自动将 Spatial Editor 工程编译生成 .bundle 文件，并将其无缝集成到 APK 的 /assets 目录中。需要注意的是，这些 .bundle 文件仅在构建时动态生成并打包，因此在本地开发环境的 assets 文件夹中并不会看到这些文件。完成打包后，你可以在代码中使用 "asset://YourBundleName.bundle" 这样的资源路径来加载 AssetBundle，从而实现对场景和其他资源的动态加载和管理。
+每个被添加到空间应用项目的 Spatial Editor 项目都会以单个 module 的形式呈现。模板工程中，名为 editor-asset 的 module 已被添加，你可以在项目顶层的 settings.gradle.kts 文件中看到以下模块配置：
+ 
+*在 editor-asset 模块的 build.gradle 文件中，存在以下默认配置：
+*plugins {} 部分，已默认配置了 Spatial Tools：
+**
+*文件最底部默认配置了 spatial {} 部分，你可以将此处的名称替换为自定义的 .bundle 文件的名称：
+* 
+*在 app 模块的 build.gradle.kts 文件中，dependencies{} 部分也添加了对 editor-asset 模块的依赖：
+**
+*资源压缩相关
+*为了优化模型与资源文件的加载性能，建议你在 app 的模块级 build.gradle.kts 文件中，于 android {} 代码块内通过 noCompress 指定无需压缩的资源文件类型。这样做有两大好处：
+*提升加载速度：资源在打包时不会被压缩，运行时系统可以通过内存映射（mmap）直接访问资源，免去了解压过程。
+*减少启动开销：允许系统在应用更新后对资源进行预处理（例如兼容性升级），从而加快应用启动。
+此外，是否使用 noCompress 是在 APK 体积和运行时性能之间的一种权衡：
+*启用 noCompress：APK 体积会变大，但资源加载更快，运行更稳定。
+*不启用 noCompress：APK 体积较小，但运行时会产生额外的解压开销。
+ 
+* 
+*
+
+**
+
+ 
+
+ 
+
+
+
+*模块
+
+*能力
+
+*Group ID 
+
+*Artifact ID 
+
+*Core
+
+为空间应用提供完整的核心运行框架，包含空间容器管理系统、实体-组件-系统（ECS）架构模式、资源管理、事件系统、渲染和特效、动画系统、物理模拟、空间音视频等。
+
+com.pico.spatial.core 
+
+core 
+
+*UI
+
+基于 Jetpack Compose 开发的一套声明式空间应用 UI 框架，提供了基于 PICO Design 品牌风格的设计，用于快速构建 UI 界面。它主要包含以下能力：
+*提供应用形态与空间容器相关的能力；
+*提供 View 的空间化效果，包括空间浮起、空间旋转、空间悬停等；
+*支持交互事件处理，包括 Drag、Tap 等；
+*提供空间窗口类组件，如 Augment、Subwindow、Toolbar 等；
+*提供符合 PICO Design 的主题和 UI 组件。
+
+com.pico.spatial.ui 
+
+platform
+
+
+
+
+
+
+
+*foundation
+
+
+
+
+
+
+
+design
+
+Foundation
+
+为空间应用提供与空间数学、注解、JSON 相关的 API。
+
+com.pico.spatial.foundation 
+
+foundation
+
+*Sense 
+
+增强应用的空间感知能力，如在空间中放置持久化的空间锚点、扫描环境中的空间网格、进行平面检测等。
+
+com.pico.spatial.sense 
+
+sense 
+
+*Tracking 
+
+为空间应用提供全方位的运动追踪，包括 HMD 追踪、手柄追踪、手部追踪等，你可以通过该模块获取 HMD、手柄、和手部关节的位置和姿态数据，进而实现相关功能。
+
+com.pico.spatial.tracking 
+
+tracking 
+
+SpatialML
+
+*SpatialML 是一个专为混合现实（MR）打造的数据驱动型运行时框架，旨在深度释放 PICO 的空间计算潜能。
+*你可向 SpatialML 部署自定义算法，包括基于 OpenCV 实现的算法或通过 PyTorch、TensorFlow、ONNX 等主流框架训练的机器学习模型。SpatialML 通过 Qualcomm AI Engine Direct (QNN) 进行模型部署，利用 PICO 搭载的 Qualcomm NPU 对模型推理进行硬件级加速，并能快速集成双目相机、深度相机、空间定位及锚点数据作为输入，最终以算法输出直接驱动沉浸式的 MR 交互体验。
+
+*com.pico.spatial.ml
+
+readback
+
+
+
+
+
+
+
+securemr
+
+maven {
+*    url = uri("https://artifact.bytedance.com/repository/Volcengine")
+    name = "VolcengineMaven"
+}
+
+[versions]
+# ...
+bom = "sdk_version" # 填入你所使用的 SDK 版本
+
+[libraries]
+# ...
+bom = { group = "com.pico.spatial", name = "bom", version.ref = "bom" }
+core = { group = "com.pico.spatial.core", name = "core" }
+platform = { group = "com.pico.spatial.ui", name = "platform" }
+*foundation = { group = "com.pico.spatial.ui", name = "foundation" }
+design = { group = "com.pico.spatial.ui", name = "design" }
+sense = { group = "com.pico.spatial.sense", name = "sense" }
+tracking = { group = "com.pico.spatial.tracking", name = "tracking" }
+
+dependencies {
+    // ...
+    implementation(platform(libs.bom))
+    implementation(libs.core)
+    implementation(libs.platform)
+    implementation(libs.foundation)
+    implementation(libs.design)
+    implementation(libs.sense)
+    implementation(libs.tracking)
+}
+
+dependencies {
+    //...
+    implementation(platform("com.pico.spatial:bom:sdk_version")) // 需填入你所使用的 SDK 版本
+    implementation("com.pico.spatial.core:core")
+    implementation("com.pico.spatial.ui:platform")
+*    implementation("com.pico.spatial.ui:foundation")
+    implementation("com.pico.spatial.ui:design")
+    implementation("com.pico.spatial.sense:sense")
+    implementation("com.pico.spatial.tracking:tracking")
+}
+
+rootProject.name = "My Application"
+include(":app")
+include(":editor-asset")
+
+plugins {
+    // ...
+    id 'com.pico.spatial.tools' version '6.1.0'
+}
+
+spatial {
+    name = "editor-asset" // 可替换为你所使用的 .bundle 文件的名称
+    spatialToolsVersion = 6.1
+}
+
+dependencies {
+    ...
+    implementation(project(":editor-asset"))
+    ...
+}
+
+部分格式（如 .wav）默认就不会被 Android 系统压缩，因此你无需为其添加 noCompress 配置。
+
+android {
+    ...
+    androidResources {
+        noCompress.add(".bundle")
+        noCompress.add(".glb")
+        noCompress.add(".ktx")
+        noCompress.add(".usdz")
+    }
+    ...
+}

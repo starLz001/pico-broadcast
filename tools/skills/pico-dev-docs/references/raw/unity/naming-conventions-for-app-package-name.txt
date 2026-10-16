@@ -1,0 +1,13 @@
+应用包名的命名规范
+========================================
+包名是用来识别安卓应用的重要标识之一，格式为 com.companyName.productName。
+*你可以在 Unity 编辑器内打开项目，前往 Edit > Project Settings > Player，然后配置 Company Name 和 Product Name 字段。需注意，PICO SDK 不支持以下格式的包名：
+*com.epicgames.xxx
+*com.unity.xxxx
+*com.test.xxx
+*com.DefaultCompany.xxx
+*com.Unity-Technologies.xxx
+*com.vr.xxx
+*com.xr.xxx
+*com.UnityTechnologies.xxx
+若使用不符合规范的包名，将无法通过 PICO 商店的应用上架申请。

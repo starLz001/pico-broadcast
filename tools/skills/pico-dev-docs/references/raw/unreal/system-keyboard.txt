@@ -1,0 +1,22 @@
+系统键盘
+========================================
+用户可通过应用内的键盘在各类文字场景下完成文本输入，例如：文字聊天、设置昵称等。SDK 提供系统级键盘，你可以参考本文在应用内启用。
+*准备工作
+配置系统键盘前，你需要先参考搭建场景文档将 SDK 提供的摄像机组件（Camera）和手柄（Controller）加入到场景中。
+*设置系统键盘
+参考 UE 官方文档-Android虚拟键盘中提供的步骤设置系统键盘。键盘设置好后，射线点击输入框，会唤起系统键盘。
+*已知问题
+*UE 5.4 中，虚拟键盘无法正常弹出，需要使用 PICO Fork of Unreal Engine 5.4，或者参考以下代码进行修改：
+ 
+
+E:\SourceEngines\UnrealEngine-GH\UnrealEngine\Engine\Build\Android\Java\src\com\epicgames\unreal\GameActivity.java.template
+
+    //virtual keyboard input class - custom EditText
+    //original 
+ Line 6386：public class VirtualKeyboardInput extends androidx.appcompat.widget.AppCompatEditText 
+    //original
+    
+    //virtual keyboard input class - custom EditText
+    //PICO Keyboard Fix 
+ Line 6386：public class VirtualKeyboardInput extends EditText
+    //PICO Keyboard Fix

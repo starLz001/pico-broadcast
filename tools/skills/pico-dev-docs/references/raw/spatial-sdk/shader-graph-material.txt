@@ -1,0 +1,185 @@
+ShaderGraphMaterial
+========================================
+ShaderGraphMaterial 是由 Spatial Editor 的可视化材质编辑器创建的材质类型。在 PICO Spatial SDK 中使用时，它以材质实例的形式运行在空间应用中，并存储了该 Shader 暴露的所有可调参数及资源绑定信息。
+*使用场景
+*ShaderGraphMaterial 在空间应用中的主要使用场景如下：
+*动态材质效果
+*用时间、噪声或 UV 偏移动画，让表面出现水波、火焰、光晕、溶解、扫光等动态视觉。
+*复杂纹理处理
+*在一个材质里混合多张贴图或用顶点色/遮罩分区，实现地表分层、角色多皮肤、通道打包降低采样次数。
+*光影和阴影控制
+*自定义或调整光照响应（比如 Toon 分段、高光强化、简单次表面/透光），实现风格化或特殊阴影表现。
+*透明与特效表面
+*改变发光、颜色闪烁、溶解阈值显示受击或技能充能状态。
+*可视化调试
+*快速显示法线、UV、深度梯度、遮罩区域，辅助问题定位。
+*重要提示
+*在 PICO Spatial SDK 中使用 ShaderGraphMaterial 时，需注意以下几点：
+* ShaderGraphMaterial 的参数名称与类型必须与 Spatial Editor 中的配置保持一致，否则会抛出异常。
+* 谨慎使用 Matrix 类型的参数，以避免潜在的兼容性或性能问题。
+*为了优化性能，系统会在首次加载 ShaderGraphMaterial 时进行一次性预热，这会增加 AssetBundle 的加载时间。每次 ROM 升级后，系统都会自动编译客户端的 Shader Graph 以适配新版本。这会导致升级后首次使用材质时，系统会重新进行预热。因此：
+*如果你的 AssetBundle 包含大量 Shader Graph，为避免加载时间过长影响用户体验，建议你使用 bundle.loadModelSuspend() 进行异步加载，并配合显示加载动画。
+*你需要合理控制 Shader Graph 的数量，以避免预热时间过长。
+*加载 ShaderGraphMaterial
+*通过 Scene 获取已配置的 ShaderGraphMaterial
+*ShaderGraphMaterial 目前只能存在于 Spatial Editor 生成的 AssetBundle 中。如果你在 Spatial Editor 中为场景中的实体配置了 ShaderGraphMaterial，那么当通过 AssetBundle 加载该场景时，ShaderGraphMaterial 实例会随实体一起加载。
+ 
+*通过 AssetBundle 加载新的 ShaderGraphMaterial 实例
+*除了随场景绑定的 ShaderGraphMaterial，你还可以通过路径从 AssetBundle 中单独加载 ShaderGraphMaterial，并使用它创建新的实体。路径和场景相关，例如：
+*"SceneName/Root/Material"
+*"SubFolder/SceneName/Root/Material"（/Scenes 目录下存在子目录 /SubFolder）
+*"SubFolder/SubSubFolder/SceneName/Root/Material"（/Scenes 目录下存在子目录 /SubFolder/SubSubFolder）
+ 
+*如上图所示，“shaderGraphMaterial” 是已创建好的 ShaderGraphMaterial，其加载路径为 "Hi/Root/MyMaterials/shaderGraphMaterial"。在代码中，你可以通过 ShaderGraphMaterial 类提供的静态方法加载该材质，并使用它创建新的实体。
+ 
+*设置或获取 ShaderGraphMaterial 的属性
+*获取名称：
+* 
+*设置或获取 BlendingMode：
+* 
+*设置或获取 CullingMode：
+* 
+*设置或获取 PolygonFillMode：
+* 
+*设置 DepthTest 或获取 DepthTest 的状态：
+* 
+*设置 DepthWrite 或获取 DepthWrite 的状态：
+* 
+*管理 ShaderGraphMaterial 的自定义参数
+*在 Spatial Editor 中，你可以在 Shader Graph 界面查看支持的输入节点（Input Node）类型。ShaderGraphMaterial 支持 11 种类型的自定义参数，你所定义的 Input Node 即为运行时可调整的自定义参数。
+ 
+*上图中，Input Node 支持的 11 种参数类型与 PICO Spatial SDK 中的参数类型对照如下：
+*
+你可以通过重载接口或泛型接口来设置或获取参数。参数名称需与在 Spatial Editor 中配置的名称一致，且类型必须匹配。
+*获取所有参数名称：
+* 
+*通过参数名称设置对应参数的值：
+* 
+*通过参数名称获取对应参数的值：
+* 
+*在多个模型上使用一个 ShaderGraphMaterial
+*目前，ShaderGraphMaterial 不支持深拷贝。如果需要在多个模型上应用同一个 ShaderGraphMaterial 但表现不同效果，每个模型都必须单独加载一个 ShaderGraphMaterial 实例。
+ 
+*在 Spatial Editor 中创建 ShaderGraphMaterial
+在 Spatial Editor 的 Shader Graph 中，你可以通过拖拽和连接节点的方式来创建材质，并调整其参数，而无需手动编写 HLSL 或 GLSL 等着色器代码。详情参考《什么是 Shader Graph》。
+ 
+*API 参考
+ShaderGraphMaterial 类中提供了 ShaderGraphMaterial 相关接口，详细说明参阅 API 参考。根据你所处的地理位置选择合适的文档链接：
+*中国大陆：https://developer-cn.picoxr.com/spatial-api/index.html
+*非中国大陆：https://developer.picoxr.com/spatial-api/index.html
+
+val bundle = AssetBundle.load("asset://XXX.bundle")
+val model = bundle.loadModel("Hi")
+// “AA” 实体带有 ModelComponent，并且在 Spatial Editor 中被赋予了一个 ShaderGraphMaterial 实例
+val AA = model.findEntity("AA")!!
+val modelComp = AA.components[ModelComponent::class.java]!!
+val  material = modelComponent.materials[0]
+material is ShaderGraphMaterial
+
+val bundle = AssetBundle.load("asset://XXX.bundle") // xxx 是你配置的 AssetBundle 名称
+val shaderGraph = ShaderGraphMaterial.loadFromAssetBundle(bundle, "Hi/Root/MyMaterials/shaderGraphMaterial")
+val mesh = MeshResource.createSphere(0.2f)
+val shaderGraphEntity = ModelEntity(mesh, shaderGraph)
+
+// 名称应当为在 Spatial Editor 中设置的名称
+val name = shaderGraph.getName() // name is "shaderGraphMaterial"
+
+shaderGraph.setBlendingMode(BlendingMode.ADD)
+val blendingMode = shaderGraph.getBlendingMode()
+
+shaderGraph.setCullingMode(MaterialCullingMode.FRONT)
+val cullingMode = shaderGraph.getCullingMode()
+
+shaderGraph.setPolygonFillMode(PolygonFillMode.LINE)
+val polygonFillMode = shaderGraph.getPolygonFillMode()
+
+shaderGraph.setDepthTest(false)
+shaderGraph.getDepthTest()
+
+shaderGraph.setDepthWrite(false)
+shaderGraph.getDepthWrite()
+
+
+
+Spatial Editor 中的 Input Node 类型
+
+对应的 PICO Spatial SDK 的参数类型
+
+Integer
+
+Int
+
+Boolean
+
+Boolean
+
+Float
+
+Float
+
+Color3
+
+Color3
+
+Color4
+
+Color4
+
+Vector2
+
+Vector2
+
+Vector3
+
+Vector3
+
+Vector4
+
+Vector4
+
+Matrix3
+
+Matrix3
+
+Matrix4
+
+Matrix4
+
+Filename
+
+TextureResource
+
+val names = shaderGraph.getParameterNames()
+
+// 类型是 Int
+shaderGraph.setParameter("param_name", 10)
+
+// 类型是 Boolean
+shaderGraph.setParameter("param_name", false)
+
+// 类型是 Vector3
+shaderGraph.setParameter("param_name", Vector3(10f, 10f, 10f))
+
+// 类型是 TextureResource
+val texture = TextureResource("name.png")
+shaderGraph.setParameter("param_name", texture)
+
+// 类型是 Int
+val intValue = shaderGraph.getParameter<Int>("param_name")
+// 类型是 Boolean
+val boolValue : Boolean = shaderGraph.getParameter("param_name")
+// 类型是 Vector3
+val vector3Value = shaderGraph.getParameter("param_name", Vector3::class.java)
+// 类型是 TextureResource
+val textureValue = shaderGraph.getParameter<TextureResource>("param_name")
+
+val shaderGraphMaterialA =
+ ShaderGraphMaterial.loadFromAssetBundle(bundle, "XXXXXX/Material")
+val shaderGraphMaterialB =
+ ShaderGraphMaterial.loadFromAssetBundle(bundle, "XXXXXX/Material")
+val shaderGraphMaterialC =
+ ShaderGraphMaterial.loadFromAssetBundle(bundle, "XXXXXX/Material")
+val mesh = MeshResource.createSphere(0.2f)
+val shaderGraphEntityA = ModelEntity(mesh, shaderGraphMaterialA)
+val shaderGraphEntityB = ModelEntity(mesh, shaderGraphMaterialB)
+val shaderGraphEntityC = ModelEntity(mesh, shaderGraphMaterialC)

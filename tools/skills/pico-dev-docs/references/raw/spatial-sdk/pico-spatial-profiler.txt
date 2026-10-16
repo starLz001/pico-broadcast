@@ -1,0 +1,150 @@
+PICO Spatial Profiler
+========================================
+PICO Spatial Profiler 是针对空间应用的性能分析工具，支持使用 PICO 空间应用的定制 Trace 进行帧级性能分析，帮助开发者更精准地定位性能问题，优化 PICO 空间应用的性能表现。 
+*安装并启动 PICO Spatial Profiler
+*PICO Spatial Profiler 当前支持 Windows 和 macOS 安装包，你可以直接下载并安装使用：
+*从开发资源页面下载并安装 PICO Developer Center，再从其下载中心获取 PICO Spatial Profiler。
+* 
+*安装并启动 PICO Spatial Profiler。
+* 
+*使用流程
+*第一步：抓取 Trace
+PICO Spatial Profiler 提供了用于抓取 Perfetto trace 的界面。要开始抓取，请点击左侧菜单中的 Record new trace。在该界面中，你可以配置以下选项：
+*Tracing session：点击 Start tracing 后，系统会根据你选择的设备、配置和时长开始抓取 Trace 数据。
+*Select target device：如果连接了多个设备，你需要在此处选择一个作为目标设备，才能继续进行配置和抓取操作。
+*PBTX config：系统提供了默认配置。你也可以点击 Browse 导入自定义配置，或点击 Export 导出当前配置。
+*Track event categories：勾选 spatial.debug 可以捕获更详细的 Trace 数据。请注意，这会增加统计耗时并可能影响实时性能，建议仅在必要时勾选。
+*Duration：你可以通过滑动条或直接输入数值来设定 Trace 的抓取时长。
+ 
+*第二步：加载 Trace
+你可以通过以下方式加载和查看 Trace 文件：
+*将本地 Trace 文件拖拽至工具窗口，或通过左侧菜单栏的 Open trace file (快捷键：Cmd/Ctrl + O) 打开。
+*在抓取新的 Perfetto trace 时，勾选 Open trace when done，抓取结束后会自动加载。
+*从 Recent records 列表中打开最近的抓取记录。
+ 
+*第三步：分析 Trace
+*分析 PICO 空间引擎 Trace
+*该工具在原始 Perfetto Trace 的基础上，围绕 PICO 空间引擎的渲染链路，帮助从帧生命周期、渲染指标以及空间应用线程负载三个层面联合定位问题。
+*帧生命周期可视化（SpatialFrames）：把 PICO 空间引擎的每帧按 Frame、CPUTime、GPUTime 等关键阶段重新组织，直接标出正常帧、晚帧、丢帧和过早帧。
+* 
+*异常瓶颈自动提示（Bottlenecks）：在异常帧附近自动生成 Bottlenecks 轨道事件，并在详情面板中给出对应的优化建议。
+* 
+**
+*PICO 空间引擎指标（SpatialMetrics）：把 PICO 空间引擎的关键性能指标按 3D Render、Animation、Physics、Lighting、Memory 等维度归类，结合 SpatialFrames 可以快速纵向定位问题帧以及关联数据。
+* 
+*空间应用指标（SpatialAppMetrics）：需要指定当前调试的空间应用包名，指定后将会按照 Entity、Resource、2D Render 等维度展示应用侧数据。
+* 
+*分析空间应用 Trace
+*首先需要完成目标应用的设置，设置成功后可以帮助你更方便分析空间应用的性能状况，并为你自动检测目标应用进程的异常帧。
+PICO Spatial Profiler 提供了两个 Command，你可以通过顶部 Command panel 中输入 Command 执行操作：
+*set target app：在加载 trace 文件前或未指定目标应用时，可使用此命令直接输入包名，例如 com.example.yourapp。
+* 
+*change target app：在 Trace 文件加载后，从进程列表中选择目标应用。
+* 
+* 
+设置 target app 后，PICO Spatial Profiler 会分析该应用的性能状况并自动检测异常帧，从而帮助你更精准地掌握应用性能。
+当 Bottlenecks 轨道识别到异常帧时，会显示一个红色箭头。点击该箭头，将打开 Bottleneck Details 页面，其中包含详细的异常信息。在该页面中点击 View slice，即可自动跳转到对应的异常帧 slice。
+ 
+ 
+设置目标应用后，SpatialMetrics 还会对该空间应用的 Trace 数据进行聚合与分类展示。
+ 
+*使用快速诊断 CLI
+PICO Spatial Profiler 集成了快速诊断 CLI，可用于实时查看空间应用的核心性能指标：
+*App FPS：应用的帧率。这是衡量应用流畅度的关键指标，理想情况下应稳定在 90 FPS。
+*App CPU：应用进程的 CPU 使用率。数值越高，表示负载越大。
+*Sys FPS：PICO 空间引擎的帧率。为确保流畅的系统体验，该值应稳定在 90 FPS。
+*Sys CPU：PICO 空间引擎的 CPU 使用率。数值越高，表示负载越大。
+*GPU：全局 GPU 使用率。此项需结合 GPU Freq 进行分析。如果使用率超过 90% 且 GPU 处于高频状态，则表示 GPU 负载过高。
+*GPU Freq：GPU 频率。
+*GPU Temp：GPU 温度。
+* 
+*使用命令行启动快速诊断 CLI
+*PICO Spatial Profiler 安装完成后，你可通过命令行运行快速诊断 CLI。
+ 
+ 
+*在 PICO Spatial Profiler 内启动快速诊断 CLI
+*你也可以在 PICO Spatial Profiler 界面内启动快速诊断：
+*在 PICO Spatial Profiler 的顶部 Command Panel 中输入">"，选择Open live perf功能，
+* 
+*输入你要诊断的应用包（例如 com.example.app）。
+* 
+*按下回车键，即可启动快速诊断 CLI。
+* 
+*已知问题
+*macOS 上 Record Trace 时提示错误： adb executable not found (spawn adb ENOENT)
+解决方案：
+在 macOS 终端执行以下命令：
+ 
+其中<your_adb_path>可以通过which adb找到：
+* 
+
+
+
+
+*瓶颈事件
+
+*通常意味着什么
+
+*优先检查与优化方向
+
+Heavy Draw Calls
+
+Draw Call 数量过多，CPU 与 GPU 都可能承压。
+
+优先检查可合批的 Mesh、粒子数量、阴影数量，以及是否存在过多材质切换。
+
+Complex 3D Geometry
+
+三角形或顶点数量过高，典型 3D 几何复杂度问题。
+
+优先降低模型面数、避免大面积重叠内容，并确认异常时段的 Triangle 与 Vertex 高峰。
+
+Busy Particles Update
+
+粒子更新和渲染开销过大。
+
+减少粒子数量、合并粒子系统、预加载高频粒子资源。
+
+Complex Lighting
+
+光照数量或阴影复杂度过高。
+
+减少同时可见光源，关闭不必要阴影，并评估是否可以使用成本更低的材质方案。
+
+Heavy 3D Content
+
+纹理、Mesh 或场景图内存压力过高。
+
+减少大资源数量与尺寸，确认资源是否及时释放，并检查场景中 USD、纹理和 Mesh 的整体规模。
+
+Too Many View Attachments
+
+View Attachment 数量过多，说明 2D UI 与空间挂载内容过重。
+
+减少同时存在的附件数量，重新梳理 UI 与空间对象之间的挂载方式。
+
+Too Many 2D Effect Views / Heavy 2D Effect Cost
+
+2D 效果视图过多，或 2D 效果本身成本过高。
+
+减少 3D Effect View 数量、控制 3D Clip / 3D Transform / Glass 等效果叠加，并用布局替代部分重型视觉效果。
+
+Heavy Frame Job
+
+应用主线程单帧工作过重。
+
+优先检查 Choreographer#doFrame，把资源加载和重计算迁出主线程，减少一帧中必须完成的工作量。
+
+Heavy System Update
+
+应用系统更新逻辑持续过重。
+
+检查 System_Update 的执行内容，及时注销不再需要的系统，避免在系统回调里执行耗时任务。
+
+*快速诊断 CLI 依赖 adb。请确保你的开发环境已正确配置 adb 工具，以便该功能正常运行。
+*要让 App FPS 指标正确显示，你需要先执行 adb shell setprop debug.sprt.fps.log 1 命令。
+
+perf live run -app <package_name>
+
+perf --port 9599 daemon stop
+launchctl setenv ADB_PATH "<your_adb_path>"

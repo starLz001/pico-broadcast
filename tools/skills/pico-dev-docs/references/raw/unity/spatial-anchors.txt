@@ -1,0 +1,589 @@
+空间锚点
+========================================
+空间锚点技术可以将虚拟环境中的位置与真实世界中的位置进行锚定。放置空间锚点并将其持久化至设备磁盘中后，用户再次走到放置锚点的位置时，系统可以找回该锚点并返回给应用。
+* 
+*基本概念
+*
+*功能重构说明
+自 SDK 3.0.0 版本起，PICO 重构了空间锚点功能。详细信息参考《MR 功能兼容性和迁移说明》。
+*环境要求
+*PICO 设备型号：PICO 4 系列、PICO 4 Ultra 系列
+*PICO 设备系统版本：5.15.0 及以上
+*前提条件
+*已为场景添加 XR Origin 对象。
+*已为 XR Origin 对象挂载 PXR_Manager (Script) 组件。
+*已为应用开启视频透视能力。详细说明参考《视频透视》。
+*开启空间锚点能力
+在 Inspector 窗口中的 PXR_Manager (Script) 面板上，勾选 Spatial Anchor 选框，为应用开启空间锚点能力。然后，你可以调用空间锚点相关接口，在应用内实现空间锚点功能。
+* 
+*开始/停止空间锚点功能
+调用其他空间锚点接口进行相关操作前，需要调用 StartSenseDataProvider 接口，开始空间锚点功能。操作完成后，调用 StopSenseDataProvider 接口，停止空间锚点功能。两个接口中都需要指定空间锚点数据 Provider（SpatialAnchor）。
+ 
+*获取空间锚点数据 Provider 的状态 
+此为非必须流程。若你在调用 StartSenseDataProvider 接口后没有暂存 Provider 的状态，便可以调用 GetSenseDataProviderState 接口来判断 Provider 是否启动成功。
+ 
+*管理空间锚点
+*你可以使用接口来管理场景中的空间锚点，包括创建、持久化、加载空间锚点等。除调用接口外，你还可以通过 PXR_Spatial Anchor (Script) 组件来更便捷地管理空间锚点，详见 “关于PXR_Spatial Anchor (Script) 组件” 部分。
+*创建空间锚点
+调用 CreateSpatialAnchorAsync 接口，在应用的内存中创建锚点。API 请求会返回所创建锚点的 UUID 和 Handle。除调用该接口外，你还可以使用 SpatialAnchor 预制体来更便捷地创建锚点，详见 “关于 SpatialAnchor 预制体” 部分。
+创建锚点后，若不持久化该锚点，退出应用后该锚点便会被销毁。若希望应用始终能够找回已创建的锚点，需要将锚点持久化至 PICO 设备的本地磁盘中。
+ 
+建议在应用的设计上满足锚点和用户间的交互体验，例如，尽量在用户头戴 3 米范围以内放置锚点。放置锚点后，如果想要精准地找回该锚点，需要用户在该锚点附近多看多走动。
+放置锚点后，可以在以用户为中心 3 米范围内进行观察和建图。锚点的找回范围与用户在放置锚点后观察的范围相关，半径最大不会超过 5 米。超过 5 米的位置如果没有其他锚点存在，则可能找不回锚点。
+*持久化空间锚点
+调用 PersistSpatialAnchorAsync 接口，将空间锚点持久化至 PICO 设备的本地磁盘。持久化锚点后，使用同一设备多次进入相同的空间后，可以找回已经保存的锚点。你可以长久地使用该锚点，也可以在该锚点被销毁后继续调用接口查询和加载该锚点。
+ 
+*加载空间锚点
+成功创建空间锚点后，每个锚点都会获得一个唯一的 UUID。你可以在 QuerySpatialAnchorAsync 接口中传入 UUID 列表，从设备本地磁盘或应用内存中加载指定锚点。调用 QuerySpatialAnchorAsync 前，需要先调用 GetAnchorUuid 获取锚点的 UUID。若不传入任何 UUID，则返回所有可用的锚点。
+ 
+ 
+如果用户之前放置过锚点，但现在无法查询到该锚点的相关信息，你可以引导用户返回上次放置锚点的位置。如果用户不需要找回之前的锚点，或者想换个地方放置新的锚点，你可以让用户重新放置交互物体或标定当前空间，在新地点体验应用。
+*获取空间锚点的 UUID
+调用 GetAnchorUuid 接口，获取锚点的 UUID。你可以通过 UUID 加载指定锚点。
+ 
+*获取空间锚点的实时位置
+调用 LocateAnchor 接口让你的应用获取锚点的实时位置，目的是为了保证将锚点锚定在现实世界中的固定位置。若不获取，当用户在场景内移动时，锚点的位置可能会发生偏移。
+此接口的调用频率可根据实际需求自行决定，建议 1 秒左右调用一次，最高支持每帧调用。
+ 
+*销毁空间锚点
+调用 DestroyAnchor 接口，将锚点从应用内存中销毁。若创建锚点之后立刻销毁，则无法找回该锚点；若创建锚点后将该锚点持久化至设备本地磁盘，销毁锚点后，用户下一次打开应用时仍旧可以查询和加载该锚点。
+ 
+*去持久化空间锚点
+调用 UnPersistSpatialAnchorAsync 接口，将锚点从设备本地磁盘中去持久化。去持久化后的锚点将无法被查询和加载。用户删除虚拟物体后，建议及时去持久化相关联的锚点。也建议去持久化长久不用的锚点，释放系统资源。
+* 
+ 
+应用内存和设备本地磁盘中的锚点通过 anchorHandle 进行关联，即 anchorHandle 类似于对保存于磁盘上的锚点的引用。当你首先调用 DestroyAnchor 时，anchorHandle 会被删除，你将无法继续引用磁盘上的锚点。然后，当你调用 UnPersistSpatialAnchorAsync 来去持久化具体的锚点时，系统将无法找到该锚点。在这种情况下，请先调用 UnPersistSpatialAnchorAsync，然后再调用 DestroyAnchor。
+*SpatialAnchorDataUpdated 事件说明
+*接收到 SpatialAnchorDataUpdated 事件则说明发现了新的空间锚点。你可以按需管理新的锚点，包括持久化、加载、销毁或去持久化该锚点，以及获取该锚点的 UUID 或实时位置。
+*当锚点减少时，系统不会推送该事件。例如，随着用户行走，系统会不断发现新的锚点；但当用户走远后，先前发现的旧锚点不会被自动删除。
+*关于 PXR_Spatial Anchor (Script) 组件
+*PXR_Spatial Anchor (Script) 组件是一个空间锚点自动化控制组件，用于更便捷地管理锚点的生命周期，包括创建、更新、持久化锚点等。
+* 
+*在 GameObject 上添加 PXR_Spatial Anchor (Script) 组件后，SDK 便会基于此对象的 Transform 自动创建锚点，并自动更新锚点的姿态。此后，你可以通过该组件管理锚点。以下是代码示例：
+ 
+你可以使用 QuerySpatialAnchorObjectsAsync 接口来获取挂载了 PXR_Spatial Anchor (Script) 组件的 GameObject 列表。
+ 
+*关于 SpatialAnchor 预制体
+*SDK 在 /Assets/Resources/Prefabs 目录下提供空间锚点预制体（SpatialAnchor.prefab）。该预制体默认挂载 PXR_Spatial Anchor (Script) 组件，已完成了创建操作。
+* 
+*你可以直接将其拖入至场景中使用，或通过代码将其实例化（如下）。
+ 
+*代码示例
+*示例一
+*该示例展示如何创建、持久化、销毁和去持久化空间锚点，并通过 UI 界面与用户交互。
+ 
+*示例二
+*以下代码定义了一个名为 PXRSample_SpatialAnchorManager 的类，它负责管理空间锚点的创建、加载和销毁。这个类是 Unity 中的一个 MonoBehaviour，可以附加到一个 GameObject 上。
+ 
+*API 参考
+若想了解空间锚点接口的详细信息，包括参数说明、返回值说明等，参阅 API 参考。
+
+
+
+名称
+
+说明
+
+UUID
+
+通用唯一识别码，为锚点的唯一标识，在创建锚点时分配，可用于加载指定锚点。
+
+Handle
+
+通过 Handle 可以将应用内存和本地磁盘中的锚点进行关联。在销毁、持久化、去持久化锚点，以及获取锚点的 UUID 和实时位置时，需要通过 Handle 指定锚点。Handle 不是永久不变的，应用重启后 Handle 就会发生变更。
+
+// 开始空间锚点功能
+async Task<PxrResult> StartSenseDataProvider(PxrSenseDataProviderType type)
+
+// 停止空间锚点功能
+PxrResult StopSenseDataProvider(PxrSenseDataProviderType type)
+
+PxrResult GetSenseDataProviderState(PxrSenseDataProviderType type,out PxrSenseDataProviderState state)
+
+async Task<(PxrResult result,ulong anchorHandle,Guid uuid)> CreateSpatialAnchorAsync(Vector3 position, Quaternion rotation)
+
+async Task<PxrResult> PersistSpatialAnchorAsync(ulong anchorHandle)
+
+提示
+*仅支持加载本应用创建的锚点。
+*QuerySpatialAnchorAsync 接口不支持同时多次调用，仅当本次调用结束后才可以进行下一次调用。
+
+async Task<(PxrResult result, List<ulong> anchorHandleList)> QuerySpatialAnchorAsync(Guid[] uuids = null)
+
+PxrResult GetAnchorUuid(ulong anchorHandle, out Guid uuid)
+
+PxrResult LocateAnchor(ulong anchorHandle, out Vector3 position, out Quaternion rotation)
+
+PxrResult DestroyAnchor(ulong anchorHandle)
+
+*UnPersistSpatialAnchorAsync 接口不支持同时多次调用，仅当本次调用结束后才可以进行下一次调用。
+
+async Task<PxrResult> UnPersistSpatialAnchorAsync(ulong anchorHandle)
+
+IEnumerator CreateSpatialAnchor()
+{
+    // 创建一个新的游戏对象
+    GameObject object = new GameObject();
+    // 为该对象添加 PXR_SpatialAnchor 组件
+    var anchor = object.AddComponent<PXR_SpatialAnchor>();
+    
+    // 等待直到锚点创建完成
+    yield return new WaitUntil(() => anchor.Created);
+}
+
+// 获取锚点的 UUID
+var uuid = anchor.uuid;
+// 获取锚点的 Handle
+var handle = anchor.handle;
+
+// 将锚点持久化
+await anchor.PersistAsync();
+// 将锚点去持久化
+await anchor.UnPersistAsync();
+
+// 销毁 GameObject，从而直接销毁基于该 GameObject 创建的锚点
+Destroy(object);
+
+public static async Task<(PxrResult result, List<GameObject> spatialAnchorObjects)> QuerySpatialAnchorObjectsAsync(Guid[] uuids = null, CancellationToken token = default)
+
+// 创建一个新的锚点对象，使用指定的锚点预制体（anchorPrefab）进行实例化
+GameObject anchorObject = Instantiate(anchorPrefab);
+
+// 获取实例化的锚点对象上的 PXR_Spatial Anchor (Script) 组件，通过该组件管理锚点，包括删除、持久化、去持久化等
+var anchor = anchorObject.GetComponent<PXR_SpatialAnchor>();
+
+using System;
+using UnityEngine;
+using UnityEngine.UI;
+using System.Collections.Generic;
+using Unity.XR.PXR;
+using UnityEngine.XR;
+using UnityEngine.XR.Interaction.Toolkit;
+using System.Threading.Tasks;
+
+// 确保该脚本附加到具有 XRSimpleInteractable 组件的 GameObject
+[RequireComponent(typeof(XRSimpleInteractable))]
+public class PXRSample_SpatialAnchor : MonoBehaviour
+{
+    // XR 基础交互对象
+    private XRBaseInteractable interactable;
+
+    // 锚点句柄，唯一标识一个空间锚点
+    [HideInInspector]
+    public ulong anchorHandle;
+
+    // UI 显示锚点 ID 的文本
+    [SerializeField]
+    private Text anchorID;
+
+    // 保存图标的 GameObject
+    [SerializeField]
+    private GameObject savedIcon;
+
+    // UI 画布
+    [SerializeField]
+    private GameObject uiCanvas;
+
+    // UI 按钮
+    [SerializeField] private Button btnPersist;        // 持久化锚点的按钮
+    [SerializeField] private Button btnDestroyAnchor;  // 销毁锚点的按钮
+    [SerializeField] private Button btnDeleteAnchor;   // 删除锚点的按钮
+
+    private void Awake()
+    {
+        // 初始化时隐藏 UI 画布
+        uiCanvas.SetActive(false);
+        // 设置画布使用主摄像头
+        uiCanvas.GetComponent<Canvas>().worldCamera = Camera.main;
+
+        // 为按钮添加点击事件监听器
+        btnPersist.onClick.AddListener(OnBtnPressedPersist);
+        btnDestroyAnchor.onClick.AddListener(OnBtnPressedDestroy);
+        btnDeleteAnchor.onClick.AddListener(OnBtnPressedUnPersist);
+    }
+
+    protected void OnEnable()
+    {
+        // 获取 XRBaseInteractable 组件并添加事件监听器
+        interactable = GetComponent<XRBaseInteractable>();
+        interactable.firstHoverEntered.AddListener(OnFirstHoverEntered);
+        interactable.lastHoverExited.AddListener(OnLastHoverExited);
+        interactable.firstSelectEntered.AddListener(OnFirstSelectEntered);
+        interactable.lastSelectExited.AddListener(OnLastSelectExited);
+    }
+
+    protected void OnDisable()
+    {
+        // 在禁用时可以执行清理操作（当前未实现）
+    }
+
+    private void Start()
+    {
+        // 初始化时的操作（当前未实现）
+    }
+
+    private void Update()
+    {
+        // 如果 UI 画布处于活动状态，使其始终面向摄像头
+        if (uiCanvas.activeSelf)
+        {
+            uiCanvas.transform.LookAt(new Vector3(uiCanvas.transform.position.x * 2 - Camera.main.transform.position.x, 
+                                                  uiCanvas.transform.position.y * 2 - Camera.main.transform.position.y, 
+                                                  uiCanvas.transform.position.z * 2 - Camera.main.transform.position.z), 
+                                                  Vector3.up);
+        }
+    }
+
+    private void LateUpdate()
+    {
+        // 尝试定位空间锚点
+        var result = PXR_MixedReality.LocateAnchor(anchorHandle, out var position, out var rotation);
+        if (result == PxrResult.SUCCESS)
+        {
+            // 如果成功，更新当前对象的位置和旋转
+            transform.position = position;
+            transform.rotation = rotation;
+        }
+        else
+        {
+            // 记录定位锚点的结果
+            PXRSample_SpatialAnchorManager.Instance.SetLogInfo("LocateSpatialAnchor:" + result.ToString());
+        }
+    }
+
+    // 处理第一次悬停进入事件
+    protected virtual void OnFirstHoverEntered(HoverEnterEventArgs args) => UpdateColor();
+
+    // 处理最后一次悬停退出事件
+    protected virtual void OnLastHoverExited(HoverExitEventArgs args) => UpdateColor();
+
+    // 处理第一次选择进入事件
+    protected virtual void OnFirstSelectEntered(SelectEnterEventArgs args) => UpdateCanvas();
+
+    // 处理最后一次选择退出事件
+    protected virtual void OnLastSelectExited(SelectExitEventArgs args) => UpdateCanvas();
+
+    // 更新对象的颜色以指示悬停状态
+    protected void UpdateColor()
+    {
+        if (interactable.isHovered)
+        {
+            foreach (var renderer in GetComponentsInChildren<Renderer>())
+            {
+                // 如果被悬停，设置发光颜色为黄色
+                renderer.material.SetColor("_EmissionColor", Color.yellow);
+            }
+        }
+        else
+        {
+            foreach (var renderer in GetComponentsInChildren<Renderer>())
+            {
+                // 如果未被悬停，清除发光颜色
+                renderer.material.SetColor("_EmissionColor", Color.clear);
+            }
+        }
+    }
+
+    // 更新 UI 画布的显示状态
+    protected void UpdateCanvas()
+    {
+        uiCanvas.SetActive(interactable.isSelected);
+    }
+
+    // 持久化锚点的按钮事件处理
+    private async void OnBtnPressedPersist()
+    {
+        var result = await PXR_MixedReality.PersistSpatialAnchorAsync(anchorHandle);
+        PXRSample_SpatialAnchorManager.Instance.SetLogInfo("PersistSpatialAnchorAsync:" + result.ToString());
+        if (result == PxrResult.SUCCESS)
+        {
+            // 如果成功，显示保存图标
+            ShowSaveIcon();
+        }
+    }
+
+    // 销毁锚点的按钮事件处理
+    private void OnBtnPressedDestroy()
+    {
+        PXRSample_SpatialAnchorManager.Instance.DestroySpatialAnchor(anchorHandle);
+    }
+
+    // 删除锚点的按钮事件处理
+    private async void OnBtnPressedUnPersist()
+    {
+        var result = await PXR_MixedReality.UnPersistSpatialAnchorAsync(anchorHandle);
+        PXRSample_SpatialAnchorManager.Instance.SetLogInfo("UnPersistSpatialAnchorAsync:" + result.ToString());
+        if (result == PxrResult.SUCCESS)
+        {
+            // 如果成功，先销毁锚点
+            OnBtnPressedDestroy();
+        }
+    }
+
+    // 设置锚点句柄并更新 UI 显示
+    public void SetAnchorHandle(ulong handle)
+    {
+        anchorHandle = handle;
+        anchorID.text = "ID: " + anchorHandle;
+    }
+
+    // 显示保存图标
+    public void ShowSaveIcon()
+    {
+        savedIcon.SetActive(true);
+    }
+}
+
+using System; 
+using System.Collections;
+using System.Collections.Generic; 
+using System.Linq; 
+using System.Runtime.InteropServices;
+using System.Threading.Tasks;
+using UnityEngine.UI; 
+using Unity.XR.PXR; 
+using UnityEngine; 
+using UnityEngine.XR; 
+using UnityEngine.XR.Interaction.Toolkit;
+
+// 定义空间锚点管理器类
+public class PXRSample_SpatialAnchorManager : MonoBehaviour
+{
+    // 单例实例
+    private static PXRSample_SpatialAnchorManager instance = null;
+
+    // 单例属性
+    public static PXRSample_SpatialAnchorManager Instance
+    {
+        get
+        {
+            // 如果实例为空，则查找场景中的实例
+            if (instance == null)
+            {
+                instance = FindObjectOfType<PXRSample_SpatialAnchorManager>();
+            }
+            return instance; // 返回实例
+        }
+    }
+
+    public GameObject anchorPrefab; // 锚点预制体
+    private bool isCreateAnchorMode = false; // 是否处于创建锚点模式
+    public Dictionary<ulong, PXRSample_SpatialAnchor> anchorList = new Dictionary<ulong, PXRSample_SpatialAnchor>(); // 存储锚点的字典
+    public Dictionary<ulong, ulong> persistTaskList = new Dictionary<ulong, ulong>(); // 持久化任务列表
+    public Dictionary<ulong, ulong> unPersistTaskList = new Dictionary<ulong, ulong>(); // 非持久化任务列表
+    private InputDevice rightController; // 右手控制器
+    [SerializeField] private GameObject anchorPreview; // 锚点预览对象
+    [SerializeField] private GameObject menuPanel; // 菜单面板
+    [SerializeField] private Button btnCreateAnchor; // 创建锚点按钮
+    [SerializeField] private Button btnLoadAnchors; // 加载锚点按钮
+
+    private bool btnAClick = false; // A按钮点击状态
+    private bool aLock = false; // A按钮锁定状态
+    private bool btnAState = false; // A按钮当前状态
+    private bool gripButton = false; // 握持按钮状态
+
+    public Text tipsText; // 提示文本
+    private int maxLogCount = 5; // 最大日志条数
+    private Queue<string> logQueue = new Queue<string>(); // 日志队列
+
+    // 初始化
+    void Start()
+    {
+        PXR_Manager.EnableVideoSeeThrough = true; // 启用视频透视
+
+        StartSpatialAnchorProvider(); // 启动空间锚点提供者
+
+        // 添加按钮点击事件
+        btnCreateAnchor.onClick.AddListener(OnBtnPressedCreateAnchor);
+        btnLoadAnchors.onClick.AddListener(OnBtnPressedLoadAllAnchors);
+
+        // 显示按钮
+        btnCreateAnchor.gameObject.SetActive(true);
+        btnLoadAnchors.gameObject.SetActive(true);
+
+        // 获取右手控制器
+        rightController = InputDevices.GetDeviceAtXRNode(XRNode.RightHand);
+    }
+
+    // 异步启动空间锚点提供者
+    private async void StartSpatialAnchorProvider()
+    {
+        var result = await PXR_MixedReality.StartSenseDataProvider(PxrSenseDataProviderType.SpatialAnchor); // 启动空间锚点感知数据提供者
+        SetLogInfo("StartSenseDataProvider:" + result); // 记录日志
+        if (result == PxrResult.SUCCESS) // 成功启动
+        {
+            var result2 = await PXR_MixedReality.QuerySpatialAnchorAsync(); // 查询空间锚点
+            SetLogInfo("LoadSpatialAnchorAsync:" + result2.result.ToString() + result2.anchorHandleList.Count); // 记录日志
+            if (result2.result == PxrResult.SUCCESS) // 成功查询
+            {
+                // 遍历锚点句柄列表
+                foreach (var key in result2.anchorHandleList)
+                {
+                    if (!anchorList.ContainsKey(key)) // 如果锚点列表中不存在该锚点
+                    {
+                        GameObject anchorObject = Instantiate(anchorPrefab); // 实例化锚点预制体
+                        PXRSample_SpatialAnchor anchor = anchorObject.GetComponent<PXRSample_SpatialAnchor>(); // 获取锚点组件
+                        anchor.SetAnchorHandle(key); // 设置锚点句柄
+
+                        // 定位锚点
+                        PXR_MixedReality.LocateAnchor(key, out var position, out var orientation);
+                        anchor.transform.position = position; // 设置锚点位置
+                        anchor.transform.rotation = orientation; // 设置锚点旋转
+                        anchorList.Add(key, anchor); // 添加到锚点列表
+                        anchorList[key].ShowSaveIcon(); // 显示保存图标
+                    }
+                }
+            }
+        }
+    }
+
+    // 启用时注册事件
+    void OnEnable()
+    {
+        PXR_Manager.SpatialAnchorDataUpdated += SpatialAnchorDataUpdated; // 注册锚点数据更新事件
+    }
+
+    // 禁用时注销事件
+    void OnDisable()
+    {
+        PXR_Manager.SpatialAnchorDataUpdated -= SpatialAnchorDataUpdated; // 注销锚点数据更新事件
+    }
+
+    // 每帧更新
+    void Update()
+    {
+        ProcessKeyEvent(); // 处理按键事件
+        
+        menuPanel.SetActive(gripButton); // 根据握持按钮状态控制菜单面板显示
+
+        // 如果处于创建锚点模式且按钮被点击
+        if (isCreateAnchorMode && btnAClick)
+        {
+            CreateSpatialAnchor(anchorPreview.transform); // 创建空间锚点
+        }
+    }
+
+    // 处理按键事件
+    private void ProcessKeyEvent()
+    {
+        rightController.TryGetFeatureValue(CommonUsages.primaryButton, out btnAState); // 获取A按钮状态
+        if (btnAState && !aLock) // 如果A按钮被按下且未锁定
+        {
+            btnAClick = true; // 设置点击状态
+            aLock = true; // 锁定按钮
+        }
+        else
+        {
+            btnAClick = false; // 否则重置点击状态
+        }
+        if (!btnAState) // 如果A按钮未被按下
+        {
+            btnAClick = false; // 重置点击状态
+            aLock = false; // 解锁按钮
+        }
+
+        // 获取左手握持按钮状态
+        InputDevices.GetDeviceAtXRNode(XRNode.LeftHand).TryGetFeatureValue(CommonUsages.gripButton, out gripButton);
+    }
+
+    // 锚点数据更新事件
+    private void SpatialAnchorDataUpdated()
+    {
+        SetLogInfo("SpatialAnchorDataUpdated:"); // 记录更新日志
+        OnBtnPressedLoadAllAnchors(); // 加载所有锚点
+    }
+
+    // 创建锚点按钮事件
+    private void OnBtnPressedCreateAnchor()
+    {
+        isCreateAnchorMode = !isCreateAnchorMode; // 切换创建锚点模式
+        if (isCreateAnchorMode) // 如果进入创建模式
+        {
+            btnCreateAnchor.transform.Find("Text").GetComponent<Text>().text = "CancelCreate"; // 更新按钮文本
+            anchorPreview.SetActive(true); // 显示锚点预览
+        }
+        else // 如果退出创建模式
+        {
+            btnCreateAnchor.transform.Find("Text").GetComponent<Text>().text = "CreateAnchor"; // 恢复按钮文本
+            anchorPreview.SetActive(false); // 隐藏锚点预览
+        }
+    }
+
+    // 异步加载所有锚点
+    private async void OnBtnPressedLoadAllAnchors()
+    {
+        var result = await PXR_MixedReality.QuerySpatialAnchorAsync(); // 查询所有空间锚点
+        SetLogInfo("LoadSpatialAnchorAsync:" + result.result.ToString() + result.anchorHandleList.Count); // 记录日志
+        if (result.result == PxrResult.SUCCESS) // 成功查询
+        {
+            foreach (var key in result.anchorHandleList) // 遍历锚点句柄
+            {
+                if (!anchorList.ContainsKey(key)) // 如果锚点列表中不存在该锚点
+                {
+                    GameObject anchorObject = Instantiate(anchorPrefab); // 实例化锚点预制体
+                    PXRSample_SpatialAnchor anchor = anchorObject.GetComponent<PXRSample_SpatialAnchor>(); // 获取锚点组件
+                    anchor.SetAnchorHandle(key); // 设置锚点句柄
+
+                    // 定位锚点
+                    PXR_MixedReality.LocateAnchor(key, out var position, out var orientation);
+                    anchor.transform.position = position; // 设置位置
+                    anchor.transform.rotation = orientation; // 设置旋转
+                    anchorList.Add(key, anchor); // 添加到锚点列表
+                    anchorList[key].ShowSaveIcon(); // 显示保存图标
+                }
+            }
+        }
+    }
+
+    // 异步创建空间锚点
+    private async void CreateSpatialAnchor(Transform transform)
+    {
+        var result = await PXR_MixedReality.CreateSpatialAnchorAsync(transform.position, transform.rotation); // 创建锚点
+        SetLogInfo("CreateSpatialAnchorAsync:" + result.ToString()); // 记录日志
+        if (result.result == PxrResult.SUCCESS) // 成功创建
+        {
+            GameObject anchorObject = Instantiate(anchorPrefab); // 实例化锚点预制体
+            PXRSample_SpatialAnchor anchor = anchorObject.GetComponent<PXRSample_SpatialAnchor>(); // 获取锚点组件
+            if (anchor == null) // 如果锚点组件不存在
+            {
+                anchor = anchorObject.AddComponent<PXRSample_SpatialAnchor>(); // 添加锚点组件
+            }
+            anchor.SetAnchorHandle(result.anchorHandle); // 设置锚点句柄
+
+            anchorList.Add(result.anchorHandle, anchor); // 添加到锚点列表
+
+            // 获取锚点的UUID
+            var result1 = PXR_MixedReality.GetAnchorUuid(result.anchorHandle, out var uuid);
+            SetLogInfo("GetUuid:" + result1.ToString() + "  " + (result.uuid.Equals(uuid)) + "Uuid:" + uuid); // 记录UUID信息
+        }
+    }
+
+    // 销毁空间锚点
+    public void DestroySpatialAnchor(ulong anchorHandle)
+    {
+        var result = PXR_MixedReality.DestroyAnchor(anchorHandle); // 销毁锚点
+        SetLogInfo("DestroySpatialAnchor:" + result.ToString()); // 记录日志
+        if (result == PxrResult.SUCCESS) // 如果成功
+        {
+            if (anchorList.ContainsKey(anchorHandle)) // 如果锚点列表中存在该锚点
+            {
+                Destroy(anchorList[anchorHandle].gameObject); // 销毁锚点对象
+                anchorList.Remove(anchorHandle); // 从列表中移除锚点
+            }
+        }
+    }
+
+    // 设置日志信息
+    public void SetLogInfo(string log)
+    {
+        if (logQueue.Count >= maxLogCount) // 如果日志队列达到最大条数
+        {
+            logQueue.Dequeue(); // 移除最旧的日志
+        }
+        logQueue.Enqueue(log); // 添加新的日志
+
+        Debug.Log("PXRSample_SpatialAnchorManager" + log); // 输出到控制台
+        
+        tipsText.text = string.Join("\n", logQueue.ToArray()); // 更新提示文本显示日志
+    }
+}

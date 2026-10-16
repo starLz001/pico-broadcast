@@ -1,0 +1,60 @@
+如何创建圆角或方角视频面板？
+========================================
+*问题描述
+如何创建圆角或方角视频面板？
+*原因分析
+视频面板的圆角并非由 WindowContainer 或 VideoComponent / VideoPlayerComponent 提供，而是由承载视频的网格（Mesh）自身的几何形状决定。MeshResource.createPlane 的 cornerRadius 默认为 0f（方角），因此若直接使用默认值或采用其他创建平面的方法，最终渲染结果即为方角；要实现圆角需在创建 Mesh 时显式传入正值的 cornerRadius（单位为米）。
+*解决方案
+通过 MeshResource.createPlane 或 MeshResource.createVideoPanel 的 cornerRadius 参数控制圆角。
+ 
+*创建圆角视频面板
+使用 MeshResource.createVideoPanel（官方文档推荐用于视频场景）。下方仅展示与圆角直接相关的关键代码——视频 Entity / VideoMaterial / SurfaceRenderTexture / MediaPlayer 等资源仍建议在 DisposableEffect 中统一构造与释放（参见「视频没有填满整个窗口」）：
+ 
+*创建方角视频面板
+将 cornerRadius 设为 0f：
+ 
+*更多信息
+*cornerRadius 使用要点
+cornerRadius 的单位约定与两类创建平面的方法的使用区别如下：
+*单位：cornerRadius 单位为米（m），而非 dp。
+*MeshResource.createPlane(width, height, cornerRadius = 0f)：通用平面网格，cornerRadius 默认值为 0（方角）。
+*MeshResource.createVideoPanel(width, height, cornerRadius)：视频面板专用网格，cornerRadius 为必填参数。
+*取值范围：cornerRadius 的取值会被运行时限制在合理范围内，以保持几何体完整性。
+*官方示例：VideoPlayerComponent 使用 MeshResource.createVideoPanel(1.6f, 0.9f, 0.1f) 创建圆角视频面板。
+
+*该方案对两种渲染组件完全一致——圆角仅与 Mesh 创建相关，与所选 VideoComponent 或 VideoPlayerComponent 无关，Mesh 创建后挂载至任一组件均可生效。
+
+import com.pico.spatial.core.ecs.resource.BlendingMode
+import com.pico.spatial.core.ecs.resource.MaterialCullingMode
+import com.pico.spatial.core.ecs.resource.MeshResource
+import com.pico.spatial.core.ecs.resource.VideoMaterial
+import com.pico.spatial.core.ecs.video.VideoDimensionMode
+
+// 在 DisposableEffect 中创建圆角 Mesh，并装载至 VideoComponent
+val mesh = MeshResource.createVideoPanel(
+    width = 1.6f,
+    height = 0.9f,
+    cornerRadius = 0.1f,    // 0.1 m（约 10 cm）的圆角半径
+)
+val videoMaterial = VideoMaterial(
+    BlendingMode.OPAQUE,
+    VideoDimensionMode.MONO,
+    MaterialCullingMode.BACK,
+)
+videoEntity.components.set(VideoComponent(mesh, videoMaterial))
+
+import com.pico.spatial.core.ecs.resource.MeshResource
+
+// 方式 1：使用 createPlane，cornerRadius 默认为 0f（方角）
+val squareMesh = MeshResource.createPlane(
+    width = 0.9f,
+    height = 0.45f,
+    cornerRadius = 0f,  // 0f = 方角（也是默认值）
+)
+
+// 方式 2：使用 createVideoPanel，cornerRadius 设为 0f
+val squareMesh2 = MeshResource.createVideoPanel(
+    width = 1.6f,
+    height = 0.9f,
+    cornerRadius = 0f,  // 0f = 方角
+)

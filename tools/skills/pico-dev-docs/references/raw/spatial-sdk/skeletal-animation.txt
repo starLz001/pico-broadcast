@@ -1,0 +1,220 @@
+骨骼动画
+========================================
+*骨骼动画是一种广泛应用于角色动画的技术。其核心原理是通过模拟由关节连接组成的骨骼层级结构来驱动模型的动态形变。在骨骼动画中：
+*每个骨骼节点可执行局部的平移、旋转和缩放变换。
+*变换会通过层级关系传递，从父骨骼依次影响所有相关的子骨骼。
+*与骨骼结构绑定的顶点（即蒙皮网格）会根据骨骼的实时变换进行形变，从而产生连续且自然的动画效果。
+例如，在角色行走动画中，髋关节的旋转会带动大腿骨骼的运动，进而影响小腿与脚部，最终实现腿部的完整摆动。通过这种方式，复杂的全身动作可由少量骨骼变换高效驱动，非常适合实时渲染与动画系统。
+*示例项目
+*在示例项目页面，选择动画示例，下载项目的代码，体验骨骼动画的效果。
+*下载示例项目并在 PICO 头显或 PICO 模拟器中运行后，在最左侧的导航栏选择 Skeletal，界面会呈现骨骼动画的内容。在中间的动画列表中选择目标动画后，右侧的播放区域会展示对应的骨骼动画。
+* 
+*glTF vs USD
+*glTF 和 USD 在架构设计上有显著差异，尤其是在骨骼动画的处理方式上。
+*glTF 的动画处理方式
+*glTF 使用基于场景图的方式处理骨骼，它将所有动画存储在单一数组中。每个动画独立定义，可以在运行时选择和切换，并且可以使用索引访问。示例如下：
+* 
+*USD 的动画处理方式
+*USD 骨骼只能通过单一的 rel skel:animationSource 关系绑定一个 SkelAnimation，这意味着 USD 无法像 glTF 那样在同一个文件中存储多个骨骼动画并在运行时切换。USD 一般通过时间轴分段或动态 Layer/文件切换来处理多个动画。
+*时间轴分段
+*将多个动画放在同一时间轴的不同区间内，然后使用 AnimationViews 将时间轴切片为多个动画片段。
+* 
+*动态 Layer/文件切换
+*在运行时动态加载不同的动画 Layer/文件来实现动画切换。通常需要应用程序提供额外的动画管理逻辑。
+* 
+*适用场景对比
+*基于 USD 和 glTF 在多动画处理方面的技术特性，对于包含多个骨骼动画的角色模型，可参考以下格式选择建议：
+*适合选择 glTF 的场景：
+*实时交互应用：在需要频繁切换动画状态的场景（如让角色从行走过渡到跑步或攻击），glTF 的独立动画数组结构支持快速切换，无需重新加载文件，适合游戏开发、Web 3D 展示和 AR/VR 应用。
+*网络传输：当文件大小和加载速度至关重要时，glTF 的 GLB 格式结合 Draco 压缩可显著减小文件大小，而 JSON 结构支持渐进式加载，非常适合在线游戏、Web 展示和移动应用。
+*性能敏感：需要高效的数据结构和稳定的渲染性能时，glTF 的连续缓冲区布局与量化压缩特性都针对 GPU 做了优化，适合移动设备、大量角色渲染及其他实时渲染需求。
+*适合选择 USD 的场景：
+*内容创作阶段：在需要精细调整和团队协作时，USD 的稀疏动画存储和外部引用机制能够支持独立工作与版本管理，方便动画师并行开发和持续迭代。 
+*高质量输出：在追求最佳视觉效果的场景中，USD 提供多种数值精度和完整的元数据系统，确保动画质量不会因精度损失而下降，适用于影视渲染、广告制作和建筑可视化。 
+*复杂制作管线：面对多软件协作与非线性编辑的复杂工作流，USD 的分层系统与外部引用机制可实现跨 DCC 软件的数据交换与统一资源管理，非常适合大型项目。
+*决策流程图
+参考以下流程，选择多动画角色模型的文件格式。
+* 
+*限制与规定
+骨骼动画存在以下限制与规定：
+**
+*实现骨骼动画
+*此部分以上述示例项目为例，介绍如何在应用中实现骨骼动画。
+*第一步：获取骨骼动画
+*你可以通过以下方式制作或获取骨骼动画，且须保证动画模型符合 PICO 动画设计规范。
+*DCC（数字内容创作）软件制作：使用 Blender、Maya、3ds Max、Character Creator 等软件自制骨骼动画。整体流程包括建模、骨骼绑定、蒙皮、制作关键帧动画等。
+*下载或购买现成的动画资源：从 Mixamo、Sketchfab、Unity Asset Store、Fab (Unreal Engine Marketplace) 等资源商店购买现成的动画资源。
+*委托制作：委托专业的动画师或工作室，根据需求制作特定的骨骼动画。
+* 
+*第二步：加载 3D 模型
+*此部分以示例项目中的 3D 模型文件（含骨骼动画）/app/src/main/assets/pico_robot_animated.glb 为例，介绍如何加载 3D 模型。在 SkeletalAnimationUtil.kt 中，以下 initialize() 函数加载了模型，调整了其大小和位置，并将加载的模型 Entity 添加为传入的根 entity 的子节点（该根 entity 由 SkeletalAnimationViewModel 创建并持有）。
+* 
+* 
+*第三步：查找骨骼根实体
+*从本质上讲，骨骼动画的播放通常以骨骼系统为入口驱动蒙皮网格产生动态变形。因此，在获取骨骼动画资源或播放骨骼动画时，通常应优先定位骨骼根实体。
+你可以通过 fun findSkeletonRootEntity(includeDisabled: Boolean = false): Array<Entity> 查找当前 entity 及其子节点中所有可作为骨骼动画播放入口的骨骼根实体。includeDisabled 参数用于控制是否包含 enable = false 的实体；该方法会将查找到的所有符合条件的骨骼根实体以 Array<Entity> 的形式返回。找到骨骼根实体后，你就可以基于这些实体进一步获取或播放对应的骨骼动画资源。
+ 
+*第四步：获取动画资源
+*获取带有蒙皮网格的 Entity 数组之后，你可以通过 getAnimationResources() 方法获取数组中每个 Entity 实例所绑定的动画资源。该方法会将指定蒙皮网格上的所有动画按顺序存储在一个 AnimationResource 类型的数组中并返回。
+ 
+*第五步：播放动画
+*获取到动画资源之后，你可以通过 entity.playAnimation(animationResource) 播放对应的动画。
+ 
+*查找蒙皮网格、获取动画资源以及播放对应的骨骼动画的相关逻辑被封装在 SkeletalAnimationUtil.kt 的 play() 函数中。
+* 
+*AnimationResource 用于描述要播放的动画内容，entity.playAnimation() 返回 AnimationPlaybackController 用于后续控制播放状态。普通播放场景下通常不需要关闭 AnimationResource，PICO Spatial SDK 会按生命周期管理 AnimationResource。
+*第六步：停止播放与资源管理
+*当你需要停止播放所有动画时，可以使用 entity.stopAllAnimations() 方法。
+* 
+此外，资源是否需要手动释放取决于持有方式。普通播放场景通常不需要在停止播放后立即手动关闭 AnimationResource。只有在显式长期持有、或跨实体/跨生命周期复用资源时，才需要自行管理并在确认不再使用时手动释放。在 SkeletalAnimationUtil.kt 中，以下 closeResources() 函数实现了资源释放；示例项目在 SkeletalAnimationViewModel 的 onCleared() 中调用它，以便在 ViewModel 销毁时统一停止播放并释放动画资源。
+* 
+*API 参考
+AnimationBindTarget、AnimationPlaybackController 和 AnimationResource 类提供了骨骼动画相关的函数，详情参阅 API 参考。根据你所处的地理位置选择合适的文档链接：
+*中国大陆：https://developer-cn.picoxr.com/spatial-api/index.html
+*非中国大陆：https://developer.picoxr.com/spatial-api/index.html
+
+{
+  "animations": [
+    {
+      "name": "Walk",
+      "channels": [
+        {"sampler": 0, "target": {"node": 1, "path": "translation"}},
+        {"sampler": 1, "target": {"node": 1, "path": "rotation"}}
+      ],
+      "samplers": [
+        {"input": 0, "output": 1, "interpolation": "LINEAR"},
+        {"input": 2, "output": 3, "interpolation": "STEP"}
+      ]
+    },
+    {
+      "name": "Run",
+      "channels": [...],
+      "samplers": [...]
+    }
+  ]
+}
+
+时间轴：
+帧 1-30:   Walk 动画
+帧 31-60:  Run 动画  
+帧 61-90:  Jump 动画
+帧 91-120: Wave 动画
+
+Character.usd          # 主文件，包含骨骼定义
+├── walk.usd         # Walk 动画的独立层/文件
+├── run.usd          # Run 动画的独立层/文件  
+├── jump.usd         # Jump 动画的独立层/文件
+└── wave.usd         # Wave 动画的独立层/文件
+
+是否需要在运行时频繁切换动画？
+├── 是 → glTF（独立动画数组，支持快速切换）
+└── 否 → 继续判断
+      是否对文件大小和加载速度敏感？
+      ├── 是 → glTF（GLB + Draco 压缩）
+      └── 否 → 继续判断
+            是否需要精细的创作控制？
+            ├── 是 → USD（稀疏动画 + 外部引用）
+            └── 否 → 继续判断
+                  是否涉及复杂的制作管线？
+                  ├── 是 → USD（分层系统 + 元数据）
+                  └── 否 → 根据目标平台选择
+                        ├── 实时应用 / Web / 移动 → glTF
+                        └── 影视 / 高端可视化 → USD
+
+
+
+参数
+
+用途
+
+限制/规定
+
+骨骼数量
+
+控制可用骨骼的总数。
+
+*PICO 设备的上限：1024
+*Spatial Editor 的上限：512
+*超限行为：超过 512 时，动画无法播放
+
+每顶点骨骼权重数量
+
+用于驱动顶点动画。
+
+系统自动选择权重最大的前 4 个骨骼，并归一化。
+
+动画关键帧率
+
+*控制动画的流畅度和性能。
+
+*推荐值：24fps / 30fps / 60fps 
+*默认值：24fps
+
+PICO Spatial SDK 仅支持导入 usdc、usda、usdz、gltf、glb 格式的资源，请确保你制作、下载或购买的模型属于以上格式。
+
+你还可以通过 SpatialModelView 加载 3D 模型并播放 3D 模型包含的骨骼动画。详情参阅《在 SpatialModelView 和 SpatialView 中添加 3D 内容》。
+
+fun initialize(
+    entity: Entity,
+    scope: CoroutineScope,
+    onInitialized: (SkeletalAnimationData) -> Unit
+) {
+    scope.launch {
+        val character = withContext(Dispatchers.IO) { Entity.load(ANIMATED_ROBOT) }
+        entity.addChild(character)
+        character.components[TransformComponent::class.java]?.apply {
+            setPosition(INITIAL_POSITION_ANIMATED_ROBOT)
+            setScaleVector(INITIAL_SCALE_ANIMATED_ROBOT)
+        }
+        
+        ...
+
+    }
+}
+
+val skinnedMeshEntities = entity.findSkeletonRootEntity().toList()
+
+for (entity in skinnedMeshEntityArray) {
+    skeletalAnimationResources = entity.getAnimationResources()
+}
+
+for (meshEntity in entities) {
+    val animationResource =
+state.skeletalAnimationResources?.get(skeletalAnimationState.value)
+    animationResource?.let {
+        meshEntity.playAnimation(it)
+    }
+}
+
+fun play(skeletalAnimationState: SkeletalAnimationState, animationData: SkeletalAnimationData) {
+    val state = animationData
+    val entities = state.skinnedMeshEntities ?: return
+
+    if (entities.isEmpty()) {
+        Log.e("SkeletalAnimation", "No Skinned Mesh Found!")
+    } else {
+        Log.d("SkeletalAnimation", "Found $${entities.size} Skinned Mesh!")
+        for (meshEntity in entities) {
+            val animationResource =
+                state.skeletalAnimationResources?.get(skeletalAnimationState.value)
+            animationResource?.let {
+                meshEntity.playAnimation(it)
+                // Do not use use() here; animation resource must remain open for continuous
+                // playback
+            }
+        }
+    }
+}
+
+fun reset(entity: Entity, animationData: SkeletalAnimationData) {
+    entity.stopAllAnimations()
+    // Do not close animation resources here, as they may be reused for subsequent playback
+}
+
+/**
+ * Closes animation resources. Should be called when animations are no longer needed (e.g.,
+ * during ViewModel cleanup).
+ */
+fun closeResources(animationData: SkeletalAnimationData) {
+    animationData.skeletalAnimationResources?.forEach { it.close() }
+}

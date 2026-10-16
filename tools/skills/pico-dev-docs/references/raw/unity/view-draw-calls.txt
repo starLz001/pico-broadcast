@@ -1,0 +1,12 @@
+浏览绘制调用
+========================================
+本页介绍如何使用帧调试器（Frame Debugger）浏览绘制调用（draw call）相关信息。
+*Frame Debugger 概览
+帧调试器可将游戏冻结于某一帧，并且罗列出用于渲染该帧的各个绘制调用。开发者可查看绘制调用顺序，或使用调试器逐步执行各个调用，查看场景是如何从图形元素中构建出来的。若想了解更多信息，参考 Unity 官网的 Frame Debugger 窗口 文档。
+*打开帧调试器
+按以下步骤打开帧调试器。
+*在 Unity 编辑器中打开项目。
+*在上方菜单栏处，选择 Window > Analysis > Frame Debugger。
+*你将看到 Frame Debug 窗口。若想了解更多使用 Frame Debugger 相关信息，参考 Unity 官网的 Frame Debugger 窗口 文档。
+* 
+

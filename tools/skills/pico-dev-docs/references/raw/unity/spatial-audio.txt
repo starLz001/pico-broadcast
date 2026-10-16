@@ -1,0 +1,427 @@
+空间音频
+========================================
+相较于传统立体声技术，空间音频渲染赋予声音更强大的空间感，可覆盖听者四周的所有声源，包括水平面上的声源和上下方的声源。此外，空间音频场景下，用户感知到的声音变化更加贴合实际，例如：当用户靠近声源时，音量将会变大。
+*环境要求
+*设备型号：PICO Neo3、PICO 4 和 PICO 4 Ultra 系列
+*设备系统版本：5.12.0 及以上
+*Unity 版本：经测试，空间音频渲染器在以下 Unity 版本中可用：
+*2021.1.9f1c1
+*2020.3.21f1 LTS
+  若你在其他 Unity 版本中成功使用空间音频渲染器，请告知我们，谢谢。
+*SpatialAudio 文件夹概览
+导入 PICO Unity Integration SDK 后，可在 Packages/PICO Integration 目录下查看 SpatialAudio 文件夹。文件夹包含以下内容：
+*
+*脚本参数说明
+*PXR_Audio_Spatializer_Audio Source
+*PXR_Audio_Spatializer_Audio Source 脚本用于设置声源相关参数，包括基础参数、距离衰减参数、声源指向性参数。
+* 
+基础参数说明如下：
+*
+距离衰减相关参数说明如下：
+*
+现实中，声源向四周散发的声波能量非各向同性，可以用一个与声波出射角相关的极坐标进行表示，称之为声源的指向性（Polar Pattern）。极坐标的坐标原点在声源处，0 度方向同声源正方向。
+声源指向性参数说明如下：
+*
+*PXR_Audio_Spatializer_Audio Listener
+PXR_Audio_Spatializer_Audio Listener 脚本用于指定空间音频渲染的结果，即双耳音频信号的输出方式。
+* 
+Output Method 参数的可选值说明如下：
+*
+SampleScene_output_to_mixer 示例中导入了 Unity Audio Mixer，并添加了一些有趣的后处理效果。你可以在 /SpatialAudio/Samples 目录下获取该示例。
+*PXR_Audio_Spatializer_Context
+PXR_Audio_Spatializer_Context 脚本用于设置音频渲染质量。参数说明如下：
+*
+*配置不同的空间音频渲染模式
+*自由声场
+自由声场（Free Field）指仅模拟声源位置，同时忽略所有环境声学现象的声场。按以下步骤配置自由声场：
+*在 Unity 编辑器中打开你的项目。
+*从上方菜单栏处，选择 GameObject，创建一个游戏对象。
+*在 Hierarchy 窗口中，选中该游戏对象。
+*Inspector 窗口中将展示该对象挂载的脚本和组件。
+*点击 Inspector 窗口底部的 Add Component 按钮。
+*为该游戏对象添加 PXR_Audio_Spatializer_Context 脚本。
+*按需配置 Rendering Quality 参数，调整渲染质量。
+* 
+*创建另一个游戏对象。
+* 
+*为该游戏对象添加 PXR_Audio_Spatializer_Audio Source 脚本。添加后：
+*Audio Source 组件将被自动添加至该游戏对象。建议将 Spatial Blend 的值保持为 0 。
+* 
+*Scene 预览窗口中的场景如下：
+* 
+*找到挂载 Audio Listener 组件的对象。一般为 Main Camera。
+* 
+*选中该对象。
+*点击 Inspector 窗口底部的 Add Component 按钮。
+*为该对象添加 PXR_Audio_Spatializer_Audio Listener 脚本。
+* 
+至此，空间音频渲染器已经集成至你的项目。紧接着，你需要按照以下步骤将音频信号空间化：
+*选取测文件，并将其导入你的 Unity 项目。
+*在声源对象上，找到 Audio Source 组件。
+*在 AudioClip 参数处，选取目标音频文件。
+*勾选 Play On Awake。
+*声源对象启用后，Audio Source 组件将被启动。
+*勾选 Loop。
+*音频文件将被循环播放。
+*播放音频。
+*你将听到空间化的音频。
+*环境声学模拟
+*实时环境声学模拟是空间音频渲染器的重要功能模块，可以根据实际使用场景，实时计算并渲染出声源的声波传播至听者处所带来的反射声和混响。按以下步骤接入环境声学模式：
+*在你的虚拟场景中，导入或构建你的环境建模。
+*在你想参与模拟环境声学的环境模型对象上，添加 PXR_Audio_Spatializer_SceneGeometry (Script) 组件。
+*添加后，PXR_Audio_Spatializer_SceneMaterial (Script) 组件会被自动添加。
+* 
+*在 PXR_Audio_Spatializer_SceneGeometry (Script) 面板中，按需配置以下参数：
+**
+*在 PXR_Audio_Spatializer_SceneMaterial (Script) 面板中，按需配置以下参数：
+* 
+**
+*环绕声
+Ambisonics 是一种全球体环绕声格式，可覆盖水平面以及听众上下方的声源，为听众带来高度沉浸式的声音体验。PICO 空间音频渲染器可解码一阶 Ambix 格式的环绕声信号。使用步骤如下：
+*在 Unity 编辑器中打开你的项目。
+*从上方菜单栏处，选择 Edit > Project Settings。
+*你将看到 Project Settings 弹窗。
+*从左侧导航栏处，选择 Audio。
+*窗口右侧将显示 Audio 配置面板。
+*将 Ambisonic Decoder Plugin 设置为 PICO Ambisonic Decoder。
+* 
+*在 Project 窗口中，右击 Aesst 文件夹。
+*从快捷菜单处，选择 Create > Audio Mixer，创建一个混音器作为 Ambisonics 渲染总线、
+*(可选) 按需重命名新建的 Audio Mixer，例如：Ambisonics_bus。
+* 
+*点击 Ambisonics_bus 右侧的 箭头 图标。
+*你将看到以下菜单：
+* 
+*点击 Master。
+*Inspector 窗口中出现 Master 声道的配置项。
+* 
+*点击 Add Effect。
+*从菜单中选择 PICO Ambisonic Renderer，将其添加至 Master 声道。
+*在场景中创建一个对象。
+*为该对象添加 PXR_Audio_Spatializer_Ambisonic Source 脚本。
+*Audio Source 组件将被自动添加至该对象。
+*在 Audio Source 组件面板处，将 Output 设置为 Master (Ambisonic_bus)。
+至此，环绕声模式配置完毕，可按以下步骤进行试听：
+*在 Project 窗口中，前往 Packages > PICO Integration > SpatialAudio > Samples > Audio。
+*你将进入 Audio 文件夹。
+*找到 loop_FOA_48k 音频文件。
+*在 Hierarchy 窗口中，选中先前添加的对象。
+*在 Audio Source 组件面板处，将 AudioClip 设置为 loop_FOA_48k。方式如下：
+*点击 AudioClip 处的 圆圈 图标，从弹窗中选择目标音频文件。
+*或
+*直接将目标音频文件拖拽至 AudioClip 处。
+* 
+*勾选 Play On Awake 和 Loop。
+*播放音频。
+*你将听到一个电子乐声源，其运行轨迹为：先顺时针绕着听者水平旋转一周，然后向上运动，再向下垂直旋转一周。
+*混合现实空间音频
+* 
+*PICO 4 Ultra 系列设备支持实时动态扫描现实场景，然后将场景中的内容转换成空间网格。PICO 空间音频插件将该能力与空间音频渲染能力相结合，使虚拟声源可以与用户所处的真实环境交互，产生以下效果：
+*虚拟声波从真实环境的表面（即实时空间网格的表面）反射回来；
+*虚拟声波穿过真实世界的表面（即实时空间网格）时，音量衰减。
+*使用以下步骤配置混合现实空间音频模式：
+*在 PXR_Manager (Script) 组件面板上，勾选 Spatial Mesh 选框，开启空间网格能力，然后选择所需的 LOD。
+* 
+*在场景中的任意 GameObejct 上，挂载 PXR_Spatial Mesh Manager (Script) 组件，然后在 Mesh Prefab 处添加任何带有MeshFilter 组件的预制体（可以参考 /SpatialAudio/Samples/Resources/MeshPrefab 目录下的预制体）。
+* 
+*在场景中的任意 GameObject 上，挂载 PXR_Audio_Spatializer_MR Scene Geometry Manager 组件。
+* 
+*若你需要参考 PICO 提供的示例场景，可在 /SpatialAudio/Samples/SpatialMesh_with_SpatialAudio.unity 目录下获取。
+*重要提示（macOS）
+*若你使用的是 macOS 操作系统，由于 Gatekeeper 机制，系统会阻止空间音频动态库的加载，所以你可能会看到以下警告信息：
+ 
+看到以上警告信息时，按以下步骤解决：
+*前往 系统偏好设置 > 安全与隐私。
+*你将在窗口中看到以下信息：已阻止使用”libPicoSpatializer.dylib“（或 “libPicoAmbisonicDecoder.dylib”）。
+* 
+*点击信息右侧的 仍然允许 按钮。
+* 
+*重启 Unity 工程。
+*若 Unity 以及 macOS 系统不再报错，说明 PICO 空间音频资源已成功安装。
+*工具函数
+PICO 音频渲染器提供了以下工具函数，你可以实时调用他们来自定义声音场景。
+*PXR_Audio_Spatializer_Audio Source
+**
+*PXR_Audio_Spatializer_Ambisonic Source
+Resume()：恢复播放声源。
+*PXR_Audio_Spatializer_Context
+SetRenderingQuality(PXR_Audio.Spatializer.RenderingMode quality)：设置空间音频渲染质量。
+*使用技巧
+*Unity 设置
+修改 C# 代码后，即使当前正在播放音频，Unity 编辑器也会默认即刻进行编译。对于 PICO 的空间音频渲染功能来说，若在播放音频时进行编译，会导致编辑器崩溃。为避免此问题，你可以通过以下步骤更改 Unity 设置：
+*从上方菜单栏处，选择 Edit > Preferences。
+*你将看到 Preferences 窗口。
+*从左侧导航栏处，选择 General。
+*将 Script Changes While Playing 设置为 Recompile After Finished Player 或 Stop Playing And Compile。
+* 
+*声源数量
+环境声学模拟和多普勒效应模拟会造成较大的 CPU 负载。因此，在使用环境声学模拟时，请确保同时发声且开启多普勒效应模拟的声源数量在 20 以内。
+*多普勒效应
+为声源开启多普勒效应模拟后，声源的直达声和反射声将具有更高的真实感，但是音频线程 CPU 消耗变高；若关闭，声源的直达声和反射声的真实感降低，但是音频线程CPU 消耗相比打开多普勒效应时大幅减低。
+若希望实现多普勒效应，同时保证较少的 CPU 和内存消耗的话，可以尝试以下方法：
+*选择一些可接受的、声音真实感稍差的声源。
+*为声源关闭 Enable Doppler 选项。
+*将声源的 Spatial Blend 选项的值置为 1。
+*此时，音频信号输入音频渲染器时，会重新转换成 mono 格式，而不会被空间化。这样，在不使用 Unity 的方向感空间化算法的同时，使用了 Unity 自带的多普勒效应，从而在声源数量庞大的情况下，实现了音质和性能之间的平衡。
+*环境声学模拟 Mesh 最佳实践
+*不同材质的场景物体，其 Mesh 需要被分割。这样，在它们的 GameObject 上挂载 PXR_Audio_Spatializer_SceneMaterial 组件之后，可以更方便地设置不同的声学材质，从而最精确地模拟环境声。
+*环境声学模拟场景中，若听者处于一个闭塞的小角落，可能会听不到场景中某些声源的环境反射声。当你使用我们最新的 Unity 插件时，这种情况非常罕见。 
+*如果你碰到了这个问题，首先建议升级 Pico Spatializer 插件至最新版本。如此问题仍然存在，尝试以下解决方案：
+*在游戏流程上进行规避，避免让玩家进入到会出错的场景区域。
+*将场景中的 Mesh 分组成多个 GameObject，只在室内的大型墙面上挂载 PXR_Audio_Spatializer_Scene Geometry 组件，而不要在过多的细节形状（比如桌椅、柱子等）上挂载。
+*若无声问题依然存在，可以在想要反射声音的场景处，手动添加一些 Pico Sound Reflection Object，如下图白色线框中所示。Pico Sound Reflection Object 位于 /Pico Spatial Audio/Prefabs 目录下。
+* 
+*示例
+*PICOSpatialAudioSample 展示了 PICO Unity Integration SDK 所提供的空间音频功能。你可以在该示例之中配置空间音频参数、在场景内移动、播放声源等。详细说明参考《空间音频示例》一文。
+*已知问题
+若你使用的是 MacOS 系统，当在 Unity 编辑器中运行 /Packages/PICO Integration/SpatialAudio/Samples 目录下的音频样例，并按下键盘按键时，可能会听到 “滴滴滴” 的 MacOS 系统警告音效。这是一个已知的 Unity 问题，待 Unity 官方修复该问题。若有需要，可前往 Unity 社区进行讨论。
+
+
+
+
+子文件夹
+内容说明
+Plugins
+保存着各个硬件平台的引擎动态库文件，可根据 Unity 引擎实际运行的平台自行删除无用的动态库文件。
+Prefabs
+保存着一些工具预制体。
+Runtime
+保存着引擎所需的 C# 源代码。
+包含以下基础脚本：
+*PXR_Audio_Spatializer_Context.cs
+*PXR_Audio_Spatializer_Audio Source.cs
+*PXR_Audio_Spatializer_Ambisonic Source.cs
+*PXR_Audio_Spatializer_Audio Listener.cs
+包含以下辅助脚本：
+*PXR_Audio_Spatializer_API.cs
+*PXR_Audio_Spatializer_Types.cs
+包含以下环境声学模拟脚本：
+*PXR_Audio_Spatializer_Scene Geometry.cs
+*PXR_Audio_Spatializer_Scene Material.cs
+
+Samples
+保存着若干音频样例，可试听或使用。
+
+
+参数
+
+说明
+
+Source Gain (dB)
+
+用于设置声源的增益，单位为分贝。
+
+Reflection Gain (dB)
+
+用于设置声源反射声的增益，单位为分贝。
+
+Source Size (meters)
+
+用于设置声源的半径长度，单位为米。
+
+Enable Doppler
+
+用于设置是否在编译时为声源开启多普勒效应模拟：
+*若开启，声源的直达声和反射声将具有更高的真实感，但是音频线程 CPU 消耗变高；
+*若关闭，声源的直达声和反射声的真实感降低，但是音频线程CPU 消耗相比打开多普勒效应时大幅减低。
+
+
+
+参数
+
+说明
+
+Source Attenuation Mode
+
+用于设置声源音量随距离衰减的特性，选项有：
+*None：声源的音量不随着距离变化而变化；
+*Fixed：声源的音量不随着距离变化而变化；
+*Inverse Square：声源的音量与声源和听者之间的距离的平方成反比；
+*Custom（请勿使用该选项）
+
+Min Attenuation Distance
+
+用于设置声源音量的最近衰减距离。当听者与声源的距离小于 Min Attenuation Distance 时，声源音量不会随着距离的变化而衰减，即：衰减 = 0dB。
+提示：请勿输入大于 Max Attenuation Distance 的数值，否则会形成反常的音量衰减曲线。
+
+Max Attenuation Distance
+
+用于设置声源音量的最远衰减距离。当听者与声源的距离大于 Max Attenuation Range 时，声源音量不会再随着距离的增长而衰减。
+提示：请勿输入小于 Min Attenuation Distance 的数值，否则会形成反常的音量衰减曲线。
+
+
+
+参数
+
+说明
+
+Alpha
+
+该参数决定了 Polar Pattern 的形状，有全向形、心向形、八字形，以及所有中间形状。下图展示了当 order 值为 1 时，alpha 值对 Polar Pattern的影响。
+* 
+
+Order
+
+该参数决定了指向性 Polar Pattern 的尖锐程度。下图展示了当 alpha 值为 0.5 时，order 值对 Polar Pattern 的影响。
+* 
+
+
+
+值
+
+说明
+
+On Audio Filter Read
+
+在 PXR_Audio_Spatializer_Audio Listener 组件的 OnAudioFilterRead 回调中输出空间声信号，直接将空间音频信号叠加到 Unity 最终的输出信号上。这是 PICO 空间音频插件通常的处理方式。
+
+Pico Audio Router
+
+在 Unity Audio Mixer 中的所有 Pico Audio Router 插件（下图红框处）处同步输出空间音频信号。该输出方式旨在方便开发者对空间声进行独立的音量处理以及后处理。
+* 
+
+
+
+参数
+说明
+Spatializer Api Impl
+用于设置音频后端，可选择 Unity 或 Wwise。
+Rendering Quality
+用于设置音频渲染质量。
+Late Init Event
+用于定义一组发生在空间音频渲染器初始化之后，音频处理开始之前的事件。默认为空。
+为了更好的视觉效果，建议创建一个球体（Sphere）。
+
+
+
+参数
+
+说明
+
+Include Children
+
+用来设置该几何形状描述的 Mesh 是否包含该 GameObject 的子对象。
+
+Visualize Mesh In Editor
+
+在 Unity 编辑器中，用白色线框覆盖与该几何形状相关联的游戏对象。该功能仅在 Unity 编辑器中生效，不会影响游戏模式以及应用构建。
+
+Static mesh backing utilities
+
+静态 Mesh 烘焙工具。
+*Layer 参数：用于指定待烘焙 Mesh 的 Layer
+*Bake 按钮：点击后开始烘焙静态 Mesh
+*Clear 按钮：点击后删除已烘焙的静态 Mesh
+
+Baked Static Mesh
+
+烘焙完成的静态 Mesh 将自动填充至此处。
+
+提示
+你可以自行配置这些参数，也可以从 material preset 中选取 PICO 准备好的预设材料，并且按需修改预设材料的参数配置。
+
+
+
+参数
+
+说明
+
+Material Preset
+
+包含了 PICO 为不同物体预设的 Absorption，Scattering 和 Transmission 参数值。 
+若需自行设置参数值，选择 Custom；若需使用预设参数值，从列表中选择对应物体。
+
+Absorption band XXXX Hz
+
+环境材质的吸收率。
+
+Scattering
+
+环境材质的散射率。高散射率环境中，反射声听上去更像混响；低散射率环境中，反射声听上去更像一个个独立的回声。简单来说： 
+*Scattering 的值越大，混响越大，回声越小 
+*Scattering 的值越小，混响越小，回声越大 
+
+Transmission
+
+环境材质的透射率。透射率越高，穿过该几何形状的声音强度越大；反之则越弱。 
+提示：Scattering 率越大的材质，Tranmission 率越低。
+
+若想使用其他音频文件，请确保：
+*音频文件为一阶 Ambix 格式。
+*为该音频文件勾选 Ambisonic 选项。
+
+仅 PICO 4 Ultra 系列设备支持该模式。
+
+*若系统依旧弹出上述警告窗口，点击窗口中的 好。
+
+
+
+函数
+
+说明
+
+Resume
+
+恢复播放声源。
+
+SetGainDB
+
+设置声源的增益（单位：分贝）。
+
+GetGainDB
+
+获取声源的增益（单位：分贝）。
+
+SetReflectionGainDB
+
+设置声源的反射声增益（单位：分贝）。
+
+GetReflectionGainDB
+
+获取声源的反射声增益（单位：分贝）。
+
+SetSize
+
+设置声源的半径长度（单位：米）。
+
+GetSize
+
+获取声源的半径长度（单位：米）。
+
+SetDopplerStatus
+
+设置是否在声源运行时开启多普勒效应模拟。 
+提示：构建应用时，若未开启 Enable Doppler 选项，则该函数无效。
+
+GetDopplerStatus
+
+获取是否在声源运行时开启多普勒效应模拟。 
+
+GetAttenuationMode
+
+获取声源的距离衰减模式。
+
+SetMinAttenuationRange
+
+
+设置声源音量的最小衰减距离。当听者与声源的距离小于 Min Attenuation Distance 时，声源音量不会随着距离的变化而衰减，即：衰减 = 0dB。 
+提示：请勿输入大于 Max Attenuation Distance 的数值。
+
+GetMinAttenuationRange
+
+获取声源音量的最小衰减距离。
+
+SetMaxAttenuationRange
+
+设置声源音量的最大衰减距离。当听者与声源的距离大于 Max Attenuation Range 时，声源音量不会再随着距离的增长而衰减。 
+提示：请勿输入小于 Min Attenuation Distance 的数值。
+
+GetMaxAttenuationRange
+
+获取声源音量的最大衰减距离。
+
+SetDirectivity
+
+设置声源的辐射指向性（Polar Pattern）。
+*alpha：定义指向性图案的形状
+*order：表示源极坐标图的锐度

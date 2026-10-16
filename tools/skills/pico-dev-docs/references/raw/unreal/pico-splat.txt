@@ -1,0 +1,126 @@
+PICO 3D 高斯溅射插件 (Beta)
+========================================
+PICO 3D 高斯溅射插件（PICO Splat）是一个用于 Unreal 引擎的插件，提供在 PICO 4 Ultra 设备上加载和渲染 3D 高斯溅射 (3DGS) 资源的能力。有关 3DGS 的更多背景信息，参考《解锁次世代渲染：PICO 4 Ultra 原生支持3D高斯点渲染》。
+*更新说明
+*
+*环境要求
+*PC 操作系统：Windows 11
+*PICO 设备型号：PICO 4 Ultra 系列
+*Unreal 引擎版本：5.4
+*PICO Unreal Integration SDK：推荐使用最新版
+*使用限制
+阅读以下使用限制，确保当前版本的 PICO Splat 插件符合你的需求。
+*
+*推荐的项目设置
+由于 3DGS 渲染十分耗费性能，因此建议在 Unreal 引擎中完成以下设置以减少 GPU 占用。
+*
+另外，由于 3DGS 渲染的最大开支之一是绘制的碎片数量，建议调整项目设置以减少总碎片数。若需要降低屏幕的性能消耗（详见 Epic 的文档），可以启用启用注视点渲染。若你使用的是 PICO Unreal Integration SDK，参考此文档开启注视点渲染，使用 PICO Unreal OpenXR Plugin 的开发者需参考此文档。
+*使用步骤
+*第一步：启用 PICO Splat (Beta) 插件
+*从 FAB 网站下载 PICO Splat 插件并安装至本地。
+*在 Unreal 引擎中打开或新建一个需要使用 3DGS 的 VR 项目。
+*在上方菜单栏中，选择 Edit > Plugins，打开 Plugins 窗口。
+*在左侧导航面板中，选择 Rendering。
+*勾选 PICO Splat 选框，然后重启引擎以启用插件。
+*第二步：在项目内导入 3DGS 资产
+*打开 Content Browser (或 Content Drawer)。
+*任选以下方式，导入 3DGS 资产：
+*将 .ply 格式的 3DGS 文件从文件资源管理器中拖入至 Content Browser (或 Content Drawer) 中。
+*在 Content Browser (或 Content Drawer) 中，点击 Import 按钮，从文件资源管理器中将 .ply 格式的 3DGS 文件导入至项目。
+* 
+*第三步：在场景内添加 3DGS 资产
+将先前导入的 3DGS 资产从 Content Browser (或 Content Drawer) 中拖入至 Level Viewport，以添加一个新的 Splat Actor。
+* 
+*第四步：使用 Splat Actors
+Splat Actors 是携带了相关 Splat Components 的 Unreal Actors，它们包含对 3DGS Splat 资源的引用。你可以像使用其它普通 Actors 一样来使用 Splat Actors，十分便捷地将 Splat Actors 与许多现有 Unreal 系统集成。
+若你想修改 Splat Actor 的 Transform，可以在 Level Viewport 中选中它，然后在顶部的 Gizmos 菜单或右侧的 Transform 面板中操作。
+* 
+
+
+
+
+
+版本
+
+变更详情
+
+Beta 2
+
+*修复了在编辑器中进入全屏模式时的崩溃问题。
+*修复了删除 SplatActor 时偶尔出现的崩溃。
+*修复了插件安装到引擎文件夹时的 Cook Failure 问题。
+*修复了 GPU 排序时的崩溃。
+*修复了使用 D3D12 RHI 时的崩溃。
+*改进了 CPU 排序的线程模型。
+
+Beta
+
+PICO 3D 高斯溅射插件（Beta）正式上线。
+
+
+
+类别
+
+详情
+
+文件格式
+
+尚未支持诸如 .splat.ply 和 .spz 的 3DGS 资产文件格式。
+
+物理 & 碰撞
+
+尚未支持。
+
+操作系统
+
+暂不支持 macOS 和 Linux 操作系统。
+
+视图依赖光照（View-Dependent Lighting）
+
+尚未支持球面调合（Spherical Harmonics）。
+
+渲染质量
+
+默认情况下，所有的溅射数据都被打包成非常低精度的类型。目前无法调整。
+
+光照 & 阴影
+
+3DGS 资产不受光线影响，所以不会投射阴影。
+
+场景合成
+
+透明度和雾可能无法与 3DGS 资产正确混合。
+
+移动延迟渲染（Mobile Deferred Rendering）
+
+不兼容移动延迟渲染器。
+
+资产数量
+
+一次只支持展示一个 3DGS 资产。
+
+
+
+模块
+
+参数
+
+所选项
+
+Rendering > Mobile
+
+Mobile Anti-Aliasing Method
+
+None
+
+
+
+Mobile Float Precision Mode
+
+Use Half-precision
+
+
+
+Mobile Local Light Setting
+
+Local Lights Disabled

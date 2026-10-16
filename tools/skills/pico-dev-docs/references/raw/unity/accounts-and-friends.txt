@@ -1,0 +1,357 @@
+帐号&好友
+========================================
+“帐号&好友” 服务为开发者提供了用户验证、好友关系管理等功能，包括获取指定帐号信息、获取当前登录用户的好友列表、发送好友申请等。 
+*基本概念 
+*
+*使用流程
+*第一步：完成通用配置 
+参考《平台服务概览》文档，完成通用配置，包括注册信息注册、SDK 导入、项目配置、平台服务初始化等。
+*第二步：调用 UserService 接口
+调用 UserService 模块的接口为应用接入 “帐号&好友” 相关功能。具体说明和代码示例可参考 “场景教学” 部分。
+*场景教学
+*申请用户权限
+帐号登录授权
+用户可以直接使用登录 PICO 设备的用户帐号来登录你的应用，无需在应用内单独注册帐号。若用户首次打开你的应用，且未在 PICO 设备上登录任何帐号，应用内会调起帐号登录授权流程。只有已在 PICO 开发者平台上传版本的应用才能够获得授权。
+帐号登录授权时，系统会校验应用签名。你需要妥善保管应用的签名，应用后续的所有更新都必须使用相同的证书文件进行签名。
+用户信息授权
+部分平台服务接口需用户授权后才可继续执行，例如，调用  UserService.GetLoggedInUser() 接口获取用户个人信息需要用户个人信息授权，调用 UserService.GetFriends() 接口获取用户好友列表需要“用户好友信息”授权。用户完成授权后，下次调用接口将不再触发弹窗提示。 
+应用运行过程中，频繁弹窗提示授权会影响用户体验。因此，SDK 提供了 UserService.RequestUserPermissions() 接口，可用于批量申请用户权限。我们建议，在应用初始化完成后，一次性申请应用所需的全部权限，授权完成后再进行后续操作。
+*
+ 
+*验证用户身份
+你可以通过用户的 openID 和 Access Token 来验证其身份，以确保当前用户有权限使用客户端提供的 PICO 帐号来访问你的应用。
+* 
+用户验证的整体流程如下：
+ 
+*从 Unity 内部启用平台服务的 CoreService。
+*调用 UserService.GetLoggedInUser() 和 UserService.GetAccessToken() 获取用户的 openID 和 Access Token。
+*获取用户的个人信息（包含 openID）：
+* 
+*获取用户的 Access Token：
+* 
+*将用户的 openID 和 Access Token 发送至你的服务器。该服务器会发送 S2S POST 请求至 PICO 服务器，以进行用户验证。因此，这一步需要使用 “验证用户” 服务端接口。
+*获取用户的组织 ID
+在 PICO 开发者平台上，一个组织可以创建和发布多个应用。若一个用户同时购买了某个组织下的多个应用，该用户在这些应用内拥有唯一的组织 ID。你可以在 UserService.GetOrgScopedID 接口中传入用户的 openID，然后查询该用户的组织 ID。
+以下示例使用 async/await 风格 API 获取当前用户的组织 ID：
+ 
+*好友相关
+添加好友是应用内常见的社交行为。用户可以向其他用户发送好友请求，在应用查看自己的好友列表。
+向某个用户发起好友申请如下所示，执行时会弹出一个系统面板，用于填写备注。请求返回一个 LaunchFriendResult 结构体，LaunchFriendResult.DidCancel 表示用户是否取消发送好友申请。LaunchFriendResult.DidSendRequest表示是否发送好友申请成功。如果双方已经是好友，或者因为用户被对方拉黑等原因导致添加好友失败，msg.Error.Code 和 msg.Error.Message 中返回错误信息，具体见《错误码》文档中错误码 10101 至 10108 部分。
+ 
+获取当前用户的好友列表：
+ 
+*校验用户权限
+“用户权限校验” 功能用于验证用户是否有权限使用你的应用。详细说明和代码示例可参考《用户权限校验》文档。
+*OIDC 授权登录
+OpenID Connect (OIDC) 是一种基于 OAuth2 的身份认证和授权登录机制，可用于使用 PICO 帐号登录其他三方平台，例如 Unity 游戏服务。
+第一步：完成准备工作
+参考 Unity 官网说明，完成以下任务：
+*注册 Unity 游戏服务（Unity Gaming Service，UGS）。
+*将你的项目于 Unity 编辑器中的云端项目进行关联。
+*安装 Unity 的 Authentication SDK 包。
+第二步：添加 PICO 提供的 Identity Provider
+*在 Unity 编辑器中打开一个场景或创建一个新场景。
+*前往 Edit > Project Settings > Services > Authentication。
+*从 Identity Provides 列表中选择 OpenID Connect，然后点击 Add 按钮。
+* 
+*根据应用发布的地区，添加并保存相应的 Identity Provider 信息。若你的应用同时在中国大陆和非中国大陆地区发布，你需要添加两个 Identity Provider。
+**
+* 
+第三步：使用 OIDC 登录 Unity 游戏服务
+以下代码示例展示如何使用 OIDC 方式登录 Unity 游戏服务（UGS）。首先，你需要根据用户设备的国家/地区信息选择合适的 Identity Provider，然后获取用户的 ID Token，最后调用 SignInWithPICO 和 LinkWithPICO 函数。
+ 
+*接口列表
+*客户端接口
+以下为 UserService 接口列表，接口详细说明可阅读 API 参考。 
+*
+*服务端接口
+*验证用户
+*查询社交关系
+*获取好友列表
+*获取用户的组织内 ID
+*Demo 
+*UserDemo
+你可以使用 UserDemo 在 VR 一体机上调试 “账号&好友” 服务。Demo 的具体使用说明参考《帐号&好友示例》文档。
+* 
+*SimpleDemo
+SimpleDemo 是一个简单的平台服务使用示例。实例中展示了如何初始化平台服务，申请用户权限，然后获取当前登录用户的信息。更多说明参考《平台服务简单示例》文档。
+
+
+
+
+概念
+
+说明
+
+PICO 帐号
+
+可在 PICO 官网、PICO VR 一体机、PICO VR 助手中登录的帐号。
+
+openID
+
+基于 PICO 帐号授权生成的用户唯一标识。每位用户在不同应用中的 openID 是唯一且固定的。
+
+Access Token
+
+基于 PICO 帐号和 APP ID 生成的 Token。验证成功的 Token 可以访问 PICO 平台服务。
+
+ID Token
+
+用户的身份凭证，用于 OIDC 登录。
+
+组织 ID
+
+一个用户在某个组织的多个应用内拥有唯一的组织 ID。
+
+
+
+权限类型
+
+说明
+
+UserInfo
+
+获取用户注册的信息，包括昵称、性别、头像等。
+
+FriendRelation
+
+获取用户的好友关系。
+
+SportsUserInfo
+
+获取用户在运动中心的信息，包括用户的性别、生日、身高、体重等。
+
+SportsSummaryData
+
+获取用户的运动数据。
+
+RecordHighlight
+
+截屏和录屏权限，需在高光时刻服务中使用。
+
+UserService.RequestUserPermissions(new[] {Permissions.UserInfo, Permissions.FriendRelation}).OnComplete(m => 
+{ 
+    if (m.IsError) 
+    { 
+        Log($$"Permission failed code={m.Error.Code} message={m.Error.Message}"); 
+        return; 
+    } 
+    // 在此处查看已授权权限 
+    Log($$"RequestUserPermissions successfully:{String.Join(",", m.Data.AuthorizedPermissions)}"); 
+    getUser(); 
+});
+
+用户验证无法取代用户权限校验。
+
+UserService.GetLoggedInUser().OnComplete(msg =>
+{
+    if (msg.IsError)
+    {
+        Log($$"GetLoggedInUser failed: code={msg.Error.Code} message={msg.Error.Message}");
+        return;
+    }
+
+    User user = msg.Data;
+    Log($$"GetLoggedInUser success: {User2String(user)}");
+});
+
+UserService.GetAccessToken().OnComplete(msg =>
+{
+    if (msg.IsError)
+    {
+        Log($$"Got access token error:code={msg.Error.Code} {msg.Error.Message} ");
+        return;
+    }
+
+    string accessToken = msg.Data;
+    Log($$"Got accessToken {accessToken}");
+});
+
+async void GetLoggedInUserOrgId()
+{
+    // 先获取用户的 openID
+    var userMsg = await UserService.GetLoggedInUser().Async();
+    if (userMsg.IsError)
+    {
+        Debug.LogError($$"GetLoggedInUser failed {userMsg.Error}");
+        return;
+    }
+
+    var myId = userMsg.Data.ID;
+    // 获取用户的组织内 ID
+    var orgMsg = await UserService.GetOrgScopedID(myId).Async();
+    if (orgMsg.IsError)
+    {
+        Debug.LogError($$"GetOrgScopeID failed {orgMsg.Error}");
+        return;
+    }
+
+    Debug.Log($$"My orgId is {orgMsg.Data.ID}");
+}
+
+// 向目标用户发出好友申请
+UserService.LaunchFriendRequestFlow(targetUserId).OnComplete(msg =>
+{
+    if (msg.IsError)
+    {
+        Log($$"Launch friend request failed {msg.Error}");
+        return;
+    }
+
+    var launchResult = msg.Data;
+    Log($$"Launch friend request ok:DidCancel={launchResult.DidCancel},DidSend={launchResult.DidSendRequest}");
+});
+
+// 获取好友列表
+UserService.GetFriends().OnComplete(msg =>
+{
+    if (msg.IsError)
+    {
+        Log($$"Get Friends error {msg.Error}");
+        return;
+    }
+
+    var userList = msg.Data;
+    Log($$"Your friends count:{userList.Count}");
+});
+
+
+
+*在中国大陆地区发布的应用
+
+*在非中国大陆地区发布的应用
+
+添加并保存以下信息：
+*Client ID：你的应用 ID
+*Oidc Name：oidc-pico-cn
+*Issuer(URL)：https://platform-cn.picovr.com
+
+添加并保存以下信息：
+*Client ID：你的应用 ID
+*Oidc Name：oidc-pico-global
+*Issuer(URL)：https://platform-us.picovr.com
+
+using System;
+using Pico.Platform;
+using Unity.Services.Authentication;
+using Unity.Services.Core;
+using UnityEngine;
+using Task = System.Threading.Tasks.Task;
+
+public static class PICOAuth
+{
+    private static async System.Threading.Tasks.Task<(string, string)> GetProviderNameAndIDToken()
+    {
+        string providerName, idToken;
+        {
+            // 获取设备的国家/地区信息
+            var systemInfo = ApplicationService.GetSystemInfo();
+            // 根据设备所在地区，选择合适的 Identity Provider
+            providerName = systemInfo.IsCnDevice ? "oidc-pico-cn" : "oidc-pico-global";
+        }
+        {
+            // 获取用户的 ID Token
+            var message = await UserService.GetIdToken().Async();
+            if (message.IsError)
+            {
+                Debug.LogError(message.Error);
+                throw new Exception("Failed to get id token");
+            }
+
+            idToken = message.Data;
+        }
+        return (providerName, idToken);
+    }
+ 
+    public static async Task SignInWithPICO()
+    {
+        var (provider, idToken) = await GetProviderNameAndIDToken();
+        try
+        {
+            await AuthenticationService.Instance.SignInWithOpenIdConnectAsync(provider, idToken);
+            Debug.Log($$"SignIn is successful. {AuthenticationService.Instance.PlayerId}");
+        }
+        catch (Exception ex)
+        {
+            Debug.LogException(ex);
+        }
+    }
+
+    public static async Task LinkWithPICO()
+    {
+        var (provider, idToken) = await GetProviderNameAndIDToken();
+        try
+        {
+            await AuthenticationService.Instance.LinkWithOpenIdConnectAsync(provider, idToken);
+            Debug.Log($$"Link is successful. {AuthenticationService.Instance.PlayerId}");
+        }
+        catch (AuthenticationException ex) when (ex.ErrorCode == AuthenticationErrorCodes.AccountAlreadyLinked)
+        {
+            // 向用户弹出错误信息
+            Debug.LogError("This user is already linked with another account. Log in instead.");
+        }
+        catch (AuthenticationException ex)
+        {
+            // 将错误码与 AuthenticationErrorCodes 进行比对
+            // 向用户展示正确的错误信息
+            Debug.LogException(ex);
+        }
+        catch (RequestFailedException ex)
+        {
+            // 将错误码与 CommonErrorCodes 进行比对
+            // 向用户展示正确的错误信息
+            Debug.LogException(ex);
+        }
+    }
+}
+
+
+
+接口
+
+说明
+
+UserService.GetAccessToken
+
+获取用户的 Access Token。
+
+UserService.GetLoggedInUser
+
+获取当前登录用户的信息。
+
+UserService.Get
+
+获取指定用户信息。返回的用户信息字段同 UserService.GetLoggedInUser 一致。
+
+UserService.LaunchFriendRequestFlow
+
+向其他用户发送好友申请。
+
+UserService.GetFriends
+
+获取当前登录用户的好友列表。
+提示：只有当前用户和其好友都使用过该应用，并且都授权该应用使用好友关系，才可获取好友列表。
+
+UserService.GetNextUserListPage
+
+获取下一页好友列表。
+
+UserService.RequestUserPermissions
+
+向用户申请特定的权限，例如查看个人信息权限、查看运动数据权限等。
+
+UserService.GetAuthorizedPermissions
+
+查看用户已授予的权限。
+
+UserService.EntitlementCheck
+
+验证用户是否有权限使用你的应用。即：用户是否购买该应用或是否通过其他合法手段获得该应用的使用权。可用于保护应用的版权。 
+
+UserService.GetIdToken
+
+获取用户的 ID Token，用于 OIDC 登录。
+
+UserService.GetOrgScopedID
+
+获取用户在你的组织创建的所有应用内的唯一 ID。

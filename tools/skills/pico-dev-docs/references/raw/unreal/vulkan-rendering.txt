@@ -1,0 +1,27 @@
+Vulkan 渲染
+========================================
+PICO Unreal Integration SDK 支持Vulkan 渲染。本文档介绍如何开启 Vulkan 渲染功能。
+*注意事项
+*请勿同时勾选 支持 Vulkan（Support Vulkan） 和 支持 OpenGL ES（Support OpenGL ES），Vulkan 和 OpenGL ES 不会在一个应用内同时生效。
+*开启步骤
+*请基于你使用的引擎版本开启 Vulkan 渲染。
+ 
+*已知问题
+*开启 Vulkan 渲染设置下，如果你开启了注视点渲染功能，场景中的 LandScape 地形会有渲染异常。
+
+**
+
+*在 Unreal Editor 上方工具栏，点击 编辑（Edit） > 项目设置（Project Settings） > 平台（Platforms） > Android。
+*移动到 构建（Build） 选项卡下，勾选 支持 Vulkan（Support Vulkan）。
+* 
+
+
+*在 UE 4.27 版本中开启 Vulkan 渲染，你需要修改配置文件，然后在编辑器中勾选 Vulkan 渲染。参考以下步骤：
+*在 Engine/Config 目录下，打开 BaseDeviceProfiles.ini 配置文件。在 Android DeviceProfile 的参数中，如果有 r.Android.DisableVulkanSupport 这一参数，将该参数值设置为 0；否则，不作修改。
+* 
+*在 Unreal 编辑器上方工具栏，点击 编辑（Edit） > 项目设置（Project Settings） > 平台（Platforms） > Android。
+*在 构建（Build） 选项卡下，勾选 支持 Vulkan（Support Vulkan），以启用 Vulkan 渲染。
+* 
+
+
++CVars=r.Android.DisableVulkanSupport=0

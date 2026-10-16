@@ -1,0 +1,384 @@
+透视
+========================================
+透视（Passthrough）技术可以打破 VR 头显提供的全封闭式虚拟环境。其通过头显上的摄像机实时采集周围环境的视图，然后通过图像处理算法将真实场景画面呈现在头显屏幕上，使用户可以直接在头显屏幕上浏览现实场景。最终，透视画面可以与应用内的虚拟场景融合，呈现混合现实效果。 
+透视画面由 PICO 系统直接处理并上屏展示，应用程序无法获取用户的任何物理环境信息。
+* 
+*环境要求
+*SDK 版本：
+**
+*PICO 设备型号：PICO Neo3 系列、PICO 4 系列、PICO 4 Ultra 系列
+*PICO 设备系统版本：5.7.0 及以上
+*注意事项 
+*使用 ”透视“ 能力时，需禁用场景内的所有后处理能力，否则透视无法生效。 
+*若你在项目中使用了通用渲染管线（URP），则需要禁用 HDR，否则透视无法生效。
+* 
+*准备工作
+*第一步：设置场景内的主相机
+*选中场景中的主相机（通常为 Main Camera）。 
+*在 Camera 面板处，为主相机进行以下设置： 
+*将 Clear Flags 设置为 Solid Color。 
+*设置完成后，相机渲染每一帧前，会在逐像素过程中清除每个像素的颜色值，然后将需要渲染的颜色值（即接下来设置的 Background 颜色值）写入。 
+* 
+*在 Background 处，点击颜色条，打开 Color 窗口，将 R、 G、 B、 A 值都设置为 0，或直接将 Hexadecimal 设置为 000000。 
+*场景的背景颜色已被设置为黑色，Alpha 通道已被设置为完全透明。 
+* 
+* 第二步：启用 OpenXR Passthrough 拓展
+*前往 Edit > Project Settings > XR Plug-in Management > OpenXR。
+*在 OpenXR Feature Groups 区域，勾选 OpenXR Passthrough 选框。
+*已开启透视能力。
+* 
+*设置全场景透视
+全场景透视（Reconstruction Passthrough）可以将整个背景作为透视层。现实世界作为背景实时显示在 PICO 头显屏幕上，场景中的虚拟物体将覆盖在背景图上，形成穿透式 AR 场景。
+* 
+*方式一：调用接口
+*在代码编辑器中打开你的脚本文件，然后在 Awake 或者 Start 部分调用 EnableSeeThroughManual 接口，为应用开启透视。 
+*暂停应用后，透视将自动失效。因此，需在 OnApplicationPause 部分再次调用 EnableSeeThroughManual 接口，以便应用恢复后重启透视。 
+*代码示例如下：
+* 
+*方式二：使用 AR Foundation
+*在 OpenXR Feature Groups 区域，启用 OpenXR Passthrough。
+*点击 OpenXR Passthrough 选框右侧的设置按钮，然后在弹窗中勾选 Is Camera Subsystem 选框。
+* 
+*设置投射型透视
+你可以指定背景中的某一块区域作为透视层，即投射型透视（Projected Passthrough）。
+* 
+*方式一：使用 Passthrough Layer Feature 脚本
+通过 Passthrough Layer Feature 脚本，可以将某个 3D 物体外轮廓框定的区域作为透视层。以 Quad 物体为例，下图中橘色方框内的部分将作为透视层。
+* 
+*操作步骤如下：
+*在 Hierarchy 窗口中，选中 XR Origin。
+*在 Inspector 窗口中，为 XR Origin 添加 PICO Manager (Script) 组件。
+*在 Hierarchy 窗口中，点击 + > 3D Object，然后从快捷菜单中选择一个 3D 物体，将其添加至场景内。
+*选中该 3D 物体。
+*在 Inspector 窗口中，为该 3D 物体添加 Passthrough Layer Feature (Script) 组件。
+* 
+*在投射型透视区域使用 UnderlayHole 材质（位于 /Packages/PICO OpenXR Plugin/Assets/Resources/Meterials）。
+*方式二：调用接口
+*在 Hierarchy 窗口中，选中 XR Origin。
+*在 Inspector 窗口中，为 XR Origin 添加 PICO Manager (Script) 组件。
+*调用 CreateTriangleMesh 接口，通过创建三角网格的方式，指定透视区域。
+* 
+*代码示例如下：
+* 
+*在投射型透视区域使用 UnderlayHole 材质（位于 /Packages/PICO OpenXR Plugin/Assets/Resources/Meterials）。
+*设置透视特效
+若你想实现更多样的视觉效果，可以自定义透视画面相关参数，包括亮度、对比度、饱和度和 ColorMap。
+相关接口如下：
+*
+使用示例如下：
+ 
+ 
+ 
+*API 参考
+*EnableSeeThroughManual
+ 
+为应用开启/关闭透视。 
+参数说明
+*
+返回值
+*true：成功 
+*false：失败
+*CreateTriangleMesh
+ 
+创建三角网格，将其作为透视区域。
+参数说明
+*
+返回值
+*true：成功
+*false：失败
+*SetBrightnessContrastSaturation
+ 
+设置透视画面相关参数。
+参数说明
+*
+*SetColorMapbyMonoToMono
+ 
+设置 MonoToMono 的 ColorMap。让应用程序定义一个映射，用 ColorMap 中定义的灰度颜色值替换透视图像中的每个输入亮度值。该映射在任何其他效果（如边缘）渲染之前应用。
+参数说明
+*
+*SetColorMapbyMonoToRgba
+ 
+设置 MonoToRgba 的 ColorMap。让应用程序定义一个映射，用 RGBA 颜色值替换透视图像中的每个输入亮度值。该映射在任何其他效果（如边缘）渲染之前应用。
+参数说明
+*
+*SetPassthroughStyle
+ 
+更新透视画面相关参数。
+*PassthroughStyle
+ 
+PassthroughStyle 结构体说明如下：
+*
+*已知问题
+*若设备的系统版本为 5.8.0，调用 SetColorMapbyMonoToMono 和 SetColorMapbyMonoToRgba 接口为全场景透视（Reconstruction Passthrough）设置特效会导致黑屏。
+*对于通过使用 Passthrough Layer Feature 脚本或调用 CreateTriangleMesh 接口设置的投射型透视，自定义的透视层会存在闪动问题，且后续设置的透视特效皆无法生效。
+*在当前应用内重置安全区，或退出当前应用然后再重置安全区后，透视层的位置会发生变化。
+
+
+
+功能
+
+SDK 版本要求
+
+全场景透视
+
+1.1.0 及以上。
+
+*投射型透视
+*透视特效
+
+1.2.0 及以上。
+
+// 开启透视 
+void Awake() 
+{ 
+    PassthroughFeature.EnableSeeThroughManual(true); 
+} 
+ 
+// 应用恢复后，再次开启透视 
+void OnApplicationPause(bool pause) 
+{ 
+    if (pause)
+    {
+        PassthroughFeature.EnableSeeThroughManual(false);
+    }
+    else
+    {
+        PassthroughFeature.EnableSeeThroughManual(true);
+    }
+} 
+
+PassthroughLayerFeature 和 PassthroughFeature.EnableSeeThroughManual 互斥，选择其一即可。
+
+目前，Runtime 仅支持创建一个 Layer，请勿同时使用 API 和 Passthroughlayer.cs 创建网格。
+
+GeometryInstanceTransform Transform = new GeometryInstanceTransform();
+Vector3[] _verts = {new Vector3(0, 0, 0), new Vector3(1, 0, 0), new Vector3(0, 1, 0), new Vector3(1, 1, 0)};
+int[] _indexes = {0, 1, 2, 2, 1, 3};
+int _id = 1;
+Transform.pose.position.x = 0; Transform.pose.position.y = 0; Transform.pose.position.z = -1;
+Transform.pose.orientation.x = 0; Transform.pose.orientation.y = 0; Transform.pose.orientation.z = 0; Transform.pose.orientation.w = 0;
+Transform.scale.x = 1; Transform.scale.y = 1; Transform.scale.z = 1;
+bool isCreateTriangleMesh = PassthroughFeature.CreateTriangleMesh(_id, _verts, _indexes, Transform);
+
+
+
+接口
+
+说明
+
+SetBrightnessContrastSaturation
+
+设置透视画面的亮度、对比度和饱和度。
+
+SetColorMapbyMonoToMono
+
+设置 MonoToMono 的 ColorMap。
+
+SetColorMapbyMonoToRgba
+
+设置 MonoToRgba 的 ColorMap。
+
+SetPassthroughStyle
+
+更新透视画面相关参数。
+
+public void SetBrightnessContrastSaturation()
+{
+    // 设置透视画面的亮度、对比度和饱和度
+    PassthroughFeature.SetBrightnessContrastSaturation(ref passthroughStyle, brightness,contrast,saturation);
+    // 将设置的特效更新至透视层
+    PassthroughFeature.SetPassthroughStyle(passthroughStyle);
+}
+
+public void MONO_TO_MONO()
+{
+    // 设置 Mono 值
+    MONOvalues = new int[PassthroughFeature.XR_PASSTHROUGH_COLOR_MAP_MONO_SIZE_FB];
+    for (int i = 0; i < PassthroughFeature.XR_PASSTHROUGH_COLOR_MAP_MONO_SIZE_FB; ++i)
+    {
+        MONOvalues[i] = i;
+    }
+    PassthroughFeature.SetColorMapbyMonoToMono(ref passthroughStyle, MONOvalues);
+    // 将设置的特效更新至透视层
+    PassthroughFeature.SetPassthroughStyle(passthroughStyle);
+}
+
+public void MONO_TO_RGBA()
+{
+    // 设置 RGBA 值
+    values = new Color[PassthroughFeature.XR_PASSTHROUGH_COLOR_MAP_MONO_SIZE_FB];
+    for (int i = 0; i < PassthroughFeature.XR_PASSTHROUGH_COLOR_MAP_MONO_SIZE_FB; ++i)
+    {
+        float colorValue = i / 255.0f;
+        values[i] = new Color(0.0f, colorValue, 0.0f, 1.0f);
+    }
+    PassthroughFeature.SetColorMapbyMonoToRgba(ref passthroughStyle, values);
+    // 将设置的特效更新至透视层
+    PassthroughFeature.SetPassthroughStyle(passthroughStyle);
+}
+
+public static bool EnableSeeThroughManual(bool value)
+
+
+
+参数
+
+说明
+
+value 
+
+*true：开启 
+*false：关闭 
+
+public static unsafe bool CreateTriangleMesh(int id, Vector3[] vertices, int[] triangles,
+    GeometryInstanceTransform transform)
+
+
+
+参数
+
+说明
+
+id
+
+图层 ID。
+
+vertices
+
+顶点数据。
+
+triangles
+
+三角数据。
+
+transform
+
+坐标，包括位置和旋转。
+
+public static unsafe void SetBrightnessContrastSaturation(ref PassthroughStyle style, float brightness ,
+    float contrast , float saturation )
+
+
+
+参数
+
+说明
+
+style
+
+SDK 会使用传入的亮度值、对比度值和饱和度值生成一个 Color Map，然后最终生成 PassthroughStyle 结构体中的 TextureColorMapType、TextureColorMapDataSize 和TextureColorMapData 数据。
+
+brightness
+
+指定亮度值。取值范围：[0,1]。
+
+contrast
+
+指定对比度值。取值范围：[0,1]。
+
+saturation
+
+指定饱和度值。取值范围：[0,1]。
+
+public static unsafe void SetColorMapbyMonoToMono(ref PassthroughStyle style, int[] values)
+
+
+
+参数
+
+说明
+
+style
+
+SDK 会使用传入的 values 值生成一个 Color Map，然后最终生成 PassthroughStyle 结构体中的 TextureColorMapType、TextureColorMapDataSize 和TextureColorMapData 数据。
+
+values
+
+传入整数数组，该数组定义了映射关系。数组中的每个元素对应于特定的输入亮度级别，整数值表示该输入亮度级别的期望输出亮度级别。
+
+public static unsafe void SetColorMapbyMonoToRgba(ref PassthroughStyle style, Color[] values)
+
+
+
+参数
+
+说明
+
+style
+
+SDK 会使用传入的 values 值生成一个 Color Map，然后最终生成 PassthroughStyle 结构体中的 TextureColorMapType、TextureColorMapDataSize 和TextureColorMapData 数据。
+
+values
+
+传入 RGBA 颜色数组，取值范围：[0,1]。该数组定义了映射关系。数组中的每个元素对应于特定的亮度级别，并且 Color 值表示该亮度级别所对应的 RGBA 颜色。
+
+public static void SetPassthroughStyle(PassthroughStyle style)
+
+  public struct PassthroughStyle
+    {
+        public bool enableEdgeColor;
+        public bool enableColorMap;
+        public float TextureOpacityFactor;
+        public Color EdgeColor;
+        public PassthroughColorMapType TextureColorMapType;
+        public uint TextureColorMapDataSize;
+        public IntPtr TextureColorMapData;
+    }
+
+
+
+字段
+
+类型
+
+说明
+
+enableEdgeColor
+
+bool
+
+是否启用定义边缘渲染颜色：
+*true：启用，Runtime 会读取 EdgeColor。
+*false：不启用。
+
+enableColorMap
+
+bool
+
+是否启用 ColorMap 特效：
+*true：启用，Runtime 会读取 TextureColorMapType、TextureColorMapDataSize、和 TextureColorMapData。
+*false：不启用。
+
+TextureOpacityFactor
+
+float
+
+透明度。取值范围：[0,1]。
+
+EdgeColor
+
+Color
+
+边缘渲染颜色。可指定任意颜色，该颜色会作为透视图像边缘的颜色。
+
+TextureColorMapType
+
+
+PassthroughColorMapType
+
+Color Map 类型，由调用的具体接口决定。值如下：
+*PassthroughColorMapType.BrightnessContrastSaturation
+*PassthroughColorMapType.MonoToMono
+*PassthroughColorMapType.MonoToRgba
+
+TextureColorMapDataSize
+
+uint
+
+Color Map 的数据大小，由 SDK 自动转化。
+
+TextureColorMapData
+
+IntPtr
+
+Color Map 的数据地址，由 SDK 自动生成。

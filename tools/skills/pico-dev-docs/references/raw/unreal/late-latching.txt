@@ -1,0 +1,44 @@
+延迟锁定
+========================================
+延迟锁定（Late Latching）是一种降低运动到光子延迟的技术。运动到光子延迟（Motion-to-Photon Latency）是指从用户运动开始，一直到对应的图像发生变化、并通过头戴式显示设备映射到人眼上面全部的时间。当延迟时间很长时，用户可能会感到头晕、恶心或失去沉浸感，导致体验下降。
+因此，在开发 VR 应用时，你既需要保证画面渲染质量，又需要尽可能地降低画面延迟。Late Latching 可以帮助应用消除多达 1 帧的头戴和手柄动作延迟，从而有效降低运动到光子延迟，提升用户体验质量。
+*环境要求
+*SDK 版本：2.1.5 及以上版本（如果你使用 UE PICO 分支 5.1 版本，无需再导入 SDK）
+*引擎版本：UE 4.27 版本或 UE 5 版本的 PICO 分支 
+*PICO 设备支持：Neo3 和 PICO 4 系列
+*PICO 设备系统版本：5.5.0 及以上版本
+*技术原理
+Late Latching 将获取动作输入的时间尽可能延后，即在渲染开始前的最后一刻给 GPU 提供头戴和手柄动作输入，从而尽可能减少延迟。具体而言，Late latching 功能可为你的应用带来以下提升： 
+*减少方向预测延迟，从而减少因方向扭曲而导致的黑影。 
+*减少位置预测延迟，从而减轻近距离对象的晃动。 
+*使手柄的运动更加精确。
+ 
+*开启 Late Latching
+*前提条件
+开启 Late Latching 前，请先启用多视图渲染和 Vulkan 支持以提升性能，实现更好的视觉效果：
+*在编辑器左上方，前往 编辑 (Edit) > 项目设置 (Project Settings) > 引擎 (Engine) > 渲染 (Rendering)，在 VR 选卡下，勾选 移动多视图 (Enable Multi-View)。具体操作可参考此文档。
+*在编辑器左上方，前往 编辑 (Edit) > 项目设置 (Project Settings) > 平台 (Platforms) > Android > 构建 (Build) 选卡下，勾选 支持 Vulkan (Support Vulkan)。
+*具体步骤
+*方式一：在编辑器中开启 Late Latching
+*在编辑器左上方，前往 编辑 (Edit) > 项目设置 (Project Settings) > 插件 (Plugins) > PICOXR Settings。
+*在 Feature 选项卡下，勾选 Enable Late Latching。
+* 
+*方式二：使用蓝图动态启停 Late latching
+*你可以通过 PXR Set Late Latching Enable 接口动态启停 Late latching。也可以通过设置引擎控制台命令 r.EnableLateLatching 为 1 或 0 实时开关 Late Latching。蓝图示例如下：
+ 
+*调试方法
+*你可以通过设置引擎控制台命令 r.EnableLateLatchingDebugMode 为 1 或者 0，随时动态启停调试功能，诊断 Late Latching 是否可以正常运行。
+开启调试功能后，如果场景完全变为红色且手柄偏移，则证明 Late Latching 正常运行。如果场景未完全变红或手柄未偏移则说明 Late Latching 存在故障。如果场景未完全变红，你需检查是否所有自定义的新增渲染通道均添加至 RDG。这是因为自 UE5.1 之后，所有高级渲染功能均需基于 RDG 开发。
+*以下视频展示开启调试功能后且 Late Latching 运行正常的效果：
+ 
+*查看收益
+在大多数场景下，开启 Late latching 后，平均会有 2-5ms 的 MTP 收益。你可以通过 logcat 来获取当前应用的 MTP 数据。使用 logcat 抓取当前的运行 log 后，在 log 中过滤 “PxrMetric” 关键词即可获得如下 log，log 中的 MTP 数值即为这一帧的渲染延迟数据：
+ 
+你可以通过引擎控制台命令 r.EnableLateLatching 实时开关 Late latching 来对比这项数据的变化。
+*已知问题 
+若同时使用 Late Latching 和合成层（Overlay/Underlay），会导致合成层抖动。
+*了解更多
+*PICO 在虚幻引擎 - PICO 分支上支持了延迟锁定功能，要了解实现的技术细节，你可登录开发者社区阅读博客将 Late Latching 引入虚幻引擎 5。
+针对有低延时要求的应用，你可配合使用 Late Latching 和 Application SpaceWarp （应用空间扭曲）。 AppSW 技术允许应用以实际屏幕刷新率的一半刷新率来渲染画面。要了解更多 AppSW 信息，可阅读此文档。
+
+“I/PxrMetric( 9128): FPS=43/72,MTP=32.60ms,AppSW=off,FrmEarly=2,FrmLate=3,FrmCpu=2.95ms,FrmGpu=23.81ms,FrmTime=28.83ms,VsyncDelay=3,GPU=98%/587Mhz,GPUTemp=66.3C,LayerCnt=1,Pkg=com.epicgames.test,FrmId=756”，
