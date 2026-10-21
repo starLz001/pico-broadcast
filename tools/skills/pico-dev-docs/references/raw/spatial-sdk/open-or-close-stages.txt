@@ -1,0 +1,116 @@
+打开或关闭 Stage
+========================================
+在应用启动时，默认的空间容器会首先被打开，展示应用的首个界面。另外，你也可以使用 PICO Spatial SDK 打开或关闭空间容器。
+*打开 Stage
+你可以通过 openStage() 函数打开一个 Stage，调用时需指定的参数如下：
+*
+*openStage() 是一个 suspend 函数，你需要在 Coroutine 或另一个 suspend 函数中调用该函数。代码示例如下：
+ 
+ 
+*关闭 Stage
+你可以通过 closeStage() 函数关闭一个 Stage。closeStage 是一个 suspend 函数，你需要在 Coroutine 中调用该函数。
+* 
+如果你想在一个 WindowContainer 关闭的同时，也关闭 Stage（例如关闭主页 WindowContainer 时，自动关闭仍然打开的 Stage），可以这样实现：
+ 
+
+
+
+
+
+参数
+
+是否必填
+
+描述
+
+id
+
+是
+
+声明 Stage 时设置的 ID（即名字）。
+
+style
+
+否
+
+Stage的样式，用于控制真实环境的视频透视（Video see-through, VST）与虚拟场景的融合方式，以及基于图像的环境光照（Image-based lighting, IBL）和虚拟实体的渲染行为。
+*Automatic：样式由系统决定。当前，系统的默认设置为 Mixed 样式。
+*Mixed：虚拟实体始终被渲染，且基于图像的环境光照完全来自真实环境的视频透视。
+*下图展示了 Mixed 样式下的场景。在这个示例中，一个虚拟的金属小球被天空球包裹。尽管天空球使用了“夜间美术馆”贴图并开启了基于图像的环境光照，但小球反射的仍是真实环境（卧室）的视频透视。这是因为 Mixed 模式下的环境光照完全来自真实房间的视频透视，而非夜间美术馆。
+* 
+*Progressive：允许你通过调节沉浸度从而改变真实环境的视频透视与虚拟实体的融合方式。你可以通过 Stage 的 immersion 参数设置沉浸度。沉浸度的取值范围为 0~100：
+*immersion 为 0：体验接近 Mixed 样式，你仍然可以看到真实环境。但与 Mixed 样式不同的是，虚拟实体不被渲染。因此，金属球和夜间美术馆都会消失。
+*immersion 大于 0 且小于 100：随着immersion数值提高：真实环境的渲染程度逐渐降低；虚拟实体渲染的程度逐渐提升。
+*immersion 为 100：等同于 Full 样式。详情参阅 Full 样式的描述。
+*下图展示了 Progressive 样式下 immersion 为 50 时的场景。在这个示例中，一个虚拟的金属小球被天空球包裹。天空球使用了“夜间美术馆”贴图并开启了基于图像的环境光照。你可以看到，金属球的反射效果是真实环境（卧室）的视频透视与夜间美术馆的的混合。其中，金属球的正面是真实环境的视频透视，边缘和背面是美术馆。
+* 
+*Full：虚拟实体始终被渲染，且基于图像的环境光照完全来自虚拟场景。因此，如果你不设置虚拟场景，应用将因缺少光照而显示为纯黑背景。
+*下图展示了 Full 样式下的场景。在这个示例中，一个虚拟的金属小球被天空球包裹。天空球使用了“夜间美术馆”贴图并开启了基于图像的环境光照。你可以看到，金属球完全反射虚拟的夜间美术馆。真实环境（卧室）被完全屏蔽。
+* 
+
+bundle
+
+否
+
+自定义的透传数据，可在 Stage 的内容根节点获取。
+
+upperLimbRenderMode
+
+否
+
+控制上肢在 Stage 中的可见效果。
+*UpperLimbRenderMode.Default：跟随系统设置。
+*UpperLimbRenderMode.Visible：上肢可见。
+*UpperLimbRenderMode.Hidden：上肢不可见。
+
+val coroutine = rememberCoroutineScope()
+// 方式一（推荐）：使用 com.pico.spatial.ui.platform.containers.SpatialNavigator.openStage
+val navigator = LocalSpatialNavigator.current
+coroutine.launch { 
+    val result = navigator.openStage("HelloStage", StageStyle.Full)
+    when (result) {
+        is OpenStageResult.Allowed -> {
+            // Stage 获准打开
+            Log.i("Stage", "Stage successfully opened.")
+        }
+        is OpenStageResult.NotAllowed -> {
+            // 被系统策略拦截
+            Log.w("Stage", "Opening Stage is not allowed.")
+        }
+        is OpenStageResult.Error -> {
+            // 技术性异常
+            Log.e("Stage", "Failed to open Stage: $${result.code} - $${result.reason}")
+        }
+    }
+}
+// 方式二：使用 com.pico.spatial.ui.platform.containers.openStage
+val context = LocalContext.current
+coroutine.launch { 
+    val result = context.openStage("HelloStage", StageStyle.Full) 
+    // 同样建议处理 result 返回值
+}
+
+*一个应用可以拥有多个 Stage，但一次只能在空间中打开一个 Stage，无法同时打开多个。
+*你需要为 Stage 配置自定义的天空盒和基于贴图的光照（IBL），否则打开 Stage 之后会呈现全黑的环境。关于如何配置 IBL，参考《基于贴图的光照》。
+*style 参数在 Stage 打开后不可动态修改，只能在每次调用 openStage() 时指定。
+
+由于空间中只能存在一个被打开的 Stage。因此，不需要在 closeStage 中指定需关闭的 Stage，系统会关闭当前唯一的 Stage。
+
+@Composable
+fun HomePage() {
+    val navigator = LocalSpatialNavigator.current
+    val coroutine = rememberCoroutineScope()
+    val lifecycleOwner = LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_DESTROY) {
+                coroutine.launch(Dispatchers.Main.immediate) { 
+                    navigator.closeStage() 
+                }
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
+    // ...
+}

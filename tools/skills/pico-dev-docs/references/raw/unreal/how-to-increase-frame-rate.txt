@@ -1,0 +1,13 @@
+如何提高游戏的帧率？
+========================================
+你可以按照以下两种方式之一来提高游戏帧率。
+*方式 1：取消使用环境光遮蔽
+若 VR 应用对全局光照的要求不是太高，可关闭环境光遮蔽。
+*在编辑器左上角，点击 编辑（Edit） > 项目设置（Project Settings） > 引擎（Engine） > 渲染（Rendering）。
+*向下滑动到 默认设置（Default Settings） 下，取消勾选 环境光遮挡（Ambient Oculusion） 与 环境光遮蔽静态部分（Ambient Oculusion Static Fraction）。
+* 
+*方式 2：取消勾选 Mobile HDR
+*在编辑器左上角，点击 编辑（Edit） > 项目设置（Project Settings） > 引擎（Engine） > 渲染（Rendering）。
+*在 移动平台（Mobile） 下，取消勾选 移动 HDR（Mobile HDR）。
+* 
+

@@ -1,0 +1,169 @@
+独立追踪
+========================================
+PICO 体感追踪器（正式版）可被绑定于物体上进行位置追踪。在独立追踪模式下，如已连接配对的体感追踪器在 PICO VR 一体机的可见范围内，则可实时追踪并输出体感追踪器的 6DoF 信息，用于追踪体感追踪器本体或绑定的物体。
+* 
+*应用场景
+以下为 “独立追踪” 功能的部分应用场景。这些场景需要开发者自行开发，PICO 官方仅提供对 PICO 体感追踪器的追踪能力。
+*运动 / 游戏器械追踪
+*将追踪器固定在乒乓球拍、棒球拍、弓箭、枪等运动器械上，通过追踪器追踪现实中运动器械的位置，并在 XR 游戏中进行互动，为用户带来更真实的手感和更佳的发挥。结合追踪器自身的扩展外设接口，可接收或传递外设的数据，支持如扣动扳机、击球振动反馈等能力。
+*办公用具追踪
+* 将追踪器固定在办公用具（例如笔）上，通过追踪器推测笔尖位置，可在 XR 场景中提供更真实的书写体验。结合追踪器自身的外设接口，配合支持压感、按键的笔身，可带来更丰富的输入体验。
+*手势辅助
+*将追踪器固定在手部追踪手套或裸手上，通过追踪器追踪现实中人手的位置，结合手部追踪器或视觉的手势识别，为用户提供更精准、低延迟、可覆盖盲区的手部追踪能力。
+*注意事项
+*独立追踪模式下，若体感追踪器与一体机之间的距离超过 1 米或进入一体机盲区，则会导致追踪数据不准确或无法更新。请在调试或正式使用时确保体感追踪器在有效追踪范围内。
+*独立追踪模式与全身动捕模式互斥，在开启独立追踪模式后，无法输出全身动捕数据。
+*环境要求
+*SDK 版本：3.0.0
+*PICO 设备型号：PICO Neo3、PICO 4 和 PICO 4 Ultra 系列
+*PICO 设备系统版本：5.11.0 及以上
+*PICO 体感追踪器（正式版）
+*前提条件
+*已在项目中导入 PICO Unreal Integration SDK 并完成项目配置。
+*接入独立追踪
+此部分介绍如何为你的应用接入独立追踪功能，包括以下两部分：
+*在 Unreal 编辑器内为应用开启运动追踪；
+*在你的项目代码中调用独立追踪接口，实现该功能。
+*第一步：在编辑器中启用独立追踪能力 
+*在 UE 编辑器中创建一个项目或打开已有项目。 
+*在编辑器左上角，点击 编辑（Edit） > 项目设置（Project Settings） > 插件（Plugins） > PICOXR Settings。 
+*移动到 Feature 选项卡下，勾选 Enable Body Tracking。 
+* 
+你已为应用开启独立追踪能力。 
+*第二步：检查当前追踪模式
+调用 PXR_CheckMotionTrackerModeAndNumber 接口，检查当前体感追踪器的模式和数量是否符合预期。该接口会打开以下面板，Tracker Type 即期望的追踪模式，BODY_TRACKING_MODE 为全身动捕模式，OBJCET_TRACKING_MODE 为独立追踪模式。Tracker Number 为期望的追踪器数量（0-3）。
+* 
+若当前的追踪模式不是 “独立追踪”，该接口会打开以下面板，用户需要手动在面板上切换并完成校准。
+* 
+*第三步：获取 PICO 体感追踪器信息
+通过调用以下接口，你可以获取 PICO 体感追踪器数据，包括连接状态、型号、位置和当前追踪模式等。此外，在 “独立追踪” 模式下，你还可以获取体感追踪器的位置。接口列表如下，接口的详细说明参阅 API 参考。
+*
+*获取体感追踪器的连接状态相关信息
+通过 PXR_GetMotionTrackerConnectState 接口，你可以获取独立追踪连接状态 ConnectState。在获取数据时，你还可以在 Break_PxrMotionConnectState 中追踪连接状态相关数据，包括追踪器数量 Tracker Sum 以及追踪器序列号数组 Trackers SN Array。具体示例如下：
+* 
+*获取体感追踪器的版本
+通过 PXR_GetMotionTrackerDeviceType 接口，你可以获取体感追踪器的版本，包括 PICO MOTION TRACKER 1 以及 PICO MOTION TRACKER 2，具体示例如下：
+* 
+*获取当前的追踪模式
+通过 PXR_GetMotionTrackerMode 接口，你可以获取当前追踪模式，包括全身动捕模式 BODY TRACKING MODE 以及独立追踪模式 OBJECT TRACKING MODE，具体示例如下：
+* 
+*获取 “独立追踪” 模式下的体感追踪器的位置
+通过 PXR_GetMotionTrackerLocations 接口，你可以获取独立追踪模式下追踪器位置，WorldToMetersScale 是单位米缩放比，默认为 100，Tracker SN 则是要获取位置数据的追踪器序列号，通过该接口，你将会获得该追踪器序列号对应的位置数据，以及当前数据的可信度，具体示例如下：
+* 
+*数据可信度如下：
+ 
+*获取外部设备数据
+通过 PICO 体感追踪器的 Type-C 接口，可以将外部设备与 PICO 头戴连接，然后在外部设备和你的应用间传递如外部设备电量、按键操作、振动指令等信息。例如，与带有振动能力的球拍相连后，可以在击中球的时候为用户提供振动反馈。此外，该功能支持开发者自定义的拓展协议。
+接口列表及示例如下，接口的详细说明参阅 API 参考。
+*
+*设置透传数据功能状态
+你可以通过 PXR_SetExtDevTrackerPassDataState 接口来设置透传数据功能状态，True 为启用透传数据功能，false 则为关闭。
+* 
+*获取当前扩展外设追踪状态
+你可以通过 PXR_GetExtDevTrackerConnectState 接口获取当前扩展外设追踪状态。在 Break_PxrExtDevTrackerConnectState以及 Break_PXRExtDevTrackerInfo 中你可以获得详细的外部设备连接状态，连接数量，外设序列号，外设充电状态及电量等信息。
+* 
+* 
+*设置独立外设宽频震动
+你可以通过 PXR_SetExtDevTrackerMotorVibrate 接口，设置独立外设宽频震动。你可以输入外设的序列号 Track SN，并设置马达震动强度 Level，震动频率 Frequency 以及震动时间 Duration。具体示例如下：
+* 
+*设置独立外设通道数据
+你可以通过 PXR_SetExtDevTrackerByPassData设置独立外设通道数据。 你需要输入通道数据 PassData，最多 15 个，多余无效。当 PICO 提供的接口不能满足开发者时，开发者也可以自定义协议，将增加的接口放入 PassData 里。
+* 
+*获取独立外设通道数据
+你可以通过调用 PXR_GetExtDevTrackerByPassData 接口，在输入有效的通道数据数组后，获取独立外设通道数据。具体示例如下：
+* 
+*获取独立外设电量
+你可以通过 PXR_GetExtDevTrackerBattery 获取独立外设电量以及充电状态相关信息。
+* 
+*获取独立外设键值
+你可以通过 PXR_GetExtDevTrackerKeyData 获取独立外设键值，具体示例如下：
+* 
+*获取独立外设连接状态变化通知
+你可以通过 DataExtDevConnectEventDelegate_Event 回调获取独立外设的连接状态变化通知。输出内容包括设备 ID 以及设备连接状态，1 为连接，0 为断连。
+* 
+*获取独立外设电量状态变化通知
+你可以通过 DataExtDevBatteryEventDelegate_Event 回调获取独立外设的连接状态变化通知。
+* 
+*获取独立外设透传数据状态变化通知
+你可以通过 DataExtDevPassDataEventDelegate_Event 回调获取独立外设的透传数据状态变化通知. Status 即透传数据状态，1 表示透传数据已就绪，开发者需要每帧调用 PXR_GetExtDevTrackerByPassData 获取，0 表示透传数据已停止。
+* 
+
+
+
+
+接口
+
+说明
+
+PXR_GetMotionTrackerConnectState
+
+获取体感追踪器的连接状态相关信息。
+
+PXR_GetMotionTrackerDeviceType
+
+获取体感追踪器的版本。
+
+PXR_GetMotionTrackerMode
+
+获取当前的追踪模式。
+
+PXR_GetMotionTrackerLocations
+
+获取 “独立追踪” 模式下的体感追踪器的位置。
+
+UENUM(BlueprintType)
+enum class EPXRMotionTrackerConfidence : uint8
+{
+    PXR_STATIC_ACCURATE = 0 UMETA(DisplayName = "Static, accurate tracking"),
+    PXR_6DOF_ACCURATE = 1 UMETA(DisplayName = "6DoF data, tracking accurate"),
+    PXR_3DOF_NOT_ACCURATE = 2 UMETA(DisplayName = "3DoF data, tracking is not accurate"),
+    PXR_6DOF_NOT_ACCURATE = 3 UMETA(DisplayName = "6DoF data, tracking is not accurate")
+};
+
+
+
+接口
+
+说明
+
+PXR_SetExtDevTrackerPassDataState
+
+设置透传数据功能状态。
+
+PXR_GetExtDevTrackerConnectState
+
+获取当前扩展外设追踪状态。
+
+PXR_SetExtDevTrackerMotorVibrate
+
+设置独立外设宽频震动。
+
+PXR_SetExtDevTrackerByPassData
+
+设置独立外设通道数据。
+
+PXR_GetExtDevTrackerByPassData
+
+获取独立外设通道数据。
+
+PXR_GetExtDevTrackerBattery
+
+获取独立外设电量。
+
+PXR_GetExtDevTrackerKeyData
+
+获取独立外设键值。
+
+DataExtDevConnectEventDelegate
+
+获取独立外设的连接状态变化通知。
+
+DataExtDevBatteryEventDelegate
+
+获取独立外设的电量状态变化通知。
+
+DataExtDevPassDataEventDelegate
+
+获取独立外设的透传数据状态变化通知。
+
+当前获取的 ExDevTrackerInfos 为定长为 6 的数组（当前最高支持 3 个追踪器，其余为接口预留），需要根据 ExtNumber 判断已连接的有效追踪器的数量

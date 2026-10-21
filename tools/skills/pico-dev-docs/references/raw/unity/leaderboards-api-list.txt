@@ -1,0 +1,46 @@
+接口列表
+========================================
+本文罗列 “排行榜” 服务涉及的主要接口，包括客户端接口和服务端接口，并提供接口功能说明。
+*客户端接口
+下表罗列 LeaderboardService 类中封装的接口。若想了解更多接口说明，可阅读 API 参考。
+*
+*服务端接口
+*创建或更新排行榜
+*查询排行榜基础信息
+*查询所有排行榜 ID
+*删除排行榜
+*创建或更新排行榜条目
+*查询排行榜条目
+*删除排行榜中的指定条目
+*删除排行榜中的所有条目
+
+
+
+
+接口
+
+说明
+
+LeaderboardService.Get
+
+获取指定排行榜的信息。
+
+LeaderboardService.GetEntries
+
+获取排行榜的条目数据，包括排行榜条目的显示分数、排行榜条目的补充数据、排行榜条目的ID、排行榜条目的排位等。
+
+LeaderboardService.GetEntriesAfterRank
+
+获取某个排行榜中指定排序之后的条目数据。
+
+LeaderboardService.GetEntriesByIds
+
+获取某个排行榜中指定用户的条目数据。
+
+LeaderboardService.WriteEntry
+
+为排行榜写入一条条目。
+
+LeaderboardService.WriteEntryWithSupplementaryMetric
+
+为排行榜写入一条条目，条目内可以包含用于决胜局的额外指标。

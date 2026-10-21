@@ -1,0 +1,831 @@
+PICO 图像分析和调试工具
+========================================
+你可以使用 PICO 图像分析和调试工具（PICO Graphics Probe Tool）对应用的性能进行分析和调试。
+*应用场景
+*系统 GPU 数据抓取与分析
+*抓取系统运行期间的 GPU 实时数据，例如 GPU 占用率、纹理缓存命中率、纹理过滤方式、显存读写速率等。
+*应用渲染阶段数据抓取与分析
+*启动某个应用，抓取该应用运行期间的渲染阶段数据，例如每帧的渲染耗时、Surface 数量、Tile-based-rendering (TBR) 渲染的 Bin 块数量、渲染模式等。
+*绘制调用（Draw Call）相关数据抓取与分析
+*启动某个应用，抓取该应用一次绘制调用命令的实时数据，例如 ALU 指令数量、硬件剔除的面片数量、顶点着色器处理的顶点数、像素着色器的片元数量等。
+*环境要求
+*PICO 设备型号：PICO Neo3 和 PICO 4 系列
+*PICO 设备系统版本：5.8.0 及以上
+*前提条件
+*确保 PC 端已下载 Andorid Debug Bridge（即 adb 工具）。
+*确保已使用 USB 数据线连接 PICO 设备和电脑。可以使用 adb devices 命令行查看已连接的 PICO 设备 ID。
+*命令行参数说明
+工具支持以下命令行参数，可用于获取 GPU 性能数据、追踪渲染阶段数据、追踪绘制调用数据等。
+*
+使用命令时，可以配合如下可选参数，实现不同的数据输出效果。
+*
+*获取 GPU 性能数据
+获取 GPU 的实时性能数据，包括 GPU 使用率、GPU 频率、纹理/顶点/着色器相关数据等。
+*使用步骤
+*执行 adb shell gprobe -r 或 adb shell gprobe --realtime 命令，获取 GPU 的实时数据。可配合以下可选参数实现更多能力。详细说明，参考 “命令行参数说明” 部分。
+**
+*通过终端支持的快捷键组合（例如：Ctrl + C）终止数据输出。
+* 
+*GPU 性能指标参考
+以下为 GPU 实时数据的指标 ID 和指标名称对照表。
+*
+*追踪渲染阶段数据
+获取应用的渲染阶段数据，包括渲染时长、抗锯齿（MSAA）等级等。步骤如下：
+*执行 adb shell gprobe -e 或 adb shell gprobe --enable-detailed 命令，开启 GPU 性能详细分析功能。
+*在头戴端手动启动目标应用。
+*执行 adb shell gprobe -t 或 adb shell gprobe --trace 命令，追踪渲染阶段数据。可配合以下可选参数实现更多能力。详细说明，参考命令行参数说明。
+**
+* 
+*追踪绘制调用数据
+获取应用的绘制调用数据，包括调用耗时、纹理/顶点/着色器相关数据等。
+*使用步骤
+*执行 adb shell gprobe -e 或 adb shell gprobe --enable-detailed 命令，开启 GPU 性能详细分析功能。
+*在头戴端手动启动目标应用。
+*执行 adb shell gprobe -x 或 adb shell gprobe --drawcall 命令，追踪绘制调用数据。可配合以下可选参数实现更多能力。详细说明，参考命令行参数说明。
+**
+* 
+*绘制调用指标参考
+*
+
+
+
+
+*参数
+
+完整命令
+
+*说明
+
+*-r 或 --realtime
+
+adb shell gprobe -r 或 adb shell gprobe --realtime
+
+获取 GPU 的实时数据。可以通过终端支持的快捷键组合（例如：Ctrl + C、Ctrl + Z）终止数据输出。
+
+*-e 或 --enable-detailed
+*
+
+adb shell gprobe -e 或 adb shell gprobe --enabled-detailed
+
+启动 GPU 性能详细分析功能，是追踪渲染阶段数据和绘制调用数据的前提条件。该命令在驱动程序的初始化阶段生效。因此，必须在目标应用启动之前开启该功能。若在启动该功能之前，目标应用已开始运行，则必须重启应用。
+提示：
+功能开启后，可能会增加至多约 10% 的 GPU 负载。
+
+*-d 或 --disable-detailed
+
+adb shell gprobe -d 或 adb shell gprobe --disable-detailed 
+
+关闭 GPU 性能详细分析功能。
+
+*-t 或 --trace
+
+adb shell gprobe -t 或 adb shell gprobe --trace
+
+执行一次渲染阶段数据追踪。
+
+-x 或 --drawcall
+
+adb shell gprobe -x 或 adb shell gprobe --drawcall
+
+执行一次绘制调用数据追踪。
+
+*-s 或 --select
+
+adb shell gprobe -s {应用包名} 或 adb shell gprobe --select {应用包名}
+
+通过包名指定某个应用，例如 adb shell gprobe -s com.pico.testpackage。
+提示：不使用该命令时，默认使用 adb shell gprobe -a 命令选择所有可以被追踪性能数据的应用。
+
+-a 或 --all
+
+adb shell gprobe -a 或  adb shell gprobe --all
+
+绑定所有当前可以被追踪性能数据的应用，包括 PICO 的系统级应用如 runtime、veshell、xrshell、seethrough 应用等，也包括在开启 GPU 性能详细分析功能后打开的其他三方应用。若成功则返回所有已选中的应用进程 ID。
+
+-h 或 --help
+
+adb shell gprobe -h 或  adb shell gprobe --help
+
+获取命令行总览和说明。
+
+
+
+
+参数
+
+说明
+
+--time n
+
+--time 用于设置获取数据的间隔时间或持续时间，单位为 “秒”。该参数可以和 -r (或 --realtime)、-t ( 或 --trace) 以及 -x (或 --drawcall) 搭配使用，如 adb shell gprobe -r --time 2 表示每隔 2 秒获取一次渲染阶段数据。
+
+-l 或 --low-mode
+
+以低 GPU 负载模式执行一次渲染阶段数据追踪。需与 -t (或 --trace) 搭配使用，最终命令为 adb shell gprobe -t -l。设置该参数后，将不会输出详细的渲染阶段和 Bin 信息，而是以一个总体的 Workload(us) 指标代替。
+
+-b 或 --bin
+
+获取渲染阶段的 Bin 块相关的详细信息，包括 Bin 块分布，Bin 的渲染阶段耗时、部分静态注视点渲染（Fixed Foveated Rendering, FFR）信息。需与 -t (或 --trace) 搭配使用，最终命令为 adb shell gprobe -t -b。
+
+-p 或 --poll-mode
+
+以连续轮询的形式输出数据，减轻内存压力。可通过 Ctrl+C 终止数据输出。可以与 -t (或 --trace) 和 -x (或 --drawcall) 搭配使用，如 adb shell gprobe -t -p。
+
+-m 或 --message
+
+罗列 GPU 实时数据和绘制调用数据的指标 ID 和指标名称。需与-r (或 --realtime) 和 -x (或 --drawcall) 搭配使用，如 adb shell gprobe -m -r。
+
+--table
+
+以表格形式打印绘制调用相关数据，以便对照分析。后续可通过 adb shell gprobe -x --table > drawcall.txt 命令将表格保存到本地。
+
+
+
+可选参数
+
+说明
+
+-- time n
+
+自定义获取实时数据的时间间隔。
+
+-r id1 id2 id3 ...
+
+选择需要输出的指标数据（idn 为指标 ID，具体参阅 “GPU 性能指标参考” 部分）。
+提示：建议一次性获取不超过 10 种指标数据，否则会影响数据精度。
+
+
+
+*指标 ID 
+
+指标名称
+
+说明
+
+*1
+
+*Clocks
+
+系统所有进程耗费的总 GPU 时钟（时间单位：秒）。
+
+*2
+
+*GPU % Utilization
+
+GPU 使用率。
+
+*3
+
+*GPU % Bus Busy
+
+*GPU 到系统存储总线忙碌的近似百分比。
+
+*4
+
+*% Vertex Fetch Stall
+
+GPU 无法再发出顶点数据请求的时钟周期百分比。 
+
+*5
+
+*% Texture Fetch Stall
+
+片元着色器无法再发出顶点数据请求的时钟周期百分比。 
+
+*6
+
+*L1 Texture Cache Miss Per Pixel
+
+每个像素中，L1 缓存未命中的平均纹理数。 
+
+*7
+
+*% Texture L1 Miss
+
+未命中 L1 纹理缓存的百分比。计算公式：L1 纹理缓存未命中次数 / L1 纹理缓存请求次数。 
+
+*8
+
+*% Texture L2 Miss
+
+未命中 L2 纹理缓存的百分比。计算公式：L2纹理缓存未命中次数 / L2 纹理缓存请求次数。 
+
+*9
+
+*% Stalled on System Memory
+
+L2 缓存因等待来自系统内存的数据而停滞的时钟周期百分比。 
+
+*10
+
+*% Instruction Cache Miss
+
+CPU 上指令缓存未命中的百分比。计算公式：指令在 L1 高速缓存未命中数 / 指令在 L1 高速缓存请求数。 
+
+*11
+
+*Pre-clipped Polygon
+
+在任何硬件裁剪之前，提交给 GPU 的多边形数量。 
+
+*12
+
+*% Prims Trivially Rejected
+
+剔除图元百分比。在光栅化阶段，将 FBO 可见区域外的图元剔除，不进入片元着色器（Fragment Shader）。 
+
+*13
+
+*% Prims Clipped
+
+GPU 裁剪的图元百分比。 
+
+*14
+
+*Average Vertices / Polygon
+
+每个多边形的平均顶点数。
+
+*15
+
+*Reused Vertices
+
+重用的顶点数。
+
+*16
+
+*Average Polygon Area
+
+每个多边形占用的平均像素数。 
+
+*17
+
+*% Wave Context Occupancy
+
+所有着色器都处于空闲状态，但至少有一个活跃 Wave 的时间百分比。 
+
+*18
+
+*% Shaders Busy
+
+所有着色器忙碌时间百分比。 
+
+*19
+
+*% Shaders Stalled
+
+每个周期的 wave 上下文占用率的平均百分比。 
+
+*20
+
+*Vertices Shaded
+
+发送给着色器进行处理的顶点数。 
+
+*21
+
+*Fragments Shaded
+
+发送给着色器进行处理的片元数。 
+
+*22
+
+*Vertex Instructions
+
+发出的标量顶点着色器指令的总数。 
+
+*23
+
+*Fragment Instructions
+
+发出的片元着色器指令总数。 
+
+*24
+
+*Fragment ALU Instructions(Full)
+
+片元着色器发出的全精度指令总数（不包括纹理提取指令）。 
+
+*25
+
+*Fragment ALU Instructions(Half)
+
+片元着色器发出的半精度标量指令总数（不包括纹理提取指令）。 
+
+*26
+
+*Fragment EFU Instructions
+
+片元着色器发出的标量基本函数单元指令总数，包括 sin、cos 和 pow 之类的数学函数。 
+
+*27
+
+*Textures / Vertex
+
+每个顶点引用的平均纹理数。 
+
+*28
+
+*Textures / Fragment
+
+每个片元引用的平均纹理数。 
+
+*29
+
+*ALU / Vertex
+
+每个着色顶点从顶点着色器发出的标量 ALU 指令平均数量。 
+
+*30
+
+*ALU / Fragment
+
+每个着色片元从片元着色器发出的标量 ALU 指令平均数量，都换算为全精度表示，其中 2 mediump = 1 highp。 
+
+*31
+
+*EFU / Fragment
+
+每个着色片元从片元着色器发出的标量 EFU 指令平均数量。 
+
+*32
+
+*EFU / Vertex
+
+每个着色顶点从顶点着色器发出的标量 EFU 指令平均数量。 
+
+*33
+
+*% Time Shading Fragments
+
+片元着色耗费的时间百分比。计算公式：着色片元所耗费的时间 / 着色所有内容所耗费得时间。 
+
+*34
+
+*% Time Shading Vertices
+
+顶点着色耗费的时间百分比。计算公式：着色顶点所耗费的时间 / 着色所有内容所耗费的时间。 
+
+*35
+
+*% Time Compute
+
+计算工作耗费的时间百分比。计算公式：计算工作所耗费的时间 / 着色所有内容所耗费的时间。 
+
+*36
+
+*% Shader ALU Capacity Utilized
+
+最大着色器容量（ALU操作）利用百分比，即对于着色器工作的每个周期，平均利用总着色器 ALU 容量的百分比。 
+
+*37
+
+*% Time ALUs Working
+
+着色器忙碌期间，ALU 正在工作的时间百分比。计算公式： ALU 工作耗费时间 / 着色器总工作时间。 
+
+*38
+
+*% Time EFUs Working
+
+着色器忙碌期间，EFU 正在工作的时间百分比。计算公式： EFU 工作耗费时间 / 着色器总工作时间。 
+
+*39
+
+*% Nearest Filtered
+
+使用最近采样方法过滤的纹理元素百分比。 
+
+*40
+
+*% Linear Filtered
+
+使用线性采样方法过滤的纹理元素百分比。 
+
+*41
+
+*% Anisotropic Filtered
+
+使用各向异性采样方法过滤的纹理元素百分比。 
+
+*42
+
+*% Non-Base Level Textures
+
+来自非 0 级别 Mipmap 的纹理元素百分比。计算公式：来自非 0 级别 Mipmap 的纹理元素 / 所有纹理元素。 
+
+*43
+
+*% Texture Pipes Busy
+
+纹理管线忙碌时间百分比。计算公式：纹理管线忙碌时间 / 总时间。 
+
+*44
+
+*Read Total (Bytes)
+
+GPU 从内存中读取的总字节数。 
+
+*45
+
+*Write Total (Bytes)
+
+GPU 写入内存的总字节数。 
+
+*46
+
+*Texture Memory Read BW (Bytes)
+
+从内存中读取的纹理数据（单位：字节）。 
+
+*47
+
+*Vertex Memory Read (Bytes)
+
+从内存中读取的顶点数据（单位：字节）。 
+
+*48
+
+*SP Memory Read (Bytes)
+
+着色器从内存中读取的总数据（单位：字节）。 
+
+*49
+
+*Avg Bytes / Fragment
+
+每个片元从内存中读取的平均纹理数据（单位：字节）。计算公式：从内存中读取的纹理字节总数 / 片元总数。 
+
+*50
+
+*Avg Bytes / Vertex
+
+每个顶点从内存中读取的平均顶点数据（单位：字节）。计算公式：从内存中读取的顶点总字节数 / 顶点总数。 
+
+*51
+
+*Preemptions
+
+GPU 抢占发生次数。 
+
+*52
+
+*Avg Preemption Delay
+
+每次 GPU 抢占的平均耗时，即从请求抢占到抢占开始之间的平均时长。 
+
+*53
+
+*GPU Frequency
+
+GPU 频率。
+
+
+
+可选参数
+
+说明
+
+--time n
+
+用于指定一次渲染阶段数据追踪的持续时间，默认为 0.05 秒。例如，adb shell gprobe -t --time 0.25 表示获取 0.25 秒内的渲染阶段数据。
+
+-l
+
+以低 GPU 负载模式执行一次渲染阶段数据追踪。
+
+-p
+
+以连续轮询的形式输出数据。
+
+-b
+
+获取渲染阶段的 Bin 块相关的详细信息。
+
+
+
+可选参数
+
+说明
+
+--time n
+
+指定一次绘制调用追踪的持续时间，默认为 0.05 秒。例如，adb shell gprobe -x --time 0.1 表示获取 0.1 秒内的所有绘制调用数据。
+
+--table
+
+以表格形式呈现数据。
+
+-x id1 id2 id3 ...
+
+选择需要输出的指标数据（idn 为指标 ID，具体参阅 “绘制调用指标参考” 部分）。
+提示：建议一次性获取不超过 10 种指标数据，否则会影响数据精度。
+
+
+
+指标 ID
+
+指标名称
+
+说明
+
+1
+
+Clocks
+
+调用该 Draw Call 时耗费的 GPU 时钟。
+
+2
+
+% Vertex Fetch Stall
+
+GPU 无法再发出顶点数据请求的时钟周期百分比。
+
+3
+
+% Texture Fetch Stall
+
+片元着色器无法再发出纹理数据请求的时钟周期百分比。
+
+4
+
+L1 Texture Cache Miss Per Pixel
+
+每个像素中，L1 缓存未命中的平均纹理数。
+
+5
+
+% Texture L1 Miss
+
+未命中 L1 纹理缓存的百分比。计算公式：L1 纹理缓存未命中次数 / L1 纹理缓存请求次数。
+
+6
+
+% Texture L2 Miss
+
+未命中 L2 纹理缓存的百分比。计算公式：L2纹理缓存未命中次数 / L2 纹理缓存请求次数。
+
+7
+
+% Stalled on System Memory
+
+L2 缓存因等待来自系统内存的数据而停滞的时钟周期百分比。
+
+8
+
+% Instruction Cache Miss
+
+CPU 上指令缓存未命中的百分比。计算公式：指令在 L1 高速缓存未命中数 / 指令在 L1 高速缓存请求数。
+
+9
+
+Pre-clipped Polygon
+
+在任何硬件裁剪之前，提交给 GPU 的多边形数量。
+
+10
+
+% Prims Trivially Rejected
+
+剔除图元百分比。
+
+11
+
+% Prims Clipped
+
+GPU 裁剪的图元百分比。
+
+12
+
+Average Vertices / Polygon
+
+每个多边形的平均顶点数。
+
+13
+
+Reused Vertices
+
+从后变换顶点缓存中使用的顶点数量。
+
+14
+
+Average Polygon Area
+
+每个多边形占用的平均像素数。
+
+15
+
+% Wave Context Occupancy
+
+所有着色器都处于空闲状态，但至少有一个活跃 Wave 的时间百分比。
+
+16
+
+% Shaders Busy
+
+所有着色器忙碌时间百分比。
+
+17
+
+% Shaders Stalled
+
+每个周期的 wave 上下文占用率的平均百分比。
+
+18
+
+Vertices Shaded
+
+发送给着色器进行处理的顶点数。
+
+19
+
+Fragments Shaded
+
+发送给着色器进行处理的片元数。
+
+20
+
+Vertex Instructions
+
+发出的标量顶点着色器指令的总数。
+
+21
+
+Fragment Instructions
+
+发出的片元着色器指令总数。
+
+22
+
+Fragment ALU Instructions(Full)
+
+片元着色器发出的全精度指令总数（不包括纹理提取指令）。
+
+23
+
+Fragment ALU Instructions(Half)
+
+片元着色器发出的半精度标量指令总数（不包括纹理提取指令）。
+
+24
+
+Fragment EFU Instructions
+
+片元着色器发出的标量基本函数单元指令总数，包括 sin、cos 和 pow 之类的数学函数。
+
+25
+
+Textures / Vertex
+
+每个顶点引用的平均纹理数。
+
+26
+
+Textures / Fragment
+
+每个片元引用的平均纹理数。
+
+27
+
+ALU / Vertex
+
+每个着色顶点从顶点着色器发出的标量 ALU 指令平均数量。
+
+28
+
+ALU / Fragment
+
+每个着色片元从片元着色器发出的标量 ALU 指令平均数量，都换算为全精度表示，其中 2 mediump = 1 highp。
+
+29
+
+EFU / Fragment
+
+每个着色片元从片元着色器发出的标量 EFU 指令平均数量。
+
+30
+
+EFU / Vertex
+
+每个着色顶点从顶点着色器发出的标量 EFU 指令平均数量。
+
+31
+
+% Time Shading Fragments
+
+片元着色耗费的时间百分比。计算公式：着色片元所耗费的时间 / 着色所有内容所耗费得时间。
+
+32
+
+% Time Shading Vertices
+
+顶点着色耗费的时间百分比。计算公式：着色顶点所耗费的时间 / 着色所有内容所耗费的时间。
+
+33
+
+% Time Compute
+
+计算工作耗费的时间百分比。计算公式：计算工作所耗费的时间 / 着色所有内容所耗费的时间。
+
+34
+
+% Shader ALU Capacity Utilized
+
+
+最大着色器容量（ALU 操作）利用百分比，即对于着色器工作的每个周期，平均利用总着色器 ALU 容量的百分比。
+
+35
+
+% Time ALUs Working
+
+着色器忙碌期间，ALU 正在工作的时间百分比。计算公式： ALU 工作耗费时间 / 着色器总工作时间。
+
+36
+
+% Time EFUs Working
+
+着色器忙碌期间，EFU 正在工作的时间百分比。计算公式： EFU 工作耗费时间 / 着色器总工作时间。
+
+37
+
+% Nearest Filtered
+
+使用最近采样方法过滤的纹理元素百分比。
+
+38
+
+% Linear Filtered
+
+使用线性采样方法过滤的纹理元素百分比。
+
+39
+
+% Anisotropic Filtered
+
+使用各向异性采样方法过滤的纹理元素百分比。
+
+40
+
+% Non-Base Level Textures
+
+来自非 0 级别 Mipmap 的纹理元素百分比。计算公式：来自非 0 级别 Mipmap 的纹理元素 / 所有纹理元素。
+
+41
+
+% Texture Pipes Busy
+
+纹理管线忙碌时间百分比。计算公式：纹理管线忙碌时间 / 总时间。
+
+42
+
+Read Total (Bytes)
+
+GPU 从内存中读取的总字节数。
+
+43
+
+Write Total (Bytes)
+
+GPU 写入内存的总字节数。
+
+44
+
+Texture Memory Read BW (Bytes)
+
+从内存中读取的纹理数据（单位：字节）。
+
+45
+
+Vertex Memory Read (Bytes)
+
+从内存中读取的顶点数据（单位：字节）。
+
+46
+
+SP Memory Read (Bytes)
+
+着色器从内存中读取的总数据（单位：字节）。
+
+47
+
+Avg Bytes / Fragment
+
+每个片元从内存中读取的平均纹理数据（单位：字节）。计算公式：从内存中读取的纹理字节总数 / 片元总数。
+
+48
+
+Avg Bytes / Vertex
+
+每个顶点从内存中读取的平均顶点数据（单位：字节）。计算公式：从内存中读取的顶点总字节数 / 顶点总数。
+
+49
+
+Preemptions
+
+GPU 抢占发生次数。
+
+50
+
+Avg Preemption Delay
+
+每次 GPU 抢占的平均耗时，即从请求抢占到抢占开始之间的平均时长。

@@ -1,0 +1,105 @@
+房间&匹配示例
+========================================
+你可以在 PICO Github 上获取 “房间&匹配” 服务和游戏模块相关 Demo，包括 RoomAndMatchmakingEntry 和 GameAPITest。
+以上两个 Demo 都拥有图形化界面，相关部分位于 DebugPanel 文件夹中。此外，Log 文件夹中包含用于输出日志的脚本文件。两个 Demo 的具体说明如下。
+*RoomAndMatchmakingEntry
+RoomAndMatchmakingEntry 的界面如下：
+* 
+以下为 Demo 的使用说明：
+*
+*GameAPITest
+这是一个完整的游戏模块接口测试 Demo。该示例包含 ”房间&匹配“ 服务的全部接口。你可以在图形化界面上测试接口。界面如下：
+* 
+接口测试步骤如下：
+*选择接口功能类型。
+*选择接口类型后，下方将列出该类别下所有接口。
+*选择具体的接口。
+*在 设置参数 部分，将列出需为该接口配置的参数。
+*配置参数。
+*点击 执行。
+*右侧日志面板处将显示执行结果。
+*(可选) 点击单条日志，查看日志详情。
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+功能
+
+说明
+
+初始化 PICO 平台服务和游戏模块
+
+初始化流程如下：
+*点击 Initialize，调用 CoreService.Initialize() 接口进行 PICO 平台服务初始化。
+*PICO 平台服务初始化成功后将获取用户的 AccessToken。
+*获取 AccessToken 后，调用 CoreService.GameInitialize(accessToken) 接口初始化游戏模块。
+
+监听初始化结果
+
+*若 CoreService.GameInitialize 的返回值为 0，说明调用失败。
+*若 CoreService.GameInitialize 的返回值不为 0，说明调用成功，此时需要设置响应函数 CoreService.GameInitialize(...).OnComplete(YourOnCompleteFunction) 来监听初始化结果 。若 GameInitializeResult 返回 Success，说明游戏模块初始化成功，可使用 ”房间&匹配“ 服务提供的接口。
+提示： 当回调函数收到的 GameInitializeResult 不为 Success 时，你需调用 CoreService.GameUninitialize 先进行反初始化操作，再调用 CoreService.GameInitialize 接口来初始化游戏模块。
+
+输入匹配池名称
+
+输入在 PICO 开发者平台上配置好的匹配池名称。
+
+匹配玩家
+
+点击 start match，进入相同匹配池队列的玩家可能会被匹配到同一个房间中。需要调用 MatchmakingService.SetMatchFoundNotificationCallback(ProcessMatchmakingMatchFound) 接口监听匹配结果。
+提示：在本示例中，用户匹配成功后将自动进入房间。
+
+发送与读取消息
+
+房间内的用户可以在消息发送框中输入并发送信息，也可以读取来自房间内其他用户的消息。
+提示：本示例中，调用 NetworkService.SendPacketToCurrentRoom 接口来允许用户在房间内发送消息，同时调用 NetworkService.ReadPacket 接口允许用户读取房间内其他用户发送的消息。
+
+离开房间
+
+用户可以点击 Leave room 主动离开当前房间。
+提示：本示例设置了最大读取消息数量。当读取的消息数量超过最大数目后，用户将自动离开房间。
+
+展示执行结果
+
+在 Output 框中，可以查看每次接口调用的结果信息。
+
+反初始化游戏模块
+
+点击 Uninitialize，登出游戏模块。
+
+

@@ -1,0 +1,221 @@
+应用内购（IAP）
+========================================
+ 
+应用内购买（IAP，In-Application Purchase） 可直接在应用内提供额外的商品或服务，从而丰富用户体验，拓宽应用的盈利渠道。PICO Unreal Integration SDK（以下简称 SDK） 的 IAP 模块封装了支付宝、银行卡、Paypal 等多种支付系统，可提供一站式、便捷支付的解决方案。
+*应用场景
+*对玩家而言，IAP 支持直接在应用内部购买商品或服务，无需在 PICO 应用商店进行购买。
+*对开发者而言，它开辟了额外的营收来源，提供了另一种可选择的盈利模式。
+*基本概念
+*
+*功能说明
+应用内购实现流程如下：
+ 
+*获取可购买的商品列表
+在 PICO 开发者平台为应用添加了商品后，你可以调用 GetProductsBySKU 获取当前应用内可购买的商品列表，列表中会返回商品的价格和货币单位，对玩家进行展示。
+ 
+你可以通过 OnlineSubsystemPico 类获取相关接口。调用示例如下：
+ 
+*发起购买流程
+调用 LaunchCheckoutFlow 允许玩家发起商品购买流程，从而在应用内调起系统支付弹窗。调用此接口时，你需要传入指定商品的价格和货币单位。因此，发起购买流程前，需调用 GetProductsBySKU 接口获取上述信息。
+对于非中国大陆地区，系统会根据用户所在地区的货币单位自动匹配汇率代码，然后对价格进行换算。即：若你在开发者平台配置的货币单位为美金，但不同地区的用户将用换算后的当地货币支付。因此，请勿在代码里固定货币单位。
+ 
+*获取已购买的商品列表
+完成购买流程之后，你可以调用 GetViewerPurchases 接口来获取玩家已购买的商品列表，包括永久型商品和尚未履约的消耗型商品。
+ 
+*履约已购买商品
+对于消耗型商品，你需要在自己的业务服务端实现履约逻辑。例如，当玩家购买了“10 个游戏金币”后，你的业务服务端向指定的玩家账号充值 10 个金币，你可以调用 ConsumePurchase 接口来记录履约结果。
+ 
+若成功履约，调用 GetViewerPurchases 接口，玩家的已购买商品列表不再包含“10 个金币”。
+*准备工作
+使用 IAP 模块前，你需要完成一些配置，并在 PICO开发者平台上为应用添加 IAP 商品。
+*完成前期配置
+详细步骤，参考配置平台服务。
+*添加 Add-On
+ 
+在 PICO 开发者管理平台，为你的应用添加 Add-On。
+*登录 PICO 开发者平台。
+*在 我的应用 页面上，点击目标应用卡片，进入其 概览 页。
+*从左侧导航栏中，选择   >  。
+*你将进入   配置页。
+*在面板右上角，点击   按钮。
+*页面上显示   窗口。
+* 
+*配置 Aadd-on 信息。
+**
+*点击   按钮。
+*Add-on 创建完成，你被导航至该 Add-on 的配置页。
+* 
+*在页面右上角，点击   按钮。
+*页面上显示   窗口。
+* 
+*选择创建方式：  或  。
+*根据选择的创建方式，点击    或   按钮。
+*你将进入该版本 Add-on 的配置页。
+* 
+*根据页面提示配置该版本的 Add-on，配置项包括： 、 、 、 、 、  和  。
+*点击   按钮。
+*提交后，Add-on 将进入审核流程。审核通过后，用户可在应用内查看该 Add-on 的信息。
+*更新 Add-on
+*Add-on 审核通过并上线后，若你需要更新 Add-on 信息，可以为其创建新版本，步骤如下：
+*进入   配置页。
+*从列表中找到状态为 “ ” 的 Add-on ，然后点击   栏中的 查看 按钮。
+*你将进入该 Add-on 的版本展示页。
+* 
+*点击右上角的   按钮。
+*你将进入该版本 Add-on 的编辑页。
+*设置该版本 Add-on 的信息并保存。
+*点击底部的   按钮。
+*该版本的 Add-on 进入审核流程。审核通过后，应用和 PICO 商店内的 Add-on 信息将自动更新至最新版。
+*测试 IAP 服务
+创建 Add-on 后，你可以使用该 Add-on 测试 IAP 服务，检查是否可以跑通完整的应用内购流程。对于未提交审核的 Add-on，无论对应的应用发布与否，都需用 PICO 开发者账号进行测试；对于已提交并通过审核的 Add-on，需根据应用的发布状态，使用非 PICO 开发者账号进行测试。
+*测试途径
+你可以通过调用接口或者在 PICO 商店测试 Add-on。两种方式的具体说明如下：
+*
+*注意事项
+以下为 Add-on 测试相关的注意事项：
+*必须绑定真实的支付方式。对于 中国大陆地区，可绑定支付宝等支付方式；对于 非中国大陆地区，可绑定 PayPal 等支付方式。
+*测试价格为当地 PICO 商店支持的最小支付金额。
+*测试中产生的收益会被算入开发者账号对应的组织。
+*测试 Add-on 时，若主应用还未提交，平台会展示一些默认的应用信息（如主应用名称、图片视频等），这些信息会在主应用审核通过后自动更新。
+*测试完成后，若你希望正式发布此 Add-on，需提交 Add-on，审核通过后，此 Add-on 会正式上线。
+*准备工作
+*进入目标 Add-on 的配置页面，为其开启/关闭  。若开启支付测试，可模拟支付成功的场景；若关闭支付测试，可模拟支付失败的场景。
+*(可选) 若后续需要在 PICO 应用商店内测试 Add-on，需同步开启。
+* 
+*操作步骤
+*使用开发者账号测试
+无论应用发布与否，你都可按照以下步骤使用 PICO 开发者账号测试未提交的 Add-on。组织内的成员也可以使用他们的账号进行测试。
+*使用创建该 Add-on 的开发者账号登录设备。
+*按照测试途径中的说明，测试该 Add-on。
+*使用非开发者账号测试
+按以下步骤，根据应用的发布状态，使用非 PICO 开发者账号测试已提交并通过审核的 Add-on。
+若 Add-on 未通过审核，测试 Offer 将会失效，需要使用原来的 SKU 创建一个新的草稿并保存，才能正常访问测试 Offer。
+应用已发布
+*进入目标 Add-on 的信息编辑页，点击页面底部的   按钮。
+*Add-on 将进入 “ ” 状态。
+*审核通过后，按照测试途径中的说明，测试该 Add-on。
+应用未发布
+*进入应用详情页，点击页面右下角的 提交。 具体说明可参考该文档。
+*联系你的 AM，让其联系 QA，将该应用保持在 “ ” 状态。
+*进入目标 Add-on 的信息编辑页，点击页面底部的   按钮。
+*Add-on 将进入 “ ” 状态。
+*审核通过后，按照测试途径中的说明，测试该 Add-on。
+*Demo
+*前置条件
+确保 PICO 设备的 PUI （ROM）版本为 4.8.0 及以上。
+*使用说明
+你可以前往 PICO GitHub 获取对应引擎版本的 IAP Demo。IAP Demo 位于 Content\Maps\WindowsMaps 中。Demo 的图形化界面如下：
+ 
+在以下示例中，你可以点击 IAP 切换至 IAP 选项卡，Hovered 接口按钮会提示需要输入的信息（该测试用例不必手动输入）。测试过程如下：
+*不填写 SKU 字段，点击 GetProductsBySKU 获取所有 IAP 商品。
+*点击 ProductList，在下拉菜单中，选择任意 IAP 商品。
+*商品信息会自动填充至 SKU、Price、Currency 输入框中。
+* 
+*点击 LaunchCheckoutFlow 以进行商品购买。
+* 
+* 
+*返回购买结果。
+*点击 ConsumePurchase，以消耗当前商品。
+大部分输出信息的将显示在上图的 Out put Info 面板下。
+*API 参考
+IAP 相关 API 详情，可参考 API 文档。
+
+
+对于中国大陆地区，若应用类型为“游戏”且未取得版号，则无法在应用中使用 IAP 服务。非中国大陆地区可正常使用。
+
+
+
+概念
+
+说明
+
+Add-ons
+
+应用内所有的额外商品或服务，可作为 IAP 商品销售，也可在 PICO 应用商店出售。
+
+IAP
+
+IAP 指玩家从 PICO 设备上的应用或游戏内购买的额外商品或服务，通常为游戏内皮肤、道具、金币等。
+
+Product
+
+提供给玩家的 IAP 商品，包含价格、以何种货币销售、商品描述等信息。你可以提供两种商品类型：
+● 消耗型商品：使用后会耗尽，可多次购买，例如游戏金币、宝石。
+● 永久型商品：可用于解锁更多进阶功能，只需购买一次就可永久拥有该商品，例如，游戏关卡、相机应用里的滤镜、图书应用里的杂志。
+
+Consume
+
+消耗型商品的履约过程。例如：玩家购买了 100 个游戏金币，金币充值到该玩家的账号后，即视为“商品已履约”。在玩家可再次购买同一个消耗品之前，之前的购买必须“履约”。
+
+SKU
+
+SKU（Stock Keeping Unit）是每个 IAP 商品的唯一标识。
+
+Price
+
+IAP 商品的价格。
+
+Currency
+
+用于支付 IAP 商品的货币种类。
+
+bool GetProductsBySKU(TArray<FString> ProductSKUs, int32 Count, FGetProductsBySKUDelegate InGetProductsBySKUDelegate);
+
+FOnlineSubsystemPico* Subsystem = static_cast<FOnlineSubsystemPico*>(Online::GetSubsystem(GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::ReturnNull), PICO_SUBSYSTEM));
+ if (Subsystem && Subsystem->GetPicoIAPInterface())
+ {
+     return Subsystem->GetPicoIAPInterface()->GetProductsBySKU(ProductSKUs, Count, OnGetProductsBySKUCompleteDelegate);
+ }
+
+bool LaunchCheckoutFlow(const FString& SKU, const FString& Price, const FString& Currency, FLaunchCheckoutFlowDelegate InLaunchCheckoutFlowDelegate);
+
+bool GetViewerPurchases(FGetViewerPurchasesDelegate InGetViewerPurchasesDelegate);
+
+bool ConsumePurchase(const FString& SKU, FConsumePurchaseDelegate InConsumePurchaseDelegate);
+
+Add-On 关联的应用必须为“审核中”或“已发布”状态，否则将无法提交 Add-On。
+
+
+
+字段
+
+说明
+
+SKU
+
+Add-on 的唯一标识。SKU 创建后便无法修改。
+
+ 
+
+Add-on 类型，包括：
+* ：即永久型商品（例如：关卡），一次购买后永久生效。
+* ：即消耗性商品（例如：金币），支持重复购买。
+
+ 
+
+Add-on 名称。
+
+ 
+
+Add-on 发布的应用商店，包括：
+*PICO Store (非中国大陆)
+*PICO Store (中国大陆)
+
+
+
+途径
+
+说明
+
+接口测试
+
+你可以使用 SDK 提供的接口，获取用于测试的 Add-on 的数据，然后进行购买流程测试，接口说明可参考此处。
+
+PICO 商店测试
+
+根据 Add-on 的实际发布地区，在对应的线上 PICO 商店中直接搜索 Add-on 的名称，可精确匹配到对应的 Add-on。然后，然后使用创建 Add-on 的 PICO 开发者账号按测试价进行购买流程测试。
+
+OuterID 仅适用于订阅服务，为订阅周期的唯一标识。
+
+LaunchCheckoutFlow_V2 提供 OuterId 参数，兼容并支持订阅类 Add-On 的购买请求。
+LaunchCheckoutFlow_V3 提供 OuterId 参数和扩展字段，兼容并支持订阅类 Add-On 的购买请求，同时支持添加自定义信息。

@@ -1,0 +1,98 @@
+视频面板浮起，与窗口不贴合，如何解决？
+========================================
+*问题描述
+视频面板（通过 SpatialView 渲染的 3D 视频 Entity）与窗口背面之间存在间隙，视觉上呈现为悬浮于窗口上方，而非贴合窗口背板。
+*原因分析
+在支持 depth 的布局系统中，SpatialView（即 View）本身具有默认 depth（窗口深度），3D 内容的原点位于 View 容器的几何中心。系统会自动将 3D 内容沿 Z 轴抬升半个窗口深度。因此即使将 Entity 的 position 设为 (0, 0, 0)，视频面板仍会因 depth 偏移而悬浮。
+*解决方案
+将 SpatialView 的 depth 设为 0.dp，并在父布局中通过 alignDepth(DepthAlignment.DepthBack) 对齐到窗口背面，从而消除深度偏移。
+* 
+*方法一：使用 depth 属性（推荐）
+ 
+*方法二：使用全局位置补偿
+若布局较为复杂，无法用 alignDepth 直接控制（例如多层嵌套），可获取当前 Entity 在世界坐标系中的全局 Z 位置，再反向补偿。资源构造与释放部分与方法一相同（外部 remember + DisposableEffect），此处仅展示 SpatialView 部分：
+ 
+*
+
+*本问题与具体视频组件无关，只取决于 SpatialView 的 depth 行为。因此，该方案对 VideoComponent 与 VideoPlayerComponent 完全一致。下方示例以 VideoComponent 演示，将 videoEntity 上挂载的组件替换为 VideoPlayerComponent 同样适用。
+*方法一（depth(0.dp) + alignDepth(DepthBack)）适用于绝大多数场景。方法二适用于无法通过 alignDepth 控制的特殊嵌套布局，作为备用方案。
+*仅调用 setPosition(Vector3(0f, 0f, 0f)) 通常无法解决悬浮问题，因为偏移来源为 depth，而非 Entity 的 localTransform。
+
+import android.media.MediaPlayer
+import com.pico.spatial.core.ecs.Entity
+import com.pico.spatial.core.ecs.VideoComponent
+import com.pico.spatial.core.ecs.resource.BlendingMode
+import com.pico.spatial.core.ecs.resource.MaterialCullingMode
+import com.pico.spatial.core.ecs.resource.MeshResource
+import com.pico.spatial.core.ecs.resource.SurfaceRenderTexture
+import com.pico.spatial.core.ecs.resource.VideoMaterial
+import com.pico.spatial.core.ecs.video.VideoDimensionMode
+import com.pico.spatial.ui.foundation.content.SpatialView
+import com.pico.spatial.ui.foundation.layout.DepthAlignment
+import com.pico.spatial.ui.foundation.layout.alignDepth
+import com.pico.spatial.ui.foundation.layout.depth
+
+@Composable
+fun VideoFittingWindowSample() {
+    val context = LocalContext.current
+
+    // 1) 视频 Entity / SurfaceRenderTexture / MediaPlayer 等资源在外部 remember + DisposableEffect 中构造与释放
+    val videoEntity = remember { Entity() }
+    val srt = remember { SurfaceRenderTexture(width = 1920, height = 1080) }
+    val mediaPlayer = remember { MediaPlayer() }
+
+    DisposableEffect(Unit) {
+        // Mesh + VideoMaterial + VideoComponent
+        val mesh = MeshResource.createPlane(0.9f, 0.45f, 0.0f)
+        val videoMaterial = VideoMaterial(
+            BlendingMode.OPAQUE,
+            VideoDimensionMode.MONO,
+            MaterialCullingMode.BACK,
+        )
+        videoEntity.components.set(VideoComponent(mesh, videoMaterial))
+
+        // 绑定 SurfaceRenderTexture → VideoMaterial → MediaPlayer
+        srt.toGlobal()
+        videoMaterial.bindSurfaceRenderTexture(srt)
+        srt.acquireSurface()?.let { mediaPlayer.setSurface(it) }
+        // 之后照常 mediaPlayer.setDataSource(...) / prepareAsync() / start()
+
+        onDispose {
+            mediaPlayer.release()
+            srt.close()
+            videoEntity.destroy()
+        }
+    }
+
+    // 步骤 1：父容器使用 alignDepth(DepthAlignment.DepthBack) 对齐到窗口背面
+    Box(modifier = Modifier.alignDepth(DepthAlignment.DepthBack)) {
+        SpatialView(
+            // 步骤 2：SpatialView 的 depth 设为 0.dp，消除深度偏移
+            modifier = Modifier.fillMaxSize().depth(0.dp),
+            initial = { content, _ ->
+                // 仅完成装配：将外部已构造的 videoEntity 接入 SpatialView
+                content.addEntity(videoEntity)
+            },
+        )
+    }
+}
+
+*import com.pico.spatial.core.math.Vector3
+import com.pico.spatial.ui.foundation.content.SpatialView
+
+SpatialView(
+    modifier = Modifier.fillMaxSize(),
+    initial = { content, _ ->
+        // 同样接入外部已构造的 videoEntity，而非在此处新建
+        content.addEntity(videoEntity)
+
+        // Entity 加入 content 后，可获取其在世界坐标系下的全局位置
+        // 此处 globalPosition.z 通常 > 0，表示当前位置位于窗口背面前方
+        val globalPosition = videoEntity.convertPositionTo(Vector3.ZERO, null)
+        videoEntity.components[TransformComponent::class.java]?.apply {
+            // 关键：用 -globalPosition.z 将 Entity 复位到窗口背面所在的 z 层；
+            // 加 0.01f 是为了避免完全贴合产生 z-fighting。
+            setPosition(Vector3(0f, 0f, -globalPosition.z + 0.01f))
+        }
+    },
+)

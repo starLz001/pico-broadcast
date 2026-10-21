@@ -1,0 +1,2051 @@
+可以通过属性对设备进行个性化定制。
+*接口列表
+*
+*pbsPropertySetPowerOnOffLogo
+开关机动画设置
+ 
+适用设备
+全系企业级设备
+入参说明
+*
+返回值
+无
+调用示例
+ 
+*pbsPropertySetHomeKey
+Home按键设置一
+ 
+适用设备
+全系企业级设备
+入参说明
+*
+返回值
+无
+调用示例
+ 
+*pbsPropertySetHomeKeyAll
+Home按键设置二
+ 
+适用设备
+全系企业级设备
+入参说明
+*
+返回值
+无
+调用示例
+ 
+*pbsRemoveControllerHomeKey
+恢复Home按键配置
+ 
+适用设备
+全系企业级设备
+入参说明
+*
+返回值
+无
+调用示例
+ 
+*pbsPropertyDisablePowerKey
+power按键设置
+ 
+适用设备
+全系企业级设备
+入参说明
+*
+返回值
+无
+调用示例
+ 
+*pbsPropertySetScreenOffDelay
+屏幕关闭超时设置
+ 
+适用设备
+全系企业级设备
+入参说明
+*
+返回值
+无
+调用示例
+ 
+*pbsPropertySetSleepDelay
+系统休眠超时设置
+ 
+适用设备
+全系企业级设备
+入参说明
+*
+返回值
+无
+调用示例
+ 
+*setSystemAutoSleepTime
+系统休眠超时设置，返回接口执行结果
+ 
+适用设备
+全系企业级设备
+入参说明
+*
+返回值
+*
+调用示例
+ 
+*pbsEnableEnterKey
+启用头戴确认键
+ 
+适用设备
+全系企业级设备
+入参说明
+无
+返回值
+无
+调用示例
+ 
+*pbsDisableEnterKey
+禁用头戴确认键
+ 
+适用设备
+全系企业级设备
+入参说明
+无
+返回值
+无
+调用示例
+ 
+*pbsEnableVolumeKey
+启用音量键
+ 
+适用设备
+全系企业级设备
+入参说明
+无
+返回值
+无
+调用示例
+ 
+*pbsDisableVolumeKey
+禁用音量键
+ 
+适用设备
+全系企业级设备
+入参说明
+无
+返回值
+无
+调用示例
+ 
+*pbsEnableBackKey
+启用返回键
+ 
+适用设备
+全系企业级设备
+入参说明
+无
+返回值
+无
+调用示例
+ 
+*pbsDisableBackKey
+禁用返回键
+ 
+适用设备
+全系企业级设备
+入参说明
+无
+返回值
+无
+调用示例
+ 
+*pbsPropertyGetScreenOffDelay
+获取设置的灭屏时间
+ 
+适用设备
+全系企业级设备
+入参说明
+*
+返回值
+*
+调用示例
+ 
+*pbsPropertyGetSleepDelay
+获取设置的系统睡眠时间
+ 
+适用设备
+全系企业级设备
+入参说明
+*
+返回值
+*
+调用示例
+ 
+*pbsPropertyGetPowerKeyStatus
+获取Power按键启用状态
+ 
+适用设备
+全系企业级设备
+入参说明
+*
+返回值
+*
+调用示例
+ 
+*pbsGetEnterKeyStatus
+获取头戴确认键启用状态
+ 
+适用设备
+全系企业级设备
+入参说明
+*
+返回值
+*
+调用示例
+ 
+*pbsGetVolumeKeyStatus
+获取音量键启用状态
+ 
+适用设备
+全系企业级设备
+入参说明
+*
+返回值
+*
+调用示例
+ 
+*pbsGetBackKeyStatus
+获取返回键启用状态
+ 
+适用设备
+全系企业级设备
+入参说明
+*
+返回值
+*
+调用示例
+ 
+*pbsPropertyGetHomKeyStatus
+获取Home键功能
+ 
+适用设备
+全系企业级设备
+入参说明
+*
+返回值
+*
+调用示例
+ 
+*pbsSetSystemLanguage
+设置系统语言
+ 
+适用设备
+PICO4E ，Neo3 Pro，G3【PUI5.4.0及以上】，Neo3 Pro【PUI4.8.17&4.9.5及以上】
+入参说明
+*
+返回值
+*
+调用示例
+ 
+*pbsGetSystemLanguage
+获取系统当前语言
+ 
+适用设备
+PICO4E ，Neo3 Pro，G3 【PUI5.4.0及以上】，Neo3 Pro【PUI4.8.17&4.9.5及以上】
+入参说明
+*
+返回值
+*
+调用示例
+ 
+*pbsConfigWifi
+设置默认WiFi
+ 
+适用设备
+PICO4E ， Neo3 Pro ，G3【PUI5.4.0及以上】
+入参说明
+*
+返回值
+*
+调用示例
+ 
+*pbsGetConfiguredWifi
+获取系统默认WiFi
+ 
+适用设备
+PICO4E ， Neo3 Pro，G3 【PUI5.4.0及以上】
+入参说明
+*
+返回值
+*
+调用示例
+ 
+*pbsSetSystemCountryCode
+设置国家/地区
+ 
+适用设备
+PICO4E ，Neo3 Pro，G3 【PUI5.4.0及以上，仅海外】
+入参说明
+*
+返回值
+*
+调用示例
+ 
+*pbsGetSystemCountryCode
+获取国家/地区
+ 
+适用设备
+PICO4E ，Neo3 Pro，G3 【PUI5.4.0及以上，仅海外】
+入参说明
+*
+返回值
+*
+调用示例
+ 
+*pbsSetSkipInitSettingPage
+设置初始化设置跳过页面
+ 
+适用设备
+PICO4E ，Neo3 Pro，G3 【PUI5.4.0及以上】
+入参说明
+*
+返回值
+*
+调用示例
+ 
+*pbsGetSkipInitSettingPage
+获取初始化设置跳过页面
+ 
+适用设备
+PICO4E ，Neo3 Pro，G3 【PUI5.4.0及以上】
+入参说明
+*
+返回值
+*
+调用示例
+ 
+*pbsIsInitSettingComplete
+获取初始化设置是否完成
+ 
+适用设备
+PICO4E ，Neo3 Pro，G3 【PUI5.4.0及以上】
+入参说明
+*
+返回值
+*
+调用示例
+ 
+*pbsCustomizeAppLibrary
+自定义资源库
+ 
+适用设备
+PICO4E ，Neo3 Pro，G3 【PUI5.4.0及以上】
+入参说明
+*
+返回值
+*
+调用示例
+ 
+*pbsGetControllerBattery
+获取手柄电量
+ 
+适用设备
+PICO4E ，Neo3 Pro，G3 【PUI5.4.0及以上】
+入参说明
+*
+返回值
+*
+调用示例
+ 
+
+*pbsGetControllerConnectState
+获取手柄连接状态
+ 
+适用设备
+PICO4E ，Neo3 Pro，G3 【PUI5.4.0及以上】
+入参说明
+*
+返回值
+*
+调用示例
+ 
+*pbsGetAppLibraryHideList
+获取资源库的隐藏列表
+ 
+适用设备
+PICO4E ，Neo3 Pro，G3 【PUI5.4.0及以上】
+入参说明
+*
+返回值
+*
+调用示例
+ 
+*pbsCustomizeSettingsTabStatus
+自定义设置中Tab的显示状态
+ 
+适用设备
+PICO 4E，Neo3 Pro，Neo3 企业版，G3【PUI 5.6.0】
+入参说明
+*
+返回值
+*
+调用示例
+ 
+*pbsGetCustomizeSettingsTabStatus
+获取设置标签的显示状态
+ 
+适用设备
+PICO 4E，Neo3 Pro，Neo3 企业版，G3【PUI 5.6.0】
+入参说明
+*
+返回值
+*
+调用示例
+ 
+*pbsSetIPD
+设置瞳距（IPD）
+ 
+适用设备
+PICO 4E【PUI 5.7.0】
+入参说明
+*
+返回值
+无
+调用示例
+ 
+*pbsAppSetAPPAsHomeTwo
+设置第三方应用为Launcher
+ 
+适用设备
+全系企业级设备
+入参说明
+*
+返回值
+无
+调用示例
+ 
+*setLauncher
+设置第三方应用为Launcher
+ 
+适用设备
+全系企业级设备
+入参说明
+*
+返回值
+*
+调用示例
+ 
+*setWifiP2PDeviceName
+设置WIFI P2P设备名称
+ 
+适用设备
+全系企业级设备
+入参说明
+*
+返回值
+无
+调用示例
+ 
+*getWifiP2PDeviceName
+获取WIFI P2P设备名称
+ 
+适用设备
+全系企业级设备
+入参说明
+*
+返回值
+*
+调用示例
+ 
+*setScreenBrightness
+设置屏幕亮度
+ 
+适用设备
+全系企业级设备
+入参说明
+*
+返回值
+*
+调用示例
+ 
+*setTimeZone
+设置时区
+ 
+适用设备
+全系企业级设备
+入参说明
+*
+返回值
+*
+调用示例
+ 
+*setSystemDate
+设置系统日期
+ 
+适用设备
+全系企业级设备
+入参说明
+*
+返回值
+*
+调用示例
+ 
+*setSystemTime
+设置系统时间
+ 
+适用设备
+全系企业级设备
+入参说明
+*
+返回值
+*
+调用示例
+ 
+*setVirtualEnvironment
+切换虚拟场景
+ 
+适用设备
+全系企业级设备
+入参说明
+*
+返回值
+*
+调用示例
+ 
+*getVirtualEnvironment
+获取当前虚拟场景
+ 
+适用设备
+全系企业级设备
+入参说明
+无
+返回值
+*
+调用示例
+ 
+*setFloorHeight
+设置地面高度
+ 
+适用设备
+支持6dof的设备
+入参说明
+*
+返回值
+*
+调用示例
+ 
+*getFloorHeight
+获取地面高度
+ 
+适用设备
+支持6dof的设备
+入参说明
+无
+返回值
+*
+调用示例
+ 
+*setPowerManageMode
+设置电源管理模式
+ 
+适用设备
+全系设备
+入参说明
+*
+返回值
+*
+调用示例
+ 
+*startRoomMark
+启动房间标定应用
+ 
+适用设备
+支持6dof的设备
+入参说明
+返回值
+*
+调用示例
+ 
+*clearRoomMark
+清空房间标定数据
+ 
+适用设备
+支持6dof的设备
+入参说明
+无
+返回值
+*
+调用示例
+ 
+*clearEyeTrackData
+清除视线追踪数据
+ 
+适用设备
+支持眼动追踪的设备
+入参说明
+无
+返回值
+*
+调用示例
+ 
+*setEyeTrackRate
+设置eye tracking帧率
+ 
+适用设备
+支持Eyetracking的设备
+入参说明
+*
+返回值
+*
+调用示例
+ 
+*setTrackFrequency
+设置追踪频率
+ 
+适用设备
+支持6DOF的设备
+入参说明
+*
+返回值
+*
+调用示例
+ 
+*startSetSecureBorder
+开始设置安全边界
+ 
+适用设备
+支持6DOF的设备
+入参说明
+无
+返回值
+*
+调用示例
+ 
+*setDistanceSensitivity
+安全边界中，设置距离感应灵敏度
+ 
+适用设备
+支持6DOF的设备
+入参说明
+*
+返回值
+*
+调用示例
+ 
+*setSpeedSensitivity
+安全边界中，设置速度感应灵敏度
+ 
+适用设备
+支持6DOF的设备
+入参说明
+*
+返回值
+*
+调用示例
+ 
+*setMotionTrackerPredictionCoefficient
+设置体感追踪器预测系数
+ 
+适用设备
+支持6DOF的设备
+入参说明
+*
+返回值
+*
+调用示例
+ 
+*getMotionTrackerPredictionCoefficient
+获取体感追踪器预测系数
+ 
+适用设备
+支持6DOF的设备
+入参说明
+无
+返回值
+*
+调用示例
+ 
+*startMotionTrackerApp
+启动体感追踪器应用
+ 
+适用设备
+支持6DOF的设备
+入参说明
+*
+返回值
+*
+调用示例
+ 
+*setHMDVolumeKeyFunc
+设置头戴音量键功能
+ 
+适用设备
+PICO 4E、PICO 4 Ultra
+入参说明
+*
+返回值
+*
+调用示例
+ 
+*getHMDVolumeKeyFunc
+获取头戴音量键功能
+ 
+适用设备
+PICO 4E、PICO 4 Ultra
+入参说明
+无
+返回值
+*
+调用示例
+ 
+*setMRCollisionAlertSensitivity
+设置MR安全碰撞提醒灵敏度
+ 
+适用设备
+PICO 4 Ultra OTA1
+入参说明
+*
+返回值
+*
+调用示例
+ 
+*getMRCollisionAlertSensitivity
+获取MR安全碰撞提醒灵敏度
+ 
+适用设备
+PICO 4 Ultra OTA1
+入参说明
+无
+返回值
+*
+调用示例
+ 
+*setStaticIpConfiguration
+给WifiConfiguration设置静态IP等字段
+ 
+适用设备
+全系设备
+入参说明
+*
+返回值
+*
+调用示例
+ 
+*allowWifiAutoJoin
+允许回连wifi
+ 
+适用设备
+PICO 4 Ultra PUI5.13.0
+入参说明
+*
+返回值
+*
+调用示例
+ 
+*setFenceColor
+设置围栏颜色
+ 
+适用设备
+PICO 4 UE
+入参说明
+*
+返回值
+*
+调用示例
+ 
+*getFenceColor
+查看围栏颜色
+ 
+适用设备
+PICO 4 UE
+入参说明
+*
+返回值
+*
+调用示例
+ 
+*beginHandTrackingHook
+开始注入手势
+ 
+适用设备
+PICO 4 UE
+入参说明
+无
+返回值
+*
+调用示例
+ 
+*endHandTrackingHook
+结束注入手势
+ 
+适用设备
+PICO 4 UE
+入参说明
+无
+返回值
+*
+调用示例
+ 
+*setHandTrackingHookData
+注入手势数据
+ 
+适用设备
+PICO 4 UE
+入参说明
+*
+返回值
+*
+调用示例
+ 
+*setUsbTetheringStaticIP
+设置USB共享网络静态IP
+ 
+适用设备
+PICO 4 UE
+入参说明
+*
+返回值
+*
+调用示例
+ 
+*getUsbTetheringStaticIPLocal
+获取USB共享网络的本地静态IP
+ 
+适用设备
+PICO 4 UE
+入参说明
+无
+返回值
+*
+调用示例
+ 
+*getUsbTetheringStaticIPClient
+获取USB共享网络的客户端静态IP
+ 
+适用设备
+PICO 4 UE
+入参说明
+无
+返回值
+*
+调用示例
+ 
+接口
+说明
+pbsPropertySetPowerOnOffLogo
+自定义开关机动画
+pbsPropertySetHomeKey
+自定义Home键的功能，自定义后，按下Home键会执行对应的功能
+pbsPropertySetHomeKeyAll
+与Home按键设置一相比，增加了设置双击/长按的时间间隔，及指定启动应用的包名、类名
+pbsRemoveControllerHomeKey
+恢复Home按键为默认功能
+pbsPropertyDisablePowerKey
+设置Power按键的点击或长按功能是否禁用
+pbsPropertySetScreenOffDelay
+设置摘下头戴后多长时间灭屏
+pbsPropertySetSleepDelay
+设置摘下头戴后多长时间系统休眠
+setSystemAutoSleepTime
+设置摘下头戴后多长时间系统自动休眠
+pbsEnableEnterKey
+启用头戴确认键
+pbsDisableEnterKey
+禁用头戴确认按键，点击后无响应
+pbsEnableVolumeKey
+使音量键正常使用
+pbsDisableVolumeKey
+禁用音量键，无法使用音量键调节音量
+pbsEnableBackKey
+使返回键正常使用
+pbsDisableBackKey
+禁用返回键，点击后无响应
+pbsPropertyGetScreenOffDelay
+获取摘下头戴后多长时间灭屏
+pbsPropertyGetSleepDelay
+获取摘下头戴后多长时间休眠
+pbsPropertyGetPowerKeyStatus
+获取Power按键是否处于启用状态
+pbsGetEnterKeyStatus
+获取头戴确认按键是否处于启用状态
+pbsGetVolumeKeyStatus
+获取音量键是否处于启用状态
+pbsGetBackKeyStatus
+获取返回按键是否处于启用状态
+pbsPropertyGetHomKeyStatus
+获取自定义Home键功能
+pbsSetSystemLanguage
+设置系统语言
+pbsGetSystemLanguage
+获取系统当前语言
+pbsConfigWifi
+设置默认连接的WiFi
+pbsGetConfiguredWifi
+获取系统默认连接的WiFi
+pbsSetSystemCountryCode
+设置国家/地区，系统初始化设置没有完成之前接口生效
+pbsGetSystemCountryCode
+获取设备当前设置的国家/地区
+pbsSetSkipInitSettingPage
+设置初始化设置跳过的页面，设置完成后，进行初始化设置时，系统会跳过某些页面
+pbsGetSkipInitSettingPage
+获取初始化设置跳过哪些页面
+pbsIsInitSettingComplete
+获取初始化设置是否完成
+pbsCustomizeAppLibrary
+设置哪些应用需要在资源库中显示或隐藏
+pbsGetControllerBattery
+获取手柄的电量
+pbsGetControllerConnectState
+获取手柄的连接状态
+pbsGetAppLibraryHideList
+获取哪些应用不显示在资源库中
+pbsCustomizeSettingsTabStatus
+自定义设置中哪些Tab标签隐藏
+pbsGetCustomizeSettingsTabStatus
+获取设置中每个标签的显示状态
+pbsSetIPD
+调节设备的瞳距
+pbsAppSetAPPAsHomeTwo
+将应用设置为Launcher后，开机后、按下Home键后，会返回到此应用
+setSystemKeyUsability
+设置系统按键是否可用
+setLauncher
+设置应用为Launcher，具有接口执行接口回调
+setWifiP2PDeviceName
+设置WifiP2P设备名称
+getWifiP2PDeviceName
+获取WifiP2P设备名称
+setScreenBrightness
+设置屏幕亮度
+setTimeZone
+设置时区
+setPowerManageMode
+设置电源管理模式
+startRoomMark
+启动房间标定应用
+clearRoomMark
+清空房间标定数据
+clearEyeTrackData
+清除视线追踪数据
+setEyeTrackRate
+设置eye tracking帧率
+setTrackFrequency
+设置追踪频率
+startSetSecureBorder
+开始设置安全边界
+setDistanceSensitivity
+安全边界中，设置距离感应灵敏度
+setSpeedSensitivity
+安全边界中，设置速度感应灵敏度
+setMotionTrackerPredictionCoefficient
+设置体感追踪器预测系数
+getMotionTrackerPredictionCoefficient
+获取体感追踪器预测系数
+startMotionTrackerApp
+启动体感追踪器应用
+setHMDVolumeKeyFunc
+设置头戴音量键功能
+getHMDVolumeKeyFunc
+获取头戴音量键功能
+getPowerManageMode
+获取电源管理模式
+getEyeTrackRate
+获取eye tracking帧率
+getTrackFrequency
+获取追踪频率
+getDistanceSensitivity
+获取距离感应灵敏度
+getSpeedSensitivity
+获取速度感应灵敏度
+setMRCollisionAlertSensitivity
+设置MR安全碰撞提醒灵敏度
+getMRCollisionAlertSensitivity
+获取MR安全碰撞提醒灵敏度
+setStaticIpConfiguration
+给WifiConfiguration设置静态IP等字段
+void pbsPropertySetPowerOnOffLogo(PBS_PowerOnOffLogoEnum powerOnOffLogoEnum, String path, int ext,IBoolCallback callback);
+参数名称
+类型
+说明
+powerOnOffLogoEnum
+PBS_PowerOnOffLogoEnum 
+PBS_PowerOnOffLogoEnum
+path
+String 
+*开机首帧：.img格式文件路径，如/sdcard/bootlogo.img
+*开关机动画：图片的文件夹路径，图片需要是png格式
+ext
+int 
+扩展位，无意义
+callback
+IBoolCallback 
+IBoolCallback：true-成功，false-失败
+ToBServiceHelper.getInstance().getServiceBinder().pbsPropertySetPowerOnOffLogo(
+PBS_PowerOnOffLogoEnum.PLPowerOnLogo,
+ "/sdcard/image/bootlogo.img",
+ 0, 
+new IBoolCallback.Stub() {
+         @Override
+         public void callBack(boolean result) throws RemoteException {
+              Log.d(TAG, "callBack: 设置开机LOGO：" + result);
+         }
+   });
+void pbsPropertySetHomeKey(PBS_HomeEventEnum eventEnum, PBS_HomeFunctionEnum functionEnum, IBoolCallback callback);
+参数名称
+类型
+说明
+eventEnum
+PBS_HomeEventEnum 
+PBS_HomeEventEnum
+functionEnum
+PBS_HomeFunctionEnum 
+PBS_HomeFunctionEnum
+callback
+IBoolCallback 
+IBoolCallback
+true-成功
+false-失败
+//禁用HOME键单击事件
+ToBServiceHelper.getInstance().getServiceBinder().pbsPropertySetHomeKey(
+PBS_HomeEventEnum.SINGLE_CLICK, 
+PBS_HomeFunctionEnum.VALUE_HOME_DISABLE,
+new IBoolCallback.Stub() {
+                @Override
+                public void callBack(boolean result) throws RemoteException {
+                    Log.d(TAG, "callBack: 设置单击home键 功能 " + result);
+                }
+      });
+void pbsPropertySetHomeKeyAll(PBS_HomeEventEnum eventEnum, PBS_HomeFunctionEnum functionEnum, int timesetup, String pkg, String className，IBoolCallback callback);
+参数名称
+类型
+说明
+eventEnum
+PBS_HomeEventEnum 
+PBS_HomeEventEnum
+functionEnum
+PBS_HomeFunctionEnum 
+PBS_HomeFunctionEnum
+timesetup
+int 
+双击间隔、长按时长，单位-毫秒
+pkg
+String 
+功能为打开指定APP时，应用的包名
+className
+String 
+功能为打开指定APP时，打开的Activity全类名
+callback
+IBoolCallback 
+IBoolCallback
+true-成功
+false-失败
+//双击启动指定应用
+  ToBServiceHelper.getInstance().getServiceBinder().pbsPropertySetHomeKeyAll(
+PBS_HomeEventEnum.DOUBLE_CLICK, 
+PBS_HomeFunctionEnum.VALUE_HOME_OPEN_APP,
+            2000,
+         "com.picovr.settings", 
+        "com.picovr.vrsettingslib.UnityActivity", 
+        new IBoolCallback.Stub() {
+                        @Override
+                        public void callBack(boolean result) throws RemoteException {
+                            Log.d(TAG, "callBack: home键启动 应用" + result);
+                        }
+                     });
+void pbsRemoveControllerHomeKey(PBS_HomeEventEnum eventEnum);
+参数名称
+类型
+说明
+eventEnum
+PBS_HomeEventEnum 
+PBS_HomeEventEnum
+//恢复HOME键单击配置
+ToBServiceHelper.getInstance().getServiceBinder().pbsRemoveControllerHomeKey(PBS_HomeEventEnum.SINGLE_CLICK);
+void pbsPropertyDisablePowerKey(boolean isSingleTap, boolean enable, IIntCallback callback);
+参数名称
+类型
+说明
+isSingleTap
+boolean 
+true-单击，false-长按
+enable
+boolean 
+true-启用，false-禁用
+callback
+IIntCallback 
+IIntCallback
+回调接口，0-成功，1-失败
+//禁用Power键单击
+ToBServiceHelper.getInstance().getServiceBinder().pbsPropertyDisablePowerKey(true, false, 
+new IIntCallback.Stub() {
+                @Override
+                public void callback(int result) throws RemoteException {
+                    Log.d(TAG, "callback: 禁用Power键 " + result);
+                }
+            });
+void pbsPropertySetScreenOffDelay(PBS_ScreenOffDelayTimeEnum timeEnum, IIntCallback callback);
+参数名称
+类型
+说明
+timeEnum
+PBS_ScreenOffDelayTimeEnum 
+PBS_ScreenOffDelayTimeEnum
+callback
+IIntCallback 
+IIntCallback
+0-成功，1-失败，10-设置的时间大于系统休眠超时时间
+//设置屏幕超时时间为10分钟
+ToBServiceHelper.getInstance().getServiceBinder().pbsPropertySetScreenOffDelay(
+PBS_ScreenOffDelayTimeEnum.SIX_HUNDRED,
+new IIntCallback.Stub() {
+                @Override
+                public void callback(int result) throws RemoteException {
+                    Log.d(TAG, "callback: pbsPropertySetScreenOffDelay " + result);
+                }
+            });
+void pbsPropertySetSleepDelay(PBS_SleepDelayTimeEnum timeEnum);
+参数名称
+类型
+说明
+timeEnum
+PBS_SleepDelayTimeEnum 
+PBS_SleepDelayTimeEnum
+//设置系统休眠超时时间为60秒
+ToBServiceHelper.getInstance().getServiceBinder().pbsPropertySetSleepDelay(PBS_SleepDelayTimeEnum.SIXTY);
+int setSystemAutoSleepTime(PBS_SleepDelayTimeEnum delayTimeEnum);
+参数名称
+类型
+说明
+timeEnum
+PBS_SleepDelayTimeEnum 
+PBS_SleepDelayTimeEnum
+类型
+说明
+int
+0-成功
+1-失败
+//设置系统休眠超时时间为60秒
+ToBServiceHelper.getInstance().getServiceBinder().setSystemAutoSleepTime(PBS_SleepDelayTimeEnum.SIXTY);
+void pbsEnableEnterKey();
+ToBServiceHelper.getInstance().getServiceBinder().pbsEnableEnterKey();
+void pbsDisableEnterKey();
+ToBServiceHelper.getInstance().getServiceBinder().pbsDisableEnterKey();
+void pbsEnableVolumeKey();
+ToBServiceHelper.getInstance().getServiceBinder().pbsEnableVolumeKey();
+void pbsDisableVolumeKey();
+ToBServiceHelper.getInstance().getServiceBinder().pbsDisableVolumeKey();
+void pbsEnableBackKey();
+ToBServiceHelper.getInstance().getServiceBinder().pbsEnableBackKey();
+void pbsDisableBackKey();
+ToBServiceHelper.getInstance().getServiceBinder().pbsDisableBackKey();
+PBS_ScreenOffDelayTimeEnum pbsPropertyGetScreenOffDelay(int ext);
+参数名称
+类型
+说明
+ext
+int 
+扩展位，无意义
+类型
+说明
+PBS_ScreenOffDelayTimeEnum 
+PBS_ScreenOffDelayTimeEnum
+PBS_ScreenOffDelayTimeEnum pbs_screenOffDelayTimeEnum = ToBServiceHelper.getInstance().getServiceBinder().pbsPropertyGetScreenOffDelay(0);
+PBS_SleepDelayTimeEnum pbsPropertyGetSleepDelay(int ext);
+参数名称
+类型
+说明
+ext
+int 
+扩展位，无意义
+类型
+说明
+PBS_SleepDelayTimeEnum 
+PBS_SleepDelayTimeEnum
+PBS_SleepDelayTimeEnum pbs_sleepDelayTimeEnum = ToBServiceHelper.getInstance().getServiceBinder().pbsPropertyGetSleepDelay(0);
+String pbsPropertyGetPowerKeyStatus(int ext);
+参数名称
+类型
+说明
+ext
+int 
+扩展位，无意义
+类型
+说明
+String 
+{"singleTap":true,"longTap":true, "longPressTime":5000}
+String  jsonPowerConfig = ToBServiceHelper.getInstance().getServiceBinder().pbsPropertyGetPowerKeyStatus(0);
+int pbsGetEnterKeyStatus(int ext);
+参数名称
+类型
+说明
+ext
+int 
+扩展位，无意义
+类型
+说明
+int 
+0 disable , 1 enable
+int enable= ToBServiceHelper.getInstance().getServiceBinder().pbsGetEnterKeyStatus(0);
+int pbsGetVolumeKeyStatus(int ext);
+参数名称
+类型
+说明
+ext
+int 
+扩展位，无意义
+类型
+说明
+int 
+0 disable , 1 enable
+int enable= ToBServiceHelper.getInstance().getServiceBinder().pbsGetVolumeKeyStatus(0);
+int pbsGetBackKeyStatus(int ext);
+参数名称
+类型
+说明
+ext
+int 
+扩展位，无意义
+类型
+说明
+int 
+0 disable , 1 enable
+int enable= ToBServiceHelper.getInstance().getServiceBinder().pbsGetBackKeyStatus(0);
+String pbsPropertyGetHomKeyStatus(PBS_HomeEventEnum event, int ext);
+参数名称
+类型
+说明
+event
+PBS_HomeEventEnum 
+PBS_HomeEventEnum
+ext
+int 
+扩展位，无意义
+类型
+说明
+String 
+single click: {"function":10}, double click and long click{"time":null,"function":9}.
+如果没有自定义相关功能，返回空字符串
+function：{@link PBS_HomeFunctionEnum}
+single click:单击
+double click and long click：双击和长按
+String jsonHomeFunction = ToBServiceHelper.getInstance().getServiceBinder().pbsPropertyGetHomKeyStatus(homeEvent, 0);
+int pbsSetSystemLanguage(String language，int ext)；
+参数名称
+类型
+说明
+language
+String 
+*Suomi fi
+*Ελληνικά el
+*Русский ru
+*English (United States) en-US
+*中文 (繁體) zh-Hant-TW
+*Português (Portugal) pt-PT
+*Français fr
+*中文 (香港) zh-Hant-HK
+*Čeština cs
+*Türkçe tr
+*Polski pl
+*ไทย th
+*Svenska sv
+*English (United Kingdom) en-GB
+*日本語 ja
+*Nederlands nl
+*Dansk da
+*Norsk bokmål nb
+*Português (Brasil) pt-BR
+*Melayu ms
+*Deutsch de
+*spañol (España) es-ES
+*한국어 ko
+*Română ro
+*中文 (简体) zh-Hans-CN
+*Español (Estados Unidos) es-US
+*Italiano it
+ext
+int 
+1：重启nativeshell，重启之后系统运行的2d应用会退出
+类型
+说明
+int 
+*0-设置成功  
+*1-设置失败  
+*22-不支持设置的语言
+ToBServiceHelper.getInstance().getServiceBinder().pbsSetSystemLanguage("en", 0);
+String pbsGetSystemLanguage(int ext);
+参数名称
+类型
+说明
+ext
+int 
+扩展位，无意义
+类型
+说明
+String 
+系统语言
+String language = ToBServiceHelper.getInstance().getServiceBinder().pbsGetSystemLanguage(0);
+int pbsConfigWifi(String ssid, String pwd, int ext);
+参数名称
+类型
+说明
+ssid
+String 
+WiFi名称
+pwd
+String 
+WIFI密码
+ext
+int 
+扩展位，无意义
+类型
+说明
+int 
+ 0:成功 1:失败
+ToBServiceHelper.getInstance().getServiceBinder().pbsConfigWifi("wifiname", "893dsfddf",0);
+String[] pbsGetConfiguredWifi(int ext);
+参数名称
+类型
+说明
+ext
+int 
+扩展位，无意义
+类型
+说明
+String[]
+ WiFi名称
+String[] ssid = ToBServiceHelper.getInstance().getServiceBinder().pbsGetConfiguredWifi(0);
+int pbsSetSystemCountryCode(String countryCode,IIntCallback callback, int ext);
+参数名称
+类型
+说明
+countryCode
+
+String 
+*"GB",/*英国*/
+*"FR",/*法国*/
+*"DE",/*德国*/
+*"IL", /*以色列*/
+*"IT",/*意大利*/
+*"JP",/*日本*/
+*"KR",/*韩国*/
+*"NL",/*荷兰*/
+*"SG",/*新加坡*/
+*"ES",/*西班牙*/
+*"TR",/*土耳其*/
+*"MY",/*马来西亚*/
+*"AT",/*奥地利*/
+*"BE",/*比利时*/
+*"BG",/*保加利亚*/
+*"HR",/*克罗地亚*/
+*"CZ",/*捷克*/
+*"DK",/*丹麦*/
+*"EE",/*爱沙尼亚*/
+*"FI",/*芬兰*/
+*"GR",/*希腊*/
+*"HU",/*匈牙利*/
+*"IE",/*爱尔兰*/
+*"LV",/*拉脱维亚*/
+*"LT",/*立陶宛*/
+*"LU",/*卢森堡*/
+*"MT",/*马耳他*/
+*"PL",/*波兰*/
+*"PT",/*葡萄牙*/
+*"RO",/*罗马尼亚*/
+*"SK",/*斯洛伐克*/
+*"SI",/*斯洛文尼亚*/
+*"SE",/*瑞典*/
+*"LI",/*列支敦士登*/
+*"IS",/*冰岛*/
+*"NO",/*挪威*/
+*"CH",/*瑞士*/
+*"AD",/*安道尔*/
+*"SM",/*圣马力诺*/
+*"VA",/*梵蒂冈*/
+*"MC",/*摩纳哥*/
+*"US",/*美国*/
+*"CA",/*加拿大*/
+*"NZ",/*新西兰*/
+*"AU"/*澳大利亚*/
+callback
+IIntCallback 
+IIntCallback 
+0:成功 1:失败
+ext
+int
+扩展位，无意义
+类型
+说明
+int 
+*0-成功
+*1-失败
+serviceBinder.pbsSetSystemCountryCode("JP", new IIntCallback.Stub() {
+    @Override
+    public void callback(int result) throws RemoteException {
+        Log.i(TAG, "callback: "+ result);
+    }
+},0);
+String pbsGetSystemCountryCode( int ext);
+参数名称
+类型
+说明
+ext
+int
+扩展位，无意义
+类型
+说明
+String 
+系统中当前国家码
+String countryCode = ToBServiceHelper.getInstance().getServiceBinder().pbsGetSystemCountryCode(0);
+int pbsSetSkipInitSettingPage(int flag, int ext);
+参数名称
+类型
+说明
+flag
+int 
+*前6位有效，7-32保留，每一位0：显示，1：隐藏
+* 手柄连接教学：1
+*扳机键教学：1 << 1
+* 语言选择：1 << 2
+* 地区选择（仅海外版有，国内设备设置不生效）：1 << 3
+* WiFi设置： 1 << 4
+* 快速设置：1 << 5
+ext
+int
+扩展位，无意义
+类型
+说明
+int 
+*0:成功 
+*1:失败
+int flag = Constants.INIT_SETTING_HANDLE_CONNECTION_TEACHING | Constants.INIT_SETTING_TRIGGER_KEY_TEACHING;
+int result = serviceBinder.pbsSetSkipInitSettingPage(flag,0);
+int pbsGetSkipInitSettingPage(int ext);
+参数名称
+类型
+说明
+ext
+int
+扩展位，无意义
+类型
+说明
+int 
+初始化设置需要跳过的页面
+int flag = serviceBinder.pbsGetSkipInitSettingPage(0);
+int pbsIsInitSettingComplete(int ext);
+参数名称
+类型
+说明
+ext
+int
+扩展位，无意义
+类型
+说明
+int 
+ 0:未走完，1：已走完
+int complete = serviceBinder.pbsIsInitSettingComplete(0);
+int pbsCustomizeAppLibrary(String[] packageNames, PBS_SwitchEnum switchEnum, int ext);
+参数名称
+类型
+说明
+packageNames
+String[]
+包名，包名之间用","逗号分割
+switchEnum
+PBS_SwitchEnum 
+PBS_SwitchEnum 
+*显示：S_ON
+*隐藏：S_OFF
+ext
+int
+扩展位，无意义
+类型
+说明
+int 
+*0: 成功
+*1: 失败
+ ToBServiceHelper.getInstance().getServiceBinder().pbsCustomizeAppLibrary(new String[]{"com.bytedance.os.feedback","com.bytedance.pico.matrix","com.picovr.enterpriseassistant"},PBS_SwitchEnum.S_ON,0);
+int[] pbsGetControllerBattery(int ext);
+参数名称
+类型
+说明
+ext
+int
+扩展位，无意义
+类型
+说明
+int[]
+*array[0] 左手柄电量, array[1] 右手柄电量（单手柄设置，array[0]\array[1]数值相同）
+* -1: 失败
+* 1-5: 电量
+int[] batterys = ToBServiceHelper.getInstance().getServiceBinder().pbsGetControllerBattery(0);
+int pbsGetControllerConnectState(int ext);
+参数名称
+类型
+说明
+ext
+int
+扩展位，无意义
+类型
+说明
+int 
+0 左右手柄都没连接
+1 左手柄连接
+2 右手柄连接
+3 左右手柄都连接
+ToBServiceHelper.getInstance().getServiceBinder().pbsGetControllerConnectState(0);
+String pbsGetAppLibraryHideList(int ext);
+参数名称
+类型
+说明
+ext
+int
+扩展位，无意义
+类型
+说明
+String 
+返回资源库中隐藏的应用包名，包名之间用,逗号分隔
+ToBServiceHelper.getInstance().getServiceBinder().pbsGetAppLibraryHideList(0);
+int pbsCustomizeSettingsTabStatus(PBS_CustomizeSettingsTabEnum customizeSettingsTabEnum, PBS_SwitchEnum switchEnum, int ext);
+参数名称
+类型
+说明
+customizeSettingsTabEnum
+PBS_CustomizeSettingsTabEnum 
+详见PBS_CustomizeSettingsTabEnum
+switchEnum
+PBS_SwitchEnum 
+详见PBS_SwitchEnum 
+ext
+int
+扩展位，无意义
+类型
+说明
+int
+ 0: 成功 ; 1: 失败
+try {
+    int result = ToBServiceHelper.getInstance().getServiceBinder().pbsCustomizeSettingsTabStatus(PBS_CustomizeSettingsTabEnum.CUSTOMIZE_SETTINGS_TAB_WLAN, PBS_SwitchEnum. S_OFF,0);
+} catch (RemoteException e) {
+    e.printStackTrace();
+}
+PBS_SwitchEnum pbsGetCustomizeSettingsTabStatus(PBS_CustomizeSettingsTabEnum customizeSettingsTabEnum, int ext);
+参数名称
+类型
+说明
+customizeSettingsTabEnum
+PBS_CustomizeSettingsTabEnum 
+详见PBS_CustomizeSettingsTabEnum
+ext
+int
+扩展位，无意义
+类型
+说明
+PBS_SwitchEnum 
+详见PBS_SwitchEnum 
+try {
+    PBS_SwitchEnum switchEnum = ToBServiceHelper.getInstance().getServiceBinder().pbsGetCustomizeSettingsTabStatus(PBS_CustomizeSettingsTabEnum.CUSTOMIZE_SETTINGS_TAB_BLUETOOTH,0);
+} catch (RemoteException e) {
+    e.printStackTrace();
+}
+void pbsSetIPD(float ipd, Consumer<Integer> callback);
+参数名称
+类型
+说明
+ipd
+float 
+瞳距值【范围62-72】，单位mm
+callback
+Consumer<Integer>
+
+callback 执行结果回调：
+*0-成功
+*1-失败
+*23-ipd值超出允许范围
+try {
+ToBServiceHelper.getInstance().getServiceBinder().pbsSetIPD(66, new IIntCallback.Stub() {
+    @Override
+    public void callback(int i) throws RemoteException {}
+});
+void pbsAppSetAPPAsHomeTwo(PBS_SwitchEnum open_guide, String packageName);
+参数名称
+类型
+说明
+open_guide
+PBS_SwitchEnum 
+已废弃
+packageName
+String 
+Launcher的包名
+ToBServiceHelper.getInstance().getServiceBinder().pbsAppSetAPPAsHomeTwo(PBS_SwitchEnum.S_OFF, "xxxxxxx");
+int setLauncher(String packageName);
+参数名称
+类型
+说明
+packageName
+String 
+Launcher的包名
+类型
+说明
+int
+0-成功
+1-失败
+ToBServiceHelper.getInstance().getServiceBinder().setLauncher("xxxxxxx");
+void setWifiP2PDeviceName(String deviceName, Consumer<Integer> callback, int ext);
+参数名称
+类型
+说明
+deviceName
+String 
+设备名称（最大长度30个字符）
+callback
+Consumer<Integer>
+callback：
+          0-成功
+         1-失败
+         101-名称为空
+         102-名字长度超出范围
+ext
+int 
+扩展位，无意义
+ToBServiceHelper.getInstance().getServiceBinder().setWifiP2PDeviceName("1321",
+    { Log.i(TAG, "设置结果：$it") },0)
+String getWifiP2PDeviceName(int ext);
+参数名称
+类型
+说明
+ext
+int 
+扩展位，无意义
+类型
+说明
+String 
+WIFI P2P设备名称
+ToBServiceHelper.getInstance().getServiceBinder().getWifiP2PDeviceName(0);
+int setScreenBrightness(int brightness, int ext);
+参数名称
+类型
+说明
+brightness
+int 
+屏幕亮度(0-255)
+ext
+int 
+扩展位，无意义
+类型
+说明
+int
+0-success
+1-fail
+101-out of range
+ToBServiceHelper.getInstance().getServiceBinder().setScreenBrightness(100,0);
+int setTimeZone(String timeZone);
+参数名称
+类型
+说明
+timeZone
+String
+TimeZone.getAvailableIDs();
+此API可以获取到当前设备支持的时区
+类型
+说明
+int
+0-success
+1-fail
+101-param timezone is null
+102-timezone not support
+(IToBServiceProxy)ToBServiceHelper.getInstance().getServiceBinder().setTimeZone("Pacific/Honolulu");
+int setSystemDate(int year, int month, int day);
+参数名称
+类型
+说明
+year
+int 
+年
+month
+int 
+月
+day
+int 
+日
+类型
+说明
+int
+0-成功
+1-失败
+101-设置失败，原因：自动获取日期开关打开
+(IToBServiceProxy)ToBServiceHelper.getInstance().getServiceBinder().setSystemDate(2024, 1,2);
+int setSystemTime(int hourOfDay, int minute, int second);
+参数名称
+类型
+说明
+hourOfDay
+int 
+时
+minute
+int 
+分
+second
+int 
+秒
+类型
+说明
+int
+0-成功
+1-失败
+101-设置失败，原因：自动获取日期开关打开
+(IToBServiceProxy)ToBServiceHelper.getInstance().getServiceBinder().setSystemTime(12, 1,2);
+int setVirtualEnvironment(String envPath);
+参数名称
+类型
+说明
+envPath
+String 
+虚拟场景文件路径，
+null：恢复系统内置虚拟场景
+类型
+说明
+int
+0-成功
+1-失败
+(IToBServiceProxy)ToBServiceHelper.getInstance().getServiceBinder().setVirtualEnvironment("xx/xx/xx");
+String getVirtualEnvironment();
+类型
+说明
+String
+前虚拟场景
+null-系统内置虚拟场景
+(IToBServiceProxy)ToBServiceHelper.getInstance().getServiceBinder().getVirtualEnvironment();
+int setFloorHeight(float height);
+参数名称
+类型
+说明
+height
+float 
+地面高度，单位m
+类型
+说明
+String
+0-成功
+1-失败
+-2-设备不支持
+(IToBServiceProxy)ToBServiceHelper.getInstance().getServiceBinder().setFloorHeight(1.7f);
+float getFloorHeight();
+类型
+说明
+float 
+地面高度，单位m
+(IToBServiceProxy)ToBServiceHelper.getInstance().getServiceBinder().setFloorHeight();
+int setPowerManageMode(int value);
+参数名称
+类型
+说明
+value
+int 
+0-续航，1-标准，2-性能
+类型
+说明
+int 
+0-成功，1-失败
+(IToBServiceProxy)ToBServiceHelper.getInstance().getServiceBinder().setPowerManageMode(0);
+int startRoomMark();
+类型
+说明
+int 
+0-成功，1-失败
+(IToBServiceProxy)ToBServiceHelper.getInstance().getServiceBinder().startRoomMark();
+int clearRoomMark();
+类型
+说明
+int 
+0-成功，1-失败
+(IToBServiceProxy)ToBServiceHelper.getInstance().getServiceBinder().clearRoomMark();
+int clearEyeTrackData();
+类型
+说明
+int 
+0-成功，1-失败
+(IToBServiceProxy)ToBServiceHelper.getInstance().getServiceBinder().clearEyeTrackData();
+int setEyeTrackRate(int value);
+参数名称
+类型
+说明
+value
+int 
+60，90
+类型
+说明
+int 
+0-成功，1-失败
+(IToBServiceProxy)ToBServiceHelper.getInstance().getServiceBinder().setEyeTrackRate(60);
+int setTrackFrequency(int value);
+参数名称
+类型
+说明
+value
+int 
+0-自动，50，60
+类型
+说明
+int 
+0-成功，1-失败
+(IToBServiceProxy)ToBServiceHelper.getInstance().getServiceBinder().setTrackFrequency(60);
+int startSetSecureBorder();
+类型
+说明
+int 
+0-成功，1-失败
+(IToBServiceProxy)ToBServiceHelper.getInstance().getServiceBinder().startSetSecureBorder();
+int setDistanceSensitivity(int value);
+参数名称
+类型
+说明
+value
+int 
+取值 150-800
+类型
+说明
+int 
+0-成功，1-失败
+(IToBServiceProxy)ToBServiceHelper.getInstance().getServiceBinder().setDistanceSensitivity(200);
+int setSpeedSensitivity(int value);
+参数名称
+类型
+说明
+value
+int 
+取值 0-100
+类型
+说明
+int 
+0-成功，1-失败
+(IToBServiceProxy)ToBServiceHelper.getInstance().getServiceBinder().setSpeedSensitivity(50);
+int setMotionTrackerPredictionCoefficient(float predictionCoefficient);
+参数名称
+类型
+说明
+predictionCoefficient
+float 
+预测系数 0-1.0
+类型
+说明
+int 
+0-成功，1-失败
+(IToBServiceProxy)ToBServiceHelper.getInstance().getServiceBinder().setMotionTrackerPredictionCoefficient(0.5f);
+float getMotionTrackerPredictionCoefficient();
+类型
+说明
+float
+预测系数
+((IToBServiceProxy)ToBServiceHelper.getInstance().getServiceBinder()).getMotionTrackerPredictionCoefficient(0.5f);
+int startMotionTrackerApp(int failMode, int avatarMode);
+参数名称
+类型
+说明
+failMode
+int 
+校准失败时执行的操作
+ 0：默认操作
+ 1：自动重启
+ 2：自动关闭
+avatarMode
+int
+校准成功后，校准小人弹窗的显示效果
+ 0：默认
+ -1：不显示
+ 1-60：弹窗显示时长，单位为秒，超时后自动隐藏
+类型
+说明
+int
+0-成功，1-失败
+((IToBServiceProxy)ToBServiceHelper.getInstance().getServiceBinder()).startMotionTrackerApp(0,0);
+int setHMDVolumeKeyFunc(int func);
+参数名称
+类型
+说明
+func
+int 
+0：默认
+1：音量调节
+2：瞳距调节
+类型
+说明
+int
+0-成功，1-失败，-2-设备不支持，-3-参数超出范围
+((IToBServiceProxy)ToBServiceHelper.getInstance().getServiceBinder()).setHMDVolumeKeyFunc(0);
+int getHMDVolumeKeyFunc();
+类型
+说明
+int
+0-默认，1-音量调节，2-瞳距调节，-2-设备不支持
+((IToBServiceProxy)ToBServiceHelper.getInstance().getServiceBinder()).getHMDVolumeKeyFunc();
+int setMRCollisionAlertSensitivity(float value);
+参数名称
+类型
+说明
+value
+float 
+范围0.0-1.0
+类型
+说明
+int
+ 0-成功，1-失败，-2-设备不支持，-3-value超出范围
+((IToBServiceProxy)ToBServiceHelper.getInstance().getServiceBinder()).setMRCollisionAlertSensitivity(0.5f);
+float getMRCollisionAlertSensitivity();
+类型
+说明
+int
+ 0.0-1.0-灵敏度
+-2-设备不支持
+((IToBServiceProxy)ToBServiceHelper.getInstance().getServiceBinder()).getMRCollisionAlertSensitivity();
+WifiConfiguration setStaticIpConfiguration(WifiConfiguration wifiConfiguration, InetAddress staticIP,
+                                           final String subnet_mask, InetAddress gateway, InetAddress[] dns);
+参数名称
+类型
+说明
+wifiConfiguration
+WifiConfiguration 
+需要配置IP等字段的WifiConfiguration
+staticIP
+InetAddress
+IP地址
+subnet_mask
+String
+子网掩码
+gateway
+InetAddress
+网关
+dns
+InetAddress
+DNS
+类型
+说明
+WifiConfiguration
+ 带有静态IP等字段的WifiConfiguration
+
+WifiConfiguration configuration = new WifiConfiguration();
+try {
+    InetAddress staticIP = InetAddress.getByName("192.168.50.130");
+    String subnetMask = "255.255.255.0";
+    InetAddress gateWay = InetAddress.getByName("192.168.50.1");
+    InetAddress[] dns = new InetAddress[]{
+            InetAddress.getByName("192.168.50.1")
+    };
+    
+((IToBServiceProxy)ToBServiceHelper.getInstance().getServiceBinder()).setStaticIpConfiguration(configuration, staticIP, subnetMask, gateWay, dns);
+} catch (Exception e) {
+    e.printStackTrace();
+}
+int allowWifiAutoJoin(WifiConfiguration wifiConfiguration, int networkID, boolean allowAutoJoin);
+参数名称
+类型
+说明
+wifiConfiguration
+WifiConfiguration 
+wifiConfiguration优先级大于networkID
+networkID
+int 
+wifiConfiguration为null的时候，networkID才有效
+allowAutoJoin
+boolean 
+true:allowAutoJoin
+false:not allowAutoJoin
+类型
+说明
+int
+ 0-成功，1-失败
+((IToBServiceProxy)ToBServiceHelper.getInstance().getServiceBinder()).allowWifiAutoJoin(null,0,true);
+int setFenceColor(int fenceType, int red, int green, int blue, int alpha);
+参数名称
+类型
+说明
+fenceType
+int 
+1-安全围栏，2障碍物围栏
+red
+int 
+红色：0-255
+green
+int
+绿色：0-255
+blue
+int
+蓝色：0-255
+alpha
+int
+透明度：0-255
+类型
+说明
+int
+ 0-成功，1-失败
+((IToBServiceProxy)ToBServiceHelper.getInstance().getServiceBinder()).setFenceColor(1,0,200,200,200);
+int[] getFenceColor(int fenceType);
+参数名称
+类型
+说明
+fenceType
+int 
+1-安全围栏，2障碍物围栏
+类型
+说明
+int
+ result[0]-red,
+result[1]-green,
+result[2]-blue,
+result[3]-alpha
+((IToBServiceProxy)ToBServiceHelper.getInstance().getServiceBinder()).getFenceColor(1);
+int beginHandTrackingHook();
+类型
+说明
+int
+ 0-成功
+1-失败
+((IToBServiceProxy)ToBServiceHelper.getInstance().getServiceBinder()).beginHandTrackingHook();
+int endHandTrackingHook();
+类型
+说明
+int
+ 0-成功
+1-失败
+((IToBServiceProxy)ToBServiceHelper.getInstance().getServiceBinder()).endHandTrackingHook();
+int setHandTrackingHookData(HandStateAlg left, HandStateAlg right);
+参数名称
+类型
+说明
+left
+HandStateAlg 
+左手位置姿态
+right
+HandStateAlg
+右手位置姿态
+类型
+说明
+int
+ 0-成功
+1-失败
+((IToBServiceProxy)ToBServiceHelper.getInstance().getServiceBinder()).setHandTrackingHookData(/*创建HandStateAlg实例，并设置正确的手势数据*/);
+int setUsbTetheringStaticIP(String localAddr, String clientAddr);
+参数名称
+类型
+说明
+localAddr
+String 
+本地IP地址
+clientAddr
+String
+客户端IP地址
+类型
+说明
+int
+ 0-成功
+1-失败
+101-local/client ip一致
+102-local/client 不在同一网段，子网掩码是255.255.255.0
+((IToBServiceProxy)ToBServiceHelper.getInstance().getServiceBinder()).setUsbTetheringStaticIP("192.168.10.30", "192.168.10.40");
+String getUsbTetheringStaticIPLocal();
+类型
+说明
+String
+ 设置的USB共享网络本地IP
+((IToBServiceProxy)ToBServiceHelper.getInstance().getServiceBinder()).getUsbTetheringStaticIPLocal();
+String getUsbTetheringStaticIPClient();
+类型
+说明
+String
+ 设置的USB共享网络客户端IP
+((IToBServiceProxy)ToBServiceHelper.getInstance().getServiceBinder()).getUsbTetheringStaticIPClient();

@@ -1,0 +1,223 @@
+应用空间扭曲
+========================================
+应用空间扭曲 (Application SpaceWarp，AppSW) 是一项能够显著降低渲染延迟、提高性能的功能，可以为 PICO 应用提供额外算力。
+*环境要求
+*PICO 设备型号：PICO 4 系列、PICO 4 Ultra 系列
+*PICO 设备系统版本：5.11.0 及以上
+*Unity 编辑器：Unity 2021 LTS 及以上版本
+*Unity OpenXR Plugin 版本：1.9.1 及以上
+*技术原理
+通过使用 AppSW 功能，PICO 应用能以实际屏幕刷新率的一半刷新率来渲染画面，而不会影响显示质量。例如，你的应用可以以 36 FPS 的帧率进行渲染，但仍可以达到 72 FPS 的显示效果。要使用此技术，应用需要在渲染 Eye Buffer（眼部缓冲区）的基础上额外提供 Motion Vector Buffer（运动矢量缓冲区）和 Depth Buffer（深度缓冲区），用于合成新帧。
+* 
+各个核心概念的说明如下：
+*
+*前提条件
+*项目的渲染模式为 Multiview。若非此模式，前往 Edit > Project Settings > XR Plug-in Management > OpenXR，然后将 Render Mode 设置为 Multiview。
+* 
+*项目使用的图形接口为 Vulkan。若非此设置，前往 Edit > Project Settings > Player > Other Settings > Rendering，取消勾选 Auto Graphics API 选框，然后在 Graphics API 处添加 Vulkan 并将其移到首位。
+* 
+*使用步骤
+*第一步：导入可生成运动矢量的 URP
+按以下步骤，在项目内导入可生成运动矢量的 URP。
+*克隆 Unity-Graphics 仓库。
+*使用 git checkout “AppSpacewarpFor2021Unity” 命令切换至目标分支。
+*在 Unity 编辑器中打开你的项目。
+*前往 Window > Package Manager > + > Add package from disk，将下图三个文件夹中的 package.json 文件导入你的项目。
+* 
+*导入后，Core RP Library、Shader Graph 和 Universal RP 将被添加至 Package Manager 的 Custom 目录。
+* 
+**
+*第二步：启用 URP
+参考该文档，完成以下任务：创建 URP Asset、添加 URP Asset 至 Graphics 配置、禁用 HDR 、升级 Materials。
+*第三步：替换 Shader
+将场景内动态物体的默认 Shader 替换为能生成运动矢量的 URP Shader。你可以使用 Unity-Graphics 仓库提供的标准 URP Shader (com.unity.render-pipelines.universal/Shaders/Lit.shader)，或参考该 Shader 进行修改。
+*第四步：为应用开启 AppSW
+*在 Project 窗口中新建一个脚本，调用以下接口设置 AppSW，然后将该脚本添加至 XR Origin。
+* 
+*代码示例如下：
+ 
+*第五步：确认 AppSW 开启状态
+你可以通过 PxrMetric 日志输出查看当前帧率及 AppSW 开启情况。
+ 
+
+
+
+概念
+
+说明
+
+眼部缓冲区
+
+眼部缓冲区处于 VR 设备端 3D 图像渲染的中间一环。在渲染过程中，系统将每只眼睛的标准视图渲染到眼睛缓冲区中，然后将眼部缓冲区作为渲染纹理提供给 ATW 线程进行畸变和采样处理。
+
+运动矢量缓冲区
+
+运动矢量描述了每个像素的移动速度，用于追踪像素在屏幕空间和深度缓冲区中的移动量，因此可被用来预测像素在不久的将来会在哪里。
+
+深度缓冲区
+
+深度缓冲区记录了每个像素与渲染相机之间的距离，可以用于进行基于深度的重投影，从而减少头戴端的延迟。
+
+帧合成
+
+帧合成是一个使用渲染的缓冲区来合成新帧的过程，由 PICO 系统完成。
+
+
+
+*资源
+
+*说明
+
+*Core RP Library
+
+*Scriptable Render Pipeline Core (SRP Core) 使创建或定制可编写脚本的渲染管道（SRP）变得更加容易。SRP Core 包含了可重复使用的代码，包括用于处理特定平台图形 API 的样板代码、用于常见渲染操作的效用函数、以及着色器库。如果你要从头开始创建一个自定义 SRP，或者定制一个预先构建的 SRP，你可以使用 SRP Core 以节省部分时间。
+
+*Shader Graph
+
+*Shader Graph 软件包为 Unity 编辑器添加了一个可视化的 Shader 编辑工具，可用来以可视化的方式创建着色器，无需写代码。若你需要修改 Shader，可使用该资源。
+
+*Universal RP
+
+*通用渲染管线（URP）是一个预建的可编写脚本的渲染管线，由 Unity 制作。你可以通过 URP 便捷地优化场景内的图形。
+
+// 开启或关闭 AppSW
+[DllImport("UnityOpenXR", EntryPoint = "MetaSetSpaceWarp")]
+private static extern void MetaSetSpaceWarp(bool enabled);
+
+// 设置主相机父对象的位置
+[DllImport("UnityOpenXR", EntryPoint = "MetaSetAppSpacePosition")]
+private static extern void MetaSetAppSpacePosition(float x, float y, float z);
+
+// 设置主相机父对象的旋转
+[DllImport("UnityOpenXR", EntryPoint = "MetaSetAppSpaceRotation")]
+private static extern void MetaSetAppSpaceRotation(float x, float y, float z, float w);
+
+using System.Collections;
+using System.Collections.Generic;
+using System.Runtime.InteropServices;
+using Unity.XR.OpenXR.Features.PICOSupport;
+
+using UnityEngine;
+
+public class appsw : MonoBehaviour
+{
+    // 存储眼睛摄像机的数组
+    private Camera[] eyeCamera;
+    // AppSW 是否启用的标志
+    private bool appSpaceWarp;
+    // 应用空间的变换对象
+    private Transform m_AppSpaceTransform;
+    // 缓存的深度纹理模式 
+    private DepthTextureMode m_CachedDepthTextureMode;
+
+    void Awake()
+    {
+        // 初始化摄像机数组
+        eyeCamera = new Camera[3];
+        // 获取当前对象及其子对象中的所有摄像机组件
+        Camera[] cam = gameObject.GetComponentsInChildren<Camera>();
+        
+        // 遍历所有摄像机，确定左眼、右眼和主摄像机
+        for (int i = 0; i < cam.Length; i++)
+        {
+            // 如果是主摄像机并且目标眼睛为双眼
+            if (cam[i].stereoTargetEye == StereoTargetEyeMask.Both && cam[i] == Camera.main)
+            {
+                eyeCamera[0] = cam[i]; // 主摄像机
+            }
+            // 如果是左眼摄像机
+            else if (cam[i].stereoTargetEye == StereoTargetEyeMask.Left)
+            {
+                eyeCamera[1] = cam[i]; // 左眼摄像机
+            }
+            // 如果是右眼摄像机
+            else if (cam[i].stereoTargetEye == StereoTargetEyeMask.Right)
+            {
+                eyeCamera[2] = cam[i]; // 右眼摄像机
+            }
+        }
+    }
+
+    // 在每帧开始前调用
+    void Start()
+    {
+        // 启用 AppSW
+        SetSpaceWarp(true);
+    }
+
+    // 在每帧更新时调用
+    void Update()
+    {
+        // 此处可以添加每帧需要执行的逻辑
+    }
+
+    // 设置 AppSW 启用状态
+    public void SetSpaceWarp(bool enabled)
+    {
+        // 遍历所有眼睛摄像机
+        for (int i = 0; i < 3; i++)
+        {
+            // 如果摄像机存在且已启用
+            if (eyeCamera[i] != null && eyeCamera[i].enabled)
+            {
+                if (enabled)
+                {
+                    // 缓存当前的深度纹理模式
+                    m_CachedDepthTextureMode = eyeCamera[i].depthTextureMode;
+                    // 启用运动向量和深度的深度纹理模式
+                    eyeCamera[i].depthTextureMode |= (DepthTextureMode.MotionVectors | DepthTextureMode.Depth);
+
+                    // 如果摄像机没有父对象
+                    if (eyeCamera[i].transform.parent == null)
+                    {
+                        // 将原点设置为主相机父对象的位置和旋转
+                        m_AppSpaceTransform.SetPositionAndRotation(Vector3.zero, Quaternion.identity);
+                    }
+                    else
+                    {
+                        // 将主相机父对象的 Tranform 设置为摄像机的父对象
+                        m_AppSpaceTransform = eyeCamera[i].transform.parent;
+                    }
+                }
+                else
+                {
+                    // 恢复摄像机的深度纹理模式
+                    eyeCamera[i].depthTextureMode = m_CachedDepthTextureMode;
+                    m_AppSpaceTransform = null; // 清空主相机父对象的 Transform
+                }
+            }
+        }
+        // 调用本地方法设置 AppSW
+        MetaSetSpaceWarp(enabled);
+        appSpaceWarp = enabled; // 更新状态标志
+    }
+
+    // 在每帧后调用
+    private void LateUpdate()
+    {
+        // 如果 AppSW 启用且 Transform 不为空
+        if (appSpaceWarp && m_AppSpaceTransform != null)
+        {
+            // 设置主相机父对象的位置
+            MetaSetAppSpacePosition(m_AppSpaceTransform.position.x, m_AppSpaceTransform.position.y, m_AppSpaceTransform.position.z);
+            // 设置主相机父对象的旋转
+            MetaSetAppSpaceRotation(m_AppSpaceTransform.rotation.x, m_AppSpaceTransform.rotation.y, m_AppSpaceTransform.rotation.z, m_AppSpaceTransform.rotation.w);
+        }
+    }
+    
+    #region OpenXR Plugin DLL Imports
+    // 导入用于开启或关闭 AppSW 的外部方法
+    [DllImport("UnityOpenXR", EntryPoint = "MetaSetSpaceWarp")]
+    private static extern void MetaSetSpaceWarp(bool enabled);
+
+    // 导入用于设置主相机父对象的位置的外部方法
+    [DllImport("UnityOpenXR", EntryPoint = "MetaSetAppSpacePosition")]
+    private static extern void MetaSetAppSpacePosition(float x, float y, float z);
+
+    // 导入用于设置主相机父对象的旋转的外部方法
+    [DllImport("UnityOpenXR", EntryPoint = "MetaSetAppSpaceRotation")]
+    private static extern void MetaSetAppSpaceRotation(float x, float y, float z, float w);
+    #endregion
+}
+
+xxx/com.pico.xxx I/PxrMetric: FPS=36/72,MTP=40.60ms,AppSW=on,FrmEarly=0,FrmLate=0,FrmCpu=2.33ms,FrmGpu=7.16ms,FrmTime=9.50ms,VsyncDelay=1,GPU=43%/441Mhz,GPUTemp=55.2C,LayerCnt=3

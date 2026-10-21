@@ -1,0 +1,199 @@
+平面检测
+========================================
+平面检测是增强现实（AR）和混合现实（MR）中关键的环境感知技术，用于帮助系统识别现实世界中的平面，从而使虚拟物体能够与真实环境精准交互和融合。
+*通过平面检测，MR 应用能够识别并追踪水平、垂直或倾斜的表面（如地板、桌面、墙壁和斜屋顶），确保虚拟物体被准确放置并稳定对齐于实际空间。
+ 
+*语义标签
+*平面检测支持的语义标签（PxrSemanticLabel）如下：
+**
+*开始/停止平面检测功能
+*调用 StartSenseDataProvider 和StopSenseDataProvider来开始或停止平面检测功能。
+ 
+*获取平面检测数据 Provider 的状态
+*使用 GetSenseDataProviderState 来获取平面检测数据 Provider 的状态。
+ 
+*获取平面检测数据
+*通过监听 PlaneDetectionDataUpdated 事件，获取带有 ChangeState 的数据。
+ 
+*AR Foundation
+*SDK 也支持通过 AR Foundation 实现平面检测功能。具体支持的能力如下：
+**
+
+***
+
+ 
+
+ 
+
+ 
+
+
+
+语义标签
+
+说明
+
+Unknown
+
+除以下给定语义之外的物体。
+
+Floor
+
+地面
+
+Ceiling
+
+天花板
+
+Wall
+
+现实环境中的墙面，可以在上面标定门和窗。
+
+Door
+
+门，必须在墙面（Wall）内标定。
+
+Window
+
+窗，必须在墙面（Wall）内标定。
+
+Opening
+
+开口区域
+
+Table
+
+桌子
+
+Sofa
+
+沙发
+
+Chair
+
+椅子
+
+Curtain
+
+窗帘
+
+Cabinet
+
+柜子
+
+Bed
+
+床
+
+Plant
+
+植物
+
+Screen
+
+屏幕
+
+VirtualWall
+
+虚拟墙面为场景标定应用自动生成的墙面，与现实环境中的墙面无关联，无法在虚拟墙面上标定门和窗。
+虚拟墙面会形成一个封闭空间，将现实和虚拟物体包含在内。你可以在应用内添加用户进出该封闭空间的逻辑判断或增加安全提示。
+
+Refrigerator
+
+冰箱
+
+WashingMachine
+
+洗衣机
+
+AirConditioner
+
+空调
+
+Lamp
+
+灯
+
+WallArt
+
+墙面艺术，必须在墙面（Wall）内标定。
+
+// 开始平面检测功能
+PXR_MixedReality.StartSenseDataProvider(PxrSenseDataProviderType.PlaneDetection);
+ 
+// 停止平面检测功能 
+PXR_MixedReality.StopSenseDataProvider(PxrSenseDataProviderType.PlaneDetection)
+
+PXR_MixedReality.GetSenseDataProviderState(PxrSenseDataProviderType.PlaneDetection,out var state)
+
+// 表示平面检测中网格数据的变化类型
+public enum MeshChangeState
+{
+  Added, // 新增的网格
+  Updated, // 更新的网格
+  Removed, // 移除的网格
+  Unchanged, // 未变化的网格
+}
+
+// 定义检测到的平面的空间方向类型
+public enum PxrPlaneOrientation
+{
+    HorizontalUpward = 0, // 水平向上的平面（如地面、桌面）
+    HorizontalDownward = 1, // 水平向下的平面（如天花板）
+    Vertical = 2, // 垂直平面（如墙面）
+    Arbitrary = 3, // 任意方向的平面
+}
+
+// 包含平面检测系统识别到的平面的完整信息
+public struct PxrPlaneData
+{
+    public Guid uuid; // 平面的唯一标识符
+    public Vector3 position; // 平面在世界坐标系中的位置
+    public Quaternion rotation; // 平面在世界坐标系中的旋转
+    public PxrSemanticLabel label; // 平面的语义标签（如墙面、地面、天花板等）
+    public PxrSceneBox2D box2D; // 平面的 2D 边界框信息
+    public ushort[] indices; // 平面网格的索引数组，用于构建三角形
+    public Vector3[] vertices; // 平面网格的顶点数组
+    public MeshChangeState state; // 平面网格的变化状态
+    public PxrPlaneOrientation orientationMode; // 平面的方向模式
+}
+
+// 订阅平面检测数据更新事件
+void OnEnable()
+{
+    PXR_Manager.PlaneDetectionDataUpdated += PlaneDetectionDataUpdated;
+}
+
+// 取消订阅平面检测数据更新事件，防止内存泄漏
+void OnDisable()
+{
+    PXR_Manager.PlaneDetectionDataUpdated -= PlaneDetectionDataUpdated;
+}
+
+// 当 PXR 系统检测到平面数据变化时会调用此方法
+void PlaneDetectionDataUpdated(List<PxrPlaneData> planeDatas)
+{
+    //...
+}
+
+
+
+*Horizontal plane detection
+
+*水平平面检测：指示提供方实现是否支持检测水平平面，例如地面。
+
+*Vertical plane detection
+
+*垂直平面检测：指示提供方实现是否支持检测垂直平面，例如墙面。
+
+*Arbitrary plane detection
+
+*任意平面检测：指示提供方实现是否支持检测既不与水平轴也不与垂直轴对齐的平面。
+
+*Boundary vertices
+
+*边界顶点：指示提供方实现是否支持为其平面提供边界顶点。
+
+*Classification
+
+* 分类：指示提供方实现是否可以为 ARPlane.classifications 提供值。

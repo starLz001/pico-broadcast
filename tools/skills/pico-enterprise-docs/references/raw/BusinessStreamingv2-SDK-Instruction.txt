@@ -1,0 +1,448 @@
+*主要更新
+*全面支持串流1.2SDK接口,修复了SDK接口调用阻塞问题
+*大幅扩充了SDK接口功能,支持通过SDK查询串流状态,修改串流设置,新增消息采用Json格式,保证兼容性
+*提供了C# winform实现的SDK demo,对于Unity 开发者更友好
+*SDK使用说明
+*1. SDK目录结构
+ 
+*2. 引用方式
+*2.1 C++语言
+*接口及数据结构使用
+使用SDK/include目录下的头文件
+*BStreamingSDK.h
+定义了SDK初始化,终止,控制,状态获取的的相关接口
+*Dll接口调用
+构建时用BStreaming\SDKDist\lib 目录下的lib文件,运行时使用lib目录下的dll文件
+*2.2 C#语言
+*接口及数据结构使用
+C#语言无法直接使用.h文件,需要进行适当转化,具体可以参考CSharpDemo
+*3. 接口说明
+*3.1 初始化
+ 
+使用任何接口之前首先调用该接口,主要作用是建立与企业串流软件主体的通信,userData为保留字段,传入空即可.
+*3.2 查询控制消息接口
+*json消息接口
+2.1版本新增的json消息接口,此接口实现了SDK的全部功能,推荐使用
+ 
+*参数说明
+*msg: 传入参数，json 格式字符串
+*res: 传出参数，以字符串方式返回查询结果，存储空间由用户分配，请根据消息类型分配足够的空间
+*len: 传入参数，指定 res 长度，以字节为单位
+*timeout: 查询超时时间，单位毫秒，防止长时间无响应导致 API 卡死，默认超时时间300毫秒
+*返回值
+ 
+*指令列表
+*
+*备注:
+*对于发送至hmd/pc的指令,如果不识别,返回
+*{"cmd":"xxx","detail":"UnKnown cmd","error_code":-1},其中 "xxx" 为不识别的指令名称
+*连接状态列表
+*
+*语种列表
+*
+*性能面板数据说明
+*
+5.游戏设置选项说明
+*
+6.音频设置选项说明
+*
+*控制与查询接口 (过时,推荐使用Json消息接口)
+消息名称 参数列表
+ 
+该接口用于传递SDK对于串流的查询或控制指令,详见如下列表
+*
+*
+错误码:
+*0 成功 (BStreamingSDKError_None)
+*-1 SDK未初始化 (BStreamingSDKError_SDKNotInit)
+*-2 未知消息 (BStreamingSDKError_UnknowMsg)
+*-3 接收Socket异常 (BStreamingSDKError_BadRecvSocket)
+*-5 操作不匹配 (BStreamingSDKError_ActionMismatch)
+*-6 HMD未连接 (BStreamingSDKError_HMDNotConnected)
+*查询接口 (过时,推荐使用Json消息接口)
+ 
+*
+*错误码:
+*0 成功 (BStreamingSDKError_None)
+*-1 SDK未初始化 (BStreamingSDKError_SDKNotInit)
+*-2 未知消息 (BStreamingSDKError_UnknowMsg)
+*-3 接收Socket异常 (BStreamingSDKError_BadRecvSocket)
+*-4 内存溢出 (BStreamingSDKError_MemoryOverflow)
+*3.3 终止
+ 
+停止使用SDK时,需调用此接口进行资源的释放
+*4. SDK示例程序
+*4.1 UI
+SDK 主界面如下所示
+* 
+*界面说明:
+*SDK初始化成功指示
+*调整高度,正方向,原点
+*获取连接状态
+*获取头显电量
+*获取头显SN
+*Json消息输入框
+*Json消息输出框
+*Json消息超时设置,单位为毫秒
+*Json消息发送按钮
+ 
+
+Install directory
+├─CSharpDemo
+│  └─BStreamingSDKDemoCSharp //c# winform demo 源码
+└─SDKDist
+    ├─include                //sdk 头文件,c/c++可直接引用,c# 项目仅供参考
+    └─lib                    //.dll库文件,与 sdk demo可执行文件
+    BSTREAMINGSDK_API int BStreamingSDK_Init(void* userData);
+BSTREAMINGSDK_API int BStreamingSDK_MsgJson(const char* msg, char* res, unsigned len, unsigned timeout);
+    enum BStreamingSDKError
+    {
+        BStreamingSDKError_None = 0, // 成功
+        BStreamingSDKError_SDKNotInit = -1, // SDK未初始化
+        BStreamingSDKError_BadRecvSocket = -4, // 接收socket错误
+        BStreamingSDKError_MemoryOverflow = -5, // res内存溢出
+        BStreamingSDKError_InvalidParam = -6, // 无效参数
+        BStreamingSDKError_Timeout = -7 // 超时
+    };
+指令(msg)
+说明
+返回值(res)
+备注
+{"cmd":"stop_streaming"}
+停止串流
+
+{"cmd":"stop_streaming","error_code":0}
+-
+{"cmd":"close_app"}
+结束串流,退出软件
+{"cmd":"close_app","error_code":0}
+-
+{"cmd":"get_left_battery"}
+查询左手柄电量
+未连接：{"cmd":"get_left_battery","battery":0}
+电量1-5档：{"cmd":"get_left_battery","battery":1} 到 {"cmd":"get_left_battery","battery":100}
+-
+{"cmd":"get_right_battery"}
+查询右手柄电量
+未连接：{"cmd":"get_right_battery","battery":0}
+电量1-5档：{"cmd":"get_right_battery","battery":1} 到 {"cmd":"get_right_battery","battery":100}
+-
+{"cmd":"get_hmd_battery"}
+查询头显电量
+未连接：{"cmd":"get_hmd_battery","battery":0}
+电量1-5档：{"cmd":"get_hmd_battery","battery":1} 到 {"cmd":"get_hmd_battery","battery":100}
+-
+{"cmd":"query_connection"}
+查询连接状态
+{"cmd":"query_connection","state":"xxx","connectionType":"usb/wifi/null","streamingNetwork":"xxx"}
+具体连接状态参见连接状态列表,streamingNetwork为当前串流网络名称
+{"cmd":"query_hmd_sn"}
+查询头显SN
+
+连接：{"cmd":"query_hmd_sn","sn":"snxxxxxx"}
+未连接：{"cmd":"query_hmd_sn","sn":"unknownSN"}
+-
+{"cmd":"set_autoconnect_service","value":true}
+设置是否自动连接服务
+
+{"cmd":"set_autoconnect_service","error_code":0}
+-
+{"cmd":"get_game_settings"}
+获取当前游戏设置
+
+{"cmd":"get_game_settings","data":{JSON settings}}
+-
+{"cmd":"set_game_settings","data":{JSON settings}}
+更新游戏设置
+
+成功：{"cmd":"set_game_settings","error_code":0}
+失败：{"cmd":"set_game_settings","error_code":-1,"detail":"xxx"}
+注意，更新分辨率和码率选项会自动重启steamvr，从而导致串流中断，需要用户重新启动steamvr串流应用，如果是openxr串流需要重启openxr串流应用
+
+{"cmd":"get_desktop_settings"}
+获取当前桌面设置
+{"cmd":"get_desktop_settings","data":{"sharpenRate": 20}}
+-
+{"cmd":"set_desktop_settings","data":{"sharpenRate": 20}}
+更新桌面设置
+成功：{"cmd":"set_desktop_settings","error_code":0}
+失败：{"cmd":"set_desktop_settings","error_code":-1,"detail":"xxx"}
+-
+{"cmd":"get_audio_settings"}
+获取当前音频设置
+{"cmd":"get_audio_settings","data":{JSON settings}}
+-
+{"cmd":"set_audio_settings","data":{JSON settings}}
+更新音频设置
+成功：{"cmd":"set_audio_settings","error_code":0}
+失败：{"cmd":"set_audio_settings","error_code":-1,"detail":"xxx"}
+-
+{"cmd":"get_autostart"}
+获取开机自动运行设置
+{"cmd":"get_autostart","value":true}
+-
+{"cmd":"set_autostart","value":true}
+设置开机自动运行
+{"cmd":"set_autostart","error_code":0}
+-
+{"cmd":"get_closetotray"}
+获取最小化到托盘设置
+{"cmd":"get_closetotray","value":true}
+-
+{"cmd":"set_closetotray","value":true}
+设置最小化到托盘
+
+{"cmd":"set_closetotray","error_code":0}
+-
+{"cmd":"get_language"}
+获取语言设置
+{"cmd":"get_language","value":"zh-Hans-CN"}
+支持的语种ID参见语种列表
+{"cmd":"set_language","value":"zh-Hans-CN"}
+设置语言
+{"cmd":"set_language","error_code":0}
+-
+{"cmd":"get_stream_mode"}
+获取串流模式
+
+{"cmd":"get_stream_mode","value":"openxr"}
+-
+{"cmd":"get_app_version"}
+获取软件版本
+{"cmd":"get_app_version","value":"2.1.0"}
+-
+{"cmd":"show_perf_panel","value":true}
+显示/隐藏性能面板
+
+{"cmd":"show_perf_panel","error_code":0}
+-
+{"cmd":"get_psensor_state","type":"hmd"}
+查询psersor状态
+
+靠近psensor：{"cmd":"get_psensor_state","state":0}
+远离psensor：{"cmd":"get_psensor_state","state":1}
+-
+{"cmd":"reset_space","type":"hmd","height":1.8}
+重置串流空间高度,原点,正方向
+
+{"cmd":"reset_space","error_code":0}
+-
+{"cmd":"get_swift_info","type":"hmd"}
+
+获取swift tracker信息
+
+{"cmd":"get_swift_info","trackerlist":[{"battery":0,"connectState":0,"sn":"PC2310MLJ8071172G"},{"battery":90,"connectState":1,"sn":"PC2310MLJ6050563G"}]}
+-
+{"cmd":"get_stream_performance_data","type":"hmd"}
+获取串流性能面板数据
+
+{"cmd":"get_stream_performance_data","error_code":0,"performanceData":{性能面板JSON数据}}
+
+性能面板数据说明参见性能面板数据说明
+{"cmd":"show_hand_skeleton","type":"driver","value":true}
+显示手部骨骼
+
+{"cmd":"show_hand_skeleton","error_code":0}
+-
+序号
+状态值
+说明
+1
+streaming-service-disconnected
+企业互联PC端未连接串流服务
+2
+hmd-never-connected
+企业互联PC端已连接串流服务，HMD未连接PC
+3
+hmd-connected
+HMD已连接, 但未启动任意类型串流
+4
+steamvr-connected
+SteamVR已连接
+5
+openxr-connected
+OpenXR已连接
+6
+desktop-connected
+桌面串流已连接
+7
+disconnect-by-hmd
+HMD主动断开串流
+8
+disconnect-by-pc
+PC主动断开串流
+9
+desktop-capture-error
+桌面串流采集错误
+ID
+语种
+zh-Hans-CN
+简体中文
+de-DE
+Deutsch
+en-US
+English
+es-ES
+Español
+fr-FR
+Français
+it-IT
+Italiano
+ja-JP
+日本語
+ko-KR
+한국어
+pt-BR
+Português
+ru-RU
+Русский язык
+th-TH
+ภาษาไทย
+zh-Hant-HK
+繁體中文（中國香港）
+zh-Hant-TW
+繁體中文（中國台灣）
+字段名
+中文说明
+英文说明
+autoBitrate
+自动码率
+AutoBitrate
+bitrate
+码率
+Bitrate
+captureTime
+游戏渲染
+Game
+codecType
+编码方式
+Codec
+decodeTime
+解码
+Decode
+encodeTime
+编码
+Encode
+fov
+视场角
+FOV
+frameRate
+帧率
+FPS
+handTrackingActive
+手势是否激活
+Hand Tracking is Active
+interpolatedFrame
+自动插帧
+ASW
+isPcWiredNetwork
+PC网络
+PC Network
+pcAcPlugged
+PC供电方式
+PC Power
+pcEncodeGpuUsage
+显卡编码
+GPU Encode
+pcGpuDeviceName
+PC显卡名称
+PC GPU Device Name
+pcGpuMemoryUsage
+显存使用
+GPU Memory
+pcGpuUsage
+显卡渲染
+GPU Render
+resolution
+分辨率
+Resolution
+resolutionStandard
+画质
+Resolution Standard
+streamDelay
+总延迟
+Latency
+transTime
+传输
+Transmit
+字段名
+说明
+类型
+取值范围
+gamma
+伽马值
+number
+0.5-1.5
+superResolution
+视频超分
+boolean
+-
+sharpenRate
+图像锐化
+number
+0-100
+frameBuffer
+帧缓冲
+boolean
+-
+colorMode
+色彩模式
+string
+default,rec2020,hsv1_4
+asw
+插帧
+boolean
+-
+codec
+编码方式
+string
+avc,hevc,av1
+bitrate
+码率
+number
+20-150
+resolution
+清晰度(分辨率)
+string
+smooth,sd,hd,ultra,uhd,uhdplus
+字段名
+说明
+类型
+取值范围
+mic
+启用VR麦克风
+boolean
+-
+output
+声音输出
+string
+hmd,pc,both
+    BSTREAMINGSDK_API int BStreamingSDK_ControlMsg(const char* msg);
+消息格式
+说明
+返回值
+备注
+reset_space 1.5
+重置usb/wifi串流高度,中心点,正方向
+0 连接建立非0值 具体原因见错误码
+高度范围是 0-10米
+query_connection
+查询VR端是否已连接,用于
+0 连接建立非0值 具体原因见错误码
+此接口存在超时等待,最好在后台线程中轮训
+query_hmd_battery
+查询电量
+>=0 电量<0 错误码
+
+     BSTREAMINGSDK_API int BStreamingSDK_QueryMsg(const char *msg,char* res,unsigned len);
+消息命名
+说明
+返回值
+备注
+query_hmd_sn
+查询设备snres 为存放sn查询结果的地址len 为res可用长度
+见错误码
+
+sn长度为17位,分配查询结果内存时应当注意预留足够空间
+    BSTREAMINGSDK_API int BStreamingSDK_Deinit();
+按钮2-5内部调用的是旧版接口,这些接口仅保留做向后兼容,同样的功能也可以通过Json消息接口实现,以便灵活设置超时时间,具体可参考C# demo 源码

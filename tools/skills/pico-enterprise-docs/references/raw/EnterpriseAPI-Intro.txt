@@ -1,0 +1,479 @@
+*引言
+*编写目的
+PICO TobService 提供了企业级接口，本文档目的是描述 PICO TobService 提供的功能及其运行环境，以便使用者了解其使用范围和使用方法，并为软件的维护和更新提供必要的信息。
+*目标读者
+本文档读者对象主要为具备一定安卓开发能力的PICO合作伙伴。Unity及Unreal开发者调用方法请前往PICO 开发者平台，参照Unity SDK使用说明文档 （如下图Unity API）。
+*
+ 
+
+*适用设备
+大部分接口支持PICO的全系列企业级产品，但仍有少数设备无法使用这些接口。特殊情况在相应的接口描述中有注明。如果您有任何疑问或需要进一步的帮助，请将相关问题发送至邮箱（pico-business-techsupport@bytedance.com）联系PICO企业服务团队。
+PICO 企业版全系产品包含：PICO Neo3 Pro/eye，PICO Neo3 企业版，PICO 4 Enteprise（简称PICO4E），PICO 4 Ultra Enterprise（简称PICO4UE），PICO G3
+*系统版本说明
+*企业级安卓接口的各个版本依赖于设备的系统版本。
+*
+*更新历史
+本文记录了 ToBService 接口近3个版本的变更情况。
+*v4.3.24
+发版日期：2025-05
+系统版本：PICO 4 Ultra E PUI 5.14.4
+*
+*v4.3.22
+发版日期：2025-04
+系统版本：PICO 4 Ultra E PUI 5.13.3
+*
+*v4.3.20
+发版日期：2025-02
+系统版本：PICO 4 Ultra E PUI5.13.0
+*
+*v4.3.18
+发版日期：2024-11
+系统版本：PICO 4 Ultra E PUI5.12.0
+*
+*快速开始
+*第一步：导入依赖库
+*配置Maven仓库地址
+* 
+*引入依赖库
+* 
+*第二步：添加高风险接口权限标签
+*高风险接口列表：
+**
+*添加方法：
+*在manifest文件增加一个标签，标签存在则可以用service高风险接口。
+* 
+*备注：使用高风险接口的应用将无法上传至PICO开发者平台；
+*第三步：调用接口
+*绑定TobService
+* 
+*解绑TobService
+* 
+*设置绑定状态回调
+* 
+*绑定TobService和设置绑定状态回调
+* 
+*调用接口示例
+*  第二步绑定成功之后才能执行本步操作
+*  获取PUI版本号：
+* 
+*错误码描述
+常见错误码详见：常见错误码
+*Device owner独占接口说明
+*Device owner独占接口列表
+*
+*接口分类总览
+ 
+*
+
+Tobservice版本
+设备系统版本
+v4.3.22
+PICO 4 Ultra E PUI5.13.3 
+v4.3.20
+PICO 4 Ultra E PUI5.13.3 
+v4.3.18
+PUI5.12.0
+v4.3.16
+PUI5.11.0
+v4.3.14
+PICO 4 Ultra E beta
+v4.3.12
+PUI5.9.8
+v4.3.10
+PUI5.9.0
+v4.3.8
+PUI5.9.0
+v4.3.6
+PUI5.8.0
+v4.3.4
+PUI5.7.0
+变更类型
+变更说明
+相关内容
+新增
+
+PBS_SystemFunctionSwitchEnum 新增以下枚举: 
+    //HOME手势开关:系统桌面中
+    SFS_GESTURE_RECOGNITION_HOME_ENABLE_ON_DESKTOP(98),
+    
+    //RESET手势开关:系统桌面中
+    SFS_GESTURE_RECOGNITION_RESET_ENABLE_ON_DESKTOP(99),
+    
+    //关闭窗口内存优化策略
+    SFS_DISABLE_WINDOW_MEMORY_OPTIMIZATION(100),
+    
+    //系统桌面沉浸模式
+    //可设置值：0-100
+    SFS_IMMERSIVE_MODE(101),
+    
+    //全局VST
+    SFS_GLOBAL_VST(102),
+    
+    //手势注入开关
+    SFS_HAND_TRACKING_HOOK(103),
+    
+    //USB共享网络静态IP开关
+    SFS_USB_TETHERING_STATIC_IP_ENABLED(104),
+    
+    //Swift追踪模式：全身动捕/独立追踪
+    //0-全身动捕，1-独立追踪
+    SFS_TRACKER_MODE(105),
+    
+    //Guardian 持久沉浸模式，离开安全区不主动进入透视
+    //0-系统默认，不做特殊处理，1-不触发VST
+    SFS_GUARDIAN_PERSISTENT_IMMERSION_MODE(106);
+相关接口
+pbsSwitchSystemFunction
+pbsGetSwitchSystemFunctionStatus
+
+
+PBS_SystemInfoEnum新增以下枚举
+//PSensor状态
+PSENSOR_STATUS(23),
+//大空间地图缩放比例
+LARGE_SPACE_MAP_SCALE(24);
+相关接口
+pbsStateGetDeviceInfo
+
+
+
+
+
+设置围栏颜色
+setFenceColor
+
+查看围栏颜色
+getFenceColor
+
+开始注入手势
+beginHandTrackingHook
+
+结束注入手势
+endHandTrackingHook
+
+注入手势数据
+setHandTrackingHookData
+
+设置USB共享网络的静态IP
+setUsbTetheringStaticIP
+
+获取USB共享网络的本地静态IP
+getUsbTetheringStaticIPLocal
+
+获取USB共享网络的客户端静态IP
+getUsbTetheringStaticIPClient
+
+设置大空间地图比例
+setLargeSpaceMapScale
+
+将系统缓冲区中的数据同步到磁盘
+fileSync
+变更类型
+变更说明
+相关内容
+新增
+
+PBS_SystemFunctionSwitchEnum 新增以下枚举: 
+     //混合追踪模式开关
+    SFS_MIXED_INTERACTION_MODE(96),
+    
+    //异常定位提醒
+    SFS_REMINDER_FOR_ABNORMAL_LOCATING(97),
+相关接口
+pbsSwitchSystemFunction
+pbsGetSwitchSystemFunctionStatus
+
+
+获取头戴定位状态
+getHeadTrackingStatus
+
+获取头戴Pose
+getHeadPose
+
+获取手柄Pose
+getControllerPose
+
+获取Swift Pose
+getSwiftPose
+
+获取头戴IMU数据
+getHeadIMUData
+
+获取手柄IMU数据
+getControllerIMUData
+
+获取Swift设备IMU数据
+getSwiftIMUData
+
+获取Swift 设备信息
+getSwiftTrackerDevices
+
+进入tracker配对状态
+startSwiftTrackerPairing
+
+解绑Tracker
+unBondSwiftTracker
+
+重启定位追踪
+resetTracking
+变更类型
+变更说明
+相关内容
+新增
+
+PBS_CustomizeSettingsTabEnum新增以下枚举
+    //账号 Sparrow_PUI5130
+    CUSTOMIZE_SETTINGS_TAB_ACCOUNTS(7),
+    //系统升级 Sparrow_PUI5130
+    CUSTOMIZE_SETTINGS_TAB_SYSTEM_UPDATE(8),
+    //交互 Sparrow_PUI5130
+    CUSTOMIZE_SETTINGS_TAB_INTERACTION(9),
+    //瞳距 Sparrow_PUI5130
+    CUSTOMIZE_SETTINGS_TAB_PUPIL_DISTANCE(10),
+    //相机与透视 Sparrow_PUI5130
+    CUSTOMIZE_SETTINGS_TAB_CAMERA_SEETHROUGH(11),
+    //虚拟场景 Sparrow_PUI5130
+    CUSTOMIZE_SETTINGS_TAB_VIRTUAL_ENVIRONMENT(12),
+    //安全防护 Sparrow_PUI5130
+    CUSTOMIZE_SETTINGS_TAB_SAFEGUARD(13),
+    //房间标定 Sparrow_PUI5130
+    CUSTOMIZE_SETTINGS_TAB_ROOM_CAPTURE(14),
+    //性能 Sparrow_PUI5130
+    CUSTOMIZE_SETTINGS_TAB_PERFORMANCE(15),
+    //控制中心 Sparrow_PUI5130
+    CUSTOMIZE_SETTINGS_TAB_CONTROL_CENTRE(16),
+    //通知 Sparrow_PUI5130
+    CUSTOMIZE_SETTINGS_TAB_NOTIFICATIONS(17),
+    //应用管理 Sparrow_PUI5130
+    CUSTOMIZE_SETTINGS_TAB_APP_MANAGEMENT(18),
+    //关于本机 Sparrow_PUI5130
+    CUSTOMIZE_SETTINGS_TAB_ABOUT(19),
+    //帮助与反馈 Sparrow_PUI5130
+    CUSTOMIZE_SETTINGS_TAB_HELP_FEEDBACK(20);
+相关接口
+pbsCustomizeSettingsTabStatus
+
+
+PBS_SystemFunctionSwitchEnum 新增以下枚举: 
+ //手柄是否进入静止状态
+    //不支持pbsGetSwitchSystemFunctionStatus接口
+    SFS_CONTROLLER_STILL(92),
+    
+    //快捷设置是否显示性能按钮 Sparrow_PUI513
+    SFS_SHORTCUT_SHOW_PERFORMANCE_UI(93),
+    
+    //电池状态显示
+    SFS_BATTERY_STATUS_DISPLAY(94),
+    
+    //快速重定位
+    SFS_QUICK_RELOCATION(95);
+相关接口
+pbsSwitchSystemFunction
+pbsGetSwitchSystemFunctionStatus
+
+
+PBS_SystemInfoEnum新增以下枚举
+    //充电协议
+    CURRENT_CHARGING_PROTOCOL(20),
+    //最大充电功率
+    USB_PWOER_MAX(21),
+    //头戴位姿
+    HMD_POSITION_AND_ORIENTATION(22);
+相关接口
+pbsStateGetDeviceInfo
+
+
+
+
+
+setDeviceOwner
+设置DeviceOwner
+
+getDeviceOwner
+获取当前设置的DeviceOwner
+
+setBrowserHomePage
+设置浏览器主页
+
+getBrowserHomePage
+获取当前浏览器主页
+
+setMotionTrackerAutoStart
+Motion Tracker插电自动开机
+
+allowWifiAutoJoin
+允许回连wifi
+
+getLargeSpaceBoundsInfoWithType
+获取大空间围栏信息
+变更类型
+变更说明
+相关内容
+新增
+
+PBS_SystemInfoEnum新增以下枚举
+LARGESPACE_MAP_INFO：大空间地图信息
+相关接口
+pbsStateGetDeviceInfo
+
+
+
+
+获取手柄震动幅度
+getControllerVibrateAmplitude
+
+设置头戴音量键功能
+setHMDVolumeKeyFunc
+
+获取头戴音量键功能
+getHMDVolumeKeyFunc
+
+获取电源管理模式
+getPowerManageMode
+
+获取eye tracking帧率
+getEyeTrackRate
+
+获取追踪频率
+getTrackFrequency
+
+获取距离感应灵敏度
+getDistanceSensitivity
+
+获取速度感应灵敏度
+getSpeedSensitivity
+
+设置MR安全碰撞提醒灵敏度
+setMRCollisionAlertSensitivity
+
+获取MR安全碰撞提醒灵敏度
+getMRCollisionAlertSensitivity
+
+给WifiConfiguration设置静态IP等字段
+setStaticIpConfiguration
+
+获取单目画面来源
+getSingleEyeSource
+
+获取画面视野
+getViewVisual
+
+获取是否接受外部投屏
+getAcceptCastMode
+
+获取是否分享屏幕给外部设备
+getScreenCastMode
+
+获取录屏、截屏画面比例
+getScreenRecordShotRatio
+
+获取录屏、截屏画面分辨率
+getScreenResolution
+
+获取录屏帧率
+getScreenRecordFrameRate
+
+连接wifi
+connectWifi
+maven {
+    url 'https://artifacts-cn-beijing.volces.com/repository/picoxrtob'
+}
+implementation 'com.picoxr.tobservice:tobservicelib:4.3.24' 
+接口
+说明s
+pbsControlSetDeviceAction
+关机、重启
+pbsControlAPPManger
+应用静默安装、卸载
+pbsKillAppsByPidOrPackageName
+杀死应用，可通过传入应用pid或应用包名方式杀死应用
+
+pbsKillBackgroundAppsWithWhiteList
+清除后台杀死应用，传入的白名单应用不会被清除
+
+pbsInstallOTAPackage
+Rom离线升级接口
+pbsRequestSystemPermissionAsync
+授予权限（需额外授权后调用）
+startService
+启动服务
+startForegroundService
+启动前台服务
+sendBroadcast
+发送广播
+sendOrderedBroadcast
+发送有序广播
+<application
+…
+>
+<meta-data
+    android:name="pico_advance_interface"
+    android:value="0"/>
+        …
+</application>
+ToBServiceHelper.getInstance().bindTobService(Context context);
+ToBServiceHelper.getInstance().unBindTobService(getApplicationContext());
+ToBServiceHelper.getInstance().setBindCallBack(new ToBServiceHelper.BindCallBack() {
+    @Override
+    public void bindCallBack(Boolean status) {
+        //绑定结果回调，绑定成功之后才能调用接口
+        Log.i(TAG,"bindCallBack : " + status);
+    }
+});
+ToBServiceHelper.getInstance().bindTobService(getApplicationContext(), new ToBServiceHelper.BindCallBack() {
+    @Override
+    public void bindCallBack(Boolean status) {
+        Log.i(TAG,"bindCallBack : " + status);
+    }
+});
+String puiVersion = ToBServiceHelper.getInstance().getServiceBinder(). pbsStateGetDeviceInfo(PBS_SystemInfoEnum.PUI_VERSION, 0);
+接口
+说明
+pbsControlSetDeviceAction
+关机、重启
+pbsControlAPPManger
+应用静默安装、卸载
+pbsKillAppsByPidOrPackageName
+杀死应用，可通过传入应用pid或应用包名方式杀死应用
+pbsKillBackgroundAppsWithWhiteList
+清除后台杀死应用，传入的白名单应用不会被清除
+pbsInstallOTAPackage
+Rom离线升级接口
+pbsControlSetAutoConnectWIFI
+连接指定WiFi
+pbsControlSetAutoConnectWIFIWithErrorCodeCallback
+连接指定WiFi，支持返回error code
+PBS_CustomizeSettingsTabEnum##CUSTOMIZE_SETTINGS_TAB_GENERAL_LOCKSCREEN(5),
+隐藏恢复出厂设置UI
+pbsAppSetAPPAsHomeTwo
+设置第三方应用为Launcher
+pbsTimingShutdown
+定制关机
+pbsScreenOff
+灭屏
+pbsRecord
+快速录屏：用系统的录屏功能（保存mp4本地文件）
+pbsStartRecordScreenBySurface
+企业设置直接传输头戴画面（不保存本地文件）
+*支持设备类型
+*大部分接口支持PICO的全系列企业级产品，但仍有少数设备无法使用这些接口。特殊情况在相应的接口描述中有注明。如果您有任何疑问或需要进一步的帮助，请联系PICO的客服团队。
+类型
+说明
+设备信息类
+获取设备属性、使用状态等信息。
+设备控制类
+控制设备执行一些具体操作。
+设备属性类
+可以通过属性对设备进行个性化定制。
+设备开关类
+通过打开/关闭一些功能来控制设备的行为。
+应用类
+应用相关的接口：如设置Launcher、开机自启动、保活等。
+投屏功能类
+通过Miracast或PICO自研投屏把头戴屏幕的画面显示到外部设备。
+大空间功能
+实现多设备共享同一地图，处于统一坐标系中，虚拟场景中的位置与真实世界的位置一致。可以支持VR虚拟大空间中的多人协作、多人对战等场景。
+录音录屏功能
+TobService实现录屏、录音功能，然后将音视频数据通过接口传给客户端。
+蓝牙相关
+控制蓝牙的一些行为，如解绑、自动配对等。

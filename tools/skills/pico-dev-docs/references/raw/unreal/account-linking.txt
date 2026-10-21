@@ -1,0 +1,282 @@
+账号关联
+========================================
+通过账号关联服务，你可以将用户的 PICO 账号与自己的自有账号体系关联起来，获取用户 PICO 账号的昵称、用户 ID、头像等信息，从而允许用户使用 PICO 账号登录你的应用。
+*基本概念
+*
+*开发流程
+*第一步：注册 SSO 重定向域名
+同一个应用可配置一个中国大陆重定向域名和一个非中国大陆重定向域名，两个域名相互独立。你可以根据应用的发布地区进行选择。
+*登录 PICO 开发者平台。
+*点击目标应用卡片，进入其概览页。
+*在左侧导航栏中，点击 平台服务。
+*你将前往 PSS 开发平台。
+*在左侧导航栏中，点击 SSO配置。
+*你将进入 SSO配置 页。
+* 
+*根据应用发布的地区，选择 中国大陆 和/或 非中国大陆。
+*点击 编辑 按钮。
+*填入 SSO 重定向域名。
+* 
+*示例如下：
+* 
+*点击 保存 按钮。
+*第二步：创建 UI 并链接到 PICO 的登录授权页面
+提供一个按钮或者链接，让用户能够跳转到 PICO 的登录授权页面。
+登录页面地址格式如下：
+ 
+该地址内有三个参数，说明如下：
+*
+链接地址示例：
+ 
+PICO 登录授权页面展示：
+* 
+*第三步：提取 PICO 账号的授权码
+用户在 PICO 登录授权页面成功登录后，页面会通过 HTTP 302 跳转到 redirect_uri 参数中指定的地址，并带上授权码。你需要提取 PICO 账号的授权码，从而获取用于访问用户 PICO 账号信息的 Access Token。
+跳转地址示例如下：
+ 
+*第四步：获取访问 PICO 账号信息的 Access Token
+提取授权码后，你可以从 PICO 服务端获取访问 PICO 账号信息的 Access Token。
+接口说明如下：
+*
+请求示例：
+ 
+响应示例：
+ 
+*第五步：使用 Access Token 获取 PICO 账号信息
+获取 Access Token 后，可以根据 Access Token 查询用户的 PICO 账号信息。
+接口说明如下：
+*
+请求示例：
+ 
+响应示例：
+ 
+*第六步：使用 Refresh Token 更新 Access Token
+若 Access Token 过期，可以使用 Refresh Token 进行更新。
+接口说明如下：
+*
+请求示例：
+ 
+响应示例：
+ 
+
+
+
+*名称
+
+*说明
+
+SSO
+
+单点登录（Single Sign On），是一种身份验证解决方案，允许用户使用一个唯一的凭证（如用户名和密码）登录到多个应用中，而不需要在每个应用中都输入一遍凭证。
+
+SSO 重定向域名
+
+你自己的登录服务。
+
+Access Token
+
+访问令牌，有效期为 15 天，用于获取 PICO 账号的信息。
+
+Refresh Token
+
+刷新令牌，有效期为 30 天，用于更新过期的 Access Token。
+
+*仅支持 https:// 开头的域名。
+*域名不得超过 500 个字符。
+*输入完整 URL 时，仅保留域名部分。
+
+https://platform-cn.picovr.com
+https://platform-cn.picovr.com/open/v1/authorize/login
+
+https://$pico_auth_domain/oauth/authorize?client_key=$app_id&redirect_uri=$developer_code_receive_url
+
+
+
+参数名
+
+说明
+
+pico_auth_domain
+
+PICO 提供的三方授权页面对应的域名：
+*中国大陆：openid.picovr.com
+*非中国大陆：open-global.picoxr.com
+
+client_key
+
+应用的 ID（App ID），在 PICO 开发者平台上查看。详细说明参考此文档。
+
+redirect_uri
+
+PICO 账号授权登录成功后，需要跳转到你自己的登录服务，跳转时会带上 PICO 账号的授权码。该地址必须支持 https，且域名必须与你在 PICO 开发者平台上配置的 SSO 重定向域名一致。
+
+https://openid.picovr.com/oauth/authorize?client_key=xxxxf0c4aafa504fc1ae8386113c8421&redirect_uri=https://platform-cn.picovr.com/open/v1/authorize/login
+
+https://platform-cn.picovr.com/open/v1/authorize/login?code=xxxx4530340d3292bccctu0Mu5NGYWmXcyux&scopes=user_info
+
+
+
+
+
+格式
+
+说明
+
+接口地址
+
+https://$pico_auth_domain/passport/open/access_token/
+
+
+PICO 提供的三方授权页面对应的域名：
+*中国大陆：openid.picovr.com
+*非中国大陆：open-global.picoxr.com
+
+方法
+
+POST
+
+-
+
+Content-Type
+
+application/x-www-form-urlencoded
+
+-
+
+Body
+
+
+client_key=$app_id&client_secret=$app_secret&code=$code&grant_type=authorization_code
+
+*client_key：应用的 ID（App ID），在 PICO 开发者平台上查看。
+*client_secret：应用的密钥（App Secret），在 PICO 开发者平台上查看。
+*code：授权码，从第三步中获取。
+提示：关于如何查看应用的 ID 和密钥，参考此文档。
+
+curl -X POST "https://openid.picovr.com/passport/open/access_token/" -H "Content-Type: application/x-www-form-urlencoded; charset=UTF-8" -d "client_key=xxxxf0c4aafa504fc1ae8386113c8421&client_secret=ec850766400cc0a383332f85faac01d4&code=xxxx4530340d3292bccctu0Mu5NGYWmXcyux&grant_type=authorization_code" -v
+
+{
+    "data":{
+        "access_token":"act.xxxx2fa0b41f9b0f49cfdf0e1a5a4e08UQe5FTYFgGEcAeMdlCzEhzp26Udf",
+        "captcha":"",
+        "desc_url":"",
+        "description":"",
+        "error_code":0,
+        "expires_in":5184000,
+        "log_id":"xxxx08251052489473587D0F4BF26D3378",
+        "open_id":"xxxx842695713621048",
+        "refresh_expires_in":15552000,
+        "refresh_token":"rft.xxxxf2d0570e3b1762248d6c41a6300fUVTiu8GCnZkVMUSvIRQB4uNjedKt",
+        "scope":"user_info"
+    },
+    "message":"success"
+}
+
+
+
+
+
+格式
+
+说明
+
+接口地址
+
+https://$pico_auth_domain/passport/open/userinfo/
+
+
+PICO 提供的三方授权页面对应的域名：
+*中国大陆：openid.picovr.com
+*非中国大陆：open-global.picoxr.com
+
+方法
+
+POST
+
+-
+
+Content-Type
+
+application/x-www-form-urlencoded
+
+-
+
+Body
+
+
+open_id=$open_id&access_token=$access_token
+
+*open_id：第四步中获取的用户 ID。
+*access_token：第四步中获取的 Access Token。
+
+curl -X POST "https://openid.picovr.com/passport/open/userinfo/" -H "Content-Type: application/x-www-form-urlencoded; charset=UTF-8" -d "open_id=xxxx842695713621048&access_token=act.xxxx2fa0b41f9b0f49cfdf0e1a5a4e08UQe5FTYFgGEcAeMdlCzEhzp26Udf" -v
+
+{
+    "data":{
+        "avatar":"https://p26-passport.byteacctimg.com/img/user-avatar/80f4ec6a25460f15d906392a7a9d1e05~300x300.image",
+        "captcha":"",
+        "client_key":"xxxxf0c4aafa504fc1ae8386113c8421",
+        "desc_url":"",
+        "description":"",
+        "error_code":0,
+        "log_id":"xxxx08251054456497265C287F8671A9F1",
+        "nickname":"PICO",
+        "open_id":"xxxx842695713621048"
+    },
+    "message":"success"
+}
+
+
+
+
+
+格式
+
+说明
+
+接口地址
+
+https://$pico_auth_domain/passport/open/refresh_token/
+
+
+PICO 提供的三方授权页面对应的域名：
+*中国大陆：openid.picovr.com
+*非中国大陆：open-global.picoxr.com
+
+方法
+
+POST
+
+-
+
+Content-Type
+
+application/x-www-form-urlencoded
+
+-
+
+Body
+
+client_key=$app_id&grant_type=refresh_token&refresh_token=$refresh_token
+
+*client_key：应用的 ID（App ID），在 PICO 开发者平台上查看。详细说明参考此文档。
+*refresh_token：第四步中获取的 Refresh Token。
+
+curl -X POST "https://openid.picovr.com/passport/open/refresh_token/" -H "Content-Type: application/x-www-form-urlencoded; charset=UTF-8" -d "client_key=xxxxf0c4aafa504fc1ae8386113c8421&grant_type=refresh_token&refresh_token=rft.xxxxf2d0570e3b1762248d6c41a6300fUVTiu8GCnZkVMUSvIRQB4uNjedKt" -v
+
+{
+    "data":{
+        "access_token":"act.xxxx2fa0b41f9b0f49cfdf0e1a5a4e08UQe5FTYFgGEcAeMdlCzEhzp26Udf",
+        "captcha":"",
+        "desc_url":"",
+        "description":"",
+        "error_code":0,
+        "expires_in":5184000,
+        "log_id":"xxxx08251056423F8EBE0681AEC16184C9",
+        "open_id":"xxxx842695713621048",
+        "refresh_expires_in":15551766,
+        "refresh_token":"rft.xxxxf2d0570e3b1762248d6c41a6300fUVTiu8GCnZkVMUSvIRQB4uNjedKt",
+        "scope":"user_info"
+    },
+    "message":"success"
+}

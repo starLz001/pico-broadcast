@@ -1,0 +1,269 @@
+获取设备属性、使用状态等信息。
+*接口列表
+*
+*pbsStateGetDeviceInfo
+获取设备信息
+ 
+适用设备
+PICO 全系企业级设备
+入参说明
+*
+返回值
+*
+调用示例
+ 
+*pbsGetCpuUsages
+获取CPU当前使用率
+ 
+适用设备
+全系企业级设备
+入参说明
+无
+返回值
+*
+调用示例
+ 
+*pbsGetDeviceTemperatures
+获取设备当前温度
+ 
+适用设备
+全系企业级设备
+入参说明
+*
+返回值
+*
+调用示例
+ 
+*getHeadTrackingStatus
+获取头戴定位状态
+ 
+适用设备
+全系企业级设备
+入参说明
+无
+返回值
+*
+调用示例
+ 
+*getHeadPose
+获取头戴Pose
+ 
+适用设备
+支持6DOF的设备
+入参说明
+*
+返回值
+*
+调用示例
+ 
+*getControllerPose
+获取手柄Pose
+ 
+适用设备
+支持6DOF的设备
+入参说明
+*
+返回值
+*
+调用示例
+ 
+*getSwiftPose
+获取Swift Pose
+ 
+适用设备
+支持Swift的设备
+入参说明
+*
+返回值
+*
+调用示例
+ 
+*getHeadIMUData
+获取头戴IMU数据
+ 
+适用设备
+支持6DOF的设备
+入参说明
+*
+返回值
+*
+调用示例
+ 
+*getControllerIMUData
+获取手柄IMU数据
+ 
+适用设备
+支持6DOF的设备
+入参说明
+*
+返回值
+*
+调用示例
+ 
+*getSwiftIMUData
+获取Swift设备IMU数据
+ 
+适用设备
+支持Swift的设备
+入参说明
+*
+返回值
+*
+调用示例
+ 
+*getSwiftTrackerDevices
+获取Swift 设备信息
+ 
+适用设备
+支持Swift的设备
+入参说明
+无
+返回值
+*
+调用示例
+ 
+
+接口
+说明
+pbsStateGetDeviceInfo
+获取设备信息
+pbsGetCpuUsages
+获取CPU当前使用率
+pbsGetDeviceTemperatures
+获取设备当前温度
+String pbsStateGetDeviceInfo(PBS_SystemInfoEnum systemInfoEnum, int ext);
+参数名称
+类型
+说明
+systemInfoEnum
+PBS_SystemInfoEnum 
+详见枚举类PBS_SystemInfoEnum
+ext
+int
+扩展位，无意义
+类型
+说明
+String
+systemInfoEnum 对应的设备信息
+蓝牙状态：1-已连接，0-未连接
+WiFi状态：1-已连接，0-未连接
+充电状态：充电中-BatteryManager.BATTERY_STATUS_CHARGING
+未充电-BatteryManager.BATTERY_STATUS_DISCHARGING
+String puiVersion = ToBServiceHelper.getInstance().getServiceBinder(). pbsStateGetDeviceInfo(PBS_SystemInfoEnum.PUI_VERSION, 0);
+CpuUsageInfo[] pbsGetCpuUsages();
+类型
+说明
+CpuUsageInfo[]
+CPU使用率信息数组
+CpuUsageInfo[] infos = ToBServiceHelper.getInstance().getServiceBinder().pbsGetCpuUsages();
+float[] pbsGetDeviceTemperatures(int type,  int source);
+参数名称
+类型
+说明
+type
+int 
+0-DEVICE_TEMPERATURE_CPU （设备CPU温度）
+1-DEVICE_TEMPERATURE_GPU （设备GPU温度）
+2-DEVICE_TEMPERATURE_BATTERY （设备电池温度）
+3-DEVICE_TEMPERATURE_SKIN （设备表面温度）
+source
+int
+0-TEMPERATURE_CURRENT （当前的设备温度）
+1-TEMPERATURE_THROTTLING （节流温度阈值）
+2-TEMPERATURE_SHUTDOWN （关机温度阈值）
+3-TEMPERATURE_THROTTLING_BELOW_VR_MIN（节流温度阈值，高于此温度阈值将不会满足VR模式的最低时钟频率。） 
+类型
+说明
+float[]
+返回float类型的设备温度数组
+float[] temps = ToBServiceHelper.getInstance().getServiceBinder().pbsGetDeviceTemperatures(HardwarePropertiesManager.DEVICE_TEMPERATURE_CPU, HardwarePropertiesManager.TEMPERATURE_CURRENT);
+int getHeadTrackingStatus();
+类型
+说明
+int
+0-定位丢失，1-定位正常
+int trackingStatus = ((IToBServiceProxy)ToBServiceHelper.getInstance().getServiceBinder()).getHeadTrackingStatus();
+Pose getHeadPose(long predictTime);
+参数名称
+类型
+说明
+predictTime
+long 
+预测时间 nanoseconds
+类型
+说明
+Pose
+头戴位姿
+Pose headPose = ((IToBServiceProxy)ToBServiceHelper.getInstance().getServiceBinder()).getHeadPose(0);
+List<Pose> getControllerPose(long predictTime);
+参数名称
+类型
+说明
+predictTime
+long 
+预测时间 nanoseconds
+类型
+说明
+List<Pose>
+手柄位姿 0-左手柄，1-右手柄
+List<Pose> controllerPose = ((IToBServiceProxy)ToBServiceHelper.getInstance().getServiceBinder()).getControllerPose(0);
+Pose getSwiftPose(String swiftSN, long predictTime);
+参数名称
+类型
+说明
+swiftSN
+String 
+Swift SN
+predictTime
+long 
+预测时间 nanoseconds
+类型
+说明
+Pose
+Swift Pose
+Pose swiftPose = ((IToBServiceProxy)ToBServiceHelper.getInstance().getServiceBinder()).getSwiftPose("XXXXXXX",0);
+IMUData getHeadIMUData(long predictTime);
+参数名称
+类型
+说明
+predictTime
+long 
+预测时间 nanoseconds
+类型
+说明
+IMUData
+头戴IMU
+IMUData imuData = ((IToBServiceProxy)ToBServiceHelper.getInstance().getServiceBinder()).getHeadIMUData(0);
+List<IMUData> getControllerIMUData(long predictTime);
+参数名称
+类型
+说明
+predictTime
+long 
+预测时间 nanoseconds
+类型
+说明
+List<IMUData>
+手柄IMU数据 0-左手柄，1-右手柄
+List<IMUData> imuDatas = ((IToBServiceProxy)ToBServiceHelper.getInstance().getServiceBinder()).getControllerIMUData(0);
+IMUData getSwiftIMUData(String swiftSN, long predictTime);
+参数名称
+类型
+说明
+swiftSN
+String 
+Swift SN
+predictTime
+long 
+预测时间 nanoseconds
+类型
+说明
+IMUData
+Swift IMU
+IMUData imuData = ((IToBServiceProxy)ToBServiceHelper.getInstance().getServiceBinder()).getSwiftIMUData("XXXXXX", 0);
+List<SwiftDevice> getSwiftTrackerDevices();
+类型
+说明
+SwiftDevice
+Swift IMU
+List<SwiftDevice> swiftDevices = ((IToBServiceProxy)ToBServiceHelper.getInstance().getServiceBinder()).getSwiftTrackerDevices();

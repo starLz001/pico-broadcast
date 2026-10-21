@@ -1,0 +1,63 @@
+平面检测
+========================================
+本文介绍如何在虚幻引擎中使用 PICO 的平面检测功能。
+*平面检测是增强现实（AR）和混合现实（MR）中关键的环境感知技术，用于帮助系统识别现实世界中的平面，从而使虚拟物体能够与真实环境精准交互和融合。
+*通过平面检测，MR 应用能够识别并追踪水平、垂直或倾斜的表面（如地板、桌面、墙壁和斜屋顶），确保虚拟物体被准确放置并稳定对齐于实际空间。
+*环境要求
+*PICO 设备型号：PICO 4 Ultra 或 Project Swan（PICO OS 6）
+*PICO 设备系统版本：5.15.0 及以上
+*前提条件
+*已为应用开启视频透视能力。详细说明请参考《视频透视》。 
+*实现方法
+*启用平面检测
+*选择 Edit > Project Settings > Plugins > PICO OpenXR，找到 Mixed Reality 并勾选 Enable Spatial Plane。
+* 
+*请求相关权限
+*主动调用 Request Android Permissions 蓝图接口，在 Permissions 中输入权限字段：com.picovr.permission.SPATIAL_DATA 申请相关权限。
+* 
+*启动平面扫描
+*调用LaunchSpatialPlaneScanningPICO_Async启动平面扫描。该接口为异步接口，启动成功时执行On Success，失败时执行On Failure并通过 Result 返回错误码。
+* 
+*获取平面检测数据
+*监听Plane Scanning State Updated Delegate事件，在事件触发后调用RequestSpatialPlaneInfosPICO_Async请求平面数据。
+* 
+*关闭平面扫描
+*不再需要平面扫描时，调用Close Spatial Plane Scanning PICO 关闭平面扫描。该接口为同步接口，关闭后不会再产生新的平面数据。
+* 
+* 
+*其他操作
+*使用 Spatial Plane Actor PICO
+如果需要快速验证或直接绘制检测结果，可以在关卡中放置Spatial Plane Actor PICO。
+*添加 Spatial Plane Actor PICO
+*在 UnrealEditor 中添加一个 Spatial Plane Actor PICO。
+* 
+*配置 Spatial Plane Actor PICO
+*按需配置 Spatial Plane Actor PICO 的参数。参数描述如下：
+*Plane Component Class：用于指定自定义平面渲染组件。默认使用内置组件。使用方法参考 PICO OpenXR Plugin 中的PICOOpenXR/Content/DevTools/MixedReality/BP_SpatialPlaneComponent_Sample.uasset。
+*Draw on Begin Play：勾选后会在Begin Play时自动开始绘制。如果不勾选，你也可以通过Start Draw和Pause Draw蓝图接口动态开始或暂停绘制。
+*Spatial Plane Material：根据语义设置不同颜色的绘制效果。默认使用 PICO OpenXR Plugin 中的 PICOOpenXR/Content/Material/M_Wireframe.uasset。
+*Collision Type：用于控制平面的碰撞检测类型。除碰撞外，还可以结合Spatial Plane Material、Spatial Plane Visible和Semantic to Colors配置平面的材质、显示状态和不同语义对应的颜色。
+*Spatial Plane Visible：显示或隐藏平面。你也可以通过 Set Plane Visibility 设置。
+* 
+*Semantic to Colors：对应语义的顶点颜色。
+* 
+*使用 Spatial Plane Actor PICO 对应的蓝图接口
+*根据需要使用 Spatial Plane Actor PICO 对应的蓝图接口实现以下功能：
+*使用 Start Draw 动态开始绘制或使用 Pause Draw 暂停绘制
+* 
+* 
+*使用 Set Plane Visibility 设置平面是否可见
+* 
+*使用 Clear Plane 清空 Actor 所在的平面
+* 
+*为 Spatial Plane Actor PICO 自定义平面检测组件
+*你可以为 Spatial Plane Actor PICO 自定义平面检测组件。自定义的平面检测组件继承SpatialPlaneComponentPICO，通过以下接口自定义平面朝向和语义的渲染逻辑：
+*Get Plane Orientation：获取平面朝向
+* 
+*Get Plane Semantic：获取平面语义
+* 
+
+
+在封闭空间中，建议完整扫描整个空间后关闭扫描，以节省资源。
+
+如果只需要平面生成的碰撞体，可以在确认扫描完成后隐藏平面，从而节省 GPU 资源。

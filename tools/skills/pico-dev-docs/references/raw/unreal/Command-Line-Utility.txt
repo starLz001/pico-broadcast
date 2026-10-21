@@ -1,0 +1,880 @@
+CLI 命令行工具
+========================================
+PICO CLI 命令行工具（PICO Command Line Utility）是面向开发者的一款命令行工具，以帮助 PICO 开发者更轻松地管理 PICO 开发者平台的文件。使用 CLI 工具，你可以：
+*上传 APK、OBB文件、资源文件
+*管理 DLC 文件
+*下载 APK 文件
+*跨渠道复制 Build
+*更新历史
+*
+*准备工作
+使用 CLI 工具前，你需要：
+*在 PICO 开发者平台创建应用；
+*根据系统环境下载并安装 CLI 工具；
+*获取 CLI 工具凭证。
+*安装 CLI 工具
+请参考以下表格下载并安装 CLI 工具：
+*
+如果你的设备是 macOS 系统，可能需要更改 CLI 工具的访问权限才可使用，步骤如下：
+*在终端输入 cd/{CLI 工具所在目录}。
+*输入 chmod +x ./pico-cli。
+*若出现弹窗提示 “无法打开“pico-cli”，因为无法验证开发者”，你可以：
+*点击桌面左上角苹果图标，选择 系统偏好设置 > 安全性与隐私 > 通用。
+*点击 通用 面板中的 仍要允许 按钮，并输入你的 Mac 密码。
+*输入 ./pico-cli 和一条指令（如：pico-cli help）可运行 CLI 工具。
+*获取 CLI 工具凭证
+使用 PICO CLI 工具时，你会用到：
+*App ID 和 App Secret：用于验证 CLI 工具的应用管理权限。参考查看 App ID 和 App Secret 获取。
+*Build ID：用于下载指定 Build。获取步骤如下：
+*登录 PICO 开发者平台。
+*选择已创建的组织。
+*前往 我的应用，点击目标应用卡片，进入其 概览 页。
+*在左侧导航栏处，点击 分发渠道，进入 分发渠道 详情页。
+*找到目标分发渠道，然后点击 操作 栏处的 编辑。
+*你将进入该渠道的版本列表页。
+*找到目标版本，然后点击 操作 栏处的 查看。
+*你将进入以下页面，在 版本信息 选卡下可查看 版本 ID （Build ID）。
+* 
+*核心功能
+你可以通过指令来管理 CLI 工具和 PICO 开发者平台文件。有关指令的更多信息，参考指令详解。
+*CLI 工具管理
+在 CLI 工具内输入相应指令，可对 CLI 工具进行管理或获取帮助信息。
+*
+*平台文件管理
+在 CLI 工具内输入相应指令，可管理 Build 文件及其分发渠道。
+**
+
+
+*DLC 文件管理
+*
+
+*指令详解
+各指令及参数说明如下。
+*升级 CLI 工具
+将 CLI 工具更新为最新版本。
+输入指令
+ 
+*获取 CLI 工具版本
+查看当前 CLI 工具版本。
+输入指令
+ 
+*获取帮助信息
+获取帮助信息，包含指令及说明、其他操作及说明、示例、分发渠道及对应参数。
+输入指令
+ 
+*获取 Build 信息
+根据传入的参数，获取对应的 Build 信息。
+输入指令
+ 
+参数说明
+*
+*上传 Build
+上传 Build 文件或将 OBB、Asset 文件（额外的 OBB 文件）等上传至指定 Build。
+输入指令
+ 
+参数说明
+*
+其他操作
+*
+*下载 Build
+将 PICO 开发者平台的 Build 文件下载至本地。
+输入指令
+ 
+参数说明
+*
+*跨渠道复制 Build
+将 Build 复制到指定渠道。
+输入指令
+ 
+参数说明
+*
+其他操作
+*
+*查询 Add-on 的 DLC 文件信息
+查询指定 Add-on 的 DLC 文件信息。只有已上传过 DLC 文件且状态为“草稿”的 Add-on 才支持查询该信息。
+输入指令
+ 
+参数说明
+*
+*添加 DLC 文件
+添加 DLC 文件到指定 Add-on，单个 Add-on 最多可添加 10 个 DLC 文件 。
+输入指令
+ 
+参数说明
+*
+*更新 DLC 文件
+更新 Add-on 下的指定 DLC 文件，即用本地 DLC 文件替换云端的指定 DLC 文件。
+输入指令
+ 
+参数说明
+*
+*设置 DLC 文件的最小兼容应用版本号
+设置 Add-on 下的 DLC 文件的最小兼容应用版本号。基于应用的上架地区，需设置 DLC 文件在该地区的最小兼容版本号。
+输入指令
+ 
+参数说明
+*
+*删除 DLC 文件
+删除 Add-on 下的指定 DLC 文件。
+输入指令
+ 
+参数说明
+*
+其他操作
+*
+*了解更多
+*关于如何创建 Add-on 并为其添加 DLC 文件，可参考应用内购和可下载内容（DLC）文档。
+
+
+
+日期
+
+版本
+
+说明
+
+2023年 04 月 11 日
+
+1.0.3
+
+上调上传 Build 时支持添加的的资产文件（Assets）数量至 1000。
+
+2023 年 02 月 16 日
+
+1.0.2
+
+支持为单个 Add-on 上传多个 DLC 文件。
+
+2023 年 01 月 12 日
+
+1.0.1
+
+新增 CLI 命令行工具。
+
+
+
+系统环境
+
+版本
+
+下载地址
+
+Windows 32 位系统和 64 位系统
+
+中国大陆版
+
+*中国大陆地区下载
+*非中国大陆地区下载
+
+
+
+非中国大陆版
+
+*中国大陆地区下载
+*非中国大陆地区下载
+
+macOS X
+
+中国大陆版
+
+*中国大陆地区下载
+*非中国大陆地区下载
+
+
+
+非中国大陆版
+
+*中国大陆地区下载
+*非中国大陆地区下载
+
+Linux
+
+中国大陆版
+
+*中国大陆地区下载
+*非中国大陆地区下载
+
+
+
+非中国大陆版
+
+*中国大陆地区下载
+*非中国大陆地区下载
+
+
+
+功能
+
+说明
+
+指令字段
+
+指令格式
+
+更新版本
+
+将 CLI 工具升级至最新版本。目前不支持版本回退。
+
+self-update
+
+ 
+
+查看版本信息
+
+查看 CLI 工具版本号。
+
+version
+
+ 
+
+获取帮助
+
+显示指令与对应介绍。
+
+help
+
+ 
+
+
+
+*功能
+
+说明
+
+*指令字段
+
+指令格式
+
+获取 Build 信息
+
+根据传入的参数，可获取对应的 Build 信息，包括：
+*当前应用下所有 Build 的信息
+*对应 Build ID 的 Build 信息
+*相应分发渠道中的 Build 信息
+
+query-build-parameter
+
+
+ 
+
+上传 Build
+
+上传 Build 至 PICO 开发者平台。
+
+
+upload-build
+
+
+ 
+
+下载 Build
+
+
+在 PICO 开发者平台上下载指定 Build 到本地。
+
+
+download-build
+
+ 
+
+更改分发渠道
+
+更改 Build 的分发渠道。
+
+clone-release-channel-build
+
+
+ 
+
+
+
+*功能
+
+说明
+
+*指令字段
+
+指令格式
+
+查询 Add-on 的 DLC 文件信息
+
+
+查询指定 Add-on 下的 DLC 文件信息。
+
+
+query-add-on
+
+ 
+
+添加 DLC 文件到 Add-on
+
+
+添加一个 DLC 文件到指定 Add-on，单个Add-on 最多可以添加 10 个 DLC 文件 。
+
+
+upload-add-on
+
+
+ 
+
+更新 Add-on 下的 DLC 文件
+
+
+更新 Add-on 下的某个 DLC 文件，即用本地 DLC 文件替换云端的指定 DLC 文件。
+
+upload-add-on
+
+ 
+
+设置 Add-on 下 的 DLC 文件所兼容的最小应用版本号
+
+
+设置 Add-on 下某个 DLC 文件所兼容的最小应用版本号。基于应用的上架地区，需设置 DLC 文件在该地区的最小兼容版本号。
+
+upload-add-on
+
+
+ 
+
+删除 Add-on 下的 DLC 文件
+
+删除 Add-on 下的某个 DLC 文件
+
+upload-add-on
+
+
+ 
+
+pico-cli self-update
+
+pico-cli version
+
+pico-cli help
+
+pico-cli query-build-parameter --app-id <AppID> --app-secret <AppSecret> --region <cn|noncn> --info <device-type|release-channel|build-id|all>
+
+
+
+句法
+
+是否必填
+
+说明
+
+ --app-id <ID> 或 -a <ID>
+
+是
+
+应用的唯一标识，即 App ID，用于指定应用。
+
+--app-secret <AppSecret> 或 -s <AppSecret>
+
+是
+
+应用程序密钥，即 App Secret，用于指定应用权限。
+
+--region <cn｜noncn> 或 -r <cn｜noncn>
+
+是
+
+指定命令行请求的服务器所属的地区。
+
+ --info <device-type|release-channel|build-id|all>
+
+
+是
+
+
+指定需获取的 Build 信息，参数包括（四选一）：
+*device-type：获取设备信息（如：PICO 4、PICO Neo3）。
+*release-channel：填入分发渠道参数，可获取相应分发渠道中的 Build 信息。参数及对应渠道如下：
+*1：PICO Store (Mainland China)
+*2：PICO Store (Outside Mainland China)
+*3：Beta
+*4：Alpha
+*5：Release Candidate
+*6：PICO Enterprise Store(Mainland China)
+*7：PICO Enterprise Store(Outside Mainland China)
+*build-id：填入 Build ID，可获取对应 Build ID 的 Build 信息。
+*all：返回以上三项信息。
+
+pico-cli upload-build --app-id <AppID> --app-secret <AppSecret> --region <cn｜noncn> --device <'Device1,Device2...'> --apk <FilePath> --obb <FilePath> --assets-dir <DirPath> --channel <ReleaseChannel> --note-cn <ReleasesNotes> --note-en <ReleasesNotes>
+
+
+
+句法
+
+是否必填
+
+说明
+
+--app-id <ID> 或 -a <ID>
+
+是
+
+应用的唯一标识，即 App ID，用于指定应用。可参考此文档获取 App ID。
+
+--app-secret <AppSecret> 或 -s <AppSecret>
+
+是
+
+应用程序密钥，即 App Secret，用于指定应用权限。可参考此文档获取 App Secret。
+
+--region <cn｜noncn> 或 -r <cn｜noncn>
+
+是
+
+指定命令行请求的服务器所属的地区。
+
+--device<'Device1,Device2...'>
+
+是
+
+指定上传的设备型号。如 --device 'PICO Neo3,PICO 4'。
+
+--apk <FilePath>
+
+是
+
+指定待上传 Build 的本地路径。
+
+--assets-dir <DirPath>
+
+否
+
+指定 Build 对应的 DLC 文件的本地路径。
+
+--obb <FilePath>
+
+否
+
+指定 OBB 文件的本地路径。
+
+--channel <ReleaseChannel>或 -c <ReleaseChannel>
+
+是
+
+指定 Build 上传的分发渠道：
+*1：PICO Store (Mainland China)
+*2：PICO Store (Outside Mainland China)
+*3：Beta
+*4：Alpha
+*5：Release Candidate
+
+--notes-en <Text>
+
+否
+
+上传英文版发行说明。
+
+--notes-cn <Text>
+
+否
+
+上传中文版发行说明。
+
+
+
+句法
+
+是否必填
+
+说明
+
+--help
+
+否
+
+展示该指令的具体使用说明。
+
+pico-cli download-build --app-id <AppID> --app-secret <AppSecret> --region <cn｜noncn> --build-id <BuildID> --output-dir <Directory>
+
+
+
+句法
+
+是否必填
+
+说明
+
+--app-id <ID> 或 -a <ID>
+
+是
+
+应用的唯一标识，即 App ID，用于指定应用。可参考此文档获取 App ID。
+
+--app-secret <AppSecret> 或 -s <AppSecret>
+
+是
+
+应用程序密钥，即 App Secret，用于指定应用权限。可参考此文档获取 App Secret。
+
+--region <cn｜noncn> 或 -r <cn｜noncn>
+
+是
+
+指定命令行请求的服务器所属的地区。
+
+--build-id <BuildID>或 -b <BuildID>
+
+是
+
+指定 Build ID。
+
+--output-dir <DirPath>或 -d <DirPath>
+
+是
+
+指定保存 Build 的本地路径。
+
+pico-cli clone-release-channel-build --app-id <AppID> --app-secret <AppSecret> --region <cn｜noncn> --build-id <BuildID> --destination-channel <Channel>
+
+
+
+句法
+
+是否必填
+
+说明
+
+--app-id <ID> 或 -a <ID>
+
+是
+
+应用的唯一标识，即 App ID，用于指定应用。可参考此文档获取 App ID。
+
+--app-secret <AppSecret> 或 -s <AppSecret>
+
+是
+
+应用程序密钥，即 App Secret，用于指定应用权限。可参考此文档获取 App Secret。
+
+--region <cn｜noncn> 或 -r <cn｜noncn>
+
+是
+
+指定命令行请求的服务器所属的地区。
+
+--build-id <BuildID>或 -b <BuildID>
+
+是
+
+指定 Build ID。
+
+--destination-channel <ReleaseChannel>
+
+是
+
+目标分发渠道：
+*1：PICO Store (Mainland China)
+*2：PICO Store (Outside Mainland China)
+*3：Beta
+*4：Alpha
+*5：Release Candidate
+
+
+
+句法
+
+是否必填
+
+说明
+
+--help
+
+否
+
+展示该指令的具体使用说明。
+
+pico-cli query-add-on --app-id <AppID> --app-secret <AppSecret> --region <cn｜noncn> --sku <SKU> 
+
+
+
+句法
+
+是否必填
+
+说明
+
+--app-id <ID> 或 -a <ID>
+
+是
+
+应用的唯一标识，即 App ID，用于指定应用。
+
+--app-secret <AppSecret> 或 -s <AppSecret>
+
+是
+
+应用程序密钥，即 App Secret，用于指定应用权限。
+
+--region <cn｜noncn> 或 -r <cn｜noncn>
+
+是
+
+指定命令行请求的服务器所属的地区。
+
+--sku <SKU> 或 -p <SKU>
+
+是
+
+该 Add-on 对应的 SKU。
+* 注 ：SKU 是 Add-on 的唯一标识，在 PICO 开发者平台创建 Add-on 时配置。
+
+pico-cli upload-add-on --app-id <AppID> --app-secret <AppSecret> --region <cn｜noncn> --cmd-type add --sku <SKU> --file <FilePath>
+
+
+
+句法
+
+是否必填
+
+说明
+
+--app-id <ID> 或 -a <ID>
+
+是
+
+应用的唯一标识，即 App ID，用于指定应用。
+
+--app-secret <AppSecret> 或 -s <AppSecret>
+
+是
+
+应用程序密钥，即 App Secret，用于指定应用权限。
+
+--region <cn｜noncn> 或 -r <cn｜noncn>
+
+是
+
+指定命令行请求的服务器所属的地区。
+
+--cmd-type <add | update | delete | set-min-version>
+
+是
+
+DLC 文件操作类型，如下：
+*add：添加 DLC 文件到指定 Add-on
+*update：更新指定 Add-on 下的指定 DLC 文件
+*set-min-version：设置 DLC 文件兼容的最小应用版本号
+*delete：删除指定 Add-on 下的指定 DLC 文件
+
+*--sku <SKU> 或 -p <SKU>
+*
+
+是
+
+该 Add-on 对应的 SKU。
+注：SKU 是 Add-on 的唯一标识，在 PICO 开发者平台创建 Add-on 时配置。
+
+*--file <file-path> 或 -f <file-path>
+
+是
+
+DLC 文件所在的本地路径。
+
+pico-cli upload-add-on --app-id <AppID> --app-secret <AppSecret> --region <cn｜noncn> --cmd-type update --sku <SKU> --file-id <FileID> --file <FilePath> 
+
+
+
+句法
+
+是否必填
+
+说明
+
+--app-id <ID> 或 -a <ID>
+
+是
+
+应用的唯一标识，即 App ID，用于指定应用。
+
+--app-secret <AppSecret> 或 -s <AppSecret>
+
+是
+
+应用程序密钥，即 App Secret，用于指定应用权限。
+
+--region <cn｜noncn> 或 -r <cn｜noncn>
+
+是
+
+指定命令行请求的服务器所属的地区。
+
+--cmd-type <add | update | delete | set-min-version>
+
+是
+
+DLC 文件操作类型，如下：
+*add：添加 DLC 文件到指定 Add-on
+*update：更新指定 Add-on 下的指定 DLC 文件
+*set-min-version：设置 DLC 文件兼容的最小应用版本号
+*delete：删除指定 Add-on 下的指定 DLC 文件
+
+*--sku <SKU> 或 -p <SKU>
+*
+
+是
+
+该 Add-on 对应的 SKU。
+注：SKU 是 Add-on 的唯一标识，在 PICO 开发者平台创建 Add-on 时配置。
+
+--file-id <FileID>
+
+是
+
+待替换 DLC 文件的 ID，可通过 query-add-on 指令查询。
+
+*--file <file-path> 或 -f <file-path>
+
+是
+
+新 DLC 文件所在的本地路径。
+
+pico-cli upload-add-on --app-id <AppID> --app-secret <AppSecret> --region <cn｜noncn> --cmd-type set-min-version --sku <SKU> --mainland-min-version <VersionCode> --nonmainland-min-version <VersionCode>
+
+
+
+句法
+
+是否必填
+
+说明
+
+--app-id <ID> 或 -a <ID>
+
+是
+
+应用的唯一标识，即 App ID，用于指定应用。
+
+--app-secret <AppSecret> 或 -s <AppSecret>
+
+是
+
+应用程序密钥，即 App Secret，用于指定应用权限。
+
+--region <cn｜noncn> 或 -r <cn｜noncn>
+
+是
+
+指定命令行请求的服务器所属的地区。
+
+--cmd-type <add | update | delete | set-min-version>
+
+是
+
+DLC 文件操作类型，如下：
+*add：添加 DLC 文件到指定 Add-on
+*update：更新指定 Add-on 下的指定 DLC 文件
+*set-min-version：设置 DLC 文件兼容的最小应用版本号
+*delete：删除指定 Add-on 下的指定 DLC 文件
+
+*--sku <SKU> 或 -p <SKU>
+*
+
+是
+
+该 Add-on 对应的 SKU。
+注：SKU 是 Add-on 的唯一标识，在 PICO 开发者平台创建 Add-on 时配置。
+
+--mainland-min-version <version-code>
+
+是
+
+DLC 文件对应的中国大陆 Build 的最低兼容版本号。
+
+--nonmainland-min-version <version-code>
+
+是
+
+DLC 文件对应的非中国大陆 Build 的最低兼容版本号。
+
+pico-cli upload-add-on --app-id <AppID> --app-secret <AppSecret> --region <cn｜noncn> --cmd-type delete --sku <SKU> --file-id <FileID>
+
+
+
+句法
+
+是否必填
+
+说明
+
+--app-id <ID> 或 -a <ID>
+
+是
+
+应用的唯一标识，即 App ID，用于指定应用。
+
+--app-secret <AppSecret> 或 -s <AppSecret>
+
+是
+
+应用程序密钥，即 App Secret，用于指定应用权限。
+
+--region <cn｜noncn> 或 -r <cn｜noncn>
+
+是
+
+指定命令行请求的服务器所属的地区。
+
+--cmd-type <add | update | delete | set-min-version>
+
+是
+
+DLC 文件操作类型，如下：
+*add：添加 DLC 文件到指定 Add-on
+*update：更新指定 Add-on 下的指定 DLC 文件
+*set-min-version：设置 DLC 文件兼容的最小应用版本号
+*delete：删除指定 Add-on 下的指定 DLC 文件
+
+*--sku <SKU> 或 -p <SKU>
+*
+
+是
+
+该 Add-on 对应的 SKU。
+注：SKU 是 Add-on 的唯一标识，在 PICO 开发者平台创建 Add-on 时配置。
+
+--file-id <FileID>
+
+是
+
+DLC 文件的 ID，可通过 query-add-on 指令查询。
+
+
+
+句法
+
+是否必填
+
+说明
+
+--help
+
+否
+
+展示该指令的具体使用说明。
+
+pico-cli self-update
+
+pico-cli version
+
+pico-cli help
+
+pico-cli query-build-parameter --app-id <AppID> --app-secret <AppSecret> --region <cn|noncn> --info <device-type|release-channel|build-id|all>
+
+pico-cli upload-build --app-id <AppID> --app-secret <AppSecret> --region <cn｜noncn> --device <'Device1,Device2...'> --apk <FilePath> --obb <FilePath> --assets-dir <FilePath> --channel <ReleaseChannel> --note-cn <ReleasesNotes> --note-en <ReleasesNotes>
+
+pico-cli download-build --app-id <AppID> --app-secret <AppSecret> --region <cn｜noncn> --build-id <BuildID> --output-dir <Directory>
+
+pico-cli clone-release-channel-build --app-id <AppID> --app-secret <AppSecret> --region <cn｜noncn> --build-id <BuildID> --destination-channel <Channel>
+
+pico-cli query-add-on --app-id <AppID> --app-secret <AppSecret> --region <cn｜noncn> --sku <SKU> 
+
+pico-cli upload-add-on --app-id <AppID> --app-secret <AppSecret> --region <cn｜noncn> --cmd-type add --sku <SKU> --file <FilePath> 
+
+pico-cli upload-add-on --app-id <AppID> --app-secret <AppSecret> --region <cn｜noncn> --cmd-type update --sku <SKU> --file-id <FileID> --file <FilePath> 
+
+pico-cli upload-add-on --app-id <AppID> --app-secret <AppSecret> --region <cn｜noncn> --cmd-type set-min-version --sku <SKU> --mainland-min-version <VersionCode> --nonmainland-min-version <VersionCode>
+
+pico-cli upload-add-on --app-id <AppID> --app-secret <AppSecret> --region <cn｜noncn> --cmd-type delete --sku <SKU> --file-id <FileID>

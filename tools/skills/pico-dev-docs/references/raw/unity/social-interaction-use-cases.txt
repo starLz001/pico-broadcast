@@ -1,0 +1,227 @@
+场景教学 & 代码示例
+========================================
+本文档具体介绍 “社交互动” 服务的使用场景并提供对应的代码示例。
+*设置/更新/清空 Presence 信息
+调用 PresenceService.Set 接口设置用户的所有 Presence 信息。调用时，需先创建 PresenceOptions，然后设置 Presence 信息，最后在请求成功之后打印当前用户的 Presence 信息。当玩家离开房间或退出应用时，需调用 PresenceService.Clear 接口及时清空相应玩家的 Presence 信息。
+ 
+*查看好友的位置和 Presence 信息
+用户可以查看好友的位置和 Presence 信息。
+ 
+*邀请好友
+“邀请好友” 和 “加入好友” 是多人社交互动中的成对行为，也是最基础和重要的社交互动体验。Destination、Deeplink 和 Presence 共同实现了应用内的 “邀请/加入好友” 能力。目前，PICO SDK 支持的邀请方式为好友间发送邀请消息卡片。邀请实现流程如下：
+*用户 A 向好友 B 发送邀请。
+*系统将用户 A 的 Presence 信息抽取出来然后存储在邀请消息中。
+*好友 B 点击邀请信息，相关应用被启动。
+*你需要将 Deeplink 里的信息抽取出来作为 Launch Details（例如 Destination、Lobby Session ID、Match Session ID 等信息），然后解析 Launch Details，将玩家 B 传送至目标位置。
+* 
+用户需要在邀请面板上向指定好友发送邀请。邀请面板中会展示用户的全部好友，用户可从中选择好友进行邀请。你可以直接复用 “好友” APP 的邀请面板（下图所示）和交互逻辑，该方式更加便捷。若不使用系统邀请面板，则需要自定义邀请流程，同时需自行设计并实现相关 UI 界面和交互逻辑。
+* 
+*前提条件
+*已在 PICO 开发者平台创建 Destination，且为 Destination 开启 DeepLink 能力。详细步骤参考《社交互动 - 平台计入》。
+*使用系统邀请面板
+*邀请好友加入应用内的某个位置（可简称 Presence 邀请）
+* 
+*邀请好友加入私人房间
+* 
+*邀请好友加入挑战
+* 
+*使用自定义邀请面板
+以下为使用自定义邀请面板的代码示例，包括邀请好友加个某个位置、私人房间和挑战。
+*邀请好友加入应用内的某个位置（可简称 Presence 邀请）
+* 
+*邀请好友加入私人房间
+* 
+*邀请好友加入挑战
+* 
+*获取应用启动详情
+*应用的启动方式包括冷启动（后台不存在该应用进程）和热启动（应用从后台切换至前台）。 你需要同时完成冷启动和热启动相关配置。
+*应用 冷启动 时，可以直接调用 ApplicationService.GetLaunchDetails 接口获取启动参数。 
+*应用 热启动 时，如果 LaunchDetails 发生变化，并触发 ApplicationService.SetLaunchIntentChangedCallback 设置的回调函数，则可在接收到此回调函数之后立即调用 ApplicationService.GetLaunchDetails。
+ 
+*跳转至其他应用
+PICO 系统支持应用间跳转，即在某个应用中启动并前往另一个应用。为实现该能力，你需要调用 ApplicationService.LaunchApp 或 ApplicationService.LaunchAppByAppId 接口，然后在 Options 参数中传入 SetDeeplinkMessage 函数对象。SetDeeplinkMessage 函数对象中自定义了具体的跳转规则。
+ 
+调用这两个接口时，必须传入 ApplicationOptions 参数。示例如下：
+ 
+*跳转至 PICO 应用商店
+若你希望用户及时把应用更新到最新版本，以便进行新功能推广和 Bug 修复等，则可将用户引导至 PICO 商店中的应用详情页，用户可以手动选择是否升级应用。
+ 
+*分享内容至 “抖音” APP
+*仅适用于中国大陆地区。
+记录应用内的精彩时刻，分享至社交媒体，是玩家间的常见社交行为。SDK 提供内容分享相关接口，接入后，用户可在应用内将截屏或视频分享至 “抖音” APP。待分享的文件必须位于公共目录。
+ 
+
+
+// 设置、更新 Presence 信息
+var options = new PresenceOptions();
+options.SetDestinationApiName("destinationApiName");
+options.SetExtra("extraData");
+options.SetIsJoinable(true);
+options.SetMatchSessionId("matchSessionId");
+options.SetLobbySessionId("lobbySessionId");
+var message = await PresenceService.Set(options).Async();
+if (message.IsError)
+    Debug.LogError(message.Error);
+else
+    Debug.Log("Presence Set successfully.");
+    
+// 清空 Presence 信息
+PresenceService.Clear();
+
+var message = await UserService.GetFriends().Async();
+if (message.IsError)
+    Debug.LogError(message.Error);
+else
+    // 可在此添加自定义逻辑
+    foreach (var friend in message.Data)
+    {
+        Debug.Log("Friend: " + friend.DisplayName);
+        Debug.Log($$"Api name: {friend.PresenceDestinationApiName}");
+        Debug.Log($$"Extra: {friend.PresenceExtra}");
+        Debug.Log($$"Match session id: {friend.PresenceMatchSessionId}");
+        Debug.Log($$"Lobby session id: {friend.PresenceLobbySessionId}");
+    }
+
+// 发送邀请
+var message = await PresenceService.LaunchInvitePanel().Async();
+if (message.IsError)
+    Debug.LogError(message.Error);
+else
+    Debug.Log("Presence invite panel launched successfully.");
+    
+// 注册接受邀请回调
+PresenceService.SetJoinIntentReceivedNotificationCallback(message =>
+{
+    var intent = message.Data;
+    // 可在此添加自定义逻辑，根据 JoinIntent 将用户加入目标位置
+    Debug.Log($$"DestinationApiName: ${intent.DestinationApiName} ");
+    Debug.Log($$"MatchSessionId: ${intent.MatchSessionId}");
+    Debug.Log($$"LobbySessionIda: ${intent.LobbySessionId}");
+    Debug.Log($$"DeeplinkMessage: ${intent.DeeplinkMessage}");
+});
+
+// 发送邀请
+var message = await RoomService.LaunchInvitableUserFlow(roomId).Async();
+if (message.IsError)
+    Debug.LogError(message.Error);
+else
+    Debug.Log("Room invite panel launched successfully.");
+ 
+ // 注册接受邀请回调
+RoomService.SetRoomInviteAcceptedNotificationCallback((message) =>
+{
+    var roomId = message.Data;
+    // 可在此添加自定义逻辑，根据 RoomID 将用户加入目标房间
+    Debug.Log($$"RoomId: ${roomId}");
+});
+
+// 发送邀请
+var message = await ChallengesService.LaunchInvitableUserFlow(challengeID).Async();
+if (message.IsError)
+    Debug.LogError(message.Error);
+else
+    Debug.Log("Challenge invite panel launched successfully.");
+    
+// 注册接受邀请回调
+ ChallengesService.SetChallengeInviteAcceptedOrLaunchAppNotificationCallback((message) =>
+{
+    var challengeId = message.Data;
+    // 可在此添加自定义逻辑，根据 ChallengeID 将用户加入目标挑战
+    Debug.Log($$"ChallengeId: ${challengeId}");
+});
+
+// 发送邀请
+string[] userIds = { "userId1", "userId2" };
+PresenceService.SendInvites(userIds);
+
+// 注册接受邀请回调
+PresenceService.SetJoinIntentReceivedNotificationCallback(message =>
+{
+    var intent = message.Data;
+    // 可在此加入自定义逻辑，根据 JoinIntent 将用户加入目标位置
+    Debug.Log($$"DestinationApiName: ${intent.DestinationApiName} ");
+    Debug.Log($$"MatchSessionId: ${intent.MatchSessionId}");
+    Debug.Log($$"LobbySessionIda: ${intent.LobbySessionId}");
+    Debug.Log($$"DeeplinkMessage: ${intent.DeeplinkMessage}");
+});
+
+// 获取被邀请用户的 Invite Token
+RoomOptions options = new RoomOptions();
+var message = await RoomService.GetInvitableUsers2(options).Async();
+if (message.IsError)
+{
+    Debug.LogError(message.Error);
+    return;
+}
+
+// 发送邀请
+var userList = message.Data;
+for (int i = 0; i < userList.Capacity; i++)
+{
+    RoomService.InviteUser(roomId, userList[i].InviteToken);
+}
+
+// 注册接受邀请回调
+RoomService.SetRoomInviteAcceptedNotificationCallback((message) =>
+{
+    var roomId = message.Data;
+    // 可在此加入自定义逻辑，根据 RoomID 将用户加入目标房间
+    Debug.Log($$"RoomId: ${roomId}");
+});
+
+// 发送邀请
+ChallengesService.Invite(challengeID, new[] { "userId1", "userId2" });
+
+// 注册接受邀请回调
+ ChallengesService.SetChallengeInviteAcceptedOrLaunchAppNotificationCallback((message) =>
+{
+    var challengeId = message.Data;
+    // 可在此加入自定义逻辑，根据 ChallengeID 将用户加入目标挑战
+    Debug.Log($$"ChallengeId: ${challengeId}");
+});
+
+// 初次冷启动
+var launchDetails = ApplicationService.GetLaunchDetails();
+// 可在此添加自定义逻辑
+Debug.Log(launchDetails.LaunchType);
+
+// 热启动
+ApplicationService.SetLaunchIntentChangedCallback((message) =>
+{
+    var launchDetails = ApplicationService.GetLaunchDetails();
+    // 可在此添加自定义逻辑
+    Debug.Log(launchDetails.LaunchType);
+});
+
+// 通过包名启动其他应用
+var options = new ApplicationOptions();
+options.SetDeeplinkMessage("message");
+ApplicationService.LaunchApp("com.pico.example", options);
+
+// 通过 App ID 启动其他应用
+var options = new ApplicationOptions();
+options.SetDeeplinkMessage("message");
+ApplicationService.LaunchAppByAppId("APP_ID", options);
+
+ApplicationOptions options = new ApplicationOptions();
+options.SetDeeplinkMessage("");
+ApplicationService.LaunchApp("com.company.example", options);
+ApplicationService.LaunchAppByAppId("RaplaceWithYourAppid", options);
+
+public async Task LaunchToAppStoreIfOutdated()
+{
+    var appVersionMsg = await ApplicationService.GetVersion().Async();
+    var appVersion = appVersionMsg.Data;
+    var outdated = appVersion.CurrentCode < appVersion.LatestCode;
+    if (outdated)
+        ApplicationService.LaunchStore();
+    else
+        Debug.Log("App version is up to date");
+}
+
+// 分享带预览图的视频
+PresenceService.ShareVideo("/video-path", "/video-thumb-path");
+
+// 分享精彩截图
+var imagePaths = new List<string> { "/image-path-1", "/image-path-2" };
+PresenceService.ShareVideoByImages(imagePaths);

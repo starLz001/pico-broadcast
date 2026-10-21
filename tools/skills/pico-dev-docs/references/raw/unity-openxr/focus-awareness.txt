@@ -1,0 +1,15 @@
+焦点感知
+========================================
+焦点感知功能允许系统 UI 作为应用场景顶部的覆盖显示。因此，用户访问系统 UI 时无需退出当前应用，保证用户获得不间断的沉浸式 VR 体验。
+*环境要求
+*PICO 设备型号：PICO Neo3 系列、PICO 4 系列、PICO 4 Ultra 系列
+*PICO 设备系统版本：5.7.0 及以上
+*获取焦点感知状态
+通过以下方法获取焦点感知状态。 返回值为 true 时，应用程序获得输入焦点。否则，应用程序失去输入焦点。
+ 
+
+
+ PICOFeature.onAppFocusedAction += focus =>
+{
+   Debug.Log("PICOFeature.onAppFocusedAction:" + focus);
+};

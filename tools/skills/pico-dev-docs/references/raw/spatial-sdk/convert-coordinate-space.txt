@@ -1,0 +1,76 @@
+坐标空间转换
+========================================
+在空间计算中，不同的对象可能在不同的坐标空间内运行。坐标空间是由用手习惯（左手或右手）、原点和度量单位定义的坐标系统。坐标空间转换功能使你能够将几何量（例如位置、向量或方向）从一个参考坐标系转换到另一个参考坐标系。
+要执行转换，只需提供几何量及其对应的源参考坐标系和目标参考坐标系，系统将计算并返回该几何量在目标坐标空间中的等效表示。
+*不同类型的坐标空间
+*坐标空间可以与 WindowContainer、Stage、SpatialView、Entity 或 View 关联。根据关联对象的不同，坐标空间有不同的属性和表现。
+*WindowContainer 的坐标空间
+WindowContainer 会根据其处理的是 View 还是 Entity，以相应的方式定义其坐标空间。
+*当与 View（包括 SpatialView）关联时，WindowContainer 的坐标空间本质上是一个 ViewCoordinateSpace.Global，这是一个以虚拟像素为单位的左手坐标系，其原点 (0, 0) 位于 WindowContainer 背面的左上角。这种坐标定义方式在二维计算机图形中非常常见，其中 (0, 0) 通常表示渲染区域的左上角，+Y 轴向下延伸（反映了屏幕像素的排列方式）。
+ 
+*当与 Entity 关联时，WindowContainer 的坐标空间以米为单位，其原点 (0, 0, 0) 位于 WindowContainer所表示的立方体的几何中心，使得在三维环境中能够实现直观的对象放置与变换。在该坐标空间中，+X 轴指向右方，+Y 轴指向上方，+Z 轴垂直屏幕向外延伸。这与三维图形中常用的标准右手笛卡尔坐标系一致。
+ 
+*Stage 的坐标空间
+*对于 Stage 的坐标空间，其原点 (0, 0, 0) 位于 HMD 的垂直中心线与物理地面相交的位置。以该地面锚点为基准，+Y 轴向上，+X 轴向右，+Z 指向用户脸部（即垂直于场景并向外延伸）。这种定义方式与 6-DoF VR 中常用的右手笛卡尔坐标系一致，并且确保虚拟地面（Y=0）与真实地面完全对应，从而使用户在其定义的 Stage 区域内移动时保持空间的一致性。
+ 
+*SpatialView 的坐标空间
+*对于 SpatialView，其原点 (0, 0, 0)（同样以米为单位）位于其包围盒的几何中心，+X 轴向右延伸，+Y 轴向上升起，+Z 轴指向观察者方向 (即垂直屏幕向外)，与右手笛卡尔坐标系的表现一致。
+ 
+*请注意，每个 Entity 的 TransformComponent 始终保存着一个局部变换。当你使用 content.addEntity(entity) 将一个 Entity 添加到 SpatialView 中时，该 Entity 的局部变换会变成其在 SpatialView 坐标空间中的全局变换。因此，你可以直接设置 TransformComponent 的位置、旋转和缩放，以调整 Entity 相对于原点（即 SpatialView 的中心）的变换。
+然而，一旦你将一个 Entity 设为另一个 Entity 的子节点，其 TransformComponent 就变成相对于父 Entity 的变换，而不再是相对于原点。因此，修改子 Entity 的 TransformComponent 会改变它相对于父 Entity 的变换，而非相对于 SpatialView 的中心。在这种情况下，如果你希望在 SpatialView 空间内实现绝对定位，需要特别注意正确设置变换。
+*Entity 的坐标空间
+Entity 关联的坐标空间通常使用右手笛卡尔坐标系，原点（0，0，0）位于 “中心”，+X 轴指向右方，+Y 轴指向上方，+Z 轴指向观察者方向，距离以米为单位表示。
+*View 的坐标空间
+*View（如 Android View、Compose 节点等）的坐标空间采用左手坐标系，以虚拟像素为单位进行测量，原点（0，0）位于左上角，+X 轴向右延伸，+Y 轴向下递增。使用像素单位作为参考，以确保在不同屏幕密度下定位的一致性。
+*在该坐标空间的局部上下文（ViewCoordinateSpace.Local）中，原点 (0, 0, 0) 绑定于父 View 或 Compose Node 的左上角，因此局部空间中的位置是相对于该父元素而言的。而在全局上下文（ViewCoordinateSpace.Global）中，原点则位于 WindowContainer 背面的左上角，实现对整个 WindowContainer 的绝对定位。
+*转换坐标空间
+*将一个 Entity 转换至另一个 Entity 的坐标空间
+*以下代码描述了如何将当前 Entity 的变换转换到目标 Entity 的坐标空间，并重新定义父级和子级。这两个 Entity 可以来自不同的空间容器。
+ 
+*在 View 和 Entity 的坐标空间之间转换
+*以下代码演示了如何将一个 Entity 放置在一个平面的局部坐标空间中（这是一个左手坐标系，原点位于 SpatialView 的左上角），位置为 DpOffset(66 dp, 50 dp)。其中，content.localSpatialCoordinateSpace 是一个以 SpatialView 中心为原点的空间坐标系。
+ 
+*重要提示
+*由于 Stage 和 WindowContainer 在渲染层级中是叠加的，WindowContainer 内的内容总是在 Stage 之前被渲染，有时可能会遮挡视图。这是已知的预期行为，非 Bug。
+*在大多数情况下，仅调整对象的位置不足以使两个模型在视觉上重叠，因为 WindowContainer 自身的方向和大小也会影响旋转和缩放。要正确对齐它们，必须同时转换旋转和缩放，或者使用专门的辅助函数（如 convertTransformTo）来确保所有变换组件都匹配。
+*在测试旋转和缩放数值时，可能会看到由于浮点数精度限制而产生的微小误差。单精度浮点数通常有大约七位小数的准确度。如果直接用相等测试（==），细微的舍入差异（例如 0.30000001 与 0.3）可能导致判断失败。建议使用一个很小的阈值（epsilon），例如通过判断 abs(a - b) < ε 来进行比较，以获得更可靠的结果。
+*API 参考
+*ViewCoordinateSpace、SpatialCoordinateSpace、SpatialCoordinateSpaceConverter 和 Entity 是坐标空间转换相关的接口和类，详情参阅 API 参考。根据你所处的地理位置选择合适的文档链接：
+*中国大陆：https://developer-cn.picoxr.com/spatial-api/index.html
+*非中国大陆：https://developer.picoxr.com/spatial-api/index.html
+
+
+(0,0)────────→ +X  
+│  
+↓ +Y  
+(back plane)
+
+private fun Entity.moveAcrossContainersTo(destination: Entity) {
+    val convertedTransform = convertTransformTo(Transform(), destination)
+    setParent(destination)    
+    components.set(TransformComponent(convertedTransform))
+}
+
+val offset = with(LocalDensity.current) {
+    Offset(66.dp.toPx(), 50.dp.toPx())
+}
+SpatialView(
+    modifier = Modifier.size(200.dp, 100.dp).background(Color.Yellow),
+    update = { content, _ ->
+        if (sphereAdded) {
+            return@SpatialView
+        }
+        sphereAdded = true
+        val childPosition =
+            content.convertPosition(
+                Vector3(offset.x, offset.y, 0f),
+                ViewCoordinateSpace.Local,
+                content.localSpatialCoordinateSpace
+            )
+        content.addEntity(
+            SphereEntity(0.02f).apply {
+                components.set(TransformComponent().apply { position = childPosition })
+            }
+        )
+    }
+)

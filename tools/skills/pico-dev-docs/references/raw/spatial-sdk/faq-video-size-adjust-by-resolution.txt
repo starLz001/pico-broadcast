@@ -1,0 +1,327 @@
+如何根据视频分辨率动态调整窗口宽高，保持视频宽高比？
+========================================
+*问题描述
+当视频源分辨率不固定时，期望窗口宽高比与视频宽高比保持一致（由视频驱动窗口），而非将视频强制缩放至固定尺寸的窗口区域。
+*原因分析
+该需求的问题在于：WindowContainer 默认按声明的固定 defaultSize 渲染窗口，而视频源分辨率在 prepareAsync() 完成后才能获知；若不显式建立"视频分辨率 → 窗口尺寸"的驱动链路，窗口会先以默认尺寸渲染，视频被强制缩放至该窗口区域，从而出现拉伸或留黑边。同时，WindowContainer 调整尺寸基于 dp，而 MeshResource.createVideoPanel 基于米，二者若不通过 PhysicalLengthConverter 同源换算，仍会出现比例错配。
+*实现要点
+基于上述原因，实现该需求需关注以下要点：
+*依赖方向为「视频 → 窗口」：先获取视频分辨率（如 1920×1080），按其宽高比同步驱动窗口 dp 与 Mesh meters，二者比例必须一致，否则视频会被拉伸或压缩。
+*窗口尺寸存在系统级 min/max 限制：PICO 的 Planar WindowContainer 窗口尺寸范围约为 320×180 dp 至 2700×1800 dp，将视频分辨率直接视为 dp 极易越界（例如 4K 视频按 1:1 dp 会超过最大值；竖屏短视频则可能小于最小值）。
+*clip 时必须保持宽高比：若分别对宽、高调用 coerceIn 至合法范围会破坏比例。正确做法为：先确定一个基准维度（宽或高），按视频比例计算另一维度；若该维度越界，则以越界一侧的边界为锚点反向重新计算另一维度，保证最终宽高比仍等于视频宽高比。
+*窗口 dp 与 Mesh 的米必须保持同步：WindowContainer 调整尺寸基于 dp，而 MeshResource.createVideoPanel 基于米。需通过 PhysicalLengthConverter.dpToLength(dp, LengthUnit.Meters) 将同一组 dp 转换为米，并通过 VideoComponent.setMesh(...) 单独替换 Mesh，避免破坏 Surface 绑定。
+*解决方案
+整体流程：
+*通过 WindowContainer + ContainerResizeType.ContentSize，使窗口尺寸由内部 Modifier.windowConstraints(width, height) 决定。
+*通过播放器获取视频分辨率（CypressMediaPlayerCallback.onVideoSizeChanged 或 MediaPlayer.OnVideoSizeChangedListener 等回调）。
+*将视频分辨率经过「保持宽高比 + 窗口范围 clip」算法换算为窗口 dp，更新 panelWidth 和 panelHeight 状态，WindowContainer 随之响应尺寸变更。
+*视频内部通过 BoxWithConstraints 获取当前布局尺寸（与窗口 dp 一致），换算为米，并通过 setMesh(...) 同步 Mesh。
+本节按步骤组织，各步骤可独立引用，无需按顺序拼接为单一文件。
+*步骤一：保持比例 + 窗口范围 clip 的核心算法
+ 
+*步骤二：通过算出的 dp 驱动 windowConstraints
+* 
+*使用 VideoPlayerComponent + CypressMediaPlayer
+ 
+*使用 VideoComponent + 第三方播放器
+ 
+*步骤三：Mesh 跟随实际布局尺寸同步替换
+AdaptiveVideoView 通过 BoxWithConstraints 获取当前实际布局 dp（即步骤二计算出的窗口尺寸），换算为 meters，并通过 setMesh 同步 Mesh，避免视频被拉伸。
+* 
+*使用 VideoPlayerComponent
+ 
+*使用 VideoComponent + 第三方播放器
+ 
+*AndroidManifest.xml 配置（可选）
+若需通过 AndroidManifest.xml 配置窗口属性，等效于上述 DSL 中的 defaultSize + resizeType + resizeRestriction：
+ 
+*更多信息
+*比例同步要点与边界处理
+本节归纳"视频 → 窗口"驱动方向下的比例同步规则、窗口尺寸边界处理，以及两种渲染组件下的分辨率获取方式。
+*依赖方向：视频分辨率 → 窗口宽高比 → 同步驱动窗口 dp 与 Mesh 的米（Meter）值；不应将视频反向 fit 至固定窗口，否则会出现拉伸或压缩。
+*clip 必须保持宽高比：先按比例计算，再以 min/max 边界为锚点反算另一维度；仅对单边调用 coerceIn 会破坏比例。
+*窗口尺寸范围：约 320×180 dp 至 2700×1800 dp，4K 等高分辨率视频需先按窗口最大值进行 clip。
+*窗口 dp 与 Mesh 的米（Meter）值同源：通过 PhysicalLengthConverter.dpToLength(...) 将窗口 dp 转换为 Mesh 的米（Meter）值，并通过 setMesh(newMesh) 单独替换 Mesh，可保留 VideoMaterial 与 Surface 绑定。
+*分辨率获取来源：
+*VideoPlayerComponent + CypressMediaPlayer：通过 CypressMediaPlayerCallback.onVideoSizeChanged 获取。
+*VideoComponent + 第三方播放器：通过 MediaPlayer.OnVideoSizeChangedListener / OnPreparedListener 或 ExoPlayer.Player.Listener.onVideoSizeChanged 获取；Surface 通过 SurfaceRenderTexture + bindSurfaceRenderTexture 接入。
+
+// 系统允许的窗口尺寸范围（dp）
+private val WINDOW_MIN = DpSize(320.dp, 180.dp)
+private val WINDOW_MAX = DpSize(2700.dp, 1800.dp)
+// 基准宽度（dp）：在系统允许范围内尽量利用可视面积
+private val PREFERRED_WIDTH = 1760.dp
+
+/**
+ * 根据视频宽高比计算窗口 dp 尺寸：
+ * 1) 以 PREFERRED_WIDTH 为基准，按视频比例计算高度；
+ * 2) 若高度超出 [WINDOW_MIN.height, WINDOW_MAX.height] 范围，
+ *    则以越界侧的边界值为锚点反算宽度，保持宽高比；
+ * 3) 最后再将宽度夹至 [WINDOW_MIN.width, WINDOW_MAX.width] 范围内。
+ */
+fun resolveWindowSize(videoW: Int, videoH: Int): DpSize {
+    if (videoW <= 0 || videoH <= 0) {
+        return DpSize(PREFERRED_WIDTH, PREFERRED_WIDTH * 9f / 16f)
+    }
+    val ratio = videoW.toFloat() / videoH.toFloat()  // w / h
+
+    var w: Dp = PREFERRED_WIDTH
+    var h: Dp = w / ratio
+
+    // 高度超过最大值：以最大高度为锚点反算宽度，保持宽高比
+    if (h > WINDOW_MAX.height) {
+        h = WINDOW_MAX.height
+        w = h * ratio
+    }
+    // 高度小于最小值：以最小高度为锚点反算宽度，保持宽高比
+    if (h < WINDOW_MIN.height) {
+        h = WINDOW_MIN.height
+        w = h * ratio
+    }
+    // 最终再保证宽度位于允许范围内（极端比例下可能仍越界，此时只能牺牲一定比例精度）
+    w = w.coerceIn(WINDOW_MIN.width, WINDOW_MAX.width)
+    return DpSize(w, h)
+}
+
+*推荐将 Modifier.windowConstraints挂载于 WindowContainer content lambda 的根级子节点上，整个窗口仅调用一次。配合 resizeType = ContainerResizeType.ContentSize 时，该 Modifier 直接决定窗口的最终尺寸。传入的 width 或height 状态变化时，窗口随之更新。
+
+import com.pico.spatial.core.ecs.video.CypressMediaPlayer
+import com.pico.spatial.core.ecs.video.CypressMediaPlayerCallback
+import com.pico.spatial.core.ecs.video.CypressMediaPlayerErrorCode
+import com.pico.spatial.ui.foundation.dsl.Form
+import com.pico.spatial.ui.foundation.dsl.SpatialAppScope
+import com.pico.spatial.ui.foundation.dsl.WindowContainer
+import com.pico.spatial.ui.foundation.dsl.WindowContainerSize
+import com.pico.spatial.ui.platform.resize.ContainerResizeRestriction
+import com.pico.spatial.ui.platform.resize.ContainerResizeType
+import com.pico.spatial.ui.platform.resize.windowConstraints
+
+fun SpatialAppScope.VideoAdaptiveWindow() {
+    WindowContainer(
+        id = "video-window",
+        form = Form.Planar,
+        defaultSize = WindowContainerSize(width = PREFERRED_WIDTH, height = PREFERRED_WIDTH * 9f / 16f),
+        resizeType = ContainerResizeType.ContentSize,
+        defaultResizeRestriction = ContainerResizeRestriction.UniformResizable,
+        enableMaterialBackground = false,
+    ) {
+        var size by remember { mutableStateOf(resolveWindowSize(videoW = 1920, videoH = 1080)) }
+
+        val player = remember { CypressMediaPlayer() }
+
+        DisposableEffect(player) {
+            val callback = object : CypressMediaPlayerCallback {
+                override fun onVideoSizeChanged(width: Int, height: Int) {
+                    if (width > 0 && height > 0) {
+                        size = resolveWindowSize(width, height)
+                    }
+                }
+                override fun onPrepared() {}
+                override fun onStarted() {}
+                override fun onPaused() {}
+                override fun onStopped() {}
+                override fun onCompleted() {}
+                override fun onSeekToCompleted() {}
+                override fun onError(error: CypressMediaPlayerErrorCode) {}
+            }
+            player.registerCypressMediaPlayerCallback(callback)
+            onDispose {
+*                player.unregisterCypressMediaPlayerCallback()
+                player.close()
+            }
+        }
+
+        Box(
+            modifier = Modifier
+                .windowConstraints(width = size.width, height = size.height)
+                .fillMaxSize()
+        ) {
+            AdaptiveVideoView(player)
+        }
+    }
+}
+
+import android.media.MediaPlayer
+import com.pico.spatial.ui.foundation.dsl.Form
+import com.pico.spatial.ui.foundation.dsl.SpatialAppScope
+import com.pico.spatial.ui.foundation.dsl.WindowContainer
+import com.pico.spatial.ui.foundation.dsl.WindowContainerSize
+import com.pico.spatial.ui.platform.resize.ContainerResizeRestriction
+import com.pico.spatial.ui.platform.resize.ContainerResizeType
+import com.pico.spatial.ui.platform.resize.windowConstraints
+
+fun SpatialAppScope.VideoAdaptiveWindow() {
+    WindowContainer(
+        id = "video-window",
+        form = Form.Planar,
+        defaultSize = WindowContainerSize(width = PREFERRED_WIDTH, height = PREFERRED_WIDTH * 9f / 16f),
+        resizeType = ContainerResizeType.ContentSize,
+        defaultResizeRestriction = ContainerResizeRestriction.UniformResizable,
+        enableMaterialBackground = false,
+    ) {
+        var size by remember { mutableStateOf(resolveWindowSize(videoW = 1920, videoH = 1080)) }
+
+        val mediaPlayer = remember { MediaPlayer() }
+
+        DisposableEffect(mediaPlayer) {
+            mediaPlayer.setOnVideoSizeChangedListener { _, w, h ->
+                if (w > 0 && h > 0) {
+                    size = resolveWindowSize(w, h)
+                }
+            }
+            onDispose { mediaPlayer.release() }
+        }
+
+        Box(
+            modifier = Modifier
+                .windowConstraints(width = size.width, height = size.height)
+                .fillMaxSize()
+        ) {
+            AdaptiveVideoView(mediaPlayer)
+        }
+    }
+}
+
+*建议视频 Entity、Mesh 或 VideoMaterial 等资源在 remember + DisposableEffect 中提前构造与释放。SpatialView.initial 仅完成装配。update 仅承担 setMesh 等轻量同步操作。
+
+import com.pico.spatial.core.ecs.VideoPlayerComponent
+import com.pico.spatial.core.ecs.resource.BlendingMode
+import com.pico.spatial.core.ecs.resource.MaterialCullingMode
+import com.pico.spatial.core.ecs.resource.MeshResource
+import com.pico.spatial.core.ecs.resource.VideoMaterial
+import com.pico.spatial.core.ecs.video.CypressMediaPlayer
+import com.pico.spatial.core.ecs.video.VideoDimensionMode
+import com.pico.spatial.ui.foundation.content.SpatialView
+import com.pico.spatial.ui.platform.LengthUnit
+import com.pico.spatial.ui.platform.LocalPhysicalLengthConverter
+
+@Composable
+fun AdaptiveVideoView(player: CypressMediaPlayer) {
+    val converter = LocalPhysicalLengthConverter.current
+
+    BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+        val widthMeter  = converter.dpToLength(maxWidth,  LengthUnit.Meters)
+        val heightMeter = converter.dpToLength(maxHeight, LengthUnit.Meters)
+
+        val videoEntity = remember { Entity() }
+        var lastW by remember { mutableStateOf(0f) }
+        var lastH by remember { mutableStateOf(0f) }
+
+        DisposableEffect(Unit) {
+            val mesh = MeshResource.createVideoPanel(widthMeter, heightMeter, 0.02f)
+            val videoMaterial = VideoMaterial(
+                BlendingMode.OPAQUE,
+                VideoDimensionMode.MONO,
+                MaterialCullingMode.BACK,
+            )
+            videoEntity.components.set(VideoPlayerComponent(player, mesh, videoMaterial))
+
+            lastW = widthMeter
+            lastH = heightMeter
+
+            onDispose {
+                videoEntity.destroy()
+                // player 由调用方负责 close（步骤二中已示例）
+            }
+        }
+
+        SpatialView(
+            modifier = Modifier.fillMaxSize(),
+            initial = { content, _ -> content.addEntity(videoEntity) },
+            update = { _, _ ->
+                val changed =
+                    kotlin.math.abs(widthMeter  - lastW) > 1e-4f ||
+                    kotlin.math.abs(heightMeter - lastH) > 1e-4f
+                if (changed) {
+                    val newMesh = MeshResource.createVideoPanel(widthMeter, heightMeter, 0.02f)
+                    videoEntity.components[VideoPlayerComponent::class.java]?.setMesh(newMesh)
+                    lastW = widthMeter
+                    lastH = heightMeter
+                }
+            },
+        )
+    }
+}
+
+import android.media.MediaPlayer
+import com.pico.spatial.core.ecs.Entity
+import com.pico.spatial.core.ecs.VideoComponent
+import com.pico.spatial.core.ecs.resource.BlendingMode
+import com.pico.spatial.core.ecs.resource.MaterialCullingMode
+import com.pico.spatial.core.ecs.resource.MeshResource
+import com.pico.spatial.core.ecs.resource.SurfaceRenderTexture
+import com.pico.spatial.core.ecs.resource.VideoMaterial
+import com.pico.spatial.core.ecs.video.VideoDimensionMode
+import com.pico.spatial.ui.foundation.content.SpatialView
+import com.pico.spatial.ui.platform.LengthUnit
+import com.pico.spatial.ui.platform.LocalPhysicalLengthConverter
+
+@Composable
+fun AdaptiveVideoView(mediaPlayer: MediaPlayer) {
+    val converter = LocalPhysicalLengthConverter.current
+
+    BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+        val widthMeter  = converter.dpToLength(maxWidth,  LengthUnit.Meters)
+        val heightMeter = converter.dpToLength(maxHeight, LengthUnit.Meters)
+
+        val videoEntity = remember { Entity() }
+        val srt = remember { SurfaceRenderTexture(width = 1920, height = 1080) }
+
+        var lastW by remember { mutableStateOf(0f) }
+        var lastH by remember { mutableStateOf(0f) }
+
+        DisposableEffect(Unit) {
+            val mesh = MeshResource.createVideoPanel(widthMeter, heightMeter, 0.02f)
+            val videoMaterial = VideoMaterial(
+                BlendingMode.OPAQUE,
+                VideoDimensionMode.MONO,
+                MaterialCullingMode.BACK,
+            )
+            videoEntity.components.set(VideoComponent(mesh, videoMaterial))
+
+            srt.toGlobal()
+            videoMaterial.bindSurfaceRenderTexture(srt)
+            srt.acquireSurface()?.let { mediaPlayer.setSurface(it) }
+
+            lastW = widthMeter
+            lastH = heightMeter
+
+            onDispose {
+                srt.close()
+                videoEntity.destroy()
+                // mediaPlayer 由调用方负责 release（步骤二中已示例）
+            }
+        }
+
+        SpatialView(
+            modifier = Modifier.fillMaxSize(),
+            initial = { content, _ -> content.addEntity(videoEntity) },
+            update = { _, _ ->
+                val changed =
+                    kotlin.math.abs(widthMeter  - lastW) > 1e-4f ||
+                    kotlin.math.abs(heightMeter - lastH) > 1e-4f
+                if (changed) {
+                    val newMesh = MeshResource.createVideoPanel(widthMeter, heightMeter, 0.02f)
+                    videoEntity.components[VideoComponent::class.java]?.setMesh(newMesh)
+                    lastW = widthMeter
+                    lastH = heightMeter
+                }
+            },
+        )
+    }
+}
+
+<activity android:name=".YourVideoActivity" android:exported="true">
+    <!-- ContentSize：窗口尺寸由 windowConstraints 控制 -->
+    <meta-data
+        android:name="pico.spatial.windowcontainer.resizetype"
+        android:value="2" />
+    <!-- 默认窗口尺寸（dp） -->
+    <meta-data
+        android:name="pico.spatial.windowcontainer.defaultsize"
+        android:value="1760x990" />
+    <!-- 用户手动 resize 时保持宽高比 -->
+    <meta-data
+        android:name="pico.spatial.windowcontainer.resizerestriction"
+        android:value="1" />
+*</activity>

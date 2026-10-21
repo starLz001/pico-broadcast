@@ -1,0 +1,369 @@
+示例：为 3D 模型添加动画
+========================================
+该示例演示如何在空间应用中为 3D 模型添加动画效果，涵盖两类常见动画能力：
+*骨骼动画（Skeletal Animation）：播放模型文件中自带的骨骼动画片段（示例使用 pico_robot_animated.glb）。
+*补间动画（Tween Animation）：通过插值驱动 Transform 或材质属性变化（示例使用 pico_robot_static.usdz）。
+ 
+*前提条件
+*参阅《准备开发环境》配置 PICO Spatial SDK 开发环境。
+*准备一台 PICO 设备或启动 PICO Emulator。
+*获取示例项目
+前往《PICO Spatial SDK 示例》下载 为 3D 模型添加动画 示例项目。
+*运行示例项目
+*把示例项目拉取到本地，然后用 Android Studio 打开示例项目。
+*连接 PICO 设备或启动 PICO Emulator。
+*运行 app 模块。
+运行示例后，你会看到一个 Volumetric WindowContainer，界面包含：
+*顶部 Tab：在 Skeletal 与 Tween 两种动画示例之间切换
+*左侧列表：选择不同动画项
+*右侧区域：展示动画播放效果；Tween 场景下还提供参数控制（duration/speed/repeat/ease 等）
+ 
+两类动画的资源生命周期如下：
+* 
+Volumetric 容器由 AndroidManifest.xml 的 meta-data 配置：
+ 
+*示例项目结构说明
+核心代码在 app/src/main/java/com/pico/spatial/sample/animation/ 下，建议按下面顺序阅读：
+*platform/SpatialApplication.kt：应用入口，launch(::mainApp)
+*Main.kt：默认容器与主界面骨架（Tab + HomePage）
+*ui/common/AnimationPlayView.kt：SpatialView 承载 3D 内容，并订阅动画事件
+*ui/skeletal/SkeletalAnimationViewModel.kt：骨骼动画状态、资源释放
+*util/SkeletalAnimationUtil.kt：加载 GLB、定位 skinned mesh、播放/重置/释放
+*ui/tween/TweenAnimationViewModel.kt：Tween 参数控制、重播/切换
+*util/TweenAnimationUtil.kt：创建 TweenAnimation、生成 AnimationResource、材质透明度处理
+*manager/EventManager.kt：Started/Terminated 事件订阅与统一取消
+*data/AnimationModels.kt：动画列表与状态枚举
+*基于动画系统实现骨骼动画与补间动画
+*步骤一：声明空间容器并承载 3D 场景
+应用入口是 SpatialApplication，通过 launch(::mainApp) 启动 Spatial UI 应用：
+ 
+mainApp 使用 DefaultWindowContainer { ... } 承载 Compose UI：
+ 
+动画的 3D 内容通过 SpatialView 加入场景（SpatialViewContent.addEntity()），并在 Skeletal 与 Tween 之间切换实体的 enabled 状态（并触发各自的默认 autoplay）：
+ 
+*步骤二：实现骨骼动画：加载 GLB 并播放内置动画
+*资源与动画列表
+示例的骨骼动画资源文件为：
+*/app/src/main/assets/pico_robot_animated.glb
+示例将骨骼动画映射成 5 个状态（索引即动画资源数组下标）：
+ 
+*加载模型并设置初始 Transform
+示例在 SkeletalAnimationUtil.initialize() 中异步加载 GLB 并添加到实体下：
+ 
+*找到蒙皮网格并获取动画资源
+骨骼动画通常绑定在蒙皮网格（Skinned Mesh）上。示例通过 findSkinnedMeshEntity() 获取蒙皮网格实体，再从其中取 AnimationResource 数组，并将其与蒙皮网格列表一同封装到 SkeletalAnimationData 中：
+ 
+SkeletalAnimationData 同时持有动画资源数组与蒙皮网格实体列表，便于在播放、复位与释放时统一访问：
+ 
+*播放指定索引的骨骼动画
+示例按 SkeletalAnimationState.value 取出对应动画资源并播放：
+ 
+*资源生命周期
+示例明确 不使用 use {} 包裹骨骼动画资源，原因是骨骼动画需要保持资源处于打开状态以持续播放：
+ 
+切换动画项时只需调用 reset() 停止当前播放，但 不关闭动画资源，从而支持重复播放：
+ 
+只有在 ViewModel 销毁时，才通过 closeResources() 真正释放底层资源：
+ 
+ 
+*步骤三：实现补间动画：加载 USDZ 并插值驱动 Transform/材质
+*资源与关键节点
+示例的补间动画资源文件为：
+*/app/src/main/assets/pico_robot_static.usdz
+补间动画除了 Transform，还会演示“材质属性动画”。示例需要先定位到模型层级中承载材质的节点 geo_body：
+ 
+随后记录该节点的初始材质参数（baseColor/metallic/roughness/emissiveColor/opacity），用于后续 from 起点与 reset() 复位：
+ 
+*创建 TweenAnimation
+示例使用 TweenAnimation.createTweenAnimation() 创建补间动画。Transform 类目标的例子：
+ 
+材质目标的例子（绑定 MaterialTarget.OPACITY）：
+ 
+示例支持的目标类型还包括 bindRotation()/bindScale()/bindTransform()，以及 MaterialTarget.BASE_COLOR/METALLIC/ROUGHNESS/EMISSIVE，对应 TweenAnimationState 枚举。
+*生成 AnimationResource 并播放
+补间动画需要先生成 AnimationResource：
+ 
+播放时：
+*如果是 Transform 动画，直接对 entity 播放
+*如果是材质动画，对 body（材质所在的节点）播放
+ 
+*透明度动画的额外处理
+当对材质做 opacity 动画时，需要先把混合模式切为 TRANSPARENT，否则透明度变化可能不会按预期生效（见上文播放分支）。复位阶段会再切回 OPAQUE。
+*资源释放
+补间动画资源在每次重播/切换时会重新生成，因此示例在 reset() 中会做两类事情：
+*复位场景状态：停止动画、恢复模型初始 Transform，恢复材质初始值（包含 BlendingMode 与 opacity）
+*释放旧资源：关闭并置空旧的 AnimationResource
+ 
+*步骤四：订阅动画事件：订阅 Started/Terminated
+示例通过 SpatialViewContent.subscribe() 订阅动画事件（Started/Terminated）：
+ 
+订阅实现封装在 EventManager 中：
+ 
+并在 Composable 销毁时取消订阅：
+ 
+*延伸阅读
+*《动画系统》
+*《骨骼动画》
+*《补间动画》
+*《动画事件》
+
+**
+
+*骨骼动画
+ 
+
+
+*补间动画
+ 
+
+
+**
+
+*骨骼动画
+* 
+
+
+*补间动画
+* 
+
+
+<!-- file: app/src/main/AndroidManifest.xml -->
+<meta-data android:name="pico.spatial.windowcontainer.style" android:value="2" />
+<meta-data android:name="pico.spatial.windowcontainer.defaultsize" android:value="1520x700x600" />
+<meta-data android:name="pico.spatial.windowcontainer.resizetype" android:value="2" />
+<meta-data android:name="pico.spatial.windowcontainer.worldscaletype" android:value="1" />
+
+// file:app/src/main/java/com/pico/spatial/sample/animation/platform/SpatialApplication.kt
+class SpatialApplication : Application() {
+    override fun onCreate() {
+        super.onCreate()
+        launch(::mainApp)
+    }
+}
+
+// file:app/src/main/java/com/pico/spatial/sample/animation/Main.kt
+fun mainApp(scope: SpatialAppScope) =
+    with(scope) {
+        DefaultWindowContainer {
+            PicoTheme {
+                Box {
+                    AnimationTypeTabBar()
+                    HomePage()
+                }
+            }
+        }
+    }
+
+// file:app/src/main/java/com/pico/spatial/sample/animation/ui/common/AnimationPlayView.kt
+@Composable
+fun AnimationPlayView(
+    homeViewModel: HomeViewModel = viewModel(),
+    skeletalAnimationViewModel: SkeletalAnimationViewModel = viewModel(),
+    tweenAnimationViewModel: TweenAnimationViewModel = viewModel(),
+) {
+    val skeletalEntity = skeletalAnimationViewModel.entity
+    val tweenEntity = tweenAnimationViewModel.entity
+
+    val isSkeletalSelected = homeViewModel.isStateSelected(NavigationState.SKELETAL)
+
+    LaunchedEffect(isSkeletalSelected) {
+        if (isSkeletalSelected) {
+            skeletalEntity.enabled = true
+            tweenEntity.enabled = false
+            // Ensure tween entity is reset before switching
+            tweenAnimationViewModel.resetControl()
+            // Autoplay skeletal using the current default set in TabBar
+            skeletalAnimationViewModel.restart()
+        } else {
+            skeletalEntity.enabled = false
+            tweenEntity.enabled = true
+            // Ensure skeletal entity is reset before switching
+            skeletalAnimationViewModel.animationData?.let {
+                SkeletalAnimationUtil.reset(skeletalEntity, it)
+            }
+            // Autoplay tween using the current default set in TabBar
+            tweenAnimationViewModel.restart()
+        }
+    }
+
+    DisposableEffect(Unit) { onDispose { EventManager.unsubscribeAllAnimationEvents() } }
+
+    SpatialView(
+        modifier = Modifier.height(645.dp).fillMaxWidth().requiredDepth(100.dp),
+        initial = { content, _ ->
+            content.addEntity(skeletalEntity)
+            content.addEntity(tweenEntity)
+            content.subscribeAnimationEvents()
+        }
+    )
+}
+
+// file:app/src/main/java/com/pico/spatial/sample/animation/data/AnimationModels.kt
+enum class SkeletalAnimationState(
+    val value: Int,
+    @DrawableRes val imageRes: Int,
+    @StringRes val descriptionRes: Int
+) {
+    STANDBY_MODE(0, R.drawable.img_standby_mode, R.string.standby_mode),
+    SPIN_LEAP(1, R.drawable.img_spin_leap, R.string.spin_leap),
+    CURIOUS_LOOK(2, R.drawable.img_curious_look, R.string.curious_look),
+    TURBO_DASH(3, R.drawable.img_turbo_dash, R.string.turbo_dash),
+    HELLO_WAVE(4, R.drawable.img_hello_wave, R.string.hello_wave)
+}
+
+// file:app/src/main/java/com/pico/spatial/sample/animation/util/SkeletalAnimationUtil.kt
+private const val ANIMATED_ROBOT = "asset://pico_robot_animated.glb"
+private val INITIAL_POSITION_ANIMATED_ROBOT = Vector3(-0.07f, -0.2f, 0.1f)
+private val INITIAL_SCALE_ANIMATED_ROBOT = Vector3(0.0045f)
+
+val character = withContext(Dispatchers.IO) { Entity.load(ANIMATED_ROBOT) }
+entity.addChild(character)
+character.components[TransformComponent::class.java]?.apply {
+    setPosition(INITIAL_POSITION_ANIMATED_ROBOT)
+    setScaleVector(INITIAL_SCALE_ANIMATED_ROBOT)
+}
+
+// file:app/src/main/java/com/pico/spatial/sample/animation/util/SkeletalAnimationUtil.kt
+val skinnedMeshEntities = entity.findSkinnedMeshEntity().toList()
+val skeletalAnimationResources =
+    skinnedMeshEntities.firstOrNull()?.getAnimationResources()
+
+val animationData =
+    SkeletalAnimationData(skeletalAnimationResources, skinnedMeshEntities)
+onInitialized(animationData)
+
+// file:app/src/main/java/com/pico/spatial/sample/animation/util/SkeletalAnimationUtil.kt
+data class SkeletalAnimationData(
+    val skeletalAnimationResources: Array<AnimationResource>?,
+    val skinnedMeshEntities: List<Entity>?
+)
+
+// file:app/src/main/java/com/pico/spatial/sample/animation/util/SkeletalAnimationUtil.kt
+for (meshEntity in entities) {
+    val animationResource =
+        state.skeletalAnimationResources?.get(skeletalAnimationState.value)
+    animationResource?.let {
+        meshEntity.playAnimation(it)
+        // Do not use use() here; animation resource must remain open for continuous playback
+    }
+}
+
+// file:app/src/main/java/com/pico/spatial/sample/animation/util/SkeletalAnimationUtil.kt
+meshEntity.playAnimation(it)
+// Do not use use() here; animation resource must remain open for continuous playback
+
+// file:app/src/main/java/com/pico/spatial/sample/animation/util/SkeletalAnimationUtil.kt
+fun reset(entity: Entity, animationData: SkeletalAnimationData) {
+    entity.stopAllAnimations()
+    // Do not close animation resources here, as they may be reused for subsequent playback
+}
+
+// file:app/src/main/java/com/pico/spatial/sample/animation/util/SkeletalAnimationUtil.kt
+fun closeResources(animationData: SkeletalAnimationData) {
+    animationData.skeletalAnimationResources?.forEach { it.close() }
+}
+
+// file:app/src/main/java/com/pico/spatial/sample/animation/ui/skeletal/SkeletalAnimationViewModel.kt
+override fun onCleared() {
+    super.onCleared()
+    animationData?.let {
+        SkeletalAnimationUtil.reset(entity, it)
+        SkeletalAnimationUtil.closeResources(it)
+    }
+}
+
+// file:app/src/main/java/com/pico/spatial/sample/animation/util/TweenAnimationUtil.kt
+private const val NODE_BODY = "geo_body"
+val bodyEntity = requireNotNull(character.findEntity(NODE_BODY)) { "Body entity named $$NODE_BODY not found" }
+
+// file:app/src/main/java/com/pico/spatial/sample/animation/util/TweenAnimationUtil.kt
+val material =
+    requireNotNull(
+        entity.components[ModelComponent::class.java]?.materials?.firstOrNull()
+            as? PhysicallyBasedMaterial
+    ) { "Material not found for entity $$entity or not a PhysicallyBasedMaterial" }
+state.pbrMaterial = material
+state.initMaterial =
+    MaterialProperties(
+        baseColor = material.getBaseColor(),
+        metallic = material.getMetallic(),
+        roughness = material.getRoughness(),
+        emissiveColor = material.getEmissiveColor(),
+        opacity = material.getOpacity()
+    )
+
+// file:app/src/main/java/com/pico/spatial/sample/animation/util/TweenAnimationUtil.kt
+TweenAnimation.createTweenAnimation(
+    bindTarget = AnimationBindTarget.bindPosition(),
+    to = POSITION_TO,
+    duration = control.duration,
+    speed = control.speed,
+    repeatCount = control.repeatCount,
+    repeatMode = control.repeatMode,
+    easeType = control.easeType,
+)
+
+// file:app/src/main/java/com/pico/spatial/sample/animation/util/TweenAnimationUtil.kt
+TweenAnimation.createTweenAnimation(
+    bindTarget = AnimationBindTarget.bindMaterial(0, MaterialTarget.OPACITY),
+    from = animationData.initMaterial?.opacity,
+    to = OPACITY_TO,
+    duration = control.duration,
+    speed = control.speed,
+    repeatCount = control.repeatCount,
+    repeatMode = control.repeatMode,
+    easeType = control.easeType,
+)
+
+// file:app/src/main/java/com/pico/spatial/sample/animation/util/TweenAnimationUtil.kt
+val animationResource = AnimationResource.generateWithTweenAnimation(tweenAnimation)
+animationData.tweenAnimationResource = animationResource
+
+// file:app/src/main/java/com/pico/spatial/sample/animation/util/TweenAnimationUtil.kt
+if (!isMaterialAnimation) {
+    entity.playAnimation(animationResource)
+} else {
+    if (isOpacityAnimation) {
+        animationData.pbrMaterial?.setBlendingMode(BlendingMode.TRANSPARENT)
+    }
+    animationData.body.playAnimation(animationResource)
+}
+
+// file:app/src/main/java/com/pico/spatial/sample/animation/util/TweenAnimationUtil.kt
+entity.stopAllAnimations()
+
+// 恢复初始 Transform
+entity.components[TransformComponent::class.java]?.apply {
+    setPosition(INITIAL_POSITION_STATIC_ROBOT)
+    setEulerAngles(INITIAL_ROTATOR_STATIC_ROBOT)
+    setScaleVector(INITIAL_SCALE_STATIC_ROBOT)
+}
+
+// 恢复材质初始值（尤其是透明度动画会切到 TRANSPARENT，需要复位回 OPAQUE）
+animationData.pbrMaterial?.apply {
+    setBaseColor(animationData.initMaterial?.baseColor ?: Color4.WHITE)
+    setMetallic(animationData.initMaterial?.metallic ?: 1f)
+    setRoughness(animationData.initMaterial?.roughness ?: 1f)
+    setEmissiveColor(animationData.initMaterial?.emissiveColor ?: Color4.WHITE)
+    setBlendingMode(BlendingMode.OPAQUE)
+    setOpacity(animationData.initMaterial?.opacity ?: 1f)
+}
+
+animationData.tweenAnimationResource?.close()
+animationData.tweenAnimationResource = null
+
+// file:app/src/main/java/com/pico/spatial/sample/animation/ui/common/AnimationPlayView.kt
+private fun SpatialViewContent.subscribeAnimationEvents() {
+    EventManager.subscribeAnimationEvent(this, AnimationEvents.Started::class.java)
+    EventManager.subscribeAnimationEvent(this, AnimationEvents.Terminated::class.java)
+}
+
+// file:app/src/main/java/com/pico/spatial/sample/animation/manager/EventManager.kt
+subscription =
+    content.subscribe(animEvent) {
+        Log.d("EventManager", "Animation Started!")
+        // Implement your logic here
+    }
+
+// file:app/src/main/java/com/pico/spatial/sample/animation/ui/common/AnimationPlayView.kt
+DisposableEffect(Unit) { onDispose { EventManager.unsubscribeAllAnimationEvents() } }

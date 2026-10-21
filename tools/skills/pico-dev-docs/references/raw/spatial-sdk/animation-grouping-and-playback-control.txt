@@ -1,0 +1,275 @@
+动画组合与播放控制
+========================================
+本文档将详细介绍如何对多种动画资源进行组合与播放控制，包括重复播放单一动画、并行/串行播放多个动画、通过 AnimationPlaybackController 实现暂停、调速、跳转等播放状态管理，以及通过 AnimationPlayConfig 实现动画的过渡与混合。
+*示例说明
+*使用的模型文件如下。该模型文件一共包含五个 AnimationResource，按顺序分别为待机（idle）、跳跃（jump）、环顾四周（look_around）、向前行进（walk_forward）和挥手（wave）。你可以使用 Blender 等第三方 DCC 软件预览它们。
+*本文档将通过 wave 动画，以及使用代码创建的一段补间动画，展示如何控制动画播放。
+ 
+* 
+*准备工作
+*获取 AnimationResource 实例。
+*AnimationResource 表示可播放的动画数据，可以通过以下方式获取：
+*骨骼动画：获取带有蒙皮网格的 Entity 数组后，你可以通过 getAnimationResources () 函数获取数组中每个 Entity 实例所绑定的 AnimationResource。详情参考《骨骼动画》。
+*补间动画：你可以用 AnimationResource.generateWithTweenAnimation() 静态函数生成 AnimationResource。详情参考《补间动画》。
+*轨道动画：你可以将创建的轨道动画转换为 AnimationResource。详情参考《轨道动画》。
+*重复播放单个动画
+*如果你想让一段动画在播放完第一次之后，再重复播放指定的次数，可以使用 animationResource.repeat(count: Int)。该函数会根据传入的 count 参数，创建一个新的动画资源，并设置其重复播放的次数。
+*例如：让机器人挥手 4 次（重复 3 次）后停止播放挥手动画。
+* 
+* 
+*组合多个动画资源并播放
+*获取多个 AnimationResource 实例后，你可以将它们组合为一个新的单一的 AnimationResource 实例，然后实现多个动画并行播放、以及多个动画串行播放。
+*并行播放多个动画
+*若需并行播放多个动画，可以使用 AnimationResource.group(with: List<AnimationResource>) 函数。该函数会将传入的多个动画资源合并为一个单一的动画资源，播放该资源即可实现并行播放。
+例如：让机器人从后方向前移动，同时在移动过程中挥手 4 次（重复 3 次），直至到达终点，总耗时约 12 秒。
+* 
+ 
+*串行播放多个动画
+*若需按顺序播放多个动画，可以使用 AnimationResource.sequence(with: List<AnimationResource>) 函数。该函数会将传入的多个动画资源组合为一个有序的串行动画序列，前一个动画结束后自动开始播放下一个。
+例如：让机器人先从后方向前移动（约 3 秒），到达终点后再挥手 4 次（重复 3 次）。
+* 
+ 
+*控制动画播放
+Entity 实例调用 playAnimation() 播放动画后，会返回一个 AnimationPlaybackController 实例。通过该实例可控制动画播放，如暂停、恢复、停止、调整速度、跳转进度等，并获取动画的当前播放状态。
+*主要功能包括：
+*
+ 
+*注意事项
+*骨骼动画的播放机制
+*对于通过 skinnedMeshEntity.getAnimationResources() 获取的骨骼动画，默认无限循环播放。因此，将这些动画直接转换为 List 并传入 sequence() 函数时，播放序列将卡在第一个无限循环的动画上。若希望动画仅播放一次，请在传入前显式调用 repeat(0)。
+*动画目标（AnimationTarget）冲突
+*对于绑定到同一 AnimationTarget 的多个 TweenAnimation，将它们传入 sequence() 函数时，所有动画可以按顺序依次正常播放。
+*但将它们传入 group() 函数时，仅会播放最后一个动画。因为这些动画作用于同一个 AnimationTarget，后一次修改会覆盖前一次。
+*同理，将骨骼动画列表传入 group() 函数时，也只会播放最后一个动画。原因是这些骨骼动画作用于同一个动画目标（AnimationTarget），只有最后应用的动画会生效。
+*线程要求
+*Entity 上所有动画相关函数（如 entity.playAnimation()），以及 AnimationPlaybackController 的函数（如 controller.pause()），均标注了 @MainThread。你必须在主线程中调用这些函数。
+*资源管理
+*Entity 实例销毁时，会自动关闭其关联的所有动画播放控制器。
+*动画资源传入限制
+*同一个 AnimationResource 实例不能被重复传入 sequence() 或 group() 函数，否则请求将抛出异常。
+*实现动画过渡与混合
+*为了实现复杂的动画过渡与混合效果，你可以在调用 playAnimation() 函数时，传入一个 AnimationPlayConfig 对象。通过配置 AnimationPlayConfig 对象，你可以实现以下动画场景：
+*平滑过渡：在两个动画（如“行走”到“跑步”）之间创建平滑的混合效果。
+*叠加：在不打断现有动画（如角色基础待机）的情况下，叠加播放新的动画（如“挥手”）。
+*中断并混合：在一个动画的任意时刻中断它，并从当前姿态平滑地混合到下一个动画。
+*分层控制：通过动画分层（blendLayer）和权重（blendWeight）实现复杂的叠加逻辑。例如，将身体动画和表情动画放在不同层级，并独立控制它们的贡献程度。
+*AnimationPlayConfig 类的参数说明如下：
+*
+下面的示例代码展示了如何使用 Crossfade 模式从待机动画过渡到跑步动画。
+* 
+
+@Composable
+fun AnimationCombinationExample() {
+    SpatialView(
+        initial = { content, _ ->
+            // 异步加载带有骨骼动画的模型
+            val robot = Entity.loadSuspend("asset://model/pico_robot_animated.glb")
+            robot.apply {
+                components[TransformComponent::class.java]?.apply {
+                    setPosition(Vector3(0f, -0.5f, 0f))
+                }
+                content.addEntity(this)
+                playAnimationRepeat(this)
+            }
+        }
+    )
+}
+
+fun playAnimationRepeat(entity: Entity) {
+    // 查找 entity 下的蒙皮网格
+    val skinnedMeshEntityArray = entity.findSkinnedMeshEntity()
+    for (skinnedMeshEntity in skinnedMeshEntityArray) {
+        // 获取所有骨骼动画资源
+        val skeletalAnimationResources = skinnedMeshEntity.getAnimationResources()
+        // wave 动画的索引为 4
+        val waveAnimationResource = skeletalAnimationResources[4]
+        // 创建一个新的动画资源，将重复播放次数设置为 3（共播放 4 次）
+        val repeat = waveAnimationResource.repeat(3)
+        // 播放动画，并使用 `use` 确保资源在使用后被正确关闭/释放
+        repeat.use { skinnedMeshEntity.playAnimation(it) }
+    }
+}
+
+@Composable
+fun AnimationCombinationExample() {
+    SpatialView(
+        initial = { content, _ ->
+            // 异步加载带有骨骼动画的模型
+            val robot = Entity.loadSuspend("asset://model/pico_robot_animated.glb")
+            robot.apply {
+                components[TransformComponent::class.java]?.apply {
+                    setPosition(Vector3(0f, -0.5f, -0.9f))
+                }
+                content.addEntity(this)
+                playAnimationGroup(this)
+            }
+        }
+    )
+}
+
+fun playAnimationGroup(entity: Entity) {
+    // 创建位移动画：从后方 (-0.9) 移动到前方 (0.3)，时长为 12 秒
+    val moveAnimation =
+        AnimationResource.generateWithTweenAnimation(
+            TweenAnimation.createTweenAnimation(
+                bindTarget = AnimationBindTarget.bindPosition(),
+                from = Vector3(0f, -0.5f, -0.9f),
+                to = Vector3(0f, -0.5f, 0.3f),
+                duration = 12f
+            )
+        )
+    // 查找 entity 下的蒙皮网格
+    val skinnedMeshEntityArray = entity.findSkinnedMeshEntity()
+    for (skinnedMeshEntity in skinnedMeshEntityArray) {
+        // 获取所有骨骼动画资源
+        val skeletalAnimationResources = skinnedMeshEntity.getAnimationResources()
+        // wave 动画的索引为 4
+        val waveAnimationResource = skeletalAnimationResources[4]
+        // 将 wave 动画的重复播放次数设置为 3（共播放 4 次）
+        val repeat = waveAnimationResource.repeat(3)
+        // 将 move 动画和 wave 动画组合成一个并行播放的动画组
+        val group = AnimationResource.group(listOf(moveAnimation, repeat))
+        // 播放动画组，并使用 `use` 确保资源在使用后被正确关闭/释放
+        group.use { skinnedMeshEntity.playAnimation(it) }
+    }
+}
+
+@Composable
+fun AnimationCombinationExample() {
+    SpatialView(
+        initial = { content, _ ->
+            // 异步加载带有骨骼动画的模型
+            val robot = Entity.loadSuspend("asset://model/pico_robot_animated.glb")
+            robot.apply {
+                components[TransformComponent::class.java]?.apply {
+                    setPosition(Vector3(0f, -0.5f, -0.9f))
+                }
+                content.addEntity(this)
+                playAnimationSequence(this)
+            }
+        }
+    )
+}
+
+fun playAnimationSequence(entity: Entity) {
+    // 创建 move 动画：从后方 (-0.9) 移动到前方 (0.3)，时长为 3 秒
+    val moveAnimation =
+        AnimationResource.generateWithTweenAnimation(
+            TweenAnimation.createTweenAnimation(
+                bindTarget = AnimationBindTarget.bindPosition(),
+                from = Vector3(0f, -0.5f, -0.9f),
+                to = Vector3(0f, -0.5f, 0.3f),
+                duration = 3f
+            )
+        )
+    // 查找 entity 下的蒙皮网格
+    val skinnedMeshEntityArray = entity.findSkinnedMeshEntity()
+    for (skinnedMeshEntity in skinnedMeshEntityArray) {
+        // 获取所有骨骼动画资源
+        val skeletalAnimationResources = skinnedMeshEntity.getAnimationResources()
+        // wave 动画的索引为 4
+        val waveAnimationResource = skeletalAnimationResources[4]
+        // 将 wave 动画的重复播放次数设置为 3（共播放 4 次）
+        val repeat = waveAnimationResource.repeat(3)
+        // 将 move 动画和 wave 动画组合成一个串行播放的动画序列（先移动，后挥手）
+        val sequence = AnimationResource.sequence(listOf(moveAnimation, repeat))
+        // 播放动画序列，并使用 use 确保资源在使用后被正确关闭/释放
+        sequence.use { skinnedMeshEntity.playAnimation(it) }
+    }
+}
+
+
+
+功能
+
+相关函数/属性
+
+*播放状态与有效性检查
+
+相关属性：
+*控制器有效性：valid(bool)
+*播放状态查询：isPlaying()、isComplete()、isPaused()、isStopped()
+
+播放控制
+
+*暂停播放：pause()
+*恢复播放：resume()
+*停止播放：stop()
+
+播放速度与时间设置
+
+*获取、设置播放速度：getSpeed()、setSpeed(speed)
+*获取、设置播放时间：getTime()、setTime(time)
+
+资源释放
+
+使用完 AnimationPlaybackController 实例后，需手动调用 close() 来释放它，以避免占用不必要的内存。
+
+*进行动画播放控制前，建议先使用 controller.valid 检查控制器是否有效。
+*使用 setTime() 进行时间轴跳转；配合 pause() 可做静态预览。
+
+
+
+参数名
+
+类型
+
+说明
+
+transitionDuration
+
+Float
+
+动画过渡的时长，单位为秒，用于控制从当前动画平滑混合到新动画所需的时间。
+*0.0f: （默认）立即切换，没有过渡效果。
+*> 0.0f: 在指定的秒数内，从旧动画线性混合到新动画。
+*< 0.0f: 该值会被视为 0.0f，并会打印一条警告（Warning）日志。
+
+transitionMode
+
+AnimationTransitionMode
+
+动画过渡模式决定了当一个新动画开始播放时，如何处理实体上正在播放的旧动画。AnimationTransitionMode 是一个枚举类，它定义了以下四种不同的过渡行为：
+*DEFAULT：（默认）此模式下，SDK 会根据动画类型自动选择最常规的过渡方式，以简化您的配置。
+*对于骨骼动画，其行为等同于 CROSSFADE。
+*对于其他类型的动画（如补间动画），其行为等同于 COMPOSE。
+*CROSSFADE：平滑地从当前动画过渡到新动画。在 transitionDuration 指定的时间内，旧动画会逐渐淡出（权重从当前值衰减至 0），同时新动画会逐渐淡入（权重从 0 增加至 blendWeight 目标值）。这是最经典的切换方式，适用于需要无缝连接的动作序列，例如从“站立”切换到“行走”，或从“跑步”切换到“跳跃”。
+*COMPOSE：在现有动画之上叠加播放新动画，两者将同时运行且互不干扰（除非它们驱动了相同的属性），旧动画不会因此停止或淡出。此模式适用于需要叠加多个独立动画效果的场景。例如，在一个循环播放的“呼吸”待机动画（位于 blendLayer 0）之上，叠加一个“挥手”动画（位于 blendLayer 1），两者会同时生效。
+*STOP_AND_CROSSFADE：立即冻结当前所有动画的姿态，并以此静止姿态为起点，在 transitionDuration 时间内平滑过渡到新动画。该模式适用于需要从一个动态过程中，以当前“快照”为基础紧急切换到另一动作的场景。例如，当一个角色在攻击动作中途被击中时，就需要立即从当前姿态过渡到一个“受击”动画。
+
+blendLayer
+
+Int
+
+定义动画播放的混合层级，用于组织动画的叠加与覆盖。当不同层级的动画影响同一属性时，高层级的动画效果会覆盖低层级的动画。
+取值如下：
+*-1：（默认）在默认层级上播放。
+*>= 0：在指定的层级上播放。您可以通过层级分离不同类型的动画（如身体层和表情层），使它们同时存在并独立影响最终姿态，从而实现更复杂的组合动作。
+
+blendWeight
+
+Float
+
+动画的混合权重，用于控制此动画在最终混合结果中的贡献程度。
+取值如下：
+*1.0f：（默认）完全应用此动画效果。
+*0.0f：此动画不产生任何效果。
+*(0.0f, 1.0f)：按比例应用动画效果，并与其他激活的动画混合。
+*范围外的值：小于 0.0f 的值将被修正为 0.0f，大于 1.0f 的值将被修正为 1.0f。
+
+val idleAnimation: AnimationResource = ...
+val runAnimation: AnimationResource = ...
+
+// 先播放待机动画
+entity.playAnimation(idleAnimation)
+
+// ... 某时机触发跑步 ...
+
+// 创建一个配置，指定在 0.5 秒内使用 CROSSFADE 模式过渡到跑步动画
+val config = AnimationPlayConfig(
+    transitionDuration = 0.5f,
+    transitionMode = AnimationTransitionMode.CROSSFADE
+)
+
+// 播放跑步动画，此时会从待机动画平滑过渡
+entity.playAnimation(runAnimation, config)

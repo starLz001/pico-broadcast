@@ -1,0 +1,6 @@
+平台服务简单示例
+========================================
+SimpleDemo 是一个简单的平台服务使用示例。实例中展示了如何初始化平台服务，申请用户权限，然后获取当前登录用户的信息。
+你可以在 PICO 的 GitHub 上获取 SimpleDemo，也可以在项目中导入 SDK，然后在 Packages\PICO Integration\Platform\Samples 目录下获取该 Demo。
+* 
+

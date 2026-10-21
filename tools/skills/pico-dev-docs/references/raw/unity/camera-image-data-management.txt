@@ -1,0 +1,310 @@
+相机图像数据（用户设备）
+========================================
+本文介绍如何在 PICO XR 设备上使用 PXR_CameraImage 类提供的接口来管理相机图像数据。
+*关于 PXR_CameraImage 
+*PXR_CameraImage 是一个静态工具类，封装了 PICO XR 设备相机相关能力，主要包括：
+* 枚举设备上可用的相机
+* 查询相机属性与能力（分辨率、格式、帧率、模型等）
+* 创建和管理相机设备与捕获会话
+* 获取相机内参与外参
+* 实时获取并释放相机图像数据
+PXR_CameraImage 底层基于 OpenXR 扩展 XR_PICO_camera_image，并依赖 XR_EXT_future 提供的异步能力。
+*环境要求
+*设备型号：PICO 4 Ultra、Project Swan
+*设备系统版本：
+*PICO 4 Ultra：5.15.0 及以上
+*Project Swan：PICO OS 6
+*权限声明
+在 AndroidManifest.xml 中声明相机权限。
+ 
+*整体使用流程
+*申请相机权限。
+*调用 GetAvailableCameras 获取可用相机。
+*查询相机能力（分辨率、格式等）。
+*调用 CreateCameraDeviceAsync 创建相机设备。
+*调用 CreateCameraCaptureSessionAsync 创建捕获会话。
+*调用 BeginCameraCapture 开始捕获图像。
+*在循环中使用 AcquireCameraImage 获取图像。
+*处理所获取的图像。
+*调用 ReleaseCameraImage 释放图像资源。
+*调用 EndCameraCapture 结束捕获。
+*调用 DestroyCameraCaptureSession 和 DestroyCameraDevice 清理资源。
+ 
+*代码示例
+*获取可用相机
+*获取设备上可用的相机 ID 列表。
+ 
+*获取相机支持的属性类型
+*获取指定相机支持的属性类型列表。
+ 
+*获取相机的朝向
+*获取相机的朝向。
+ 
+*获取相机的位置
+*获取相机的位置。
+ 
+*获取相机的类型
+*获取相机的类型（如彩色透视相机等）。
+ 
+*获取相机支持的能力类型
+*获取指定相机支持的能力类型列表。
+ 
+*获取相机支持的图像帧率
+*获取相机支持的图像帧率列表。
+ 
+*获取相机支持的相机模型
+*获取相机支持的相机模型列表。
+ 
+*获取相机支持的数据传输类型
+*获取相机支持的数据传输类型列表。
+ 
+*获取相机支持的图像格式
+*获取相机支持的图像格式列表。
+ 
+*获取相机支持的图像分辨率
+*获取相机支持的图像分辨率列表。
+ 
+*异步创建相机设备
+*异步创建指定 ID 的相机设备。
+ 
+*异步创建相机捕获会话
+*异步创建相机捕获会话，配置捕获参数。
+ 
+*销毁相机设备
+*销毁指定 ID 的相机设备。
+ 
+*销毁相机捕获会话
+*销毁指定相机 ID 的捕获会话。
+ 
+*获取相机的内参
+*获取相机的内参信息。
+ 
+*获取相机的外参
+*获取相机的外参信息（相对于设备的位置和方向）。
+ 
+*启动指定相机的图像捕获
+*让指定相机开始捕获图像。
+ 
+*结束指定相机的图像捕获
+*让指定相机结束图像捕获。
+ 
+*相机图像获取与资源释放
+*获取相机图像，返回最新的图像 ID。
+*释放之前获取的相机图像资源。
+*获取相机图像的原始数据。
+以下是每帧组合调用流程：
+ 
+*API 参考
+*若想获取了解更多接口相关的信息，参阅 API 参考。
+
+<uses-permission android:name="android.permission.CAMERA" />
+
+public void GetAvailableCameras()
+{
+    PxrResult ret = PXR_CameraImage.GetAvailableCameras(out XrCameraIdPICO[] cameraIds);
+    if (ret == PxrResult.SUCCESS)
+    {
+        foreach (var cameraId in cameraIds)
+        {
+            Debug.Log("CameraAPITest GetAvailableCameras cameraId:" + cameraId);
+        }
+    }
+}
+
+public void GetCameraPropertyTypesAvailable()
+{
+    PxrResult ret = PXR_CameraImage.GetCameraPropertyTypesAvailable(XrCameraIdPICO.XR_CAMERA_ID_RGB_LEFT_PICO,
+        out XrCameraPropertyTypePICO[] types);
+    if (ret == PxrResult.SUCCESS)
+    {
+        foreach (var type in types)
+        {
+            Debug.Log("CameraAPITest GetCameraPropertyTypesAvailable type:" + type);
+        }
+    }
+}
+
+public void GetCameraFacingProperties()
+{
+    var ret = PXR_CameraImage.GetCameraFacingProperties(XrCameraIdPICO.XR_CAMERA_ID_RGB_LEFT_PICO,
+        out XrCameraFacingPICO facing);
+    Debug.Log("CameraAPITest GetCameraFacingProperties ret:" + ret + " facing:" + facing);
+}
+
+public void GetCameraPositionProperties()
+{
+    var ret = PXR_CameraImage.GetCameraPositionProperties(XrCameraIdPICO.XR_CAMERA_ID_RGB_LEFT_PICO,
+        out XrCameraPositionPICO position);
+    Debug.Log("CameraAPITest GetCameraPositionProperties ret:" + ret + " position:" + position);
+}
+
+public void GetCameraCameraTypeProperties()
+{
+    var ret = PXR_CameraImage.GetCameraCameraTypeProperties(XrCameraIdPICO.XR_CAMERA_ID_RGB_LEFT_PICO,
+        out XrCameraTypePICO cameraTypePico);
+    Debug.Log("CameraAPITest GetCameraCameraTypeProperties ret:" + ret + " cameraTypePico:" + cameraTypePico);
+}
+
+public void GetCameraCapabilityAvailable()
+{
+    var ret = PXR_CameraImage.GetCameraCapabilityAvailable(XrCameraIdPICO.XR_CAMERA_ID_RGB_RIGHT_PICO,
+        out XrCameraCapabilityTypePICO[] capabilities);
+    if (ret == PxrResult.SUCCESS)
+    {
+        foreach (var capability in capabilities)
+        {
+            Debug.Log("CameraAPITest GetCameraCapabilityAvailable capability:" + capability);
+        }
+    }
+}
+
+public void GetCameraImageFpsCapability()
+{
+    PxrResult ret = PXR_CameraImage.GetCameraImageFpsCapability(XrCameraIdPICO.XR_CAMERA_ID_RGB_LEFT_PICO,
+        out XrCameraImageFpsPICO[] imageFps);
+    if (ret == PxrResult.SUCCESS)
+    {
+        foreach (var fps in imageFps)
+        {
+            Debug.Log("CameraAPITest GetCameraImageFpsCapability fps:" + fps);
+        }
+    }
+}
+
+public void GetCameraCameraModelCapability()
+{
+    PxrResult ret = PXR_CameraImage.GetCameraCameraModelCapability(XrCameraIdPICO.XR_CAMERA_ID_RGB_LEFT_PICO,
+        out XrCameraModelPICO[] cameraModels);
+    if (ret == PxrResult.SUCCESS)
+    {
+        foreach (var cameraModel in cameraModels)
+        {
+            Debug.Log("CameraAPITest GetCameraCameraModelCapability cameraModel:" + cameraModel);
+        }
+    }
+}
+
+public void GetCameraDataTransferTypeCapability()
+{
+    PxrResult ret = PXR_CameraImage.GetCameraDataTransferTypeCapability(XrCameraIdPICO.XR_CAMERA_ID_RGB_LEFT_PICO,
+        out XrCameraDataTransferTypePICO[] dataTransferTypes);
+    if (ret == PxrResult.SUCCESS)
+    {
+        foreach (var dataTransferType in dataTransferTypes)
+        {
+            Debug.Log("CameraAPITest GetCameraDataTransferTypeCapability dataTransferType:" + dataTransferType);
+        }
+    }
+}
+
+public void GetCameraImageFormatCapability()
+{
+    PxrResult ret = PXR_CameraImage.GetCameraImageFormatCapability(XrCameraIdPICO.XR_CAMERA_ID_RGB_LEFT_PICO,
+        out XrCameraImageFormatPICO[] formats);
+    if (ret == PxrResult.SUCCESS)
+    {
+        foreach (var format in formats)
+        {
+            Debug.Log("CameraAPITest GetCameraImageFormatCapability format:" + format);
+        }
+    }
+}
+
+public void GetCameraImageResolutionCapability()
+{
+    PxrResult ret = PXR_CameraImage.GetCameraImageResolutionCapability(XrCameraIdPICO.XR_CAMERA_ID_RGB_LEFT_PICO,
+        out PxrExtent2Di[] resolutions);
+    if (ret == PxrResult.SUCCESS)
+    {
+        foreach (var resolution in resolutions)
+        {
+            Debug.Log($$"CameraAPITest GetCameraImageResolutionCapability resolution:{resolution.width}x{resolution.height}");
+        }
+    }
+}
+
+public async void CreateCameraDeviceAsync()
+{
+    var result0 = await PXR_CameraImage.CreateCameraDeviceAsync(XrCameraIdPICO.XR_CAMERA_ID_RGB_LEFT_PICO);
+    Debug.Log("CameraAPITest CreateCameraDeviceAsync result:" + result0);
+}
+
+public async void CreateCameraCaptureSessionAsync()
+{
+    var result0 = await PXR_CameraImage.CreateCameraCaptureSessionAsync(XrCameraIdPICO.XR_CAMERA_ID_RGB_LEFT_PICO,width, height, fps, format, transferType, model);
+    Debug.Log("CameraAPITest CreateCameraCaptureSessionAsync result:" + result0);
+}
+
+public void DestroyCameraDevice()
+{
+    PxrResult ret = PXR_CameraImage.DestroyCameraDevice(XrCameraIdPICO.XR_CAMERA_ID_RGB_LEFT_PICO);
+    Debug.Log("CameraAPITest DestroyCameraDevice result:" + ret);
+}
+
+public void DestroyCameraCaptureSession()
+{
+    PxrResult ret = PXR_CameraImage.DestroyCameraCaptureSession(XrCameraIdPICO.XR_CAMERA_ID_RGB_LEFT_PICO);
+    Debug.Log("CameraAPITest DestroyCameraCaptureSession result:" + ret);
+}
+
+public void GetCameraIntrinsics()
+{
+    PxrResult ret = PXR_CameraImage.GetCameraIntrinsics(XrCameraIdPICO.XR_CAMERA_ID_RGB_LEFT_PICO, out XrCameraIntrinsics intrinsics);
+    if (ret==PxrResult.SUCCESS)
+    {
+        Debug.Log($$"CameraAPITest GetCameraIntrinsics intrinsics.focalLength:{intrinsics.focalLength.X},{intrinsics.focalLength.Y}");
+        Debug.Log($$"CameraAPITest GetCameraIntrinsics intrinsics.principalPoint:{intrinsics.principalPoint.X},{intrinsics.principalPoint.Y}");
+        Debug.Log($$"CameraAPITest GetCameraIntrinsics intrinsics.fov:{intrinsics.fov.X},{intrinsics.fov.Y}");
+    }
+}
+
+public void GetCameraExtrinsics()
+{
+    PxrResult ret = PXR_CameraImage.GetCameraExtrinsics(XrCameraIdPICO.XR_CAMERA_ID_RGB_LEFT_PICO, out XrCameraExtrinsics extrinsics);
+    if (ret==PxrResult.SUCCESS)
+    {
+        Debug.Log($$"CameraAPITest GetCameraExtrinsics extrinsics.pose.Position:{extrinsics.pose.Position.X},{extrinsics.pose.Position.Y},{extrinsics.pose.Position.Z}");
+        Debug.Log($$"CameraAPITest GetCameraExtrinsics extrinsics.pose.Orientation:{extrinsics.pose.Orientation.X},{extrinsics.pose.Orientation.Y},{extrinsics.pose.Orientation.Z},{extrinsics.pose.Orientation.W}");
+    }
+}
+
+public void BeginCameraCapture()
+{
+    var result0 =PXR_CameraImage.BeginCameraCapture(XrCameraIdPICO.XR_CAMERA_ID_RGB_LEFT_PICO);
+    Debug.Log("CameraAPITest BeginCameraCapture result:" + result0);
+    isBeginCameraCapture = (result0==PxrResult.SUCCESS);
+}
+
+public void EndCameraCapture()
+{
+    var result0 =PXR_CameraImage.EndCameraCapture(XrCameraIdPICO.XR_CAMERA_ID_RGB_LEFT_PICO);
+    Debug.Log("CameraAPITest EndCameraCapture result:" + result0);
+    isBeginCameraCapture = !(result0==PxrResult.SUCCESS);
+}
+
+private IEnumerator ProcessCameraImageAsync()
+{
+    // 获取相机图像
+    ulong imageId;
+    PxrResult acquireResult = PXR_CameraImage.AcquireCameraImage(targetCamera, lastCaptureTime, out imageId,out Int64 captureTime);
+    
+    if (acquireResult == PxrResult.SUCCESS && imageId > 0)
+    {
+        // 获取图像的原始数据
+        XrCameraImageDataRawBuffer imageData;
+        if (PXR_CameraImage.GetCameraImageData(targetCamera, imageId, out imageData) == PxrResult.SUCCESS)
+        {
+            // 将原始图像数据渲染到 Texture2D 
+          
+        }
+        
+        // 释放图像资源
+        PXR_CameraImage.ReleaseCameraImage(targetCamera, imageId);
+    }
+    else if (acquireResult != PxrResult.SUCCESS)
+    {
+        UpdateStatus($$"获取图像失败: {acquireResult}");
+    }
+    
+    yield return null;
+}

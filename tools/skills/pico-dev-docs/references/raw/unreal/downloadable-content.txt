@@ -1,0 +1,214 @@
+可下载内容（DLC）
+========================================
+DLC 是一种特殊的商品属性，如游戏的后续拓展包（俗称下载包）。DLC 与 Add-on 商品关联，每个 DLC 都拥有独立的 SKU 作为其唯一标识。
+DLC 提供了一种更加灵活轻量的应用更新方式。应用上线后，如果需要更新应用内容，你无需发布新版本，只需将关卡、皮肤等新资源以 DLC 的形式与 Add-on 商品关联。通过这种形式，用户不需要升级或重装应用就能够购买、下载和体验最新游戏资源。
+*基本概念
+*
+*功能说明
+*获取可用 DLC 列表
+你可以调用以下接口获取可用 DLC 列表，从而在应用内向用户展示可购买或/和已购买的 DLC。具体说明如下：
+*
+ 
+*购买和下载 DLC
+用户在 PICO 商店或 “PICO VR” 应用内购买 DLC 后，需要在你的应用内下载该 DLC。
+* 
+*用户购买和下载 DLC 流程如下：
+ 
+*用户购买某个应用后，可在应用内或从 PICO 商店购买关联 DLC 的 Add-on 商品。商品被购买后，该 DLC 的 IapStatus 则为 entitled（可使用），否则为 not-entitled（不可使用）。IapStatus 是服务端直接返回的字符串。
+*当用户在应用内点击下载已购买的 DLC，将调用 DownloadById() 或 DownloadByName() 启动下载。此外，你可以：
+*调用 StatusById() 或 StatusByName() 查看某个 DLC 的下载状态；
+*调用 GetAssetFileDownloadResult() 查看下载结果；
+*调用 DownloadCancelById() 取消下载某个 DLC；
+*调用 GetAssetFileDownloadCancelResult() 查看取消下载某个 DLC 的结果。
+*当用户在应用内点击购买 DLC，将调用 IAP 服务中的 LaunchCheckoutFlow()，启动购买流程。支付成功后，用户可点击下载 DLC。
+*卸载并重装应用后，用户需重新下载 DLC。
+*删除已下载的 DLC
+用户下载的 DLC 将被保存至应用内的 OBB 文件夹中。用户卸载应用后，该应用的文件夹和相应的 DLC 会被同步删除。此外，你也可以调用 DeleteById() 或 DeleteByName() 删除某个设备上已下载的某个 DLC。已购买的 DLC 被删除后，可再次下载。
+*商店展示
+DLC 发布后，PICO 商店内的应用介绍页将展示 DLC 信息，包括海报、名称、简介和价格。DLC 信息在 PICO 开发者平台上配置，具体步骤可参考下文。
+一体机端
+下图为 DLC 在一体机端商店内的展示。
+* 
+手机端
+下图为 DLC 在手机端商店内的展示。
+* 
+*实现流程
+本部分介绍操作 DLC 的具体步骤。
+*前提条件
+你已经配置了平台服务。详情参考配置平台服务。
+*添加 DLC
+ 
+你可以在 PICO 开发者平台上为应用添加 DLC。DLC 正式发布后，用户可以进行购买，然后在应用内下载并使用 DLC 中的内容。开发者平台有 DLC 文件名查重机制，若要为应用上传多个 DLC 文件，需确保每个 DLC 文件名的唯一性。
+添加 DLC 的步骤如下：
+*创建 Add-on。具体步骤参考《应用内购》使用指南。
+*返回 Add-on 列表。
+*点击 Add-on 名称或 操作 栏处的 编辑 按钮，进入该 Add-on 的信息编辑页。
+*在   部分，为 Add-on 上传 DLC 文件。
+* 
+*点击   按钮。
+*DLC 文件关联的 Add-on 将进入审核流程。审核通过后，用户可在应用内查看并下载 DLC 文件。
+*更新 DLC
+*DLC 文件所关联的 Add-on 审核通过并上线后，你可以为该 Add-on 添加新的 DLC 文件，旧的 DLC 文件无法删除。新 DLC 文件上线后，未下载旧 DLC 文件的用户将直接看到最新的 DLC 文件。已下载旧 DLC 文件的用户可继续使用旧 DLC 文件。若你希望用户使用最新的 DLC 文件，可自定义相关逻辑（例如弹窗）来提醒用户进行更新。
+*进入 DLC 文件所关联的 Add-on 的信息编辑页。
+*从左上角下拉列表中选择 草稿。
+* 
+*按需更新 Add-on 信息并添加新的 DLC 文件。
+*点击页面右上角的 提交 按钮。
+*Add-on 进入审核流程。审核通过后，应用和 PICO 商店内的 Add-on 信息和 DLC 文件将自动更新。
+*测试 DLC
+上传 DLC 后，无论对应的 Add-on 提交审核与否，你都可以通过 PICO 开发者账号来测试 DLC，检查是否可以跑通完整的应用内购流程。
+*前提条件
+确保已在 基本描述 配置面板上开启 展示在 Store。
+ 
+*测试途径
+你可以通过调用接口或者在 PICO 商店测试 DLC。两种方式的具体说明如下：
+*
+*注意事项
+以下为 DLC 测试相关的注意事项：
+*必须使用提交应用包和 DLC 的 PICO 开发者账号。
+*必须绑定真实的支付方式。对于 中国大陆地区 ，可绑定支付宝等支付方式；对于 非中国大陆地区 ，可绑定 PayPal 等支付方式。
+*对于中国大陆地区，商品的测试价格为 0.1 元；对于非中国大陆地区，价格为 0.01 美元。
+*若要允许他人（例如 QA）获取 DLC 测试 Offer，需将相关人员加入你的组织，并将其角色设置为 组织管理员 或 应用管理员。具体步骤参考管理组织成员。
+*测试中产生的收益会被算入开发者账号对应的组织。
+*若 DLC 最低兼容版本的 Build 被删除，你将无法查找到该 DLC 的任何信息，需在 PICO 开发者平台上重新选择 DLC 所兼容的最小版本。
+*若你的应用已正式发布，你只需要保存 DLC（无需提交），便可以使用上传 DLC 的开发者账号在 PICO 商店搜索或查看该 DLC。
+*PICO 商店无法下载用于测试的 DLC，你需在应用内下载，然后进行测试。
+*测试 DLC 时，若主应用还未提交，平台会展示一些默认的应用信息（如主应用名称、图片视频等），这些信息会在主应用审核通过后自动更新。
+*测试完成后，若你希望正式发布该 DLC，需提交对应的 Add-on，审核通过后，DLC 将正式上线。
+*Demo
+*前提条件
+设备的 ROM 版本为 4.8.0 或以上。
+*使用说明
+你可以前往 PICO GitHub 获取对应引擎版本的 DLC Demo。DLC Demo 位于 Content\Maps\WindowsMaps 中。Demo 的图形化界面如下：
+ 
+界面的控件说明见下表：
+*
+*API 参考
+DLC 相关 API 详情，可参考 API 文档。
+
+
+
+
+术语
+
+说明
+
+Add-ons
+
+应用内所有的额外商品或服务，可作为 IAP 商品销售，也可在 PICO 应用商店进行展示和出售。
+
+In-App Purchase (IAP)
+
+玩家从 PICO 设备上的应用或游戏内购买的额外商品或服务。此类商品通常为游戏皮肤、道具、金币等，必须在开发者平台配置。
+
+DLC
+
+Downloadable Content，指可下载的内容/文件，如游戏的后续扩展包。PICO 商店不支持 DLC 的下载，你需自行在应用内实现。
+
+SKU
+
+Stock Keeping Unit，商品码，为 Add-on 的唯一标识，即一个 SKU 仅对应一个 Add-on。
+
+
+
+API
+
+说明
+
+Subsystem->GetPicoAssetFileInterface()->GetAssetFileList()
+
+获取可用 DLC 列表。返回数据情况如下：
+*中国大陆地区：若 App 的类型为 “游戏”，因不支持应用内购，所以仅返回已购买的 DLC；若 App 的类型为 “应用”，则同时返回可购买和已购买的 DLC。
+*非中国大陆地区：同时返回已购买和可购买的 DLC 列表。
+
+Subsystem->GetPicoAssetFileInterface()->GetNextAssetDetailsArrayPage()
+
+分页获取可用 DLC 列表。
+
+若你在编辑器中打包的应用的 APK 版本小于你在 PICO 开发者平台配置的最低版本号，则获取不到 DLC。要成功获取，你需要更改应用的 APK 版本：
+*在编辑器左上角，点击 编辑（Edit） > 项目设置（Project Settings） > 平台（Platforms） > Android 。
+*在 APK 打包（APK Packaging） 选项卡下，更改 Store Version。
+* 
+
+PICO 商店不支持下载 DLC，你需要自行在应用内实现 DLC 下载功能。
+
+仅支持为属性为“ 非消耗品 ”的 Add-on 商品关联 DLC 文件。
+
+*单个文件最大为 4 GB，最多可上传 25 个文件。然后选择 DLC 文件所兼容的最低 Build 版本。
+*DLC 文件审核通过后，文件名便无法修改，请仔细命名你的 DLC 文件。
+
+
+
+途径
+
+说明
+
+接口测试
+
+你可以使用 SDK 提供的接口，获取用于测试的 DLC 的数据，然后进行购买流程测试，接口说明可参考此处。
+
+PICO 商店测试
+
+根据 DLC 的实际发布地区，在对应的线上 PICO 商店中直接搜索相关 Add-on 的名称，可精确匹配到 DLC 对应的 Add-on。然后使用上传 DLC 的 PICO 开发者账号按测试价进行购买流程测试。
+
+
+
+界面控件
+
+说明
+
+AssetFileList 下拉菜单
+
+获取到的 AssetFileList 列表。
+
+AssetFileID 输入框
+
+作为输入和显示的资产文件 ID。
+
+AssetFileName 输入框
+
+作为输入和显示的资产文件名称。
+
+DeleteByID 按钮
+
+点击后，可通过文件 ID 删除某个设备上已下载的某个 DLC。
+
+DeleteByName 按钮
+
+点击后，可通过文件名称删除某个设备上已下载的某个 DLC。
+
+DownloadById 按钮
+
+点击后，可通过文件 ID 将某个 DLC 下载到设备上。
+
+DownloadByName 按钮
+
+点击后，可通过文件名称将某个 DLC 下载到设备上。
+
+DownloadCancelById 按钮
+
+点击后，可通过文件 ID 取消下载某个 DLC。
+
+DownloadCancelByName 按钮
+
+点击后，可通过文件用名称取消下载某个 DLC。
+
+GetAssetFileStatusById 按钮
+
+点击后，通过资产文件 ID 获取文件当前状态。
+
+GetAssetFileStatusByName 按钮
+
+点击后，通过资产文件名称获取文件当前状态。
+
+GetAssetFileList 按钮
+
+点击后，可获取某个应用的可用 DLC 列表。
+
+GetNextAssetDetailsArrayPage 按钮
+
+点击后，可获取某个应用的下一页 DLC 列表。
+
+LaunchCheckoutFlow 按钮
+
+点击后，启动 DLC 购买流程。

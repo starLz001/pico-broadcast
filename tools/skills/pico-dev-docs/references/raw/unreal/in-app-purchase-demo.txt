@@ -1,0 +1,26 @@
+应用内购 Demo
+========================================
+本文档介绍 PICO Unreal Integration SDK 提供的应用内购（IAP）服务 Demo。要了解应用内购服务，查看应用内购文档。
+*前提条件
+确保 PICO 设备的 PUI （ROM）版本为 4.8.0 及以上。
+*使用说明
+你可以前往 PICO GitHub 获取对应引擎版本的 IAP Demo。IAP Demo 位于 Content\Maps\WindowsMaps 中。Demo 的图形化界面如下：
+ 
+在以下示例中，你可以点击 IAP 切换至 IAP 选项卡，Hovered 接口按钮会提示需要输入的信息（该测试用例不必手动输入）。测试过程如下：
+*不填写 SKU 字段，点击 GetProductsBySKU 获取所有 IAP 商品。
+*点击 ProductList，在下拉菜单中，选择任意 IAP 商品。
+*商品信息会自动填充至 SKU、Price、Currency 输入框中。
+* 
+*点击 LaunchCheckoutFlow 以进行商品购买。
+* 
+* 
+*返回购买结果。
+*点击 ConsumePurchase，以消耗当前商品。
+大部分输出信息的将显示在上图的 Out put Info 面板下。
+*API 参考
+IAP 相关 API 详情，可参考 API 文档。
+
+OuterID 仅适用于订阅服务，为订阅周期的唯一标识。
+
+LaunchCheckoutFlow_V2 提供 OuterId 参数，兼容并支持订阅类 Add-On 的购买请求。
+LaunchCheckoutFlow_V3 提供 OuterId 参数和扩展字段，兼容并支持订阅类 Add-On 的购买请求，同时支持添加自定义信息。

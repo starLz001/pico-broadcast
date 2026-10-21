@@ -1,0 +1,33 @@
+为实体挂载组件
+========================================
+在 ECS 架构下，Component 是描述实体能力与数据的最小单元。你通过 entity.components 来管理实体上的组件，包括挂载、查询、获取和移除等。本文介绍如何在运行时挂载组件以及查询实体上是否存在指定组件。
+*实现方法
+你可以通过 entity.components 来管理实体上挂载的组件：
+*挂载：components.set(component) 或 components[Foo::class.java] = Foo()
+*查询：components.has(Foo::class.java)、components[Foo::class.java]、components.get<Foo>()
+关于 PICO Spatial SDK 提供的内置组件，参考《内置组件》。如需自定义组件，参考《自定义系统和组件》。
+*代码示例
+以下代码展示了如何检查 TransformComponent 是否存在，并在缺失时创建并挂载。
+ 
+以下代码展示了如何先 components.set(...)，再用 components.get<T>() 获取并设置 Transform。
+ 
+*注意事项
+*每个 Entity 创建后会自动带 TransformComponent；在业务代码里你仍然可以通过 components.has/get 做显式确认。
+*同一种组件类型在同一个 Entity 上只能有一个实例。如果你需要更新组件状态，通常是拿到已有组件并修改其属性，而不是重复挂载同类型组件。
+*API 参考
+Entity 和组件管理相关接口的详细说明参阅 API 参考。根据你所处的地理位置选择合适的文档链接：
+*中国大陆：https://developer-cn.picoxr.com/spatial-api/index.html
+*非中国大陆：https://developer.picoxr.com/spatial-api/index.html
+
+val transformComponent =
+    entity.components[TransformComponent::class.java]
+        ?: TransformComponent().also {
+            entity.components[TransformComponent::class.java] = it
+        }
+
+cube.components.set(TransformComponent())
+
+cube.components
+    .get<TransformComponent>()!!
+    .setPosition(Vector3(-10F, 5.5F, -11F))
+    .setScaleVector(Vector3(1F))

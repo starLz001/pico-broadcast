@@ -1,0 +1,61 @@
+*IIntCallback
+ 
+*IBoolCallback
+ 
+*IBundleCallback
+ 
+*IBytesCallback
+ 
+*IGetControllerPairTimeCallback
+ 
+*ILongCallback
+ 
+*ISensorCallback
+ 
+*IStringCallback
+ 
+*IWDJsonCallback
+ 
+*IWDModelsCallback
+ 
+*IWIFIManager
+ 
+*ISystemUpdateCallback
+ 
+interface IIntCallback {
+    void callback(int result);
+}
+interface IBoolCallback {
+    void callBack(boolean result);
+}
+interface IBundleCallback {
+    void callBack(in Bundle result);
+}
+interface IBytesCallback {
+    void callBack(in byte[] buffer, int bufferSize);
+}
+interface IGetControllerPairTimeCallback {
+    void callBack(in PBS_ControllerPairTimeEnum result);
+}
+interface ILongCallback {
+    void callback(long result);
+}
+interface ISensorCallback {
+    void callback(float x, float y, float z);
+}
+interface IStringCallback {
+    void callback(String value);
+}
+interface IWDJsonCallback {
+    void callback(String json);
+}
+interface IWDModelsCallback {
+    void callback(inout List<PBS_WifiDisplayModel> models);
+}
+IWIFIManager
+interface ISystemUpdateCallback {
+
+    void onUpdateStatusChanged(int statusCode, float percent);
+
+    void onUpdateComplete(int errorCode, String errorMsg);
+}

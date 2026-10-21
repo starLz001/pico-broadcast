@@ -1,0 +1,26 @@
+SecureMR 示例
+========================================
+*PICO 提供了一些示例，展示如何使用 SecureMR 功能在保护隐私的基础上构建 XR 应用。这些示例重点介绍了如何在 Unity 中集成机器学习推理、安全访问 MR 数据，以及渲染结果。
+*Git 仓库
+*SecureMR_Unity_Samples
+*环境要求
+*Unity 版本：Unity 6
+*PICO Unity Integration SDK：3.2.0
+*PICO 设备型号：PICO 4 Ultra 系列
+*PICO 设备系统版本：5.13.0 及以上
+*示例
+*Minst
+*一个最小化示例，演示了如何在图像模型推理中使用 SecureMR，包括以下内容：
+* 运行一个轻量级的数字分类模型（类似 MNIST）。
+* 捕获 VST 输入并进行预处理（例如，调整大小和裁剪）。
+* 展示模型推理流程与 SecureMR 服务的集成方式。
+* 
+*ColorPicker
+*一个交互式示例，展示如何处理来自环境的颜色信息，包括以下内容：
+* 捕获 VST 图像并进行预处理。
+* 通过 SecureMR 的 operator 提取像素信息。
+* 演示从相机到数据处理流程再到 Unity 渲染的实时数据流。
+* 
+
+
+

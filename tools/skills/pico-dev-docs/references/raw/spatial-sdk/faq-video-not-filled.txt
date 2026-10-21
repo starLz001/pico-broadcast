@@ -1,0 +1,335 @@
+视频没有填满整个窗口，如何解决？
+========================================
+*问题描述
+视频内容仅在窗口中央显示一小块区域，未能填满整个窗口。
+*原因分析
+若需视频充满窗口，应同时满足以下三个条件：
+*窗口尺寸已确定：通过 WindowContainer.defaultSize 声明，并配合合适的 resizeType。
+*SpatialView 的 2D 布局区域等于窗口尺寸：使用 Modifier.fillMaxSize()。
+*视频 Mesh 的物理尺寸（米）等于窗口物理尺寸：使用 PhysicalLengthConverter.dpToLength(dp, LengthUnit.Meters) 将窗口的 dp 转换为米，并传入 MeshResource.createVideoPanel。
+若三者尺寸不一致（例如直接硬编码 Modifier.size(782.dp, 412.dp)，或 Mesh 硬编码为固定的 1.6f × 0.9f），视频可能仅显示局部区域，或被裁切、拉伸。
+*解决方案
+示例中出现的 PANEL_WIDTH / PANEL_HEIGHT 表示窗口的宽高 dp，建议在文件顶层声明为共享常量，使 WindowContainer 与 Mesh 共用同一组数值，避免两端尺寸不一致导致视频被裁切或留黑边：
+ 
+涉及播放器接入的步骤会分别给出 VideoPlayerComponent 与 VideoComponent 两套代码。
+*步骤一：声明 WindowContainer，固定窗口尺寸
+ 
+ 
+你也可以在 AndroidManifest.xml 中配置 pico.spatial.windowcontainer.resizetype=2 与 pico.spatial.windowcontainer.defaultsize=1760x990 达成等效效果。
+*步骤二：使用 fillMaxSize() 填充 SpatialView，并用 PhysicalLengthConverter 将 Mesh 尺寸转换为米
+ 
+*使用 VideoPlayerComponent
+ 
+*使用 VideoComponent + 第三方播放器
+ 
+*步骤三（可选）：Mesh 跟随实际布局尺寸自适应
+若窗口允许 resize，或希望 Mesh 完全自适应，可使用 BoxWithConstraints 获取 SpatialView 当前实际布局 dp，再换算为米。
+ 
+*使用 VideoPlayerComponent
+ 
+*使用 VideoComponent + 第三方播放器
+ 
+*注意事项
+*推荐通过 setMesh 单独替换 Mesh，VideoMaterial 和 Surface 绑定保持不变。
+* 
+*你也可以重新构造组件，但需同步重新绑定播放器与 Surface 等资源，频繁 resize 场景下相比 setMesh 成本更高。
+* 
+*setMesh 须在主线程调用（VideoComponent 与 VideoPlayerComponent 同名方法）。
+*传入的 MeshResource 须为有效实例（已成功创建且未释放）。
+*组件须先挂载至 Entity，setMesh 才会作用于渲染。
+*频繁 resize 会反复重建 Mesh，存在一定 GPU 开销；若 resize 频率较高，可一次性创建较大尺寸的 Mesh，再通过 transform / 缩放进行适配。
+*更多信息
+*保持窗口、SpatialView 和 Mesh 的尺寸一致
+窗口、SpatialView 和 Mesh 的尺寸保持一致所需遵循的核心约定与常用换算如下：
+*三处尺寸需同源：声明固定尺寸的窗口；通过 fillMaxSize() 使 SpatialView 占满窗口；通过 dpToLength 将窗口 dp 同步至 Mesh 的米。
+*dp 与 meters 的换算：通过 PhysicalLengthConverter 由窗口 dp 推导 Mesh 的米（Meter）值，避免硬编码导致设备或窗口尺寸切换后失配。
+*常量复用：窗口尺寸常量与 Mesh 转换共享同一组数值，便于维护。
+*单位换算：应使用 PhysicalLengthConverter 而非硬编码。
+*窗口可缩放场景：若希望窗口可缩放且 Mesh 自适应，可使用 BoxWithConstraints 的 maxWidth 和 maxHeight 替代固定值。
+
+private val PANEL_WIDTH  = 1760.dp
+private val PANEL_HEIGHT =  990.dp
+
+*推荐将 Modifier.windowConstraints挂载于 WindowContainer content lambda 的根级子节点上，整个窗口仅调用一次。配合 resizeType = ContainerResizeType.ContentSize 时，该 Modifier 直接决定窗口的最终尺寸。传入的 width 或 height 状态变化时，窗口随之更新。
+
+import com.pico.spatial.ui.foundation.dsl.Form
+import com.pico.spatial.ui.foundation.dsl.WindowContainer
+import com.pico.spatial.ui.foundation.dsl.WindowContainerSize
+import com.pico.spatial.ui.platform.resize.ContainerResizeType
+import com.pico.spatial.ui.platform.resize.windowConstraints
+
+// 在 SpatialAppScope（mainApp DSL）下声明视频窗口
+WindowContainer(
+    id = "video-window",
+    form = Form.Planar,
+    defaultSize = WindowContainerSize(width = PANEL_WIDTH, height = PANEL_HEIGHT),
+    // ContentSize 表示窗口大小由内部 windowConstraints 决定，避免被系统调整尺寸
+    resizeType = ContainerResizeType.ContentSize,
+    // 视频场景一般无需毛玻璃背景
+    enableMaterialBackground = false,
+) {
+    // 准备播放器（生命周期跟随该 WindowContainer）
+    // - 使用 VideoPlayerComponent 时：CypressMediaPlayer
+    //     val player = remember { CypressMediaPlayer() }
+    //     DisposableEffect(player) { onDispose { player.close() } }
+    // - 使用 VideoComponent 时：第三方 MediaPlayer（下方示例）
+    val mediaPlayer = remember { MediaPlayer() }
+    DisposableEffect(mediaPlayer) {
+        onDispose { mediaPlayer.release() }
+    }
+
+    // 关键：windowConstraints 挂载于 content lambda 根级直接子节点上，整个窗口仅调用一次
+    Box(
+        modifier = Modifier
+            .windowConstraints(width = PANEL_WIDTH, height = PANEL_HEIGHT)
+            .fillMaxSize()
+    ) {
+        // 视频渲染（参见步骤二）
+        VideoFillWindowContent(mediaPlayer)
+    }
+}
+
+*建议视频 Entity / Mesh / VideoMaterial 等资源在 remember + DisposableEffect 中提前构造与释放。SpatialView.initial 仅完成装配。
+
+import com.pico.spatial.core.ecs.Entity
+import com.pico.spatial.core.ecs.VideoPlayerComponent
+import com.pico.spatial.core.ecs.resource.BlendingMode
+import com.pico.spatial.core.ecs.resource.MaterialCullingMode
+import com.pico.spatial.core.ecs.resource.MeshResource
+import com.pico.spatial.core.ecs.resource.VideoMaterial
+import com.pico.spatial.core.ecs.video.CypressMediaPlayer
+import com.pico.spatial.core.ecs.video.VideoDimensionMode
+import com.pico.spatial.ui.foundation.content.SpatialView
+import com.pico.spatial.ui.platform.LengthUnit
+import com.pico.spatial.ui.platform.LocalPhysicalLengthConverter
+
+@Composable
+fun VideoFillWindowContent(player: CypressMediaPlayer) {
+    val converter = LocalPhysicalLengthConverter.current
+
+    val panelWidthMeter  = converter.dpToLength(PANEL_WIDTH,  LengthUnit.Meters)
+    val panelHeightMeter = converter.dpToLength(PANEL_HEIGHT, LengthUnit.Meters)
+
+    val videoEntity = remember { Entity() }
+
+    DisposableEffect(panelWidthMeter, panelHeightMeter) {
+        val mesh = MeshResource.createVideoPanel(
+            panelWidthMeter,
+            panelHeightMeter,
+            cornerRadius = 0.02f,
+        )
+        val videoMaterial = VideoMaterial(
+            BlendingMode.OPAQUE,
+            VideoDimensionMode.MONO,
+            MaterialCullingMode.BACK,
+        )
+        // VideoPlayerComponent 内部会自动完成 Surface 绑定
+        videoEntity.components.set(VideoPlayerComponent(player, mesh, videoMaterial))
+        // 之后照常 player.setDataSource(...) / prepareAsync() / play()
+
+        onDispose {
+            videoEntity.destroy()
+            // player 由调用方负责 close（步骤一中已示例）
+        }
+    }
+
+    SpatialView(
+        modifier = Modifier.fillMaxSize(),
+        initial = { content, _ -> content.addEntity(videoEntity) },
+    )
+}
+
+import android.media.MediaPlayer
+import com.pico.spatial.core.ecs.Entity
+import com.pico.spatial.core.ecs.VideoComponent
+import com.pico.spatial.core.ecs.resource.BlendingMode
+import com.pico.spatial.core.ecs.resource.MaterialCullingMode
+import com.pico.spatial.core.ecs.resource.MeshResource
+import com.pico.spatial.core.ecs.resource.SurfaceRenderTexture
+import com.pico.spatial.core.ecs.resource.VideoMaterial
+import com.pico.spatial.core.ecs.video.VideoDimensionMode
+import com.pico.spatial.ui.foundation.content.SpatialView
+import com.pico.spatial.ui.platform.LengthUnit
+import com.pico.spatial.ui.platform.LocalPhysicalLengthConverter
+
+@Composable
+fun VideoFillWindowContent(mediaPlayer: MediaPlayer) {
+    val converter = LocalPhysicalLengthConverter.current
+
+    val panelWidthMeter  = converter.dpToLength(PANEL_WIDTH,  LengthUnit.Meters)
+    val panelHeightMeter = converter.dpToLength(PANEL_HEIGHT, LengthUnit.Meters)
+
+    val videoEntity = remember { Entity() }
+    val srt = remember { SurfaceRenderTexture(width = 1920, height = 1080) }
+
+    DisposableEffect(panelWidthMeter, panelHeightMeter) {
+        val mesh = MeshResource.createVideoPanel(
+            panelWidthMeter,
+            panelHeightMeter,
+            cornerRadius = 0.02f,
+        )
+        val videoMaterial = VideoMaterial(
+            BlendingMode.OPAQUE,
+            VideoDimensionMode.MONO,
+            MaterialCullingMode.BACK,
+        )
+        videoEntity.components.set(VideoComponent(mesh, videoMaterial))
+
+        // 绑定顺序：SurfaceRenderTexture → VideoMaterial → MediaPlayer
+        srt.toGlobal()
+        videoMaterial.bindSurfaceRenderTexture(srt)
+        srt.acquireSurface()?.let { mediaPlayer.setSurface(it) }
+        // 之后照常 mediaPlayer.setDataSource(...) / prepareAsync() / start()
+
+        onDispose {
+            srt.close()
+            videoEntity.destroy()
+            // mediaPlayer 由调用方负责 release（步骤一中已示例）
+        }
+    }
+
+    SpatialView(
+        modifier = Modifier.fillMaxSize(),
+        initial = { content, _ -> content.addEntity(videoEntity) },
+    )
+}
+
+*SpatialView.initial 仅在首次创建时执行一次，因此须在 update 回调中检测尺寸变化并更新 Mesh。推荐通过 setMesh(newMesh) 单独替换 Mesh，可保留原有 VideoMaterial 与 Surface 绑定，避免画面闪烁或播放中断。VideoComponent 与 VideoPlayerComponent 均提供同名的 setMesh(MeshResource) 方法。
+
+import com.pico.spatial.core.ecs.Entity
+import com.pico.spatial.core.ecs.VideoPlayerComponent
+import com.pico.spatial.core.ecs.resource.BlendingMode
+import com.pico.spatial.core.ecs.resource.MaterialCullingMode
+import com.pico.spatial.core.ecs.resource.MeshResource
+import com.pico.spatial.core.ecs.resource.VideoMaterial
+import com.pico.spatial.core.ecs.video.CypressMediaPlayer
+import com.pico.spatial.core.ecs.video.VideoDimensionMode
+import com.pico.spatial.ui.foundation.content.SpatialView
+import com.pico.spatial.ui.platform.LengthUnit
+import com.pico.spatial.ui.platform.LocalPhysicalLengthConverter
+
+@Composable
+fun VideoFillWindowContentAdaptive(player: CypressMediaPlayer) {
+    val converter = LocalPhysicalLengthConverter.current
+
+    BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+        val widthMeter  = converter.dpToLength(maxWidth,  LengthUnit.Meters)
+        val heightMeter = converter.dpToLength(maxHeight, LengthUnit.Meters)
+
+        val videoEntity = remember { Entity() }
+        var lastWidthMeter  by remember { mutableStateOf(0f) }
+        var lastHeightMeter by remember { mutableStateOf(0f) }
+
+        DisposableEffect(Unit) {
+            val mesh = MeshResource.createVideoPanel(widthMeter, heightMeter, 0.02f)
+            val videoMaterial = VideoMaterial(
+                BlendingMode.OPAQUE,
+                VideoDimensionMode.MONO,
+                MaterialCullingMode.BACK,
+            )
+            videoEntity.components.set(VideoPlayerComponent(player, mesh, videoMaterial))
+
+            lastWidthMeter  = widthMeter
+            lastHeightMeter = heightMeter
+
+            onDispose {
+                videoEntity.destroy()
+                // player 由调用方负责 close
+            }
+        }
+
+        SpatialView(
+            modifier = Modifier.fillMaxSize(),
+            initial = { content, _ -> content.addEntity(videoEntity) },
+            update = { _, _ ->
+                val changed =
+                    kotlin.math.abs(widthMeter  - lastWidthMeter)  > 1e-4f ||
+                    kotlin.math.abs(heightMeter - lastHeightMeter) > 1e-4f
+                if (changed) {
+                    val newMesh = MeshResource.createVideoPanel(widthMeter, heightMeter, 0.02f)
+                    videoEntity.components[VideoPlayerComponent::class.java]?.setMesh(newMesh)
+                    lastWidthMeter  = widthMeter
+                    lastHeightMeter = heightMeter
+                }
+            },
+        )
+    }
+}
+
+import android.media.MediaPlayer
+import com.pico.spatial.core.ecs.Entity
+import com.pico.spatial.core.ecs.VideoComponent
+import com.pico.spatial.core.ecs.resource.BlendingMode
+import com.pico.spatial.core.ecs.resource.MaterialCullingMode
+import com.pico.spatial.core.ecs.resource.MeshResource
+import com.pico.spatial.core.ecs.resource.SurfaceRenderTexture
+import com.pico.spatial.core.ecs.resource.VideoMaterial
+import com.pico.spatial.core.ecs.video.VideoDimensionMode
+import com.pico.spatial.ui.foundation.content.SpatialView
+import com.pico.spatial.ui.platform.LengthUnit
+import com.pico.spatial.ui.platform.LocalPhysicalLengthConverter
+
+@Composable
+fun VideoFillWindowContentAdaptive(mediaPlayer: MediaPlayer) {
+    val converter = LocalPhysicalLengthConverter.current
+
+    BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+        val widthMeter  = converter.dpToLength(maxWidth,  LengthUnit.Meters)
+        val heightMeter = converter.dpToLength(maxHeight, LengthUnit.Meters)
+
+        val videoEntity = remember { Entity() }
+        val srt = remember { SurfaceRenderTexture(width = 1920, height = 1080) }
+
+        var lastWidthMeter  by remember { mutableStateOf(0f) }
+        var lastHeightMeter by remember { mutableStateOf(0f) }
+
+        DisposableEffect(Unit) {
+            val mesh = MeshResource.createVideoPanel(widthMeter, heightMeter, 0.02f)
+            val videoMaterial = VideoMaterial(
+                BlendingMode.OPAQUE,
+                VideoDimensionMode.MONO,
+                MaterialCullingMode.BACK,
+            )
+            videoEntity.components.set(VideoComponent(mesh, videoMaterial))
+
+            srt.toGlobal()
+            videoMaterial.bindSurfaceRenderTexture(srt)
+            srt.acquireSurface()?.let { mediaPlayer.setSurface(it) }
+
+            lastWidthMeter  = widthMeter
+            lastHeightMeter = heightMeter
+
+            onDispose {
+                srt.close()
+                videoEntity.destroy()
+                // mediaPlayer 由调用方负责 release
+            }
+        }
+
+        SpatialView(
+            modifier = Modifier.fillMaxSize(),
+            initial = { content, _ -> content.addEntity(videoEntity) },
+            update = { _, _ ->
+                val changed =
+                    kotlin.math.abs(widthMeter  - lastWidthMeter)  > 1e-4f ||
+                    kotlin.math.abs(heightMeter - lastHeightMeter) > 1e-4f
+                if (changed) {
+                    val newMesh = MeshResource.createVideoPanel(widthMeter, heightMeter, 0.02f)
+                    videoEntity.components[VideoComponent::class.java]?.setMesh(newMesh)
+                    lastWidthMeter  = widthMeter
+                    lastHeightMeter = heightMeter
+                }
+            },
+        )
+    }
+}
+
+// VideoPlayerComponent 
+videoEntity.components[VideoPlayerComponent::class.java]?.setMesh(newMesh)
+*// VideoComponent
+videoEntity.components[VideoComponent::class.java]?.setMesh(newMesh)
+
+// VideoPlayerComponent
+videoEntity.components.set(VideoPlayerComponent(player, newMesh, videoMaterial))
+*// VideoComponent
+videoEntity.components.set(VideoComponent(newMesh, videoMaterial))

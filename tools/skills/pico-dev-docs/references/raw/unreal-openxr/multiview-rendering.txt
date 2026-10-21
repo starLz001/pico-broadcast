@@ -1,0 +1,9 @@
+多视图渲染
+========================================
+PICO Unreal OpenXR Plugin 支持在虚幻引擎中开启 移动多视图（Mobile Multi-View）以启用多视图渲染功能来降低渲染负载，提升应用性能。
+*环境要求
+*PICO 设备：PICO Neo3、PICO 4、PICO 4 Pro、PICO 4 Enterprise、PICO G3、PICO 4 Ultra 或 Project Swan（PICO OS 6）
+*前提条件
+你已在引擎中安装并启用了 PICO Unreal OpenXR 插件。详情参考 PICO Unreal OpenXR 快速开始。
+*开启步骤
+你可参考 PICO Unreal Integration SDK 文档 多视图渲染 和 UE 官方文档 移动设备的多视图支持 启用移动多视图选项。

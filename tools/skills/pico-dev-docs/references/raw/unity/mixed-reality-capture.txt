@@ -1,0 +1,131 @@
+混合现实捕捉
+========================================
+“混合现实捕捉”（Mixed Reality Capture，MRC）实现了现实世界与虚拟世界的融合，允许真实人物直接进入虚拟场景并代替虚拟形象，从而无缝显示虚拟世界与真实人物之间的交互。
+“混合现实捕捉” 可极大地赋能 VR 视频创作。通过录制混合现实视频，用户可以记录自己与虚拟场景的交互过程，并在社交媒体上进行分享。此外，随着混合现实技术的不断完善，未来，“混合现实捕捉” 将有可能被应用于更多场景，包括教育、娱乐、会议等。
+*效果展示
+混合现实视频效果如下：
+ 
+*环境要求
+*PICO 设备型号：PICO Neo3 系列、PICO 4 系列、PICO 4 Ultra 系列
+*PICO 设备系统版本：4.7.0 及以上。
+*注意事项
+*MRC 运行期间，需保证场景中存在的 XR 主相机的 Tag 为 MainCamera。若切换相机，请将新的 XR 相机的 Tag 设置为 MainCamera。否则 MRC 功能将无法正常使用。
+*启用 MRC
+按以下步骤为应用开启 MRC 能力：
+*在 Unity 编辑器中创建一个场景或打开已有场景。
+*在 Hierarchy 窗口中，为场景添加 XR Origin。若已添加，可跳过此步骤。
+*若未升级 XR Interaction Toolkit 至最新版本，则对象名称为 XR Rig。XR Interaction Toolkit 升级步骤可参考《快速开始》指南。
+*将 XR 主相机（一般为 XR Origin 下的 Main Camera 相机）的 Tag 设置为 MainCamera。一般已默认为该设置。
+* 
+*选中 XR Origin，然后为其添加 PXR_Manager 脚本。
+*勾选 MRC。默认已勾选。
+* 
+*PXR_Manager.cs 脚本的 openMRC 字段处会出现 "true" in XR Origin 的提示，表明 MRC 能力已启用，你可以在代码编辑器内查看。
+* 
+*配置 MRC 相关参数。
+**
+*前往 Edit > Project Settings > Player > Other Settings，将 Color Space* 设置为 Linear。
+* 
+*日志分析
+*你可以参考以下日志来判断 MRC 是否成功开启。
+*MRC 未开启：
+* 
+*MRC 已开启：
+* 
+*调试 MRC
+你可以在 PICO 设备上为应用调试 MRC 能力。
+*准备工作
+开始调试前，需完成以下准备工作：
+*准备以下硬件：
+*一台 PICO 设备。型号为 PICO Neo3 或以上。
+*一部手机。若使用苹果手机，系统版本需为 iOS12 或以上；若使用安卓手机，则无系统版本要求。建议尽可能使用性能较好的机型。
+*一个三脚架，用于放置手机。
+*前往手机端的应用商店，下载 “PICO VR” 应用。
+*前往 PICO 设备端的应用商店，下载 “混合现实录制” 应用。
+*将手机和 PICO 设备连接至相同的局域网。
+*使用同一个 PICO 用户帐号登录 PICO 设备和手机端 “PICO VR” 应用。
+*调试步骤
+按以下步骤为应用调试 “混合现实捕捉” 能力：
+*将你的应用安装至 PICO 设备。
+*寻找合适位置，放置三脚架和手机，将手机的后置摄像头正对自己。
+*戴上头显，然后启动 “混合现实录制” 应用。
+*根据页面提示，完成相应操作，录制混合现实视频。
+*问题排查
+*视频为第一视角
+若录制的视频为第一视角，说明 MRC 未生效。可能的原因和排查方法如下：
+*
+*虚拟场景画面过小
+写入 XML 文件中的第三视角摄像机的位置值错误。
+*cameraData：3：摄像机在 X 轴上的位置（单位：米）
+*cameraData：4：摄像机在 Y 轴上的位置（单位：米）
+*cameraData：5：摄像机在 Z 轴上的位置（单位：米）
+因此，可以根据手机相对头戴的位置，判断以上三个数值是否准确。以下图为例，cameraData：5 的值为 24.7 ，表示手机位于头戴正前方 24.7 米处，大大超过通常录制下手机与头戴之间的距离，导致虚拟场景画面过小。
+* 
+
+
+
+
+参数
+说明
+foreground Layer Masks
+选择前景相机录制的图层。所选图层将展示于人像前。
+back Layer Masks
+选择后景相机录制的图层。所选图层将展示于人像后。
+*使用 MRC 功能时，若同时使用 Vulkan 图形接口和 Gamma 颜色空间，会导致帧率大幅下降。因此，若你在项目中使用 Vulkan 图形接口，必须完成此设置，否则可跳过。
+
+117602: 04-19 15:06:28.058 21630  3841 I Unity   : PXR MRC Awake openMRC = False ,MRCInitSucceed = False.
+
+167204: 04-19 14:56:18.797  5650 31586 I Unity   : PXR MRC Awake openMRC = True ,MRCInitSucceed = False.
+167541: 04-19 14:56:18.813  5650 31586 I Unity   : PXR MRC cameraDataLength: 10
+167598: 04-19 14:56:18.826  5650 31586 I Unity   : PXR MRC cameraData: 0: 1920
+167607: 04-19 14:56:18.826  5650 31586 I Unity   : PXR MRC cameraData: 1: 1080
+167616: 04-19 14:56:18.826  5650 31586 I Unity   : PXR MRC cameraData: 2: 38.50488
+167625: 04-19 14:56:18.826  5650 31586 I Unity   : PXR MRC cameraData: 3: 0.4115266
+167634: 04-19 14:56:18.827  5650 31586 I Unity   : PXR MRC cameraData: 4: 0.4536189
+167643: 04-19 14:56:18.827  5650 31586 I Unity   : PXR MRC cameraData: 5: -0.5702769
+167652: 04-19 14:56:18.827  5650 31586 I Unity   : PXR MRC cameraData: 6: -0.02062303
+167661: 04-19 14:56:18.827  5650 31586 I Unity   : PXR MRC cameraData: 7: 0.7954143
+167670: 04-19 14:56:18.828  5650 31586 I Unity   : PXR MRC cameraData: 8: 0.005452859
+167680: 04-19 14:56:18.828  5650 31586 I Unity   : PXR MRC cameraData: 9: 0.6056905
+167816: 04-19 14:56:18.839  5650 31586 I Unity   : PXR MRC Init Succeed.
+169180: 04-19 14:56:19.013  5650 31586 I Unity   : PXR MRC Pxr_GetMrcLayerImage createMRCOverlaySucceed : true.
+169273: 04-19 14:56:19.029  5650 31586 I Unity   : PXR MRC Camera created. mrcPlay is true.
+77087: 04-19 14:56:20.793  5650 31586 I Unity   : PXR MRC Pxr_GetMrcY+:0.1921037
+
+
+
+原因
+
+排查方法
+
+未在 PXR_Manager (Script) 面板上勾选 MRC 选框
+
+对于 SDK 2.1.3 和 2.1.4 版本，查看日志中是否存在 Pxr_GetMrcY。若不存在，则表示 MRC 未开启。
+对于 SDK 2.1.5 及以上版本，若日志中的 openMRC 为 False，则表示 MRC 未开启。
+ 
+
+校准数据异常导致初始化中断
+
+查看日志中是否存在异常校准数据。若存在异常数据，说明该问题非 SDK 导致，而是由校准应用导致。
+ 
+* 
+
+未设置 URP 配置文件
+
+
+*首先，抓取日志，判断 MRC 是否初始化成功。
+*然后，开启应用，设置 loglevel=8，命令如下，检查是否每帧执行 OnPreRenderCallBack 和 OnPostRenderCallBack 中的相关接口。
+* 
+若 MRC 已经初始化成功，但是流程被阻塞，导致监听的 Camera 事件没有执行下去，则是由于未设置 URP 配置文件，导致 PXR_Manager.cs 文件中的回调函数 OnPreRenderCallBack 和 OnPostRenderCallBack 未执行。
+
+MRC 流程阻塞
+
+如果 MonoBehaviour 类生命周期存在报错，会阻塞 PXR_Manager.cs 的生命周期（如不执行 Update 部分），导致其中 MRC 相关代码无法执行，MRC 流程阻塞。
+
+// SDK 2.1.5 及以上版本的日志
+I Unity   : PXR MRC Awake openMRC = False,MRCInitSucceed = False.  
+
+I Unity   : PXR MRC  Abnormal calibration data 
+
+ // loglevel=8 设置命令
+ adb shell am broadcast -a android.intent.action.loglevel_refresh --ei "plugin_loglevel" 8 --ei "xrUnityLogLevel" 8

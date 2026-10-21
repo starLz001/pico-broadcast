@@ -1,0 +1,281 @@
+运动追踪接口兼容性说明
+========================================
+本文罗列人体追踪相关接口，并标明每个接口适用的 PICO 体感追踪器版本。
+*PICO 体感追踪器（Beta）版相关
+下表为 PICO 体感追踪器（Beta）版相关接口，所有接口在 PICO 体感追踪器（正式版）上依旧适用。
+*
+*PICO 体感追踪器（正式版）相关
+以下为全身动捕相关接口：
+*
+以下接口用于获取 PICO 体感追踪器相关信息：
+ 
+*
+*外部设备相关
+*
+
+
+
+
+接口
+
+说明
+
+适用设备
+
+PXR_GetBodyTrackingPose
+
+获取用户所有关节点的数据。
+
+*PICO 体感追踪器（Beta）
+*PICO 体感追踪器（正式版）
+*
+
+PXR_GetBodyTrackingPosebyRole
+
+获取用户特定关节点的数据。
+
+
+
+PXR_SetBodyTrackingMode
+
+
+设置 PICO 体感追踪器的人体追踪模式（默认或高精度模式）。若未调用此接口，则使用默认模式。
+
+
+
+PXR_GetMotionTrackerConnectStateWithId
+
+获取当前已连接的体感追踪器的数量和设备序列号。
+
+
+
+PXR_GetMotionTrackerCalibState
+
+获取已连接的体感追踪器的校准状态。
+
+
+
+PXR_GetMotionTrackerBattery
+
+获取指定 PICO 体感追踪器的电量。
+
+
+
+PXR_GetMotionTrackerCalibState
+
+获取当前 PICO 体感追踪器的校准状态。
+
+
+
+PXR_SetBodyTrackingBoneLength
+
+
+设置人体各个部位的骨骼长度，长度数据会同步给 PICO 算法，以获得更精确的人体姿态。
+
+
+
+MotionTrackerBatteryDelegate
+
+获取 PICO 体感追踪器的电量变化通知。
+
+
+
+MotionTrackerConnectionDelegate
+
+获取 PICO 体感追踪器当前的连接状态变化通知。
+
+
+
+MotionTrackerRecalibrationDelegate
+
+获取 PICO 体感追踪器校准数据异常通知，收到该通知后建议重新校准。
+
+
+
+
+
+接口
+
+说明
+
+适用设备
+
+PXR_StartBodyTrackingCalibApp
+
+
+打开 “体感追踪器” APP 进行校准。PICO 体感追踪器（正式版）为一眼校准，Beta 版需按照页面提示流程进行校准。
+
+*PICO 体感追踪器（Beta）
+*PICO 体感追踪器（正式版）
+*
+
+PXR_GetBodyTrackingSupported
+
+查询当前设备是否支持全身动捕。
+
+
+
+PXR_WantBodyTrackingService
+
+开启当前全身动捕服务。
+
+
+
+PXR_StartBodyTracking
+
+开始全身动捕。
+
+
+
+PXR_GetBodyTrackingState
+
+获取追踪器的动捕数据状态及异常原因。
+
+
+
+PXR_StopBodyTracking
+
+停止全身动捕。
+
+
+
+PXR_GetBodyTrackingData
+
+获取人体追踪数据。
+
+
+
+BodyTrackingStateErrorDelegate
+
+获取全身动捕的状态码与错误码通知。
+
+
+
+BodyTrackingActionDelegate
+
+获取全身动捕的 Action 状态变化通知。
+
+
+
+提示
+调用以下接口前，无需先调用 PXR_StartBodyTracking 接口。
+
+
+
+接口
+
+说明
+
+适用设备
+
+PXR_GetMotionTrackerConnectState
+
+获取当前所有 PICO 体感追踪器的连接状态。
+
+PICO 体感追踪器（正式版）
+
+PXR_GetMotionTrackerDeviceType
+
+获取已连接的 PICO 体感追踪器的版本。
+
+
+*PICO 体感追踪器（Beta）
+*PICO 体感追踪器（正式版）
+
+PXR_GetMotionTrackerMode
+
+获取 PICO 体感追踪器当前的追踪模式。
+
+PICO 体感追踪器（正式版）
+
+PXR_CheckMotionTrackerModeAndNumber
+
+检查当前追踪模式和数量是否符合预期。若与预期不一致，则会打开 “PICO 体感追踪器” APP 进行相关配置。
+
+PICO 体感追踪器（正式版）
+
+PXR_GetMotionTrackerLocations
+
+获取独立追踪模式下追踪器位置。
+
+PICO 体感追踪器（正式版）
+
+DataMotionTrackerKeyDelegate
+
+获取 PICO 体感追踪器的键值事件。
+
+PICO 体感追踪器（正式版）
+
+DataMotionTrackingModeChangedEventDelegate
+
+获取运动追踪的模式变化通知。
+
+PICO 体感追踪器（正式版）
+
+
+
+接口
+
+说明
+
+适用设备
+
+PXR_SetExtDevTrackerPassDataState
+
+设置透传数据功能状态。
+
+*PICO 体感追踪器（正式版）
+
+PXR_GetExtDevTrackerConnectState
+
+获取当前扩展外设追踪状态。
+
+
+
+PXR_SetExtDevTrackerMotorVibrate
+
+设置独立外设宽频震动。
+
+
+
+PXR_SetExtDevTrackerByPassData
+
+设置独立外设通道数据。
+
+
+
+PXR_GetExtDevTrackerByPassData
+
+获取独立外设通道数据。
+
+
+
+PXR_GetExtDevTrackerBattery
+
+获取独立外设电量。
+
+
+
+PXR_GetExtDevTrackerKeyData
+
+获取独立外设键值。
+
+
+
+DataExtDevConnectEventDelegate
+
+获取独立外设的连接状态变化通知。
+
+
+
+DataExtDevBatteryEventDelegate
+
+获取独立外设的电量状态变化通知。
+
+
+
+DataExtDevPassDataEventDelegate
+
+获取独立外设的透传数据状态变化通知。
+
+

@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- 高风险接口声明（企业分发可过，应用商店会拒审 —— 本 demo 只做侧载验证，不受影响） -->
+    <!-- 该 meta-data 必须放在 application 节点内 -->
+
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
+    <application
+        android:label="M0验证"
+        android:allowBackup="false"
+        android:supportsRtl="true">
+
+        <!-- 高风险接口开关：0 = 声明使用企业高风险接口 -->
+        <meta-data
+            android:name="pico_advance_interface"
+            android:value="0" />
+
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:screenOrientation="landscape">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <!-- V8 开机自启验证：官方文档要求 Service 声明 action com.pvr.tobservice.SERVICE_AUTO_BOOT -->
+        <service
+            android:name=".AutoBootService"
+            android:exported="true"
+            android:foregroundServiceType="specialUse">
+            <intent-filter>
+                <action android:name="com.pvr.tobservice.SERVICE_AUTO_BOOT" />
+            </intent-filter>
+        </service>
+
+        <!-- V9 Device Owner 验证接收器 -->
+        <receiver
+            android:name=".AdminReceiver"
+            android:exported="false"
+            android:permission="android.permission.BIND_DEVICE_ADMIN">
+            <meta-data
+                android:name="android.app.device_admin"
+                android:resource="@xml/device_admin" />
+            <intent-filter>
+                <action android:name="android.app.action.DEVICE_ADMIN_ENABLED" />
+            </intent-filter>
+        </receiver>
+
+    </application>
+</manifest>

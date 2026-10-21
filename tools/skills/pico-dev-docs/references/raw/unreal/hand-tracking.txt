@@ -1,0 +1,77 @@
+手势追踪
+========================================
+手势追踪 功能将用户的手部动作作为 PICO 设备的输入，让用户和应用之间实现更加密切和自然的交互，从而提升用户的沉浸式 VR 体验。
+你可以将手部追踪功能集成到应用中，这样用户就可以通过一些简单的手部动作（例如：戳、捏、握等）来进行点击、选择、拖放等操作。
+*环境要求
+*SDK 版本：3.0.0 及以上
+*PICO 设备型号：PICO Neo3 系列、PICO 4 系列、PICO 4 Ultra 系列
+*PICO 设备系统版本：5.11.0 及以上
+*前提条件
+*手势追踪功能仅支持 64 位应用开发，使用前请确保在 编辑 > 项目设置 > 平台 > Android > 构建 下勾选 支持 arm64 并取消勾选 支持 armv7。UE5 中已默认勾选 支持 arm64，自行确认即可。
+* 
+*要在设备中调试手势追踪功能，你需要在 PICO 设备系统设置中开启手势识别功能。
+* 
+*启用功能
+*在编辑器左上角，点击 编辑（Edit） > 项目设置（Project Settings） > 插件（Plugins） > PICOXR Settings。
+*在 控制器（Controller） 下，将 HandTracking Support 设置为 Controllers and Hands 或 Hands Only。
+*Controllers and Hands：手柄交互和手势交互自动切换。用户放下手柄后，若设备识别到手势，则切换为手势交互；用户拿起手柄后，则切换为手柄交互。
+*Hands Only：仅手势交互。
+* 
+* 
+*使用标准手模
+*手部模型概览
+*PICO SDK 的 “手势追踪” 功能遵循 OpenXR 标准所提出的手势定义规范并支持以下 26 个手部关节点，具体手部模型示意图如下：
+* 
+*标准手部模型路径
+开启引擎后，在编辑器左下角的 内容浏览器（Content Browser） 下，展开 PICOXR Content > Meshes > Hand，在对应文件夹下可以找到对应的手模资产。
+* 
+*添加手部识别组件
+*右击内容文件夹的空白处，然后选择 蓝图类（Blurprint Class） > Pawn/Actor。
+* 
+*在自己定义的 Pawn 或所要使用的 Actor 中，添加 PICOXRHand 组件。可以在 PICOXR Content > Blueprint > HandTracking 中的 BP_XRhandComponent_Left 和 BP_XRhandComponent_Right 引用手模组件。
+ 
+* 
+*设置手部识别组件
+为你自定义 Pawn 或 Actor 添加了手部识别组件后，你需要先选中 Pawn 或 Actor 中的手势追踪组件，然后在其细节（Details） 面板下，进行如下设置：
+*在 SkeletalAsset 下，点击 Skeletal Mesh（骨骼网格体） 右侧下拉按钮，选择你需要的手部骨骼网格体资源，将其赋予给对应的手模组件。
+* 
+* 
+*在 Default 下，勾选 Enable Ray，以显示隐藏射线。
+* 
+*在 Hand Properties 下：
+* 
+*点击 Skeleton Type 右侧下拉按钮，选择一个骨骼类型，使之与之前设置的骨骼网格体相对应。
+* 
+*勾选 Hide by Confidence，开启“根据置信度隐藏手模”。
+* 
+*勾选 Update Hand Scale，打开更新手模比例。
+*如果你使用的是 BP_XRHandComponent_Left 和 BP_XRHandComponent_Right 这两种示例， Custom Skeletal Mesh 编辑面板中的设置项已默认将手部追踪节点绑定手模骨骼节点。
+* 
+*（可选）如果你使用的是自定义手模，可参考 OpenXR 标准节点。若想了解 OpenXR 关于手部关节点的说明，参考此文档。
+*进阶功能
+为应用接入基础手势追踪功能后，你可以启用以下进阶功能，以进一步提升应用内的手势追踪体验。
+*手模自适应
+PICO 官方手模支持自适应能力，其尺寸可以根据用户真实手部尺寸的而变化而变化。如需启用该功能，可以：
+*在 Unreal 项目设置中，打开 PICOXR Settings，确认在控制器中的已经在 Handtracking Support 里选择 Controllers and Hands 选项后，勾选 Adaptive Hand Model (PICO) 选框，即可开启手摸自适应能力。
+ 
+若你使用的是自定义手模，则需要通过调用接口 GetHandScale，获取手模的缩放比例。其中 Device Hand 是指定要获取缩放比的目标手模，选项包括：无（None），左手（ HandLeft）以及右手（HandRight）。具体示例如下：
+* 
+* 
+
+
+开启手势追踪能力的应用时，用户会收到弹窗提示，请求获取手势追踪权限。若用户不同意授权，应用将无法获取手势数据。
+
+*PICOXRHand 为 C++ 基础组件； BP_XRHandComponent、 BP_XRHandComponent_Left 和 BP_XRHandComponent_Right 是基于 PICOXRHand 而制作的蓝图示例。
+*你可以直接使用  BP_XRHandComponent_Left 和 BP_XRHandComponent_Right 作为左手和右手组件。
+
+注意区分 SM_Hand_L 为左手；SM_Hand_R 为右手。
+
+例如，当你在步骤 1 中将 Skeletal Mesh 设置为了 SM_Hand_L 时， 你需要将 Skeleton Type 设置为 Hand Left。
+
+若未勾选此选项，将不会根据置信度隐藏手模。在这种情况下，当手模置信度低时，可能会发生剧烈抖动或者其他异常情况。
+
+**
+
+* 
+
+ 

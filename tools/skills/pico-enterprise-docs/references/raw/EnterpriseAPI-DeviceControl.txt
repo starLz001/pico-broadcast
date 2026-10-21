@@ -1,0 +1,1574 @@
+可以通过属性对设备进行个性化控制。
+*接口列表
+**
+*pbsControlSetDeviceAction
+*此接口为高风险接口，需要添加高风险接口权限标签
+关机、重启（高风险接口）
+ 
+适用设备
+PICO全系企业级设备
+入参说明
+*
+返回值
+无
+调用示例
+ 
+*pbsControlAPPManger
+*此接口为高风险接口，需要添加高风险接口权限标签
+应用静默安装、卸载（高风险接口）
+ 
+适用设备
+全系企业级设备
+入参说明
+*
+返回值
+无
+调用示例
+ 
+*pbsControlSetPowerOffWithUSBCable
+USB断电关机
+ 
+适用设备
+全系企业级设备
+入参说明
+*
+返回值
+无
+调用示例
+ 
+*pbsControlGetPowerOffWithUSBCable
+获取USB断电关机配置
+ 
+适用设备
+全系企业级设备
+入参说明
+*
+返回值
+*
+调用示例
+ 
+*pbsControlSetAutoConnectWIFI
+连接指定WiFi
+ 
+适用设备
+全系企业级设备
+入参说明
+*
+返回值
+无
+调用示例
+ 
+*pbsControlClearAutoConnectWIFI
+清除指定WiFi
+ 
+适用设备
+全系企业级设备
+入参说明
+*
+返回值
+无
+调用示例
+ 
+*pbsScreenOn
+亮屏
+ 
+适用设备
+全系企业级设备
+入参说明
+无
+返回值
+无
+调用示例
+ 
+*pbsScreenOff
+灭屏
+ 
+适用设备
+全系企业级设备
+入参说明
+无
+返回值
+无
+调用示例
+ 
+*pbsAcquireWakeLock
+请求WakeLock
+ 
+适用设备
+全系企业级设备
+入参说明
+无
+返回值
+无
+调用示例
+ 
+*pbsReleaseWakeLock
+释放WakeLock
+ 
+适用设备
+全系企业级设备
+入参说明
+无
+返回值
+无
+调用示例
+ 
+*pbsFreezeScreen
+冻结屏幕
+ 
+适用设备
+G2 4K、Neo2
+入参说明
+*
+返回值
+无
+调用示例
+ 
+*pbsKillAppsByPidOrPackageName
+*此接口为高风险接口，需要添加高风险接口权限标签
+杀死应用，可通过传入应用pid或应用包名方式杀死应用（高风险接口）
+ 
+适用设备
+全系企业级设备
+入参说明
+*
+返回值
+无
+调用示例
+ 
+*pbsKillBackgroundAppsWithWhiteList
+*此接口为高风险接口，需要添加高风险接口权限标签
+清除后台杀死应用，传入的白名单应用不会被清除（高风险接口）
+ 
+适用设备
+全系企业级设备
+入参说明
+*
+返回值
+无
+调用示例
+ 
+*pbsCapture
+快速截屏
+ 
+适用设备
+全系企业级设备
+入参说明
+无
+返回值
+无
+调用示例
+ 
+*pbsRecord
+快速录屏
+ 
+适用设备
+全系企业级设备
+入参说明
+无
+返回值
+无
+调用示例
+ 
+*pbsControlSetAutoConnectWIFIWithErrorCodeCallback
+连接指定WiFi，支持返回error code
+ 
+适用设备
+全系企业级设备
+入参说明
+*
+返回值
+无
+调用示例
+ 
+*pbsTimingStartup
+定时开机
+ 
+适用设备
+PICO4 E，G3 ，Neo3 企业版【PUI5.4.0及以上】，Neo3 Pro【PUI4.8.0&4.8.1及以上】
+入参说明
+*
+返回值
+无
+调用示例
+ 
+*openTimingStartup
+接口弃用
+打开定时开机，返回接口执行结果
+ 
+适用设备
+PICO4 E，G3 ，Neo3 
+入参说明
+*
+返回值
+*
+调用示例
+ 
+*openTimingStartup
+打开定时开机，返回接口执行结果
+ 
+适用设备
+PICO4 E，G3 ，Neo3 
+入参说明
+*
+返回值
+*
+调用示例
+ 
+*closeTimingStartup
+关闭定时开机功能，返回接口执行结果
+ 
+适用设备
+PICO4 E，G3 ，Neo3 
+入参说明
+无
+返回值
+*
+调用示例
+ 
+*pbsTimingShutdown
+定时关机
+ 
+适用设备
+PICO4 E，G3 ，Neo3 企业版【PUI5.4.0及以上】，Neo3 Pro【PUI4.8.0&4.8.1及以上】
+入参说明
+*
+返回值
+无
+调用示例
+ 
+*openTimingShutdown
+打开定时关机，返回接口执行结果
+ 
+适用设备
+PICO4 E，G3 ，Neo3 
+入参说明
+*
+返回值
+*
+调用示例
+ 
+*openTimingShutdown
+打开定时关机，返回接口执行结果
+ 
+适用设备
+PICO4 E，G3 ，Neo3 
+入参说明
+*
+返回值
+*
+调用示例
+ 
+*closeTimingShutdown
+关闭定时关机功能，返回接口执行结果
+ 
+适用设备
+PICO4 E，G3 ，Neo3 
+入参说明
+无
+返回值
+*
+调用示例
+ 
+*pbsStartVrSettingsItem
+启动指定的设置页面
+ 
+适用设备
+PICO4 E，Neo3 企业版，G3 【PUI 5.4.0 及以上】，Neo3 Pro 【PUI 4.8.0&4.8.1 及以上】
+入参说明
+*
+返回值
+无
+调用示例
+ 
+*pbsSwitchVolumeToHomeAndEnter
+改变头戴音量键功能
+ 
+适用设备
+PICO4 E【PUI 5.4.0及以上】
+入参说明
+*
+返回值
+无
+调用示例
+ 
+*pbsIsVolumeChangeToHomeAndEnter
+获取当前头戴音量键功能状态
+ 
+适用设备
+PICO4 E【PUI 5.4.0及以上】
+入参说明
+无
+返回值
+*
+调用示例
+ 
+*pbsSetControllerKeyState
+禁用手柄按键
+ 
+适用设备
+PICO4 E，Neo3 企业版，G3【PUI 5.4.0及以上】，Neo3 Pro【PUI4.8.0&4.8.1及以上】
+入参说明
+*
+返回值
+*
+调用示例
+ 
+*pbsInstallOTAPackage
+*此接口为高风险接口，需要添加高风险接口权限标签
+Rom离线升级接口（高风险接口）
+ 
+适用设备
+PICO4 E，Neo3 企业版，G3【PUI 5.4.0及以上】，Neo3 Pro【PUI4.8.0&4.8.1及以上】
+入参说明
+*
+返回值
+*
+调用示例
+ 
+*pbsGetAutoConnectWiFiConfig
+获取配置连接WiFi信息
+ 
+适用设备
+全系企业级设备
+入参说明
+*
+返回值
+*
+调用示例
+ 
+
+*pbsGetTimingStartupStatus
+获取定时开机设置内容
+ 
+适用设备
+PICO4 E，Neo3 企业版，G3【PUI 5.4.0及以上】，Neo3 Pro【PUI4.8.0&4.8.1及以上】
+入参说明
+*
+返回值
+*
+调用示例
+ 
+
+*pbsGetTimingShutdownStatus
+获取定时关机设置内容
+ 
+适用设备
+PICO4 E，Neo3 企业版，G3【PUI 5.4.0及以上】，Neo3 Pro【PUI4.8.0&4.8.1及以上】
+入参说明
+*
+返回值
+*
+调用示例
+ 
+*pbsGetControllerKeyState
+获取手柄按键禁用状态
+ 
+适用设备
+PICO4 E，Neo3 企业版，G3【PUI 5.4.0及以上】，Neo3 Pro【PUI4.8.0&4.8.1及以上】
+入参说明
+*
+返回值
+*
+调用示例
+ 
+
+*pbsSetControllerPairTime
+自定义手柄进配对模式的时长
+ 
+适用设备
+PICO4 E，Neo3 Pro【PUI 5.4.0及以上】
+入参说明
+*
+返回值
+无
+调用示例
+ 
+*pbsGetControllerPairTime
+获取手柄进配对模式的时长
+ 
+适用设备
+PICO4 E，Neo3 Pro【PUI 5.4.0及以上】
+入参说明
+*
+返回值
+无
+调用示例
+ 
+*fileCopy
+拷贝文件
+ 
+适用设备
+PICO 4E ，Neo3 Pro ，Neo3 企业版 ，G3【PUI 5.8.0】
+入参说明
+*
+返回值
+*
+调用示例
+ 
+*createVirtualDisplay
+创建虚拟屏
+ 
+适用设备
+全系企业级设备
+入参说明
+*
+返回值
+*
+调用示例
+ 
+*resizeVirtualDisplay
+调整虚拟屏尺寸
+ 
+适用设备
+全系企业级设备
+入参说明
+*
+返回值
+*
+调用示例
+ 
+*setVirtualDisplaySurface
+设置虚拟屏Surface
+ 
+适用设备
+全系企业级设备
+入参说明
+*
+返回值
+*
+调用示例
+ 
+*injectEvent
+注入输入事件
+ 
+适用设备
+全系企业级设备
+入参说明
+*
+返回值
+*
+调用示例
+ 
+*startApp
+启动应用到虚拟屏
+ 
+适用设备
+全系企业级设备
+入参说明
+*
+返回值
+*
+调用示例
+ 
+*releaseVirtualDisplay
+销毁虚拟屏
+ 
+适用设备
+全系企业级设备
+入参说明
+*
+返回值
+*
+调用示例
+ 
+*startLeftControllerPair
+开始左手柄配对
+ 
+适用设备
+全系企业级设备
+入参说明
+无
+返回值
+*
+调用示例
+ 
+*makeLeftControllerUnPair
+解除左手柄配对
+ 
+适用设备
+全系企业级设备
+入参说明
+无
+返回值
+*
+调用示例
+ 
+*startRightControllerPair
+开始右手柄配对
+ 
+适用设备
+全系企业级设备
+入参说明
+无
+返回值
+*
+调用示例
+ 
+*makeRightControllerUnPair
+解除右手柄配对
+ 
+适用设备
+全系企业级设备
+入参说明
+无
+返回值
+*
+调用示例
+ 
+*stopControllerPair
+停止手柄配对
+ 
+适用设备
+全系企业级设备
+入参说明
+无
+返回值
+*
+调用示例
+ 
+*setControllerPreferHand
+设置手柄惯用手
+ 
+适用设备
+全系企业级设备
+入参说明
+*
+返回值
+*
+调用示例
+ 
+*setControllerVibrateAmplitude
+设置手柄振动幅度
+ 
+适用设备
+全系企业级设备
+入参说明
+*
+返回值
+*
+调用示例
+ 
+*onlineSystemUpdate
+在线升级
+ 
+适用设备
+PICO4 Ultra E
+入参说明
+*
+返回值
+*
+调用示例
+ 
+*offlineSystemUpdate
+离线升级
+ 
+适用设备
+PICO 4 Ultra E
+入参说明
+*
+返回值
+*
+调用示例
+ 
+*recenter
+校准头戴原点正方向，功能和长按HOME键一致
+ 
+适用设备
+全系设备【PUI 5.11.0】
+入参说明
+无
+返回值
+*
+调用示例
+ 
+*setMotionTrackerAutoStart
+Motion Tracker插电自动开机
+ 
+适用设备
+PICO4 Ultra E PUI5.13.0
+入参说明
+*
+返回值
+*
+调用示例
+ 
+*startSwiftTrackerPairing
+进入tracker配对状态
+ 
+适用设备
+支持Swift的设备
+入参说明
+*
+返回值
+*
+调用示例
+ 
+*unBondSwiftTracker
+解绑Tracker
+ 
+适用设备
+支持Swift的设备
+入参说明
+*
+返回值
+*
+调用示例
+ 
+*fileSync
+将系统缓冲区中的数据同步到磁盘
+ 
+适用设备
+全系企业级设备
+入参说明
+无
+返回值
+*
+调用示例
+ 
+接口
+说明
+pbsControlSetDeviceAction
+设备关机重启接口，高权限接口，需要配置meta-data，详见高风险接口权限标签
+pbsControlAPPManger
+静默安装卸载应用，高权限接口，需要配置meta-data，详见高风险接口权限标签
+pbsControlSetPowerOffWithUSBCable
+开关打开后，拔下USB线自动关机
+pbsControlGetPowerOffWithUSBCable
+获取USB断电关机配置
+pbsControlSetAutoConnectWIFI
+设置自动连接的WIFI，每次开机都会去自动连接此WIFI
+pbsControlClearAutoConnectWIFI
+清除连接指定WiFi的配置
+pbsScreenOn
+灭屏情况下点亮屏幕
+pbsScreenOff
+使屏幕熄灭
+pbsAcquireWakeLock
+请求WakeLock，使系统不休眠
+pbsReleaseWakeLock
+释放WakeLock
+pbsFreezeScreen
+启动2D应用时，将应用画面锁定在前方，即2D in VR效果
+pbsKillAppsByPidOrPackageName
+杀死应用，可通过传入应用pid或应用包名方式杀死应用。
+高权限接口，需要配置meta-data，详见高风险接口权限标签
+pbsKillBackgroundAppsWithWhiteList
+清除后台杀死应用，传入的白名单应用不会被清除。
+高权限接口，需要配置meta-data，详见高风险接口权限标签
+pbsCapture
+为（系统-快捷设置【截屏/录屏】功能）提供接口
+pbsRecord
+为（系统-快捷设置【截屏/录屏】功能）提供接口
+pbsControlSetAutoConnectWIFIWithErrorCodeCallback
+设置自动连接的WIFI，每次开机都会去自动连接此WIFI，并返回执行结果
+pbsTimingStartup
+设置下次定时开机时间
+openTimingStartup
+打开定时开机开关，并设置下次定时开机时间
+closeTimingStartup
+关闭定时开机开关
+pbsTimingShutdown
+设置下次定时关机时间
+openTimingShutdown
+打开定时关机开关，并设置下次定时关机事件
+closeTimingShutdown
+关闭定时关机开关
+pbsStartVrSettingsItem
+启动指定的设置页面
+pbsSwitchVolumeToHomeAndEnter
+头戴音量键功能切换，头戴的音量加减键可以切换为HOME/确认键
+pbsIsVolumeChangeToHomeAndEnter
+获取当前音量键是什么功能
+pbsSetControllerKeyState
+禁用手柄的某个按键，使手柄按键无响应
+pbsInstallOTAPackage
+Rom离线升级
+pbsGetAutoConnectWiFiConfig
+获取开机自动连接的WiFi信息
+pbsGetTimingStartupStatus
+获取定时开机的相关设置
+pbsGetTimingShutdownStatus
+获取定时关机的相关设置
+pbsGetControllerKeyState
+获取手柄某个按键是否处于禁用状态
+pbsSetControllerPairTime
+设置手柄长按多长时间后进入配对模式
+pbsGetControllerPairTime
+获取手柄长按多长时间后进入配对模式
+startLeftControllerPair
+开始左手柄配对
+makeLeftControllerUnPair
+解除左手柄配对
+startRightControllerPair
+开始右手柄配对
+makeRightControllerUnPair
+解除右手柄配对
+stopControllerPair
+停止手柄配对
+setControllerPreferHand
+设置手柄惯用手
+setControllerVibrateAmplitude
+设置手柄振动幅度
+onlineSystemUpdate
+在线升级
+offlineSystemUpdate
+离线升级
+recenter
+校准头戴原点正方向，功能和长按HOME键一致
+getControllerPreferHand
+获取手柄惯用手
+getControllerVibrateAmplitude
+获取手柄震动幅度
+void pbsControlSetDeviceAction(PBS_DeviceControlEnum deviceControlEnum, IIntCallback callback);
+参数名称
+类型
+说明
+deviceControlEnum
+PBS_DeviceControlEnum 
+详见枚举类PBS_DeviceControlEnum
+callback
+IIntCallback
+IIntCallback 执行结果回调
+0-成功
+1-失败
+2-无权限执行此操作
+//重启
+ToBServiceHelper.getInstance().getServiceBinder().pbsControlSetDeviceAction(PBS_DeviceControlEnum.DEVICE_CONTROL_REBOOT, new IIntCallback.Stub() {
+    @Override
+    public void callback(int result) throws RemoteException {
+        Log.d(TAG, "callback: "+ result);
+    }
+});
+void pbsControlAPPManger(PBS_PackageControlEnum packageControlEnum, String path, int ext, IIntCallback callback);
+参数名称
+类型
+说明
+packageControlEnum
+PBS_PackageControlEnum 
+PBS_PackageControlEnum 
+path
+path
+安装-应用安装包路径
+卸载-应用包名
+ext
+int 
+预留位，无意义
+callback
+IIntCallback 
+IIntCallback 操作结果回调
+通用结果：
+0-成功
+1-失败
+2-无权限执行此操作
+静默安装结果：
+101-传入的apk路径参数异常
+102-apk文件不存在
+103-STATUS_FAILURE_BLOCKED 操作失败，因为它被阻止。例如，设备策略可能正在阻止该操作，包验证器可能已经阻止了该操作，或者核心系统操作可能需要该应用程序。
+104-STATUS_FAILURE_ABORTED 操作失败，因为它已被主动中止。例如，用户主动拒绝了请求的权限，或者会话被放弃。(静默安装，不会发生)
+105-STATUS_FAILURE_INVALID APK文件损坏
+106-STATUS_FAILURE_CONFLICT 操作失败，因为它与设备上已安装的另一个程序包冲突（或不一致）。例如，现有的权限、不兼容的证书等。用户可以卸载另一个应用程序来解决此问题。
+107-STATUS_FAILURE_STORAGE 由于存储问题，操作失败。例如，设备可能空间不足，或者外部介质可能不可用。用户可能能够帮助释放空间或插入不同的外部介质。
+108-STATUS_FAILURE_INCOMPATIBLE 操作失败，因为它与此设备根本不兼容。例如，应用程序可能需要不存在的硬件功能，可能缺少设备支持的ABI的本机代码，或者需要更新的SDK版本，等等。
+静默卸载结果：
+101-被卸载的应用未安装
+102-传入的包名参数异常
+103-DELETE_FAILED_INTERNAL_ERROR 未知原因导致失败
+104-DELETE_FAILED_DEVICE_POLICY_MANAGER 设备策略管理器(如DeviceOwner)不能卸载
+105-DELETE_FAILED_USER_RESTRICTED用户受到限制（静默卸载此错误不会出现）
+106-DELETE_FAILED_OWNER_BLOCKED  device owner或者profile 标记此应用为不可卸载
+107-DELETE_FAILED_ABORTED 删除被中止
+108-DELETE_FAILED_USED_SHARED_LIBRARY  系统未能删除该程序包，因为该程序包是其他已安装程序包使用的共享库。
+//重启
+ToBServiceHelper.getInstance().getServiceBinder().pbsControlSetDeviceAction(PBS_DeviceControlEnum.DEVICE_CONTROL_REBOOT, new IIntCallback.Stub() {
+    @Override
+    public void callback(int result) throws RemoteException {
+        Log.d(TAG, "callback: "+ result);
+    }
+});
+void pbsControlSetPowerOffWithUSBCable(PBS_SwitchEnum switchEnum, int ext);
+参数名称
+类型
+说明
+switchEnum
+PBS_SwitchEnum
+PBS_SwitchEnum 
+ext
+int 
+预留位，无意义
+//打开USB断电关机开关
+ToBServiceHelper.getInstance().getServiceBinder().pbsControlSetPowerOffwithUSBCable(PBS_SwitchEnum. S_ON, 0);
+PBS_SwitchEnum pbsControlGetPowerOffWithUSBCable(int ext);
+参数名称
+类型
+说明
+ext
+int 
+预留位，无意义
+类型
+说明
+PBS_SwitchEnum
+PBS_SwitchEnum 
+PBS_SwitchEnum  switchEnum = ToBServiceHelper.getInstance().getServiceBinder().pbsControlGetPowerOffWithUSBCable( 0);
+void pbsControlSetAutoConnectWIFI(String ssid, String pwd, int ext, IBoolCallback callback);
+参数名称
+类型
+说明
+ssid
+String 
+Wifi名字
+pwd
+String 
+Wifi密码
+ext
+int 
+扩展位，无意义
+callback
+IBoolCallback 
+执行结果回调：
+true-成功
+false-失败
+ToBServiceHelper.getInstance().getServiceBinder().pbsControlSetAutoConnectWIFI(
+        "xxx", 
+        "*********", 
+        0, 
+        new IBoolCallback.Stub() {
+                 @Override
+                 public void callBack(boolean result) throws RemoteException {
+                     Log.d(TAG, "callBack: 自动连接WiFi "+result);
+                 }
+        });
+void pbsControlClearAutoConnectWIFI(IBoolCallback callback);
+参数名称
+类型
+说明
+callback
+IBoolCallback 
+执行结果回调：
+true-成功
+false-失败
+ToBServiceHelper.getInstance().getServiceBinder().pbsControlClearAutoConnectWIFI(
+new IBoolCallback.Stub() {
+            @Override
+            public void callBack(boolean result) throws RemoteException {
+                 Log.d(TAG, "callBack: 清空自动连接wifi：" + result);
+            }
+         });
+void pbsScreenOn();
+ToBServiceHelper.getInstance().getServiceBinder().pbsScreenOn();
+void pbsScreenOff();
+ToBServiceHelper.getInstance().getServiceBinder().pbsScreenOff();
+void pbsAcquireWakeLock();
+ToBServiceHelper.getInstance().getServiceBinder().pbsAcquireWakeLock();
+void pbsReleaseWakeLock();
+ToBServiceHelper.getInstance().getServiceBinder().pbsReleaseWakeLock();
+void pbsFreezeScreen();
+参数名称
+类型
+说明
+freeze
+boolean 
+true-冻结
+false-解除冻结
+ToBServiceHelper.getInstance().getServiceBinder().pbsFreezeScreen();
+void pbsKillAppsByPidOrPackageName(int[] pids, String[] packageNames, int ext);
+参数名称
+类型
+说明
+pids
+int[]
+应用pid数组
+packageNames
+String[]
+应用包名数组
+ext
+int 
+扩展位，无意义
+ToBServiceHelper.getInstance().getServiceBinder().pbsKillAppsByPidOrPackageName(pids, apps, 0);
+void pbsKillBackgroundAppsWithWhiteList(String[] packageNames, int ext);
+参数名称
+类型
+说明
+packageNames
+String[]
+应用包名数组
+ext
+int 
+扩展位，无意义
+ToBServiceHelper.getInstance().getServiceBinder().pbsKillBackgroundAppsWithWhiteList( packageNames apps, 0);
+void pbsCapture();
+ToBServiceHelper.getInstance().getServiceBinder(). pbsCapture();
+void pbsRecord();
+ToBServiceHelper.getInstance().getServiceBinder().pbsRecord();
+void pbsControlSetAutoConnectWIFIWithErrorCodeCallback(String ssid, String pwd, int ext, IIntCallback callback);
+参数名称
+类型
+说明
+ssid
+String
+Wifi名字
+pwd
+String 
+Wifi密码
+ext
+int 
+扩展位，无意义
+callback
+IIntCallback 
+执行结果返回值：
+0-成功
+3-密码错误
+4-未知错误
+5-Wifi名字为NULL
+ToBServiceHelper.getInstance().getServiceBinder().pbsControlSetAutoConnectWIFIWithErrorCodeCallback("ssid", "pwd", 0, new IIntCallback.Stub() {
+    @Override
+    public void callback(int result) throws RemoteException {
+    }
+});
+void pbsTimingStartup(int year, int month, int day, int hour, int minute, boolean open);
+参数名称
+类型
+说明
+year
+int
+年
+month
+int
+月
+day
+int 
+日
+hour
+int
+时
+minute
+int
+分
+open
+boolean 
+true-开
+false-关
+ToBServiceHelper.getInstance().pbsTimingStartup(2022,5,7,16,35,true);
+int openTimingStartup(int year, int month, int day, int hour, int minute);
+参数名称
+类型
+说明
+year
+int
+年
+month
+int
+月
+day
+int 
+日
+hour
+int
+时
+minute
+int
+分
+类型
+说明
+int
+0-成功
+1-失败
+ToBServiceHelper.getInstance().openTimingStartup(2022,5,7,16,35);
+int openTimingStartup(int hour, int minute, int repeat);
+参数名称
+类型
+说明
+hour
+int
+时
+minute
+int
+分
+repeat
+int 
+重复模式
+*0 仅一次
+*前七位bit代表周一至周天哪天被选择重复执行开/关机
+*如0x03：周一、周二重复执行开/关机
+类型
+说明
+int
+0-成功
+1-失败
+((IToBServiceProxy)ToBServiceHelper.getInstance().getServiceBinder()).openTimingStartup(16,35,0);
+int closeTimingStartup();
+类型
+说明
+int
+0-成功
+1-失败
+ToBServiceHelper.getInstance().closeTimingStartup();
+void pbsTimingShutdown(int year, int month, int day, int hour, int minute, boolean open);
+参数名称
+类型
+说明
+year
+int
+年
+month
+int
+月
+day
+int 
+日
+hour
+int
+时
+minute
+int
+分
+open
+boolean 
+true-开
+false-关
+ToBServiceHelper.getInstance().pbsTimingShutdown(2022,5,7,16,35,true);
+int openTimingShutdown(int year, int month, int day, int hour, int minute);
+参数名称
+类型
+说明
+year
+int
+年
+month
+int
+月
+day
+int 
+日
+hour
+int
+时
+minute
+int
+分
+类型
+说明
+int
+0-成功
+1-失败
+ToBServiceHelper.getInstance().openTimingShutdown(2022,5,7,16,35);
+int openTimingShutdown(int hour, int minute, int repeat);
+参数名称
+类型
+说明
+hour
+int
+时
+minute
+int
+分
+repeat
+int 
+重复模式
+*0 仅一次
+*前七位bit代表周一至周天哪天被选择重复执行开/关机
+*如0x03：周一、周二重复执行开/关机
+类型
+说明
+int
+0-成功
+1-失败
+((IToBServiceProxy)ToBServiceHelper.getInstance().getServiceBinder()).openTimingShutdown(16,35,0);
+int closeTimingShutdown();
+类型
+说明
+int
+0-成功
+1-失败
+ToBServiceHelper.getInstance().closeTimingShutdown();
+void pbsStartVrSettingsItem(PBS_StartVRSettingsEnum vrSettingsEnum, boolean hideOtherItem, int ext);
+参数名称
+类型
+说明
+vrSettingsEnum
+PBS_StartVRSettingsEnum 
+PBS_StartVRSettingEnum
+hideOtherItem
+boolean 
+true:隐藏其他tab标签
+false:不隐藏
+ext
+int 
+扩展位，无意义
+ToBServiceHelper.getInstance().pbsStartVrSettingsItem(PBS_StartVRSettingsEnum.START_VR_SETTINGS_ITEM_WIFI,true,0);
+void pbsSwitchVolumeToHomeAndEnter(PBS_SwitchEnum switchEnum, int ext);
+参数名称
+类型
+说明
+switchEnum
+PBS_SwitchEnum 
+PBS_SwitchEnum 
+ext
+int 
+扩展位，无意义
+ToBServiceHelper.getInstance().pbsSwitchVolumeToHomeAndEnter(PBS_SwitchEnum.S_ON,0);
+PBS_SwitchEnum pbsIsVolumeChangeToHomeAndEnter();
+类型
+说明
+PBS_SwitchEnum 
+PBS_SwitchEnum 
+ToBServiceHelper.getInstance().pbsIsVolumeChangeToHomeAndEnter();
+int pbsSetControllerKeyState(PBS_ControllerKeyEnum controllerKeyEnum, PBS_SwitchEnum status, int ext);
+参数名称
+类型
+说明
+controllerKeyEnum
+PBS_ControllerKeyEnum 
+PBS_ControllerKeyEnum
+status
+PBS_SwitchEnum 
+PBS_SwitchEnum 
+ext
+int 
+扩展位，无意义
+类型
+说明
+int 
+0 - 成功
+其他 - 失败
+
+ToBServiceHelper.getInstance().pbsSetControllerKeyState(PBS_ControllerKeyEnum.CONTROLLER_KEY_JOYSTICK,PBS_SwitchEnum.S_ON,0);
+int pbsInstallOTAPackage(String otaPackagePath, int ext);
+参数名称
+类型
+说明
+otaPackagePath
+String 
+OTA包路径
+ext
+int 
+扩展位，无意义
+类型
+说明
+int 
+0: success 
+1: fail
+21: OTA升级包版本低
+ToBServiceHelper.getInstance().pbsInstallOTAPackage("/sdcard/ota.zip",0);
+String pbsGetAutoConnectWiFiConfig(int ext);
+参数名称
+类型
+说明
+ext
+int 
+扩展位，无意义
+类型
+说明
+String 
+wifi ssid:****** pswd:*****
+String  wifiConfig = ToBServiceHelper.getInstance().getServiceBinder().pbsGetAutoConnectWiFiConfig(0);
+String pbsGetTimingStartupStatus(int ext);
+参数名称
+类型
+说明
+ext
+int 
+扩展位，无意义
+类型
+说明
+String 
+ {"open":true,"time":1658980380000}
+//open：开关状态 true-打开，false-关闭
+//time：定时开机时间，单位ms
+String  jsonStartupConfig = ToBServiceHelper.getInstance().getServiceBinder().pbsGetTimingStartupStatus(0);
+String pbsGetTimingShutdownStatus(int ext);
+参数名称
+类型
+说明
+ext
+int 
+扩展位，无意义
+类型
+说明
+String 
+ {"open":true,"time":1658980380000}
+String  jsonShutdownConfig = ToBServiceHelper.getInstance().getServiceBinder().pbsGetTimingShutdownStatus(0);
+int pbsGetControllerKeyState(PBS_ControllerKeyEnum controllerKeyEnum, int ext);
+参数名称
+类型
+说明
+controllerKeyEnum
+PBS_ControllerKeyEnum 
+PBS_ControllerKeyEnum
+ext
+int 
+扩展位，无意义
+类型
+说明
+int 
+0 disable
+1 enable
+int enable= ToBServiceHelper.getInstance().pbsGetControllerKeyState(PBS_ControllerKeyEnum.CONTROLLER_KEY_JOYSTICK,0);
+void pbsSetControllerPairTime(in PBS_ControllerPairTimeEnum timeEnum, IIntCallback callback, int ext);
+参数名称
+类型
+说明
+timeEnum
+PBS_ControllerPairTimeEnum 
+PBS_ControllerPairTimeEnum
+callback
+IIntCallback 
+IIntCallback 0:fail  1:success
+ext
+int 
+扩展位，无意义
+ToBServiceHelper.getInstance().getServiceBinder().pbsSetControllerPairTime(PBS_ControllerPairTimeEnum.SIX_HUNDRED, new IIntCallback.Stub() {
+    @Override
+    public void callback(int result) throws RemoteException {
+        Log.i(TAG, "setCtrlPairTime: "+ result);
+    }
+},0);
+void pbsGetControllerPairTime(IGetControllerPairTimeCallback pairTimeCallback, int ext);
+参数名称
+类型
+说明
+pairTimeCallback
+IGetControllerPairTimeCallback 
+IGetControllerPairTimeCallback
+ext
+int 
+扩展位，无意义
+ToBServiceHelper.getInstance().getServiceBinder().pbsGetControllerPairTime(new IGetControllerPairTimeCallback.Stub() {
+    @Override
+    public void callBack(PBS_ControllerPairTimeEnum result) throws RemoteException {
+        Log.i(TAG, "getCtrlPairTime "+ result.name());
+    }
+},0);
+int fileCopy(String srcPath, String dstPath, IFileCopyCallback callback);
+参数名称
+类型
+说明
+备注
+srcPath
+String
+源路径
+*移动存储设备路径前缀：udisk://，如根目录下的Movie文件夹：“udisk://Movie"
+*内部存储路径直接写根目录下的路径，如根目录下的Picture文件夹：“Picture”
+dstPath
+String
+目标路径
+
+callback
+IFileCopyCallback 
+拷贝结果回调
+
+*onCopyStart：拷贝开始
+*onCopyProgress(double process)：拷贝进度回调0.00~1.00
+*onCopyFinish(int errorCode):
+*拷贝成功-0
+*U盘未连接-101
+*目标设备存储空间不足-103
+*拷贝失败-104
+类型
+说明
+int
+*接口调用成功，等待开始拷贝-0
+*U盘未连接-101
+*源文件不存在-102
+*参数为null-106
+ToBServiceHelper.getInstance().getServiceBinder().fileCopy("udisk://PICO/", "PICO", object : IFileCopyCallback.Stub(){
+    void onCopyStart() {
+        
+    }
+
+    void onCopyProgress(double process) {
+        
+    }
+    void onCopyFinish(int errorCode) {
+        
+    }
+})
+int createVirtualDisplay(IBinder binder, String displayName, Surface surface, int width, int height, int densityDpi, int flags);
+参数名称
+类型
+说明
+binder
+IBinder 
+ 作为客户端的token，标识本次创建的VirtualDisplay属于哪个客户端
+displayName
+String
+虚拟屏名称
+surface
+Surface 
+虚拟显示的内容应该呈现到的surface
+width
+int 
+虚拟屏宽度
+height
+int 
+虚拟屏高度
+densityDpi
+int 
+虚拟显示器的密度（以dpi为单位）必须大于0。
+flags
+int 
+A combination of virtual display flags:(flag意义参见安卓SDK中android.hardware.display.DisplayManager类中的描述)
+                 VIRTUAL_DISPLAY_FLAG_PUBLIC,
+                 VIRTUAL_DISPLAY_FLAG_PRESENTATION,
+                 VIRTUAL_DISPLAY_FLAG_SECURE,
+                 VIRTUAL_DISPLAY_FLAG_OWN_CONTENT_ONLY,
+                 VIRTUAL_DISPLAY_FLAG_AUTO_MIRROR.
+类型
+说明
+int
+虚拟屏displayId
+        成功：返回虚拟屏displayID
+        失败：-101
+int flag = DisplayManager.VIRTUAL_DISPLAY_FLAG_PUBLIC | 1 << 6 | 1 << 7 | 1 << 8 | DisplayManager.VIRTUAL_DISPLAY_FLAG_OWN_CONTENT_ONLY;
+((IToBServiceProxy)ToBServiceHelper.getInstance().getServiceBinder()).createVirtualDisplay(new Binder(),"test", imageReader.surface, 720,1080, 320, flags);
+int resizeVirtualDisplay(int displayId, int width, int height, int densityDpi);
+参数名称
+类型
+说明
+displayId
+int 
+虚拟屏id
+width
+int 
+虚拟屏宽度
+height
+int 
+虚拟屏高度
+densityDpi
+int 
+虚拟显示器的密度（以dpi为单位）必须大于0。
+类型
+说明
+int
+0-成功
+1-失败
+101-虚拟屏不存在
+((IToBServiceProxy)ToBServiceHelper.getInstance().getServiceBinder()).resizeVirtualDisplay(1, 720, 1080, 320);
+int setVirtualDisplaySurface(int displayId, Surface surface);
+参数名称
+类型
+说明
+displayId
+int 
+虚拟屏id
+surface
+Surface 
+虚拟显示的内容应该呈现到的surface
+类型
+说明
+int
+0-成功
+1-失败
+101-虚拟屏不存在
+((IToBServiceProxy)ToBServiceHelper.getInstance().getServiceBinder()).setVirtualDisplaySurface(1, surface);
+int injectEvent(int displayId, InputEvent inputEvent);
+参数名称
+类型
+说明
+displayId
+int 
+虚拟屏id
+inputEvent
+InputEvent 
+需要注入的输入事件，可以是MotionEvent或KeyEvent
+类型
+说明
+int
+0-成功
+1-失败
+101-虚拟屏不存在
+((IToBServiceProxy)ToBServiceHelper.getInstance().getServiceBinder()).injectEvent(1, motionEvent);
+int startApp(int displayId, Intent intent);
+参数名称
+类型
+说明
+displayId
+int 
+虚拟屏id
+intent
+Intent 
+startActivity的intent
+类型
+说明
+int
+0-成功
+1-失败
+101-虚拟屏不存在
+((IToBServiceProxy)ToBServiceHelper.getInstance().getServiceBinder()).startApp(1, intent);
+int releaseVirtualDisplay(int displayId);
+参数名称
+类型
+说明
+displayId
+int 
+虚拟屏id
+类型
+说明
+int
+0-成功
+1-失败
+101-虚拟屏不存在
+((IToBServiceProxy)ToBServiceHelper.getInstance().getServiceBinder()).releaseVirtualDisplay(1);
+int startLeftControllerPair();
+类型
+说明
+int
+0-成功
+1-失败
+((IToBServiceProxy)ToBServiceHelper.getInstance().getServiceBinder()).startLeftControllerPair();
+int makeLeftControllerUnPair();
+类型
+说明
+int
+0-成功
+1-失败
+((IToBServiceProxy)ToBServiceHelper.getInstance().getServiceBinder()).makeLeftControllerUnPair();
+int startRightControllerPair();
+类型
+说明
+int
+0-成功
+1-失败
+((IToBServiceProxy)ToBServiceHelper.getInstance().getServiceBinder()).startRightControllerPair();
+int makeRightControllerUnPair();
+类型
+说明
+int
+0-成功
+1-失败
+((IToBServiceProxy)ToBServiceHelper.getInstance().getServiceBinder()).makeRightControllerUnPair();
+int stopControllerPair();
+类型
+说明
+int
+0-成功
+1-失败
+((IToBServiceProxy)ToBServiceHelper.getInstance().getServiceBinder()).stopControllerPair();
+int setControllerPreferHand(boolean isLeft);
+参数名称
+类型
+说明
+isLeft
+boolean
+true:左手柄
+false:右手柄
+类型
+说明
+int
+0-成功
+1-失败
+((IToBServiceProxy)ToBServiceHelper.getInstance().getServiceBinder()).setControllerPreferHand(true);
+int setControllerVibrateAmplitude(int value);
+参数名称
+类型
+说明
+value
+int
+取值范围：0-6
+类型
+说明
+int
+0-成功
+1-失败
+((IToBServiceProxy)ToBServiceHelper.getInstance().getServiceBinder()).setControllerVibrateAmplitude(1);
+int onlineSystemUpdate(ISystemUpdateCallback systemUpdateCallback);
+参数名称
+类型
+说明
+systemUpdateCallback
+ISystemUpdateCallback
+在线升级状态、进度、结果回调
+状态码、错误码见：
+OnlineSystemUpdateErrorCode
+OnLineSystemUpdateStatusCode
+类型
+说明
+int
+接口调用结果：
+0-成功
+1-失败
+2-权限验证失败
+-1-接口废弃
+-2-设备不支持
+((IToBServiceProxy)ToBServiceHelper.getInstance().getServiceBinder()).onlineSystemUpdate(new ISystemUpdateCallback(){...});
+int offlineSystemUpdate(OffLineSystemUpdateConfig systemUpdateConfig, ISystemUpdateCallback systemUpdateCallback);
+参数名称
+类型
+说明
+systemUpdateConfig
+OffLineSystemUpdateConfig
+
+离线升级参数配置类
+systemUpdateCallback
+ISystemUpdateCallback
+
+在线升级状态、进度、结果回调
+状态码、错误码见：
+OfflineSystemUpdateErrorCode
+OffLineSystemUpdateStatusCode
+类型
+说明
+int
+接口调用结果：
+0-成功
+1-失败
+2-权限验证失败
+-1-接口废弃
+-2-设备不支持
+((IToBServiceProxy)ToBServiceHelper.getInstance().getServiceBinder()).offlineSystemUpdate(new OffLineSystemUpdateConfig(), new ISystemUpdateCallback(){...});
+int recenter();
+类型
+说明
+int
+接口调用结果：
+0-成功
+1-失败
+((IToBServiceProxy)ToBServiceHelper.getInstance().getServiceBinder()).recenter();
+String setMotionTrackerAutoStart(int enable);
+参数名称
+类型
+说明
+enable
+
+String
+0-关闭
+1-打开
+类型
+说明
+String
+1-失败，-2-设备不支持，
+track1SN:track1Result,track2SN:track2Result,xxx
+((IToBServiceProxy)ToBServiceHelper.getInstance().getServiceBinder()).setMotionTrackerAutoStart(1);
+int startSwiftTrackerPairing(int trackerId);
+参数名称
+类型
+说明
+trackerId
+
+int
+ tracker id，0表示所有tracker
+类型
+说明
+int
+0表示成功，其他表示失败
+((IToBServiceProxy)ToBServiceHelper.getInstance().getServiceBinder()).startSwiftTrackerPairing(0);
+int unBondSwiftTracker(int trackerId);
+参数名称
+类型
+说明
+trackerId
+
+int
+
+ tracker id，0表示所有tracker
+类型
+说明
+int
+0表示成功，其他表示失败
+((IToBServiceProxy)ToBServiceHelper.getInstance().getServiceBinder()).unBondSwiftTracker(0);
+int fileSync();
+类型
+说明
+int
+0-成功，1-失败
+((IToBServiceProxy)ToBServiceHelper.getInstance().getServiceBinder()).fileSync();

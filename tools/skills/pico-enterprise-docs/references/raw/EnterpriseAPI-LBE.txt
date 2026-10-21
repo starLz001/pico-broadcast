@@ -1,0 +1,516 @@
+实现多设备共享同一地图，处于统一坐标系中，虚拟场景中的位置与真实世界的位置一致。可以支持VR虚拟大空间中的多人协作、多人对战等场景。
+只支持6DOF设备，即PICO Neo3 Pro，PICO 4E ，Neo3企业版
+*接口列表
+*
+*pbsSwitchLargeSpaceScene
+开关大空间接口
+ 
+适用设备
+只支持6DOF设备，即PICO Neo3 Pro，PICO 4E ，Neo3企业版
+入参说明
+*
+返回值
+无
+调用示例
+ 
+*pbsGetSwitchLargeSpaceStatus
+获取大空间开关状态
+ 
+适用设备
+只支持6DOF设备，即PICO Neo3 Pro，PICO 4E ，Neo3企业版
+入参说明
+*
+返回值
+无
+调用示例
+ 
+*pbsExportMaps
+导出地图文件
+ 
+适用设备
+只支持6DOF设备，即PICO Neo3 Pro，PICO 4E ，Neo3企业版
+入参说明
+*
+返回值
+无
+调用示例
+ 
+*pbsImportMaps
+导入地图文件
+导入地图文件，需要将地图文件拷贝到内部存储/maps/文件夹中，再调用接口
+ 
+适用设备
+只支持6DOF设备，即PICO Neo3 Pro，PICO 4E ，Neo3企业版
+入参说明
+*
+返回值
+无
+调用示例
+ 
+*setMarkerInfoCallback
+获取marker点位姿和ID
+设置Marker点数据回调，系统扫描到Marker点后通过接口将数据回调给客户端
+ 
+适用设备
+只支持6DOF设备，即PICO Neo3 Pro，PICO 4E ，Neo3企业版【PUI5.8.0】
+入参说明
+*
+返回值
+*
+调用示例
+ 
+*gotoSeeThroughFloorSetting
+调整地面高度接口
+ 
+适用设备
+只支持6DOF设备，即PICO Neo3 Pro，PICO 4E ，Neo3企业版
+入参说明
+*
+返回值
+*
+调用示例
+ 
+
+*isMapInEffect
+判断某个地图是否正在使用中
+ 
+适用设备
+只支持6DOF设备，即PICO Neo3 Pro，PICO 4E ，Neo3企业版【PUI5.8.0】
+入参说明
+*
+返回值
+无
+调用示例
+ 
+*importMapByPath
+导入地图，支持地图压缩包
+ 
+适用设备
+只支持6DOF设备，即PICO Neo3 Pro，PICO 4E ，Neo3企业版【PUI5.8.0及以上】
+入参说明
+*
+返回值
+无
+调用示例
+ 
+*gotoEnvironmentTextureCheck
+进行环境纹理检测
+ 
+适用设备
+只支持6DOF设备，即PICO Neo3 Pro，PICO 4E ，Neo3企业版
+入参说明
+无
+返回值
+*
+调用示例
+ 
+*getLargeSpaceBoundsInfo
+获取大空间围栏信息
+ 
+适用设备
+只支持6DOF设备，即PICO Neo3 Pro，PICO 4E ，Neo3企业版
+入参说明
+无
+返回值
+*
+调用示例
+ 
+*openLargeSpaceQuickMode
+打开大空间快捷模式
+ 
+适用设备
+只支持6DOF设备，即PICO Neo3 Pro，PICO 4E ，Neo3企业版，Sparrow
+入参说明
+*
+返回值
+无
+调用示例
+ 
+*closeLargeSpaceQuickMode
+关闭大空间快捷模式
+ 
+适用设备
+只支持6DOF设备，即PICO Neo3 Pro，PICO 4E ，Neo3企业版，Sparrow
+入参说明
+无
+返回值
+无
+调用示例
+ 
+*setOriginOfLargeSpaceQuickMode
+设置大空间快捷模式原点和正方向
+ 
+适用设备
+只支持6DOF设备，即PICO Neo3 Pro，PICO 4E ，Neo3企业版，Sparrow
+入参说明
+*
+返回值
+无
+调用示例
+ 
+*setBoundaryOfLargeSpaceQuickMode
+设置大空间快捷模式安全区大小
+ 
+适用设备
+只支持6DOF设备，即PICO Neo3 Pro，PICO 4E ，Neo3企业版，Sparrow
+入参说明
+*
+返回值
+无
+调用示例
+ 
+*getLargeSpaceQuickModeInfo
+获取大空间快捷模式信息
+ 
+适用设备
+只支持6DOF设备，即PICO Neo3 Pro，PICO 4E ，Neo3企业版，Sparrow
+入参说明
+无
+返回值
+*
+调用示例
+ 
+*getLargeSpaceBoundsInfoWithType
+获取大空间围栏信息
+ 
+适用设备
+Sparrow_PUI5130
+入参说明
+无
+返回值
+*
+调用示例
+ 
+*resetTracking
+重启定位追踪
+ 
+适用设备
+Sparrow_PUI5130
+入参说明
+无
+返回值
+*
+调用示例
+ 
+*setLargeSpaceMapScale
+设置大空间地图比例
+ 
+适用设备
+PICO4 UE
+入参说明
+*
+返回值
+*
+调用示例
+ 
+接口
+说明
+pbsSwitchLargeSpaceScene
+设备打开大空间模式
+pbsGetSwitchLargeSpaceStatus
+查看大空间模式是否打开
+pbsExportMaps
+导出大空间地图，导出后，可以给其他设备使用
+pbsImportMaps
+导入从别的设备导出的地图
+setMarkerInfoCallback
+设置marker点数据回调，系统扫描到锚点后，通过回调把数据传个客户端，客户端可以使用锚点完成：
+*通过ArUco识别点确认虚拟场景不同房间位置，实现房间快速切换
+*增加与真实场景互动能力
+gotoEnvironmentTextureCheck
+打开环境纹理检测页面
+void pbsSwitchLargeSpaceScene(IBoolCallback callback, boolean open, int ext);
+参数名称
+类型
+说明
+callback
+IBoolCallback
+返回result，true-成功 false-失败
+open
+boolean 
+true 打开
+false 关闭
+ext
+int 
+扩展位，无意义
+ToBServiceHelper.getInstance().getServiceBinder().pbsSwitchLargeSpaceScene (new IBoolCallback.Stub() {
+                    @Override
+                    public void callBack(boolean result) throws RemoteException {
+                    }
+                 }, open, 0);
+void pbsGetSwitchLargeSpaceStatus(IStringCallback callback, int ext);
+参数名称
+类型
+说明
+callback
+IStringCallback
+返回状态值，1-打开， 0或null-关闭
+ext
+int 
+扩展位，无意义
+ToBServiceHelper.getInstance().getServiceBinder().pbsGetSwitchLargeSpaceStatus (new IStringCallback .Stub() {
+                    @Override
+                    public void callBack(String result) throws RemoteException {
+                    }
+                 }, 0);
+void pbsExportMaps(IBoolCallback callback, int ext);
+参数名称
+类型
+说明
+callback
+IBoolCallback
+返回result，true-成功 false-失败
+ext
+int 
+
+0 导出地图压缩包
+1001只导出原点文件（PUI5.8.0以上版本已弃用）
+1002只导出地图（PUI5.8.0以上版本已弃用）
+
+ToBServiceHelper.getInstance().getServiceBinder().pbsExportMaps(new IBoolCallback.Stub() {
+                @Override
+                public void callBack(boolean result) throws RemoteException {
+                }
+            }, 0);
+void pbsImportMaps(IBoolCallback callback, int ext);
+参数名称
+类型
+说明
+callback
+IBoolCallback
+返回result，true-成功 false-失败
+ext
+int 
+扩展位，无意义
+ToBServiceHelper.getInstance().getServiceBinder().pbsImportMaps(new IBoolCallback.Stub() {
+                @Override
+                public void callBack(boolean result) throws RemoteException {
+                }
+            }, 0);
+int setMarkerInfoCallback(Consumer<MarkerInfo[]> markerInfoCallback);
+参数名称
+类型
+说明
+markerInfoCallback
+Consumer<MarkerInfo[]>
+回调MarkerInfo数组
+ext
+int 
+扩展位，无意义
+类型
+说明
+int 
+0-成功，1-失败
+ToBServiceHelper.getInstance().getServiceBinder().setMarkerInfoCallback(new Consumer<MarkerInfo[]>() {
+    @Override
+    public void accept(MarkerInfo[] markerInfos) {
+        //对Marker点数据的处理     
+    }
+});
+int gotoSeeThroughFloorSetting(int ext);
+参数名称
+类型
+说明
+ext
+int 
+扩展位，无意义
+类型
+说明
+int 
+*0-成功
+*1-失败
+ToBServiceHelper.getInstance().getServiceBinder().gotoSeeThroughFloorSetting(0);
+void isMapInEffect(String path, IIntCallback callback, int ext);
+参数名称
+类型
+说明
+path
+String
+地图压缩包路径
+callback
+IIntCallback
+结果回调：
+0 - 成功
+1 - 失败
+101 - 文件不存在，
+102 - 文件解压失败
+103 - 地图文件损坏
+104 - 定位追踪关闭
+106 - 获取当前地图信息错误
+107 - path参数为空
+ext
+int 
+扩展位，无意义
+ToBServiceHelper.getInstance().getServiceBinder().isMapInEffect("/sdcard/maps/export/test1.zip",new IIntCallback.Stub(){
+    void callback(result: Int) {
+        
+    }
+},0)
+void importMapByPath(String path, IIntCallback callback, int ext);
+参数名称
+类型
+说明
+path
+String
+地图压缩包路径
+callback
+IIntCallback
+导入地图结果回调：
+0 - 成功
+1 - 失败
+101 - 文件不存在，
+102 - 文件解压失败
+103 - 地图文件损坏
+104 - 定位追踪关闭
+107 - path参数为空
+ext
+int 
+扩展位，无意义
+ToBServiceHelper.getInstance().getServiceBinder().importMapByPath("/sdcard/maps/export/test1.zip",new IIntCallback.Stub(){
+     void  callback(result: Int) {
+        
+    }
+},0)；
+int gotoEnvironmentTextureCheck();
+类型
+说明
+int 
+*0-成功
+*1-失败
+*-1-设备不支持
+ToBServiceHelper.getInstance().getServiceBinder().gotoEnvironmentTextureCheck();
+Point3D[] getLargeSpaceBoundsInfo();
+类型
+说明
+Point3D[]
+大空间围栏信息
+((IToBServiceProxy)ToBServiceHelper.getInstance().getServiceBinder()).getLargeSpaceBoundsInfo();
+void openLargeSpaceQuickMode(int length, int width, int originType, boolean openVst, float distance, int timeout, Consumer<Integer> callback);
+参数名称
+类型
+说明
+length
+int
+长度，单位米，范围3-30
+width
+int
+宽度，单位米，范围3-30
+originType
+int 
+原点方式： 0-自动设定，1-扫描marker设定
+openVst
+boolean
+扫描mark设定原点是否需要打开透视模式
+distance
+float
+扫描mark后原点距离mark的距离，最低0.5m,
+timeout
+int
+非透视模式下扫描mark超时时长，单位毫秒，默认10000
+callback
+Consumer<Integer>
+执行结果回调
+ 0 - 成功
+ 1 - 失败
+ -3 - 参数超出范围
+ 104 - 定位追踪关闭
+ 201 - 快捷模式已打开
+ 203 - 不支持的设置原点方式
+ 204 - 扫描mark超时
+((IToBServiceProxy)ToBServiceHelper.getInstance().getServiceBinder()).openLargeSpaceQuickMode(10,10,0,true, 1.0,1000, new Consumer<Integer>(){});
+void closeLargeSpaceQuickMode();
+((IToBServiceProxy)ToBServiceHelper.getInstance().getServiceBinder()).closeLargeSpaceQuickMode();
+void setOriginOfLargeSpaceQuickMode(int originType, boolean openVst, float distance, int timeout, Consumer<Integer> callback);
+参数名称
+类型
+说明
+originType
+int 
+原点方式： 0-自动设定，1-扫描mark设定
+openVst
+boolean
+扫描mark设定原点是否需要打开透视模式
+distance
+float
+扫描mark后原点距离mark的距离，最低0.5m,
+timeout
+int
+非透视模式下扫描mark超时时长，单位毫秒，默认10000
+callback
+
+Consumer<Integer>
+执行结果回调
+ 0 - 成功
+ 1 - 失败
+ -3 - 参数超出范围
+ 104 - 定位追踪关闭
+ 202 - 快捷模式已关闭
+ 203 - 不支持的设置原点方式
+ 204 - 扫描mark超时
+((IToBServiceProxy)ToBServiceHelper.getInstance().getServiceBinder()).setOriginOfLargeSpaceQuickMode(0, false, 1.0f, 1000, new Consumer<Integer>(){});
+ void setBoundaryOfLargeSpaceQuickMode(int length, int width, Consumer<Integer> callback);
+参数名称
+类型
+说明
+length
+int
+长度，单位米，范围3-30
+width
+int
+宽度，单位米，范围3-30
+callback
+
+Consumer<Integer>
+执行结果回调
+ 0 - 成功
+ 1 - 失败
+ -3 - 参数超出范围
+ 104 - 定位追踪关闭
+ 202 - 快捷模式已关闭
+((IToBServiceProxy)ToBServiceHelper.getInstance().getServiceBinder()).setBoundaryOfLargeSpaceQuickMode(10, 10);
+LargeSpaceQuickModeInfo getLargeSpaceQuickModeInfo();
+类型
+说明
+LargeSpaceQuickModeInfo
+大空间快捷模式信息
+((IToBServiceProxy)ToBServiceHelper.getInstance().getServiceBinder()).getLargeSpaceQuickModeInfo();
+LargeSpaceBoundsInfo[] getLargeSpaceBoundsInfoWithType();
+类型
+说明
+LargeSpaceBoundsInfo[]
+大空间围栏信息
+((IToBServiceProxy)ToBServiceHelper.getInstance().getServiceBinder()).getLargeSpaceBoundsInfo();
+int resetTracking();
+类型
+说明
+int
+0-成功，1-失败
+((IToBServiceProxy)ToBServiceHelper.getInstance().getServiceBinder()).resetTracking();
+int setLargeSpaceMapScale(float scale, Consumer<Integer> callback);
+参数名称
+类型
+说明
+scale
+float
+大空间地图比例
+callback
+
+Consumer<Integer>
+
+执行结果回调:
+0-大空间比例设置成功
+1-大空间比例设置失败
+-3-参数超出范围(0.9-1.1)
+101-Slam V1算法不支持设置地图比例
+102-大空间快捷模式不支持
+103-大空间关闭
+104-导出地图中
+105-导出地图成功
+106-导出地图失败
+107-重启定位追踪失败
+类型
+说明
+int
+0-接口调用成功
+-4-接口调用失败，当前企业设置不支持，需要更新企业设置
+((IToBServiceProxy)ToBServiceHelper.getInstance().getServiceBinder()).setLargeSpaceMapScale(0.99, new Consumer<Integer>(){});

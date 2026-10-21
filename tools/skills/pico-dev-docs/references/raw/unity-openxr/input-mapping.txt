@@ -1,0 +1,296 @@
+手柄&头戴输入映射
+========================================
+手柄和头戴是用户与应用交互的媒介。通过操作手柄或头戴，用户可在系统或应用内完成一系列操作，例如：按下返回键，退出当前场景；点击按钮，确认相关设置。每个手柄/头戴操作都会被映射为输入事件。
+*环境要求
+*PICO 设备型号：PICO Neo3 系列、PICO 4 系列、PICO 4 Ultra 系列
+*PICO 设备系统版本：5.11.0 及以上
+*手柄按键映射
+*PICO 4 Ultra 手柄按键示意图
+* 
+*PICO 4 手柄按键示意图
+* 
+* 
+*PICO Neo3 手柄按键示意图
+* 
+* 
+*前提条件
+确保已为应用开启手柄按键映射能力。若未开启，参考快速开始指南中的《开启手柄映射》部分进行开启。
+*手柄按键映射参考表
+若需要从手柄处获得按键状态输入（例如：按下特定按键），须调用新的 Unity 输入系统接口进行适配。
+下表是手柄按键与 Unity 接口参数的对应关系。
+*
+*头戴按键映射
+*PICO 4 Ultra 头戴按键示意图
+* 
+*PICO 4 头戴按键示意图
+* 
+*PICO Neo3 头戴按键示意图
+* 
+* 
+*前提条件
+确保已为应用开启 PICO XR 能力。若未开启，参考快速开始指南的《开启 PICO XR 能力》部分进行开启。
+*头戴按键映射参考表
+*若需要从手柄处获得按键状态输入（例如：按下特定按键），须调用新的 Unity 输入系统接口进行适配。
+*
+
+
+
+
+
+*Neo3 & PICO 4 & PICO 4 Ultra 手柄
+
+
+
+*Unity 新输入系统（Unity New Input System）
+
+
+
+
+
+
+
+
+
+*Binding > Path > Input
+*提示：以下以左手 LeftHand 为例，右手只需要替换为 RightHand。
+
+*XR Controller > Optional Controls
+*提示：数据来自通用接口。
+
+*XR Controller > PICO TOUCH Controller(OpenXR)
+*提示：数据来自 PICO Unity OpenXR SDK 的接口。
+
+A/X
+click
+*<XRController>
+*{LeftHand}/{primaryButton}
+*primaryButton
+*primaryButton
+
+
+touch
+*<XRController>
+*{LeftHand}/{PrimaryTouch}
+*primaryTouched
+*primaryTouched
+B/Y
+click
+*<XRController>
+*{LeftHand}/{secondaryButton}
+*secondaryButton
+*secondaryButton
+
+
+touch
+*<XRController>
+*{LeftHand}/{secondaryTouch}
+*secondaryTouched
+*secondaryTouched
+Joystick
+click
+*<XRController>
+*{LeftHand}/{primary2DAxisClick}
+*primary2DAxisClick
+*/
+*thumbstickClicked
+*thumbstickClicked
+
+
+touch
+*<XRController>
+*{LeftHand}/{primary2DAxisTouch}
+*primary2DAxisTouch
+*/
+*thumbstickTouched
+*thumbstickTouched
+
+
+up
+*<XRController>
+*{LeftHand}/{primary2DAxis}
+*Vector2
+*primary2DAxis
+*/
+*thumbstick
+*Vector2
+*thumbstick
+
+
+down
+
+
+
+
+
+
+
+
+left
+
+
+
+
+
+
+
+
+right
+
+
+
+
+
+
+Trigger
+click
+*<XRController>
+*{LeftHand}/{triggerButton}
+*triggerPressed
+*triggerPressed
+
+
+touch
+*<XRController>
+*{LeftHand}/{TriggerTouch}
+*triggerTouched
+*triggerTouched
+
+
+axis
+*<XRController>
+*{LeftHand}/{trigger}
+*trigger
+*trigger
+Grip
+click
+*<XRController>
+*{LeftHand}/{gripButton}
+*gripPressed
+*gripPressed
+
+
+axis
+*<XRController>
+*{LeftHand}/{grip}
+*grip
+*grip
+Menu
+click
+*<XRController>
+*{LeftHand}/menu
+*/
+*<XRController>
+*{LeftHand}/system
+*menu
+*menu
+位置
+
+
+*<XRController>
+*{LeftHand}/deviceRotation
+*Vector3
+*devicePosition
+*Vector3
+*devicePosition
+*/
+*devicePose > postion
+旋转
+
+
+*<XRController>
+*{LeftHand}/deviceRotation
+*Quaternion
+*deviceRotation
+*Quaternion
+*deviceRotation
+*/
+*devicePose > rotation
+pointerPosition
+
+
+*<XRController>
+*{LeftHand}/pointerPosition
+*Vector3
+*pointerPosition
+*Vector3
+*pointerPosition
+pointerRotation
+
+
+*<XRController>
+*{LeftHand}/pointerRotation
+*Quaternion
+*pointerRotation
+*Quaternion
+*pointerRotation
+线速度
+
+
+*N/A
+*N/A
+*Vector3
+*devicePose > velocity
+线加速度
+
+
+*N/A
+*N/A
+*N/A
+角速度
+
+
+*N/A
+*N/A
+*Vector3
+*devicePose > angularVelocity
+角加速度
+
+
+*N/A
+*N/A
+*N/A
+
+
+*Neo3 & PICO 4 & PICO 4 Ultra 头戴
+
+*Unity 新输入系统（Unity New Input System）
+
+
+
+
+
+*XR HMD > Optional Controls
+*提示：数据来自通用接口。
+
+*XR HMD > OpenXR HMD
+*提示：数据来自 PICO Unity OpenXR SDK 的接口。
+
+位置
+*XR HMD >
+*Vector3
+*devicePosition /
+*centerEyePosition /
+*leftEyePosition /
+*rightEyePosition /
+*提示：值相同。
+*Vector3
+*devicePosition /
+*centerEyePosition /
+*leftEyePosition /
+*rightEyePosition /
+*提示：值相同。
+旋转
+
+*XR HMD >
+*Quaternion
+*deviceRotation /
+*centerEyeRotation /
+*leftEyeRotation /
+*rightEyeRotation /
+*提示：值相同。
+*Quaternion
+*deviceRotation /
+*centerEyeRotation /
+*leftEyeRotation /
+*rightEyeRotation /
+*提示：值相同。

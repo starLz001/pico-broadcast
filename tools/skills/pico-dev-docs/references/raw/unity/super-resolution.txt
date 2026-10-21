@@ -1,0 +1,55 @@
+超分辨率
+========================================
+超分辨率（Super Resolution）指通过一定算法，基于已知图像信息，获取并补充图像细节和其它数据信息，将低分辨率图像重建为高分辨率图像的技术，提升画面清晰度。
+*环境要求 
+*PICO 设备型号：PICO Neo3 系列、PICO 4 系列、PICO 4 Ultra 系列 
+*PICO 设备系统版本：5.8.0 及以上
+*使用建议
+以 PICO 4 系列设备为例，其屏幕的显示分辨率为 4320 × 2160 像素，但为了平衡功耗与性能，默认的渲染分辨率（即 Eye Buffer 分辨率）为 1504 x 1504 像素。因此，你应用的渲染分辨率通常低于设备屏幕的显示分辨率。在性能受限的情况下，开启超分辨率功能，可以在设备上为用户带来更好的视觉体验。
+若你的应用的渲染分辨率低于默认渲染分辨率，此时不建议开启超分辨率功能，因为使用超分辨率功能将会使图像噪点更加明显。另外，随着应用的渲染分辨率逐渐接近设备屏幕的显示分辨率，使用超分辨率的效果将逐渐减弱。
+与直接提升渲染分辨率相比，使用超分辨率功能消耗的 GPU 资源相对固定。在 GPU 负载较小的场景中，你可选择直接提升渲染分辨率；但在 GPU 负载较大的场景中，推荐你使用超分辨率功能，更合理分配和控制 GPU 资源。
+*注意事项
+*超分辨率会增加合成服务侧 GPU 的压力。对三个以上的图层开启超分辨率可能导致合成服务侧 GPU 资源紧张而产生画面撕裂。SDK 会在 GPU 负载过大时自动关闭超分辨率功能，待 GPU 负载恢复正常后自动开启。
+*超分辨率与锐化功能不能在同一个 Eye Buffer 内同时开启。若同时开启，SDK 将只使用超分辨率功能。
+*超分辨率功能仅对渲染分辨率（即 Eye Buffer）有效，暂不支持合成层。
+*超分辨率与下采样暂时不支持同时开启。
+*在 Unity 编辑器中开启超分辨率模式
+*在 Unity 编辑器中打开你的项目。
+*在 Hierarchy 窗口中，添加 XR Origin。
+*选中 XR Origin，然后在 Inspector 窗口中为其添加 PXR_Manager 脚本。
+*在 PXR_Manager (Script) 面板处，勾选 Super Resolution 选框。
+* 
+*使用接口动态启用/禁用超分辨率模式
+*调用 UPxr_SetSuperResolutionOrSharpening 接口，在应用的运行时动态启用或禁用超分辨率模式。
+ 
+SuperResolutionOrSharpeningType 枚举值如下：
+ 
+*代码示例如下：
+* 
+*最佳实践
+在使用超分辨率功能的同时，为应用设置抗锯齿倍数，进一步提升画面视觉效果。详细步骤参考《抗锯齿》指南。
+*关于锐化
+超分辨率和锐化功能都可以提升图像的清晰度，但具体实现方式不同。超分辨率功能可估算并补充原始图像中没有表现出的图像细节；锐化功能可以提升图像中的高频信息，但仅增强图像中已有的高频成分。若想了解更多 PICO SDK 锐化功能相关信息，参阅《锐化》指南。
+
+
+public static void UPxr_SetSuperResolutionOrSharpening(SuperResolutionOrSharpeningType type);
+
+public enum SuperResolutionOrSharpeningType
+{        
+    None， // 同时关闭超分辨率和锐化模式
+    SuperResolution,  // 开启超分辨率模式（会自动将其他设置为 None）
+    NormalSharpening,  
+    NormalSharpeningAndFixedFoveated, 
+    NormalSharpeningAndSelfAdaptive, 
+    NormalSharpeningAndFixedFoveatedAndSelfAdaptive, 
+    QualitySharpening, 
+    QualitySharpeningAndFixedFoveated,
+    QualitySharpeningAndSelfAdaptive,
+    QualitySharpeningAndFixedFoveatedAndSelfAdaptive,
+}
+
+// 开启超分辨率模式
+PXR_Plugin.Render.UPxr_SetSuperResolutionOrSharpening(SuperResolutionOrSharpeningType.SuperResolution); 
+
+// 关闭超分辨率和锐化模式
+PXR_Plugin.Render.UPxr_SetSuperResolutionOrSharpening(SuperResolutionOrSharpeningType.None);

@@ -1,0 +1,332 @@
+声明 Stage
+========================================
+使用 Stage 前，你需要声明它并设置它的属性。
+*默认 Stage 和非默认 Stage 有不同的声明方式：
+*默认的 Stage 通过 AndroidManifest.xml进行声明。
+*非默认的 Stage 必须在 mainApp 的 DSL 中进行声明，也可以根据需要同时在 AndroidManifest.xml 中进行声明。
+* 
+*声明默认的 Stage
+*你需要为应用指定一个默认的空间容器。在应用启动时，默认的空间容器会首先被打开，展示应用的首个界面。
+* 
+*使用以下步骤，将一个 Stage 声明为默认的空间容器。
+*在 mainApp 中声明默认 WindowContainer
+*在 mainApp 的 SpatialAppScope 作用域内，调用 DefaultStage 函数来定义默认窗口的内容。
+* 
+*在 AndroidManifest.xml 中设置属性
+*在 AndroidManifest.xml 文件中，通过 <meta-data> 标签为默认的 Stage 配置属性。这些属性定义了 Stage 的基础行为和外观。
+* 
+*属性列表
+*你可以为默认 Stage 设置以下属性：
+*
+*声明非默认的 Stage
+*你可以使用以下方法声明非默认的 Stage 并设置它的属性。
+*在 mainApp 中使用 DSL 声明非默认的 Stage 并设置它的属性。
+*在AndroidManifest.xml 文件中声明非默认的 Stage 并设置它的属性。
+* 
+*使用静态 DSL 和 AndroidManifest.xml 声明 Stage
+*下面的示例代码同时使用静态 DSL 和 AndroidManifest.xml 声明非默认 Stage。
+*在静态 DSL 和 AndroidManifest.xml 中，Stage 的 ID 都是 ConfigManifestStage。
+ 
+ 
+*使用静态 DSL、动态属性和 AndroidManifest.xml 声明 Stage
+*下面的示例代码同时使用静态 DSL、动态属性（使用 openStage() 打开 Stage 时传入新的属性）和 AndroidManifest.xml 声明非默认 Stage。在静态 DSL、动态参数和 AndroidManifest.xml中，Stage 的 ID 都是 ConfigManifestStage。
+ 
+ 
+*属性列表
+*你可以为非默认 Stage 设置以下属性：
+*
+*Stage 属性设置说明
+*属性生效优先级
+*属性配置遵循以下从高到低的优先级顺序：
+*使用 OpenStage() 函数打开 Stage 时动态生效的属性。
+*DSL 中声明的属性。
+*在 AndroidManifest.xml 中声明的属性。
+*当不同来源设置了相同的属性时，高优先级的配置会覆盖低优先级的配置。系统会合并所有来源设置的不同属性。
+ 
+*如果某个属性未被赋值，则会采用以下系统默认值。
+ 
+*属性设置示例
+*以 DSL 为例，如果应用采用了 Stage 作为默认空间容器，并且还使用了另一个名为 “OtherStage” 的 Stage，且它们的内容分别为 HomeContent() 和 OtherStageContent() ，则需要在 mainApp 中需要进行如下设置：
+ 
+*设置默认沉浸度和沉浸度可调节区间
+*在空间应用中，沉浸度会影响虚拟场景与真实世界的融合程度。对于样式为 Progressive 的 Stage，你需要在声明时为其设置默认沉浸度和沉浸度可调节区间，然后可以在用户使用过程中监听这类 Stage 的沉浸度变化。
+*设置默认沉浸度和可调节区间
+*你可以通过以下属性设置 Stage 的初始沉浸度和沉浸度的可调节区间。打开 Stage 时，这些设置会立即生效。
+*Immersion.defaultValue：默认沉浸度
+*Immersion.minValue：最小沉浸度
+*Immersion.maxValue：最大沉浸度
+* 
+*监听沉浸度变化
+*你可以通过 StageImmersionManager 接口监听沉浸度的变化。
+* 
+*注意事项
+*如果你的应用的入口界面未通过 “DefaultStage + SpatialUI” 来声明，则无需在 SpatialAppScope 中添加 DefaultStage，也无需在 AndroidManifest.xml 文件中为默认的空间容器设置属性。
+
+声明非默认的 Stage 并不会使其在应用启动时自动打开。
+*应用启动时仅会自动打开默认空间容器；非默认的 Stage 需要你在代码中显式调用 openStage() 才会打开。详情参阅《打开或关闭 Stage》。
+
+*你只能为应用声明一个默认空间容器。
+*若需要将一个 WindowContainer 设置为默认的空间容器，参考《声明 WindowContainer》。
+
+fun mainApp(scope: SpatialAppScope) = with(scope) {
+    DefaultStage {
+        MainStageContent() // 默认 Stage 的内容，为一个 Composable 函数
+    }
+ }
+ 
+ @Composable
+ fun MainStageContent() {
+     // ...
+ }
+
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <application
+        android:name=".platform.SpatialApplication"
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        android:fullBackupContent="@xml/backup_rules"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.SpatialApp"
+        tools:targetApi="31">
+
+        <activity
+            android:name=".platform.LaunchActivity"
+            android:exported="true"
+            android:theme="@style/Theme.SpatialApp">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+            
+            <meta-data
+                android:name="pico.spatial.stage.id"
+                android:value="your_stage_name" />
+            <meta-data android:name="pico.spatial.stage.style" android:value="1" />
+        </activity>
+    </application>
+
+</manifest>
+
+
+
+*属性
+
+*描述
+
+pico.spatial.stage.id
+
+任意唯一的字符串，表示 Stage 的名字。
+
+pico.spatial.stage.style
+
+Stage 的样式，用于控制真实环境的视频透视（Video see-through, VST）与虚拟场景的融合方式，以及基于图像的环境光照（Image-based lighting, IBL）和虚拟实体的渲染行为。
+*"0"：对应 StageStyle.Automatic，表示样式由系统决定。
+*"1"：对应 StageStyle.Mixed，虚拟实体始终被渲染，且基于图像的环境光照完全来自真实环境的视频透视。
+*下图展示了 Mixed 样式下的场景。在这个示例中，一个虚拟的金属小球被天空球包裹。尽管天空球使用了“夜间美术馆”贴图并开启了基于图像的环境光照，但小球反射的仍是真实环境（卧室）的视频透视。这是因为 Mixed 模式下的环境光照完全来自真实房间的视频透视，而非夜间美术馆。
+* 
+*"2"：对应 StageStyle.Progressive：允许你通过调节沉浸度从而改变真实环境的视频透视与虚拟实体的融合方式。你可以通过 Stage 的 immersion 参数设置沉浸度。沉浸度的取值范围为 0~100：
+*immersion 为 0：体验接近 Mixed 样式，你仍然可以看到真实环境。但与 Mixed 样式不同的是，虚拟实体不被渲染。因此，金属球和夜间美术馆都会消失。
+*immersion 大于 0 且小于 100：随着immersion数值提高：真实环境的渲染程度逐渐降低；虚拟实体渲染的程度逐渐提升。
+*immersion 为 100：等同于 Full 样式。详情参阅 Full 样式的描述。
+*下图展示了 Progressive 样式下 immersion 为 50 时的场景。在这个示例中，一个虚拟的金属小球被天空球包裹。天空球使用了“夜间美术馆”贴图并开启了基于图像的环境光照。你可以看到，金属球的反射效果是真实环境（卧室）的视频透视与夜间美术馆的混合。其中，金属球的正面是真实环境的视频透视，边缘和背面是美术馆。
+* 
+*"3"：对应 StageStyle.Full：虚拟实体始终被渲染，且基于图像的环境光照完全来自虚拟场景。因此，如果你不设置虚拟场景，应用将因缺少光照而显示为纯黑背景。
+*下图展示了 Full 样式下的场景。在这个示例中，一个虚拟的金属小球被天空球包裹。天空球使用了“夜间美术馆”贴图并开启了基于图像的环境光照。你可以看到，金属球完全反射虚拟的夜间美术馆。真实环境（卧室）被完全屏蔽。
+* 
+
+pico.spatial.stage.immersion
+
+Stage 打开后展现的默认沉浸度，取值范围为 [0, 100] 的整数，默认值为 "50"。
+*该属性仅对样式为 Progressive 的 Stage 有效。需在声明时设置。
+
+pico.spatial.stage.immersion_min
+
+Stage 打开时，允许用户调节的最小沉浸度，取值范围为 [0, 100] 的整数，默认值为 "0"。
+*该属性仅对样式为 Progressive 的 Stage 有效。需在声明时设置。
+
+pico.spatial.stage.immersion_max
+
+Stage 打开时，允许用户调节的最大沉浸度，取值范围为 [0, 100] 的整数，默认值为 "100"。
+*该属性仅对样式为 Progressive 的 Stage 有效。需在声明时设置。
+
+pico.spatial.stage.upperlimb
+
+控制上肢在 Stage 中的可见效果。
+*0：跟随系统设置。
+*1：上肢可见。
+*2：上肢不可见。
+
+*如果你在 AndroidManifest.xml 文件中声明了非默认的 Stage，则必须同时在 DSL 中使用相同的容器 ID 对其进行声明。否则，该 Stage 将无法加载任何 Composable 内容。
+*当你通过不同方法（例如 DSL 和 AndroidManifest.xml）为同一个属性设置了不同的值时，系统会根据一个既定的优先级顺序来决定最终哪个值会生效。详情参阅《 》。
+
+Stage(
+    id = "ConfigManifestStage",
+    immersion = Immersion(70, 20, 90),
+    upperLimbRenderMode = UpperLimbRenderMode.Visible,
+) {
+    SampleBase("ConfigManifestStage") { ConfigStageSample() }
+}
+ 
+// 不传入新属性
+LocalSpatialNavigator.current.openStage("ConfigManifestStage")
+
+<activity
+    android:name=".containers.ConfigManifestStageActivity"
+    android:exported="true">
+
+    <meta-data android:name="pico.spatial.stage.id"
+        android:value="ConfigManifestStage"/>
+    <meta-data android:name="pico.spatial.stage.style" android:value="3" />
+    <meta-data android:name="pico.spatial.stage.immersion" android:value="60" />
+    <meta-data android:name="pico.spatial.stage.brightness" android:value="bright" />
+    <meta-data android:name="pico.spatial.stage.upperlimb" android:value="2" />
+
+</activity>
+
+Stage(
+    id = "ConfigManifestStage",
+    immersion = Immersion(70, 20, 90),
+    upperLimbRenderMode = UpperLimbRenderMode.Visible,
+) {
+    SampleBase("ConfigManifestStage") { ConfigStageSample() }
+}
+
+// 打开时传入新的属性
+LocalSpatialNavigator.current.openStage(
+    "ConfigManifestStage",
+    style = StageStyle.Mixed,
+    upperLimbRenderMode = UpperLimbRenderMode.Visible,
+)
+
+<activity
+    android:name=".containers.ConfigManifestStageActivity"
+    android:exported="true">
+
+    <meta-data android:name="pico.spatial.stage.id"
+        android:value="ConfigManifestStage"/>
+    <meta-data android:name="pico.spatial.stage.style" android:value="3" />
+    <meta-data android:name="pico.spatial.stage.immersion" android:value="60" />
+    <meta-data android:name="pico.spatial.stage.brightness" android:value="bright" />
+    <meta-data android:name="pico.spatial.stage.upperlimb" android:value="2" />
+
+</activity>
+
+
+
+*DSL 属性
+
+AndroidManifest.xml 属性
+
+*描述
+
+id
+
+pico.spatial.stage.id
+
+任意唯一的字符串，表示 Stage 的名字。
+
+style
+
+pico.spatial.stage.style
+
+Stage 的样式，用于控制真实环境的视频透视（Video see-through, VST）与虚拟场景的融合方式，以及基于图像的环境光照（Image-based lighting, IBL）和虚拟实体的渲染行为。当前，系统的默认设置为 Mixed 样式。
+*StageStyle.Automatic：样式由系统决定。
+*StageStyle.Mixed：虚拟实体始终被渲染，且基于图像的环境光照完全来自真实环境的视频透视。
+*下图展示了 Mixed 样式下的场景。在这个示例中，一个虚拟的金属小球被天空球包裹。尽管天空球使用了“夜间美术馆”贴图并开启了基于图像的环境光照，但小球反射的仍是真实环境（卧室）的视频透视。这是因为 Mixed 模式下的环境光照完全来自真实房间的视频透视，而非夜间美术馆。
+* 
+*StageStyle.Progressive：允许你通过调节沉浸度从而改变真实环境的视频透视与虚拟实体的融合方式。你可以通过 Stage 的 immersion 参数设置沉浸度。沉浸度的取值范围为 0~100：
+*immersion 为 0：体验接近 Mixed 样式，你仍然可以看到真实环境。但与 Mixed 样式不同的是，虚拟实体不被渲染。因此，金属球和夜间美术馆都会消失。
+*immersion 大于 0 且小于 100：随着immersion数值提高：真实环境的渲染程度逐渐降低；虚拟实体渲染的程度逐渐提升。
+*immersion 为 100：等同于 Full 样式。详情参阅 Full 样式的描述。
+*下图展示了 Progressive 样式下 immersion 为 50 时的场景。在这个示例中，一个虚拟的金属小球被天空球包裹。天空球使用了“夜间美术馆”贴图并开启了基于图像的环境光照。你可以看到，金属球的反射效果是真实环境（卧室）的视频透视与夜间美术馆的混合。其中，金属球的正面是真实环境的视频透视，边缘和背面是美术馆。
+* 
+*StageStyle.Full：虚拟实体始终被渲染，且基于图像的环境光照完全来自虚拟场景。因此，如果你不设置虚拟场景，应用将因缺少光照而显示为纯黑背景。
+*下图展示了 Full 样式下的场景。在这个示例中，一个虚拟的金属小球被天空球包裹。天空球使用了“夜间美术馆”贴图并开启了基于图像的环境光照。你可以看到，金属球完全反射虚拟的夜间美术馆。真实环境（卧室）被完全屏蔽。
+* 
+
+Immersion.defaultValue
+
+pico.spatial.stage.immersion
+
+Stage 打开后展现的默认沉浸度，Int 类型，取值范围为 [0, 100]，默认值为 50。
+*该属性仅对样式为 Progressive 的 Stage 有效。需在声明时设置。
+
+Immersion.minValue
+
+pico.spatial.stage.immersion_min
+
+Stage 打开时，允许用户调节的最小沉浸度，Int 类型，取值范围为 [0, 100]，默认值为 0。
+*该属性仅对样式为 Progressive 的 Stage 有效。需在声明时设置。
+
+Immersion.maxValue
+
+pico.spatial.stage.immersion_max
+
+Stage 打开时，允许用户调节的最小沉浸度，Int 类型，取值范围为 [0, 100]，默认值为 100。
+*该属性仅对样式为 Progressive 的 Stage 有效。需在声明时设置。
+
+upperLimbRenderMode
+
+pico.spatial.stage.upperlimb
+
+控制上肢在 Stage 中的可见效果。
+*0：跟随系统设置。
+*1：上肢可见。
+*2：上肢不可见。
+
+// 使用 OpenStage() 函数打开 Stage 时传入属性
+LocalSpatialNavigator.current.openStage(
+    "sample",
+    style = StageStyle.Mixed,
+    upperLimbRenderMode = UpperLimbRenderMode.Visible,
+)
+// 注册静态属性的容器
+Stage(id = "sample", immersion = Immersion.Default) {
+    Sample() 
+}
+
+immersion = Immersion.Default,
+brightness = Brightness.Automatic,
+style = StageStyle.Automatic,
+upperLimbRenderMode = UpperLimbRenderMode.Default,
+
+fun SpatialAppScope.mainApp() { 
+    // 设置默认 Stage 的内容
+    DefaultStage { 
+        HomeContent() 
+    } 
+     
+    // 设置名为 “OtherStage” 的 Stage 的属性和内容
+    Stage(id = "OtherStage", immersion = Immersion(min = 0, max = 100, default = 50)) {
+        OtherStageContent()
+    }
+} 
+
+Stage(
+    ...
+    immersion = Immersion(min = 0, max = 100, default = 50)
+    ...
+) {...}
+
+@Composable
+fun Demo() {
+    val localProgressiveImmersion = LocalStageImmersionManager.current
+    val currentImmersionLevel by localProgressiveImmersion.currentImmersionLevel
+    DisposableEffect(localProgressiveImmersion) {
+        val listener =
+            object : StageImmersionListener {
+                override fun onImmersionChanged(immersionLevel: Int) {
+                    // 执行自定义逻辑
+                }
+            }
+        localProgressiveImmersion.addImmersionListener(listener)
+        onDispose { localProgressiveImmersion.removeImmersionListener(listener) }
+    }
+
+    Text("Current immersion level is $$currentImmersionLevel")
+    
+}

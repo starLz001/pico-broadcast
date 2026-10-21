@@ -1,0 +1,91 @@
+快速上手 PICO OpenXR 插件
+========================================
+PICO Unreal OpenXR Plugin 是集成在虚幻引擎上的插件，提供了对虚幻引擎 OpenXR 的支持。本文档介绍使用该插件的环境要求和步骤。
+*环境要求
+*虚幻引擎：UE 5.6 或 5.7
+*图形接口：Vulkan
+*操作系统：Windows 和 macOS
+*支持 PICO 设备和 PICO Emulator。
+*支持的 PICO 设备型号：PICO Neo3 系列、PICO 4 系列 (不支持 UE 5.7)、PICO 4 Ultra 系列、Project Swan（PICO OS 6）
+*PICO 设备系统版本：5.13.0 及以上
+* 
+*准备开发环境
+*在安装 PICO OpenXR 插件前，你需要安装虚幻引擎 5.6 或 5.7，并按需安装 Visual Studio 2022（Windows）或 XCode（macOS）。
+*安装虚幻引擎
+*下载并安装 Epic Games Launcher。
+*启动 Epic Games Launcher，然后安装 5.6 或 5.7 版本的虚幻引擎。
+*在选项中确保安装 Templates and Feature Packs 和 Android 目标平台。
+* 
+*(可选) 安装 Visual Studio 2022 或 XCode
+*根据自己的开发需求，决定是否需要安装 Visual Studio 2022 (Windows) 或 XCode (macOS)。
+*需要安装 Visual Studio 2022 或 XCode 的情况：
+*你计划进行 C++ 项目开发，包括创建、修改、编译自己的 C++ 代码。
+*需要从源码编译虚幻引擎。
+*进行插件或引擎拓展开发，涉及本地 C++ 代码编写。
+*无需安装 Visual Studio 2022 或 XCode 的情况：
+*只使用 蓝图（Blueprint）进行游戏和项目开发，不涉及任何 C++ 编程。
+*使用 Epic Games Launcher 安装的引擎二进制版本，已包含预编译的引擎，无需 C++ 编译环境。
+*更多请参考虚幻引擎官网：为虚幻引擎C++项目设置Visual Studio开发环境。
+*操作步骤
+*此部分带你体验使用 PICO Unreal OpenXR Plugin 开发应用的全流程。
+*第一步：安装 PICO OpenXR 插件
+*前往 Fab 找到 PICO OpenXR 插件，然后点击 Add to My Library 将其添加到你的 Epic Games 账号。
+* 
+*在 Epic Games Launcher 中，前往 Fab > My Library 找到你添加的 PICO OpenXR 插件，然后将其安装至目标版本的虚幻引擎。
+* 
+*第二步：创建项目 
+*打开 UnrealEditor。 
+*在项目创建窗口处，选择 Games > Virtual Reality。 
+* 
+*命名你的项目，并为项目选择存储位置。注意项目存储路径和名称不可包含中文字符。
+*点击 Create。 
+*虚幻引擎将初始化项目。完成后，将打开项目编辑窗口。 
+*第三步：启用 PICO OpenXR 插件
+你需要手动为项目启用 PICO OpenXR 插件。 
+*前往 Edit > Plugins，打开 Plugins 窗口。 
+* 
+*在左侧导航栏找到 INSTALLED > Virtual Reality，勾选 PICO For OpenXR 插件，然后点击下方的 Restart Now，重启 UnrealEditor，使插件生效。 
+* 
+*UE 5.6 及以上默认启用了 RHI 线程。推荐你关闭 RHI 线程。启用 PICO OpenXR 插件后，RHI 线程默认会被关闭。
+*如果你需要手动关闭 RHI 线程，可以选择 Edit > Project Settings > Plugins > PICO OpenXR，勾选 Disable Separate RHI Thread。
+ 
+*第四步（可选）：使用 PICO OpenXR Portal 一键完成项目配置
+*打开已启用 PICO OpenXR 插件的 Unreal 项目后，OpenXR Portal 将自动弹出。
+* 
+*OpenXR Portal 是一个集设置向导与项目检测功能于一体的开发者门户，可以帮助你确保打包的应用顺利运行。OpenXR Portal 提供以下功能：
+*主界面提供开发者文档、社区、示例 (Samples) 和源码的快捷链接。
+*根据你的开发需求，帮助你完成 Settings 项目的勾选。
+*检测出项目中不支持的选项。
+ 
+*第五步（可选）：完成手柄输入映射
+*前往 Content Browser > Content > VRTemplate > Input。
+* 
+*在 输入映射上下文 部分，根据你正在使用的 PICO 设备型号绑定 PICO 手柄的按键。例如：在 IMC_Default 中，为 IA_MOVE 中分别添加 PICO 4 (R) Thumbstick Y-Axis, PICO Ultra (R) Thumbstick Y-Axis。
+* 
+* 
+*第六步：配置 Android SDK 
+*前往 Edit >  Project Settings > Platforms > Android SDK。
+*在 SDKConfig 部分，参考虚幻引擎官方文档 Android 开发要求 配置 Android SDK。
+ 
+*第七步：开发 XR 应用
+关于如何在虚幻引擎上使用 OpenXR 开发 XR 应用，可以参考 UE 官方文档。
+*第八步：打包并运行 
+在 UnrealEditor 中，点击 Platforms > Android > Package Project，将应用打包并安装到 PICO 设备或 PICO Emulator 上运行。推荐把 FLAVOR SELECTIONS 设置为 Android(OpenXR)。
+* 
+ 
+*了解更多
+*了解更多 XR 开发信息，前往 虚幻引擎官方文档。
+*了解 PICO 应用开发资源，参考 开发资源。
+*了解 PICO 应用发布流程，参考 应用分发概览。
+
+
+*使用 PICO Unreal OpenXR Plugin 开发的应用仍可以在 PICO G3 设备上运行，但不保证所有功能与 PICO G3 完全兼容。
+*UE 5.7 不支持 PICO 4 系列设备。
+
+PICO OpenXR Portal 目前仅支持 Windows。
+
+*如果你开发的应用以眼动追踪和手势追踪为主要交互方式，则无需为特定手柄型号配置按键，可以直接使用 Hand Interaction 相关的映射。
+*你为旧款手柄（如 PICO 4）配置的按键映射，在较新的手柄（如 PICO Ultra）上通常仍然可用。但这可能导致姿态不匹配或部分按键功能异常。为新款手柄配置的映射无法在旧款手柄上使用。为确保应用在所有目标设备上都能完美运行，建议你为每一款支持的手柄（如 PICO 4 和 PICO Ultra）都分别进行明确的按键绑定。
+*PICO OS 6 已支持将非 PICO 手柄（如 Oculus Touch）的按键映射自动匹配到 PICO 手柄。尽管如此，我们强烈建议你优先为 PICO 手柄添加专用的按键绑定，而不是依赖此自动映射功能。
+
+如果你打包的 Android 应用包括 .obb 文件，且你需要在 PICO Emulator 上运行该应用，那么在安装 APK 之后，你还需要将 .obb 文件推送到 PICO Emulator。详情参阅 管理 PICO Emulator 上的应用。

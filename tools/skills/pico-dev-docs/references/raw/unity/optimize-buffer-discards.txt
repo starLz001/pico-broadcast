@@ -1,0 +1,13 @@
+缓冲区丢弃优化
+========================================
+*缓冲区丢弃优化（Optimize Buffer Discards）可用来降低功耗，提升应用性能。启用后，深度缓冲区的内容将被丢弃，不会被解析；MSAA 颜色缓冲区将被解析，不会在渲染后被存储。
+*环境要求
+*PICO 设备型号：PICO Neo3 系列、PICO 4 系列、PICO 4 Ultra 系列
+*PICO 设备系统版本：5.3.0 及以上
+*图形接口：Vulkan
+*开启步骤
+*在 Unity 编辑器中打开一个场景或创建一个新场景。
+*前往 Edit > Project Settings > XR Plug-in Management > PICO > Android settings。
+*勾选 Optimize Buffer Discards (Vulkan)。
+* 
+

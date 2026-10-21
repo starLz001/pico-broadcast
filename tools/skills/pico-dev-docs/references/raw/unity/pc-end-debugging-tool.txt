@@ -1,0 +1,445 @@
+PC 端调试工具
+========================================
+PC 端调试工具简化了 PICO 平台服务的调试流程。通过使用该工具，你可以直接在 PC 上调试大部分 PICO 平台服务，而无需反复构建 APK 文件并安装到设备上进行调试。目前支持调试以下服务：帐号&好友、语音聊天、社交互动、多人游戏、应用内购（IAP）。
+*环境要求
+Windows 操作系统。
+*注意事项
+若需在短时内进行多次调试，为保证上一次调试所创建的进程完全退出，请确保在关闭调试界面至少 5 秒后再次点击 运行 按钮开启。
+* 
+*准备工作
+使用 PC 端调试工具前，需按顺序完成以下准备工作：
+*导入 PICO Unity Integration SDK。
+*获取 Access Token。
+*配置 PC 调试模式。
+*导入 PICO Unity Integration SDK
+首先，你需要在 Unity Hub 中创建项目，然后在项目中导入 PICO Unity Integration SDK。详细步骤参考导入 SDK 说明文档。
+*获取 Access Token
+然后，你需前往 PICO 开发者平台获取 Access Token。步骤如下：
+*登录 PICO 开发者平台。
+*点击目标应用卡片，进入其 概览 页。
+*在左侧导航栏中，点击 API 测试。
+*你将进入 API 面板。
+* 
+*从 授权管理 列表中选取所需权限：
+*若需要调试 “帐号&好友” 服务或 “社交互动” 服务，选择 你的好友关系，寻找与你共同使用此应用的好友，发现彼此 和 你的头像、昵称。
+*若需要调试 “多人游戏” 服务或 “应用内购” 服务，选择 你的头像、昵称。
+*点击 获取 Access Token。
+*你将看到一个展示 Access Token 的窗口。
+*点击 复制，复制生成的 Access Token。
+*完成 PC 调试配置
+最后，需要完成 PC 调试配置，你可以选择自动配置或者手动配置。
+自动配置
+步骤如下：
+*返回 Unity 编辑器中的项目配置页。导入 SDK 后，若你关闭了项目配置页，可重新在 Unity Hub 中打开该项目。
+*在上方菜单栏中，选择 PICO > PC Debug Settings。
+*Inspector 窗口中将展示 PC 调试工具配置面板，如下图所示：
+* 
+*配置以下参数：
+**
+*配置内容将被自动保存至 PicoSdkPCConfig.json 文件。
+手动配置
+配置文件 PicoSdkPCConfig.json 位于 /Assets/Resources 目录下。文件内容格式如下：
+ 
+至此，准备工作全部完成，你可以使用 PC 调试工具来调试平台服务。
+*PC 调试工具支持修改配置。修改配置后，若先前已在 Unity 编辑器中通过 PC 调试工具调试过平台服务，需要退出 Unity 编辑器和 Unity Hub，并且在任务管理器中关闭所有 Unity.exe 相关进程，然后重启 Unity 引擎，否则新配置将无法生效。
+*调试平台服务
+完成配置后，你可以开始调试平台服务。此处以 “帐号&好友” 和 “多人游戏” 服务为例，介绍具体的调试步骤。
+*帐号&好友
+你可以通过 UserDemo 来调试 “帐号&好友” 服务。步骤如下：
+*在 Project 窗口中，前往 Assets > Samples > UserDemo。
+*打开 UserDemo 文件夹，然后双击 UserDemo 文件。
+* 
+*Game 视图中将展示 UserDemo 调试面板，如下图所示：
+* 
+*点击视图上方的 运行 按钮。
+*UserDemo 调试面板转换如下：
+* 
+*输入指令（例如：a），然后点击 GO。
+*系统将调用 UserService.GetAccessToken 接口来获取当前用户的 Access Token。
+*多人游戏
+你可以通过 GameAPITest Demo 来调试 “多人游戏” 服务。步骤如下：
+*从上方菜单栏处，选择 PXR_SDK > Platform Settings。
+*在 Inspector 面板中，勾选 User Entitlement Check。
+*在 App ID 参数处，输入应用 ID。
+* 
+*在 PICO GitHub 上，获取 GameAPITest Demo。
+*在 Project 窗口中，将 GameAPITest 文件夹放入指定目录下（例如：Assets 根目录）。
+*打开 GameAPITest 文件夹，然后双击 GameAPITestScene 文件。
+* 
+*Game 视图中将展示 GameAPITest 面板，如下图所示：
+* 
+*点击视图上方的 运行 按钮。
+*参考《房间&匹配示例》文档，调试服务。
+*接口支持
+ 
+各个服务中，PC 调试工具支持的关键接口如下：
+*帐号&好友
+*
+*语音聊天
+*
+*社交互动
+*
+*多人游戏
+初始化
+*
+房间&匹配
+*
+排行榜
+*
+成就
+*
+挑战
+*
+*应用内购（IAP）
+*IAP 服务测试需依赖支付弹窗，目前还无法通过 PC 端调试工具实现。因此，以下接口皆为模拟接口，通过接口产生的数据皆为非真实数据。
+*
+*查看调试日志
+日志所在目录为：/{项目文件夹}/Logs。
+
+
+
+
+参数
+说明
+Script
+配置文件。默认已选择 SDK 自带的 PcConfig 脚本。
+Region
+应用所在地区：
+*Cn：中国大陆地区
+*I18n：非中国大陆地区
+
+Access Token
+应用的访问令牌。填入从 PICO 开发者平台获取到的 Access Token。
+{
+  "general": {
+    "region": "cn"
+  },
+  "account": {
+    "access_token": "act.e64df68e8cxxxxxxxxxxxxxxxd6d7860lg7o6V44LpCWEPJT7P1tq0AkU5yR"
+  },
+  "package": {
+    "package_name": "com.bytedance.PlatformDemoOnline",
+    "package_version_code": 2,
+    "package_version_name": "2"
+  }
+}
+
+*目前所有通知（Notification）相关功能皆不可用。
+*此部分罗列 PC 调试工具支持的关键接口。对于某个支持的接口，其对应的字段设置接口和操作接口基本全部可用。若想了解更多接口信息，可阅读 API 参考。
+
+
+
+接口
+说明
+UserService.GetAccessToken
+返回配置文件里的值
+UserService.GetLoggedInUser
+可用
+UserService.Get
+可用
+UserService.LaunchFriendRequestFlow
+可用
+UserService.GetFriends
+可用
+UserService.GetNextUserListPage
+可用
+UserService.GetFriendsAndRooms
+可用
+UserService.GetNextUserAndRoomListPage
+可用
+
+
+接口
+
+说明
+
+RTCService.JoinRoom
+
+可用
+
+RTCService.LeaveRoom
+
+可用
+
+RTCService.PublishRoom
+
+可用
+
+RTCService.UnPublishRoom
+
+可用
+
+RTCService.DestroyRoom
+
+可用
+
+RTCService.InitRtcEngine
+
+可用
+
+RTCService.StartAudioCapture
+
+可用
+
+RTCService.StopAudioCapture
+
+可用
+
+RTCService.SetAudioScenario
+
+可用
+
+RTCService.SetEarMonitorMode
+
+可用
+
+RTCService.SetEarMonitorVolume
+
+可用
+
+RTCService.SetCaptureVolume
+
+可用
+
+RTCService.SetPlaybackVolume
+
+可用
+
+RTCService.MuteLocalAudio
+
+可用
+
+RTCService.UpdateToken
+
+可用
+
+RTCService.GetToken
+
+可用
+
+RTCService.RoomPauseAllSubscribedStream
+
+可用
+
+RTCService.RoomResumeAllSubscribedStream
+
+可用
+
+RTCService.SetAudioPlaybackDevice
+
+可用
+
+RTCService.EnableAudioPropertiesReport
+
+可用
+
+RTCService.PublishRoom
+
+可用
+
+RTCService.RoomSetRemoteAudioPlaybackVolume
+
+可用
+
+RTCService.RoomSubscribeStream
+
+可用
+
+RTCService.UnPublishRoom
+
+可用
+
+RTCService.RoomUnSubscribeStream
+
+可用
+
+RTCService.SendRoomBinaryMessage
+
+可用
+
+RTCService.SendRoomMessage
+
+可用
+
+RTCService.SendStreamSyncInfo
+
+可用
+
+RTCService.SendUserBinaryMessage
+
+可用
+
+RTCService.SendUserMessage
+
+可用
+
+
+
+接口
+说明
+ApplicationService.GetLaunchDetail
+返回配置文件里的值
+ApplicationService.LogDeeplinkResult
+可用
+ApplicationService.LaunchApp
+无效
+PresenceService.GetInvitableUsers
+可用
+PresenceService.GetSentInvites
+可用
+PresenceService.GetNextApplicationInviteListPage
+可用
+PresenceService.SendInvites
+可用
+PresenceService.GetDestinations
+可用
+PresenceService.GetNextDestinationListPage
+可用
+PresenceService.Clear
+可用
+PresenceService.Set
+可用
+PresenceService.SetDestination
+可用
+PresenceService.SetIsJoinable
+可用
+PresenceService.SetLobbySession
+可用
+PresenceService.SetMatchSession
+可用
+PresenceService.SetExtra
+可用
+
+
+接口
+说明
+CoreService.GameInitialize(string accessToken)
+可用
+CoreService.GameInitialize()
+可用
+CoreService.GameUninitialize
+可用
+
+
+接口
+说明
+RoomService.CreateAndJoinPrivate2
+可用
+RoomService.Get
+可用
+RoomService.GetCurrent
+可用
+RoomService.GetCurrentForUser
+可用
+RoomService.GetInvitableUsers2
+可用
+RoomService.GetModeratedRooms
+可用
+RoomService.InviteUser
+可用
+RoomService.Join2
+可用
+RoomService.KickUser
+可用
+RoomService.LaunchInvitableUserFlow
+可用
+RoomService.Leave
+可用
+RoomService.SetDescription
+可用
+RoomService.UpdateDataStore
+可用
+RoomService.UpdateMembershipLockStatus
+可用
+RoomService.UpdateOwner
+可用
+RoomService.UpdatePrivateRoomJoinPolicy
+可用
+MatchmakingService.Browse2
+可用
+MatchmakingService.Cancel2
+可用
+MatchmakingService.CreateAndEnqueueRoom2
+可用
+MatchmakingService.Enqueue2
+可用
+MatchmakingService.GetAdminSnapshot
+可用
+MatchmakingService.GetStats
+可用
+MatchmakingService.ReportResultInsecure
+可用
+MatchmakingService.StartMatch
+可用
+MatchmakingService.CrashTest
+可用
+
+
+接口
+说明
+LeaderboardService.Get
+可用
+LeaderboardService.GetEntries
+可用
+LeaderboardService.GetEntriesAfterRank
+可用
+LeaderboardService.GetEntriesByIds
+可用
+LeaderboardService.WriteEntry
+可用
+LeaderboardService.WriteEntryWithSupplementaryMetric
+可用
+
+
+接口
+说明
+AchievementsService.AddCount
+可用
+AchievementsService.AddFields
+可用
+AchievementsService.GetAllDefinitions
+可用
+AchievementsService.GetAllProgress
+可用
+AchievementsService.GetDefinitionsByName
+可用
+AchievementsService.GetProgressByName
+可用
+AchievementsService.Unlock
+可用
+
+
+接口
+说明
+ChallengeService.Invite
+可用
+ChallengeService.Get
+可用
+ChallengeService.GetEntries
+可用
+ChallengeService.GetEntriesAfterRank
+可用
+ChallengeService.GetEntriesByIds
+可用
+ChallengeService.GetList
+可用
+ChallengeService.Join
+可用
+ChallengeService.Leave
+可用
+
+
+接口
+说明
+IAPService.ConsumePurchase
+可用
+IAPService.GetNextProductListPage
+可用
+IAPService.GetNextPurchaseListPage
+可用
+IAPService.GetProductsBySKU
+可用
+IAPService.GetViewerPurchases
+可用
+IAPService.LaunchCheckoutFlow
+可用

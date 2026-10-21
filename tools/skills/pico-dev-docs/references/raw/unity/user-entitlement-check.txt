@@ -1,0 +1,115 @@
+用户权限校验
+========================================
+用户权限校验功能可以用来验证用户是否有权限使用你的应用，即：用户是否购买该应用或是否通过其他合法手段获得该应用的使用权。若权限校验成功，用户可正常使用应用；若权限校验失败，用户会收到弹窗提示，系统将退出应用。
+*应用场景
+*应用上架后，系统自动进行用户权限校验
+*PICO 为已上架 PICO 商店的应用提供了自动校验用户权限的能力，具体的应用覆盖范围为：
+*用户从 PICO 商店内下载和安装的应用。
+*用户通过兑换码、赠送、运营直充等合法方式获得使用权的应用。
+*对于以上应用，PICO 系统会在应用启动时进行用户权限校验，校验通过后，应用才可以正常启动；若校验不通过，系统会弹窗提示用户并关闭应用。系统也会在应用运行过程中在后台定期对用户进行静默的权限校验。
+*在应用关卡内，主动调起用户权限校验
+*你可以选择在应用内合适的时机（比如每个新场景加载时），调用权限校验接口校验用户。校验通过后，用户可以继续使用应用；若校验不通过，你可选择设置相应 UI 提示，也可设置关闭应用。 
+*环境要求
+*SDK 版本为 2.1.5 及以上。
+*重要提示
+*用户权限校验只会保护在 PICO 商店上架的应用。
+*若应用未上架，未登录用户直接跳过权限校验，登录用户则直接通过权限校验。登录用户测试未上架应用时，在第一次启动应用时必须有网络连接，以便应用可以访问 PICO 的后端，并确保其不违反任何权限校验规则。一旦用户通过第一次权限校验，未上架应用在后续进行权限校验时将不再需要网络连接。
+*应用上架后，未获得应用使用权的用户将不会通过权限校验。
+*为方便应用测试，若应用已上架，应用的开发组织成员可以跳过用户权限校验。详情可参考本文档 “应用测试说明” 部分。
+*若你的应用为付费应用，则需要为其开启用户权限校验，否则将无法通过审核。对于免费应用，我们也建议为其开启用户权限校验，以更好地保护版权。
+*应用的目标 API 等级应当不低于 23（即 targetSdkVersion>=23），且推荐及时更新适配安卓新版本的 API 等级。
+*开启用户权限校验
+调用 UserService.EntitlementCheck 接口为应用在合适的时机（例如：每个新场景加载时）开启用户权限校验。调用接口时需要传入 killApp 参数：
+*若 killApp 参数传入的值为 true，当校验不通过时，系统会弹窗提示用户，然后退出应用。
+*若 killApp 参数传入的值为 false，你需要自行处理校验结果。若校验不通过，你可以自定义弹窗引导用户安装正版应用。
+*代码示例一
+*以下示例中，killApp 参数传入的值为 true。
+ 
+*代码示例二
+*以下示例中，killApp 参数传入的值为 false。
+ 
+*权限校验失败弹窗
+*若用户未通过权限校验，则会根据失败原因弹出相应窗口。
+*若用户未通过正规渠道购买该应用，则会看到以下弹窗：
+* 
+*若用户下载的不是正版应用，则会看到以下弹窗：
+* 
+*应用测试说明
+为应用开启用户权限校验后，通过以下方法测试应用。
+**
+
+
+// 同步初始化平台服务
+try
+{
+    CoreService.Initialize();
+    // 开启用户权限校验，你需要检查请求是否成功
+    UserService.EntitlementCheck(true).OnComplete(msg =>
+    {
+        if (msg.IsError)
+        {
+            Debug.Log($$"{msg.Error}");
+            return;
+        }
+
+        Debug.Log($$"Has entitlement:{msg.Data.HasEntitlement} ,status message: {msg.Data.StatusMessage}");
+    });
+}
+catch (UnityException e)
+{
+    Debug.Log($$"Init Platform SDK error:{e}");
+    throw;
+}
+
+// 异步初始化平台服务
+CoreService.AsyncInitialize().OnComplete(m =>
+{
+    if (m.IsError)
+    {
+        Debug.Log($$"Async initialize failed: code={m.GetError().Code} message={m.GetError().Message}");
+        return;
+    }
+
+    if (m.Data != PlatformInitializeResult.Success && m.Data != PlatformInitializeResult.AlreadyInitialized)
+    {
+        Debug.Log($$"Async initialize failed: result={m.Data}");
+        return;
+    }
+
+    Debug.Log("AsyncInitialize Successfully");
+    // 开启用户权限校验
+    UserService.EntitlementCheck(false).OnComplete(checkMessage =>
+    {
+        if (checkMessage.IsError)
+        {
+            Debug.Log($$"GetLoggedInUser failed:code= {checkMessage.Error}");
+            return;
+        }
+
+        // 处理校验结果
+        var checkResult = checkMessage.Data;
+        if (!checkResult.HasEntitlement)
+        {
+            Debug.Log($$"don't has entitlement :{checkResult.StatusCode} {checkResult.StatusMessage}");
+            // 你可以向用户弹窗展示 checkResult.StatusMessage
+            Application.Quit();
+        }
+    });
+});
+
+
+
+场景
+
+测试方法
+
+*应用未上架 PICO 商店
+
+直接在设备上安装 APK 文件测试。
+
+*应用已上架 PICO 商店
+
+*通过以下方式跳过权限校验：
+*将 PICO 设备的系统升级为 5.6.0 或以上版本。
+*将测试人员添加为组织成员。具体步骤可参考《管理组织成员》文档。
+*否则，你需要通过测试渠道安装 APK 文件测试应用。

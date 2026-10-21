@@ -1,0 +1,292 @@
+使用 VideoComponent
+========================================
+VideoComponent 可以将 2D 或 3D 视频作为视频材质的纹理，映射到创建好的 3D 模型的表面，从而达到在物体表面播放视频的效果。VideoComponent 是一个极其灵活的组件，能够适配任何第三方视频播放器。
+*使用流程
+*使用 VideoComponent 时，需要首先创建 VideoMaterial 和 MeshResource 对象，然后将它们分别绑定到 VideoComponent。
+若要将 VideoComponent 与第三方播放器关联，可通过 VideoMaterial 实例创建一个 SurfaceRenderTexture 对象。该对象可提供一个标准的 Android Surface，播放器即可在此 Surface 上渲染视频画面。
+*流程图
+ 
+*第一步：创建视频播放器并设置视频源
+*以 Android 自带的 MediaPlayer 为例，创建一个 MediaPlayer 对象，并设置视频源。代码示例如下：
+ 
+*第二步：创建 VideoComponent 并将其添加至实体
+*创建 VideoComponent 需要一个 Entity、一个 MeshResource 和一个 VideoMaterial。
+*MeshResource 用于表示承载视频画面的 3D 物体的几何形状，例如球体、半球体、柱状体、3D 面片等。
+*VideoMaterial 用于承载视频画面。之后需创建一个 SurfaceRenderTexture 对象，将其绑定到 VideoMaterial，并从 SurfaceRenderTexture 对象上调用 acquireSurface() 方法获取 Surface 对象。最后，将 Surface 对象传递给 MediaPlayer 对象，从而实现视频播放。
+*代码示例如下：
+ 
+*第三步：销毁实体
+*在视频播放结束，不再需要视频播放服务时，主动调用 destroy() 销毁 Entity 实例来回收资源。如果不主动调用 destroy()，SDK 会在应用退出时自动销毁 Entity 实例。
+ 
+*进阶配置
+*设置视频节点采样模式（VideoTextureSampleMode）
+*通过视频节点（videoTexture）广播功能，每一个 VideoComponent 都可以广播本组件上的视频纹理，用于后续视频特效的处理。
+*你可以通过 VideoComponent 上的 setTextureSampleName 和 setTextureSampleMode 方法，分别设置视频纹理的采样名称和采样模式，从而对被广播的视频纹理进行定制化处理。需要注意的是，所设置的采样名称必须与用户自定义 ShaderGraphMaterial 中定义的采样名称保持一致。
+*VideoTextureSampleMode 用于指定内置视频采样节点（videoTexture）的采样方式。不同的采样模式会在该节点输出的视频纹理上预先应用不同的视觉效果。你可以根据实际需求选择合适的模式，并将输出的视频纹理用于后续自定义特效的 ShaderGraphMaterial 处理流程中。你可以在运行或调试过程中动态切换采样模式，便于快速对比视觉效果。可用的采样模式如下：
+**
+代码示例如下：
+ 
+*设置视频显示模式（DisplayMode）
+*DisplayMode 用于设置 VideoComponent 在播放包含双目视差信息的 3D 视频时的显示模式。
+* 
+PICO Spatial SDK 提供的显示模式如下：
+**
+你可以使用 setDisplayMode 函数来设置 VideoComponent 的显示模式：
+ 
+*设置视频纹理使用标记（TextureUsageFlag）
+*在视频渲染管线中，纹理缓冲区的使用方式可能受到安全策略与硬件能力的限制。TextureUsageFlag 属性提供一组位掩码标记，用于在创建视频相关的 SurfaceRenderTexture 对象时声明安全性以及与特定硬件相关的限制。
+*
+代码示例如下：
+ 
+*注意事项：
+*使用 TEXTURE_USAGE_PROTECTED_CONTENT 时，需确保应用具备处理受保护视频内容所需的权限。
+*并非所有设备都支持受保护内容纹理。在生产环境中使用受保护内容相关标记之前，应始终检查设备能力。
+*当前，一个 SurfaceRenderTexture 仅支持设置一个 TextureUsageFlag。
+*API 参考
+*VideoComponent 类提供了视频数据渲染相关的函数，详情参阅 API 参考。根据你所处的地理位置选择合适的文档链接：
+*中国大陆：https://developer-cn.picoxr.com/spatial-api/index.html
+*非中国大陆：https://developer.picoxr.com/spatial-api/index.html
+
+
+val mediaPlayer = MediaPlayer()
+mediaPlayer.setDataSource("your_video_path.mp4")
+mediaPlayer.prepare()
+
+val videoEntity = remember{Entity()}
+val surfaceRender = remember { mutableStateOf<SurfaceRenderTexture?>(null) }
+SpatialView(
+    modifier = Modifier.size(782.dp, 412.dp),
+    initial =  { content, _ ->
+    
+    //创建 `mesh`
+    val mesh = MeshResource.createPlane(0.9f, 0.45f, 0.0f)
+  
+    // 创建 `VideoMaterial`
+    val videoMaterial = VideoMaterial(BlendingMode.OPAQUE,
+        VideoDimensionMode.MONO,
+        MaterialCullingMode.BACK)
+    
+    // 创建 `surface` 并将 `surface` 设置给播放器
+*    surfaceRender = SurfaceRenderTexture()
+*    surfaceRender.toGlobal()
+*    if(surfaceRender?.valid)
+    {
+        //将 `surfaceRender` 绑定到 `VideoMaterial` 上
+*        videoMaterial.bindSurfaceRenderTexture(surfaceRender)
+        //获取 `surface` 并设置给播放器
+*        val surface = surfaceRender?.acquireSurface()
+        surface?.apply{
+            mediaPlayer.setSurface(surface)
+        }
+    }
+    
+    
+    // 创建 `VideoComponent`    
+    val videoComponent = VideoComponent(mesh, videoMaterial)
+    
+    // 创建 `Entity`
+    videoEntity.apply {
+        components.set(videoComponent)
+    }
+    content.addEntity(videoEntity)
+    
+    // 开始播放
+    mediaPlayer.start()
+    }) 
+
+onDispose {
+   mediaPlayer?.stop()
+   mediaPlayer?.release()
+*   surfaceRender.close()
+   videoEntity?.destroy()
+}
+
+
+
+模式
+
+描述
+
+适用场景
+
+NONE
+
+默认模式。不输出 videoTexture节点的内容。
+
+*如果未显式设置采样模式，系统将默认使用 NONE 模式，此时不会输出 videoTexture 节点的内容。该默认行为无需用户额外配置，在不需要展示 videoTexture 节点内容的常规使用场景下即可满足基本需求。
+
+RAW
+
+直接输出原始的 videoTexture 节点的内容。
+
+*在制作镜面反射效果时，可以使用 RAW 模式输出视频纹理，再通过后续的图像处理算法对原始 videoTexture 节点的输出内容进行处理，从而实现所需的镜面反射效果。
+
+RAW_AND_BLURRED
+
+对 videoTexture 节点输出的视频纹理执行高斯模糊处理，生成一张模糊化的图像。
+
+*适用于模拟景深或柔化画面边缘的场景，例如在需要营造柔和氛围、弱化或隐藏细节的视频渲染中，使用 RAW_AND_BLURRED 模式来展示梦幻效果或通过模糊背景来突出前景主体。
+*在构建具有空间层次感的视频效果时，可利用 RAW_AND_BLURRED 模式的模糊处理进一步强化景深表现与空间纵深感。
+
+// 创建用于承载视频内容的实体
+val videoEntity = Entity()
+
+// 根据临时系统缩放因子计算视频的宽高
+val width = 1.6f * TempSystemConverter.TEMP_SCALE
+val height = 0.8f * TempSystemConverter.TEMP_SCALE
+
+// 创建一个平面 `mesh`，用于渲染视频画面
+val mesh = MeshResource.createPlane(width, height, 0.0f)
+
+// 创建并配置 `TransformComponent`，用于控制视频平面的位置和缩放
+val trans = TransformComponent()
+videoEntity.components[TransformComponent::class.java] = trans
+trans.setPosition(Vector3(0F, 0.0F, 0F))
+trans.setScaleVector(Vector3(1.0F))
+
+// 加载包含自定义 `ShaderGraph` 的资源包
+val videoBundle = remember { AssetBundle.load("asset://Video/VideoCustomEffect.bundle") }
+
+// 从资源包中加载自定义 `ShaderGraphMaterial`，并设置为全局可用
+val customMaterial = remember {
+    ShaderGraphMaterial.loadFromAssetBundle(
+            videoBundle,
+            "stereoEffectVideo/Root/Cube/StereoMaterial",
+        )
+        .apply { toGlobal() }
+}
+
+// 创建 `VideoMaterial`，用于描述视频渲染的基础属性
+val videoMaterial =
+    VideoMaterial(
+        BlendingMode.OPAQUE,
+        VideoDimensionMode.SIDE_BY_SIDE,
+        MaterialCullingMode.BACK,
+        Color4.BLACK,
+    )
+    
+// 若自定义材质加载成功，设置 `ShaderGraph` 中所需的参数
+if (customMaterial.valid) {
+    customMaterial.setParameter("fov", 76.394f)
+    customMaterial.setParameter("aspectRatio", width / height)
+    customMaterial.setParameter("windowSize", Vector2(width, height))
+    customMaterial.setParameter("immersiveProgress", 0.0f)
+    customMaterial.setParameter("ipd", 0.00f)
+    customMaterial.setParameter("shift", 0.00f)
+    customMaterial.setParameter("scale", 0.5f)
+    customMaterial.setParameter("viewPortDepth", 0.2f)
+    customMaterial.setParameter("originDistance", 1.0f)
+}
+
+// 将自定义 `ShaderGraphMaterial` 绑定到 `VideoMaterial`
+videoMaterial.attachShaderGraphMaterial(customMaterial)
+
+// 创建 `VideoComponent`，将 `mesh` 与 `VideoMaterial` 组合
+val component = VideoComponent(mesh, videoMaterial)
+videoEntity.components[VideoComponent::class.java] = component
+
+// 设置视频采样名称
+component.setTextureSampleName("blurColor")
+// 设置视频采样模式
+component.setTextureSampleMode(VideoTextureSampleMode.RAW_AND_BLURRED)
+
+该属性仅对 3D 视频生效。
+
+
+
+模式
+
+描述
+
+适用场景
+
+NONE（默认）
+
+视频的初始显示状态。视频的显示方式由视频材质的 VideoDimensionMode 属性决定。
+
+由播放器根据视频本身的 3D 封装格式自动决定显示效果。
+
+MONO
+
+以平面方式显示视频，不产生立体效果。
+
+播放 3D 视频但不需要立体视觉时，可将立体视频降级为平面显示。
+
+STEREO
+
+以立体视图显示视频，并呈现明显的立体效果。
+
+对视觉沉浸感要求较高的 3D 视频，如影视播放、虚拟影院或交互式体验。
+
+Button(
+    onClick = {
+        entity?.apply {
+            if (selectName == R.string.mv_hevc) {
+            
+                // 确保 `Entity` 实例上存在 `VideoComponent`
+                if (entity.components.has(VideoComponent::class.java)) {
+                
+                    // 获取 `VideoComponent`
+                    val videoComponent = entity.components[VideoComponent::class.java]!!
+                    
+                    // 在单目（MONO）与立体（STEREO）显示模式之间切换
+                    if (displayMode == "MONO") {
+                        videoComponent.setDisplayMode(DisplayMode.MONO)
+                        displayMode = "STEREO"
+                    } else {
+                        videoComponent.setDisplayMode(DisplayMode.STEREO)
+                        displayMode = "MONO"
+                    }
+                }
+            }
+        }
+    },
+    size = IconButtonDefaults.iconButtonSize(200.dp, 36.dp),
+    modifier =
+        Modifier.width(200.dp).height(36.dp).background(color = Color.Transparent),
+) {
+    
+    // 显示当前视频的显示模式
+    Text(text = displayMode, color = Color.White, fontSize = 25.sp)
+}
+
+
+
+Flag
+
+描述
+
+约束与安全影响
+
+TEXTURE_USAGE_NONE
+
+默认标记，表示纹理缓冲区没有任何特殊的使用要求，可在不受硬件保护约束的情况下用于任意使用场景。使用该标记创建的纹理可被标准渲染管线自由访问和处理。
+
+*无额外安全限制。
+*纹理可被标准渲染管线正常访问与处理。
+
+TEXTURE_USAGE_PROTECTED_CONTENT
+
+强制要求纹理缓冲区只能在安全的硬件环境中进行处理，通常用于需要 DRM 保护的内容。使用该标记创建的纹理具有受限的访问权限，无法被非安全的软件组件处理。
+*该标记特别适用于需要硬件级安全保障的 DRM 受保护媒体内容。
+*提示：PICO Emulator 不支持该标记。
+
+*纹理内容无法被非安全应用进行截图或捕获。 
+* 对纹理缓冲区的直接内存访问受到限制。
+* 仅允许通过硬件受保护的渲染路径使用该纹理。
+
+// 创建一个带有受保护内容标记的 SurfaceRenderTexture
+val surfaceRenderTexture = SurfaceRenderTexture(
+    width = 1920,
+    height = 1080,
+    maxBufferCount = 3,
+    usageFlag = TextureUsageFlag.TEXTURE_USAGE_PROTECTED_CONTENT
+)
+
+// 创建一个不包含任何特殊标记的 SurfaceRenderTexture（usageFlag 默认为 TEXTURE_USAGE_NONE）
+val defaultTexture = SurfaceRenderTexture(
+    width = 1920,
+    height = 1080
+    height = 1080,
+    maxBufferCount = 3
+)

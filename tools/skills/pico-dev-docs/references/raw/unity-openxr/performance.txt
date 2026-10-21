@@ -1,0 +1,94 @@
+性能
+========================================
+PICO Unity OpenXR SDK 支持 OpenXR 官方拓展 XR_EXT_performance_settings。该拓展提供用于进行性能相关操作的接口。
+*环境要求
+*PICO 设备型号：PICO Neo3 系列、PICO 4 系列、PICO 4 Ultra 系列
+*PICO 设备系统版本：5.8.0 及以上
+*API 参考
+*XrPerfSettingsSetPerformanceLevelEXT
+ 
+设置性能级别。
+参数说明
+*
+返回值
+返回本次请求的 Session 信息、设置性能级别的对象、设置的性能级别。
+*AddPerfSettingsSetPerformanceEvent
+ 
+添加性能相关事件通知。Runtime 随时监控性能变化，若认为需要调控性能，则会发送事件。
+XrPerfSettingsSubDomainEXT 为事件枚举，说明如下：
+ 
+XrPerfSettingsNotificationLevelEXT 为通知级别的枚举，说明如下：
+ 
+使用示例如下：
+ 
+*了解更多
+更多接口相关信息可参考 OpenXR 官方文档。
+
+public static XrResult XrPerfSettingsSetPerformanceLevelEXT(XrPerfSettingsDomainEXT domain,
+    XrPerfSettingsLevelEXT level)
+
+
+
+参数
+
+说明
+
+domain
+
+指定需设置性能级别的对象。枚举如下：
+ 
+
+level
+
+指定性能级别。枚举如下：
+ 
+
+public static void AddPerfSettingsSetPerformanceEvent(
+    Action<XrPerfSettingsDomainEXT, XrPerfSettingsSubDomainEXT, XrPerfSettingsNotificationLevelEXT,
+        XrPerfSettingsNotificationLevelEXT> callback)
+
+public enum XrPerfSettingsSubDomainEXT
+{
+    // Runtime 的合成性能已经达到了一个新的水平，无论是从之前的水平提升还是降低
+    XR_PERF_SETTINGS_SUB_DOMAIN_COMPOSITING_EXT = 1,
+    // 应用的渲染性能已经达到了一个新的水平，无论是从之前的水平提升还是降低
+    XR_PERF_SETTINGS_SUB_DOMAIN_RENDERING_EXT = 2,
+    // 设备的温度已经达到了一个新的水平，无论是从之前的水平提升还是降低
+    XR_PERF_SETTINGS_SUB_DOMAIN_THERMAL_EXT = 3,
+}
+
+public enum XrPerfSettingsNotificationLevelEXT
+{
+    // 普通级别。相关 Subdomain 已经达到了一个新的水平，除当前操作外，无需进一步采取任何行动。
+    XR_PERF_SETTINGS_NOTIF_LEVEL_NORMAL_EXT = 0,
+    // 警告级别。相关 Subdomain 已经达到了早期警告级别，应用需开始主动采取缓解措施，以返回到XR_PERF_SETTINGS_NOTIF_LEVEL_NORMAL_EXT 级别。
+    XR_PERF_SETTINGS_NOTIF_LEVEL_WARNING_EXT = 25,
+    // 严重级别。相关 Subdomain 已经达到了严重级别，性能显著下降，应用需采取严厉的缓解措施。
+    XR_PERF_SETTINGS_NOTIF_LEVEL_IMPAIRED_EXT = 75,
+}
+
+PerformanceSettingsFeature.AddPerfSettingsSetPerformanceEvent((domain_,subDomain_,fromLevel_,toLevel_)=>
+{
+    Debug.Log("xrPollEvent eventData XrEventDataPerfSettingsEXT domain=" + domain_);
+    Debug.Log("xrPollEvent eventData XrEventDataPerfSettingsEXT subDomain==" + subDomain_);
+    Debug.Log(" xrPollEvent eventData XrEventDataPerfSettingsEXT fromLevel==" + fromLevel_);
+    Debug.Log("xrPollEvent eventData XrEventDataPerfSettingsEXT toLevel==" + toLevel_);
+});
+
+public enum XrPerfSettingsDomainEXT
+{
+    XR_PERF_SETTINGS_DOMAIN_CPU_EXT = 1, // CPU
+    XR_PERF_SETTINGS_DOMAIN_GPU_EXT = 2, // GPU
+}
+
+public enum XrPerfSettingsLevelEXT
+{
+    // 省电级别，在应用处于非 XR 部分时优先使用。
+    XR_PERF_SETTINGS_LEVEL_POWER_SAVINGS_EXT = 0, 
+    // 低级别，在应用处于复杂度低且稳定的部分时使用。
+    XR_PERF_SETTINGS_LEVEL_SUSTAINED_LOW_EXT = 25, 
+    // 高级别，在应用处于复杂度高且动态的部分时使用。
+    XR_PERF_SETTINGS_LEVEL_SUSTAINED_HIGH_EXT = 50, 
+    // 极高级别，在应用处于复杂度极高的部分时使用。
+    XR_PERF_SETTINGS_LEVEL_BOOST_EXT = 75, 
+}

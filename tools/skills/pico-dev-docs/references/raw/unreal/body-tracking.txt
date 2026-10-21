@@ -1,0 +1,345 @@
+全身动捕
+========================================
+*全身动捕是一种动作捕捉技术，用于收集用户的身体位置和动作信息，并将其转换为可再现的姿态数据。全身动捕技术能够支持用户在 XR 场景中进行跑、踢、踩、躺、扭腰等动作，丰富用户的动作体验。
+PICO 的全身动捕功能需要结合 PICO 体感追踪器进行使用。PICO 体感追踪器可以获取用户身体位置和动作信息。全身动捕相关的接口会将这些信息转换为多个人体节点的姿态数据，作为应用的输入。
+* 
+*全身动捕模式
+全身动捕功能提供 “默认” 和 “高精度” 两种模式，说明如下：
+*
+*环境要求
+*SDK 版本：3.0.0 及以上
+*PICO 设备型号：PICO Neo3、PICO 4 和 PICO 4 Ultra 系列
+*PICO 设备系统版本：5.11.0 及以上
+*PICO 体感追踪器（正式版）
+*前提条件 
+你已在项目中导入 PICO Unreal Integration SDK。详情参考导入 PICO SDK。 
+*接入全身动捕
+此部分介绍如何为你的应用接入全身动捕功能，包括以下两部分：
+*在 UE 编辑器内为应用开启运动追踪；
+*在你的项目代码中调用全身动捕接口，实现该功能。
+*第一步：在编辑器中启用全身动捕能力 
+*在 UE 编辑器中创建一个项目或打开已有项目。 
+*在编辑器左上角，点击 编辑（Edit） > 项目设置（Project Settings） > 插件（Plugins） > PICOXR Settings。 
+*移动到 Feature 选项卡下，勾选 Enable Body Tracking。 
+* 
+你已为应用开启全身动捕能力。 
+*第二步：选择全身动捕模式 
+为项目启用全身动捕后，初始追踪模式为全身动捕默认模式。如果希望切换为全身动捕高精度模式，你需要调用 PXR_SetBodyTrackingMode 接口切换到 BodyTrackingMode2，即可切换至全身动捕高精度模式。两种模式差异请参考上文，相关示例如下：
+* 
+若当前的追踪模式不是 “全身动捕”，该接口会打开以下面板，用户需要手动在面板上切换并完成校准。
+* 
+*第三步：唤起 “体感追踪器” APP 能力进行校准 
+PICO 官方的 “体感追踪器” APP 提供了将一对体感追踪器与 PICO 头显配对并校准的能力。为确保你的应用能够接收来自体感追踪器的身体移动数据，需确保用户将体感追踪器硬件与 “体感追踪器” APP 进行配对（即连接），并在 APP 内完成人体校准。
+开发者可以通过 PXR_StartBodyTrackingCalibApp 接口完成应用内体感追踪器的校准。相关使用示例如下：
+* 
+ 
+*第四步：获取体感追踪器连接状态与校准数据 
+“体感追踪器” APP 完成用户追踪器的连接和校准后，你需要在应用中配置相关接口获取 PICO 体感追踪器连接状态和校准情况的数据。接口及示例如下：
+*
+*通过 PXR_GetMotionTrackerConnectStateWithId 接口，你可以获取当前已连接的体感追踪器的数量和 ID，相关示例如下： 
+* 
+* 输出示例如下：
+* 
+*通过 PXR_GetMotionTrackerCalibState 接口，你可以获取 PICO 体感追踪器的校准状态，相关示例如下： 
+* 
+*Calibrate State 是当前系统的校准状态，1表示已校准，0 表示未校准。若用户未完成校准，则需要调用 PXR_StartBodyTrackingCalibApp 接口，在应用内打开 “体感追踪器” APP 来让用户完成校准。
+ 
+*第五步：开启全身动捕功能
+当 PICO 体感追踪器已与 “体感追踪器” APP 完成连接，追踪模式已设置为 “全身动捕”，且用户已完成校准，便可以开始全身动捕。你可以通过以下接口，完成全身动捕的开启和状态查询：
+*
+*查询当前设备是否支持全身动捕
+通过 PXR_GetBodyTrackingSupported 接口，你可以查询当前设备是否支持全身动捕能力：
+* 
+*启动全身动捕服务
+通过 PXR_WantBodyTrackingService 接口，你可以开启当前全身动捕服务：
+* 
+*开始全身动捕
+你可以通过 PXR_StartBodyTracking 接口开启全身动捕。在 BodyTrackingMode 中选择需要动捕的模式，这里选择 BodyTrackingMode2 开启全身动捕高精度模式。其中 BoneLength 为骨长数据，若缺省则使用系统默认值。OtherMode 默认为 -1，是为特殊需求预留的扩展参数。相关示例如下：
+* 
+*获取动捕数据状态及异常原因
+你可以通过 PXR_GetBodyTrackingState 接口获取追踪器的动捕数据状态及异常原因，该接口会输出获取到的全身动捕状态码以及全身动捕错误码。相关相关示例如下：
+* 
+*Tracking Status Code 全身动捕状态码如下： 
+* 
+*Tracking Error Code 全身动捕错误码如下： 
+* 
+*第六步：获取全身动捕数据 
+你可通过以下两个接口获取用户所有关节点或是特定关节点的追踪数据和变换数据。 
+*
+*获取用户所有关节点的数据 
+通过使用PXR_GetBodyTrackingPose 接口获取用户所有关节点的数据。你需要在 WorldToMetersScale 中输入引擎当前的缩放比例，通过该接口你会得到一个 BodyTrackingData 数组，数组序号对应一个固定的追踪节点。具体示例如下： 
+* 
+*在获取数据时，你可以在 Break_PxrBodyTrackingTransform 中追踪节点的变换数据：
+ 
+* 
+*获取用户特定关节点的数据 
+你也可通过PXR_GetBodyTrackingPosebyRole接口仅获取用户特定关节点的数据。你需要在 RoleType 中选择你需要获取的关节点的类型，WorldToMetersScale 为引擎当前的缩放比例，RoleBodyTrackingData 为当前节点的追踪变换数据。具体示例如下： 
+* 
+*第七步：停止全身动捕
+当场景内无需使用全身动捕功能或用户退出应用，调用 PXR_StopBodyTracking 接口停止全身动捕。具体示例如下：
+* 
+*可选：获取体感追踪器电量 
+当 PICO 体感追踪器电量过低时，会影响追踪精度，进而影响用户的应用体验，推荐在设备电量过低时对用户进行提示。你可以调用 PXR_GetMotionTrackerBattery ，通过输入当前需要查询电量的追踪器 ID，获取 PICO 体感追踪器的电量状态。 具体示例如下：
+* 
+ 
+*可选：设置人体部位的骨骼长度 
+调用 PXR_SetBodyTrackingBoneLength 设置人体各个部位的骨骼长度，长度数据会同步给 PICO 算法，以获得更精确的人体姿态。 具体示例如下：
+* 
+*全身动捕相关回调
+全身动捕相关回调函数的接口列表如下， 接口的详细说明参阅 API参考。
+*
+*获取 PICO 体感追踪器的电量变化通知
+你可以通过 MotionTrackerBatteryDelegate 回调，获取 PICO 体感追踪器的电量变化通知。
+* 
+*获取 PICO 体感追踪器当前的连接状态变化通知
+通过 MotionTrackerConnectionDelegate 回调可以获取 PICO 体感追踪器当前的连接数量和连接状态变化通知。
+* 
+*获取 PICO 体感追踪器校准数据异常通知
+通过 MotionTrackerRecalibrationDelegate 回调， 你可以获取校准数据异常通知，收到该通知后建议重新进行校准。
+* 
+*获取全身动捕的状态码与错误码通知
+通过 BodyTrackingStateErrorDelegate 回调可以获取全身动捕的状态码与错误码通知。
+* 
+*获取 PICO 体感追踪器的键值事件
+通过 DataMotionTrackerKeyDelegate 回调可以获取 PICO 体感追踪器的键值事件。
+* 
+*获取全身动捕的模式变化通知
+通过 DataMotionTrackingModeChangedEventDelegate 回调可以获取全身动捕的模式变化通知.
+* 
+*获取全身动捕的 Action 状态变化通知
+通过 BodyTrackingActionDelegate 回调可以获取全身动捕的 Action 状态变化通知。
+* 
+*踩踏识别
+为助力节奏音游类游戏的开发，PICO 体感追踪器支持识别用户的 “踩踏” 动作。用户脚抬起再落下后，追踪器会向开发者发送 “踩踏” 信号，便于开发者判定音符是否被击中。
+使用踩踏识别时，须注意以下事项：
+*不支持长时间高频率的踩踏：建议双脚踩踏频率最高为 4 次/秒，过高的频率会导致用户姿态变形，从而降低准确性和召回率。
+*避免引导用户进行小幅度踩踏：建议踩踏时脚离地的高度大于 5 厘米，抬脚幅度越低则准确性和召回率越低。
+*不支持半角脚尖踩踏的识别：出于用户习惯和判定准确性的考虑，无法识别脚跟始终在地面且脚尖抬起落下的动作。
+*安全性：使用全身尤其是腿部玩游戏时，腿部移动范围对比手更大，会更容易出现踢到周围物体或者人的情况，因此需要系统、开发者、用户共同关注安全性问题。
+PICO 体感追踪器（正式版）可输出用户左右脚的踩踏事件数据。你可以通过 BodyTrackingActionDelegate 回调获取左脚踝（LEFT_ANKLE = 7）和右脚踝节点（RIGHT_ANKLE = 8）动作状态变化的通知，从而得出左右脚的踩踏事件。若监听到 EPxrBodyActionList ，则表示左脚和/或右脚向下踩地。
+*短按电源键识别追踪器
+连接 PICO 体感追踪器至头戴后，若用户按下体感追踪器的电源键，头戴端的 “PICO 体感追踪器” 首页会出现该体感追踪器的电源键被按下的提示（目前采用高亮闪烁的形式）。这将大大方便使用多个体感追踪器的用户，能快速对应真实世界的追踪器与头戴内的追踪器信息。
+* 
+你可以通过 DataMotionTrackerKeyDelegate 来获取 PICO 体感追踪器按键事件回调。
+* 
+*切换追踪模式
+调用 PXR_CheckMotionTrackerModeAndNumber 接口，检查当前体感追踪器的模式和数量是否符合预期。该接口会打开以下面板。用户可以手动确认是否要将追踪模式切换为全身动捕或独立追踪，然后完成校准。
+* 
+*腰部追踪器
+ 
+佩戴腰部追踪器后，对弯腰、扭腰等动作的捕捉会更加细腻，同时会提升坐姿、躺姿状态下追踪的稳定性。
+当前版本默认支持配对两个体感追踪器。若想使用第三个追踪器，需在头戴端前往 PICO 体感追踪器 > 设置 > 实验室功能，将 配对上限 改为三个。然后返回 PICO 体感追踪器首页，开始配对。
+* 
+根据用户使用场景，将腰部追踪器佩戴在身前正中（肚子）或身后正中（后腰）位置。需要在 PICO 体感追踪器 > 设置 > 实验室功能 > 腰部佩戴位置 中进行对应设置，修改佩戴位置后需要重新校准。
+* 
+*人体关节点参考
+PICO SDK 的全身动捕功能支持追踪下图中的 24 个人体关节点。
+* 
+以下为相关概念说明：
+*
+以下为 EPxrBodyTrackerRole 枚举，与参考图中的关节点一一对应。
+ 
+*授权声明
+*本全身动捕方案，部分基于 Max Planck Society e.V 依据 “署名4.0 协议国际版”（“CC BY 4.0”）授权 PICO（海南创建未来科技有限公司）使用的 SMPL-Body 修改制作。
+
+
+
+模式
+
+说明
+
+建议使用场景
+
+默认
+
+输出全身 24 个人体关节点的位置和姿态信息，并提供踩踏数据。
+动作捕捉相关测试数据如下：
+*延迟：约 15.6 (±2.6) 毫秒
+*全局位置误差：约 4.47 厘米
+*全局角度相对误差：约 5.62 度
+
+节奏音游、运动等需要快速响应的场景。
+
+高精度
+
+输出全身 24 个人体关节点的位置和姿态信息，并提供踩踏数据。
+动作捕捉相关测试数据如下：
+*延迟：约 48.2 (±1.6) 毫秒
+*全局位置误差：约 4.31 厘米
+*全局角度相对误差：约 5.58 度
+
+社交、舞蹈、内容制作等需要更准确姿态的场景。
+
+PICO 体感追踪器（正式版）支持一眼校准，开发者版需按照 APP 界面提示的流程完成校准。
+
+
+
+接口
+
+说明
+
+PXR_GetMotionTrackerConnectStateWithId
+
+获取当前已连接的体感追踪器的数量和设备序列号。
+
+PXR_GetMotionTrackerCalibState
+
+获取已连接的体感追踪器的校准状态。
+
+提示
+为确保全身动捕数据的准确性，建议在使用过程中监听校准状态的变化。若数据变为不可用状态，及时引导用户进行校准。
+
+
+
+接口
+
+说明
+
+PXR_GetBodyTrackingSupported
+
+查询当前设备是否支持全身动捕。
+
+PXR_WantBodyTrackingService
+
+开启当前全身动捕服务。
+
+PXR_StartBodyTracking
+
+开始全身动捕。
+
+PXR_GetBodyTrackingState
+
+获取追踪器的动捕数据状态及异常原因。
+
+UENUM(BlueprintType)
+enum class EPXRBodyTrackingStatusCode : uint8
+{
+    PXR_BODYTRACKING_INVALID = 0,
+    PXR_BODYTRACKING_VALID = 1,
+    PXR_BODYTRACKING_LIMITED = 2
+};
+
+UENUM(BlueprintType)
+enum class EPXRBodyTrackingErrorCode : uint8
+{
+    PXR_BT_ERROR_INNER_EXCEPTION = 0,
+    PXR_BT_ERROR_TRACKER_NOT_CALIBRATED = 1,
+    PXR_BT_ERROR_TRACKER_NUM_NOT_ENOUGH = 2,
+    PXR_BT_ERROR_TRACKER_STATE_NOT_SATISFIED = 3,
+    PXR_BT_ERROR_TRACKER_PERSISTENT_INVISIBILITY = 4,
+    PXR_BT_ERROR_TRACKER_DATA_ERROR = 5,
+    PXR_BT_ERROR_USER_CHANGE = 6,
+    PXR_BT_ERROR_TRACKING_POSE_ERROR = 7,
+};
+
+
+
+接口
+
+说明
+
+PXR_GetBodyTrackingPose
+
+获取用户所有关节点的数据。
+
+PXR_GetBodyTrackingPosebyRole
+
+获取用户特定关节点的数据。
+
+提示：
+目前， Velo、 Acce、 Wvelo 和 Wacce 暂时没有数据。
+
+ 提示
+PICO 系统版本 5.10.0 及更高版本支持连接三个体感追踪器。因此，你最多可以获取三个体感追踪器的电量信息。若程序默认遍历和获取两个体感追踪器的电量信息，建议将代码修改为根据实际获取到的体感追踪器数量来获取电量数据。
+
+
+
+接口
+
+说明
+
+MotionTrackerBatteryDelegate
+
+获取 PICO 体感追踪器的电量变化通知。
+
+MotionTrackerConnectionDelegate
+
+获取 PICO 体感追踪器当前的连接状态变化通知。
+
+MotionTrackerRecalibrationDelegate
+
+获取 PICO 体感追踪器校准数据异常通知，收到该通知后建议重新校准。
+
+BodyTrackingStateErrorDelegate
+
+获取全身动捕的状态码与错误码通知。
+
+DataMotionTrackerKeyDelegate
+
+获取 PICO 体感追踪器的键值事件。
+
+DataMotionTrackingModeChangedEventDelegate
+
+获取全身动捕的模式变化通知。
+
+BodyTrackingActionDelegate
+
+获取全身动捕的 Action 状态变化通知。
+
+提示
+腰部追踪为实验室功能，若想了解设备相关信息，请联系 developer@support.picoxr.com 。
+
+
+
+概念
+
+说明
+
+坐标系
+
+均为和头戴设备数据相同的世界坐标系。
+
+根关节节点
+
+0 (Pelvis)
+
+父/子关节节点
+
+1 至 23 号节点，靠近根关节节点的为父节点，靠近肢体端的为子节点。
+
+骨骼
+
+位于两个节点之间的一段刚体，其姿态存储在靠近根节点一侧的父节点结构内。比如：小腿骨骼的姿态角度，会存储在关节点 Knee 结构中。
+更多例子 : 
+*4 号节点 (LEFT_KNEE)：存放了左膝盖关节的位置信息，以及左小腿骨骼的姿态。
+*7 号节点 (LEFT_ANKLE)：存放了左脚踝关节的位置信息，以及左脚面骨骼的姿态。
+
+UENUM(BlueprintType)
+enum class EPxrBodyTrackerRole : uint8
+{
+   PxrPelvis = 0 UMETA(DisplayName = "Pelvis"), //骨盆
+   Pxr_LEFT_HIP = 1 UMETA(DisplayName = "LEFT_HIP"), //左侧臀部
+   Pxr_RIGHT_HIP = 2 UMETA(DisplayName = "RIGHT_HIP"), // 右侧臀部
+   Pxr_SPINE1 = 3 UMETA(DisplayName = "SPINE1"), // 脊柱
+   Pxr_LEFT_KNEE = 4 UMETA(DisplayName = "LEFT_KNEE"), // 左腿膝盖
+   Pxr_RIGHT_KNEE = 5 UMETA(DisplayName = "RIGHT_KNEE"), // 右腿膝盖
+   Pxr_SPINE2 = 6 UMETA(DisplayName = "SPINE2"), // 脊柱
+   Pxr_LEFT_ANKLE = 7 UMETA(DisplayName = "LEFT_ANKLE"), // 左脚踝
+   Pxr_RIGHT_ANKLE = 8 UMETA(DisplayName = "RIGHT_ANKLE"), // 右脚踝
+   Pxr_SPINE3 = 9 UMETA(DisplayName = "SPINE3"), // 脊柱
+   Pxr_LEFT_FOOT = 10 UMETA(DisplayName = "LEFT_FOOT"), // 左脚
+   Pxr_RIGHT_FOOT = 11 UMETA(DisplayName = "RIGHT_FOOT"), // 右脚
+   Pxr_NECK = 12 UMETA(DisplayName = "NECK"), // 颈部
+   Pxr_LEFT_COLLAR = 13 UMETA(DisplayName = "LEFT_COLLAR"), // 左侧锁骨
+   Pxr_RIGHT_COLLAR = 14 UMETA(DisplayName = "RIGHT_COLLAR"),  // 右侧锁骨
+   Pxr_HEAD = 15 UMETA(DisplayName = "HEAD"), // 头部
+   Pxr_LEFT_SHOULDER = 16 UMETA(DisplayName = "LEFT_SHOULDER"), // 左肩膀
+   Pxr_RIGHT_SHOULDER = 17 UMETA(DisplayName = "RIGHT_SHOULDER"), // 右肩膀
+   Pxr_LEFT_ELBOW = 18 UMETA(DisplayName = "LEFT_ELBOW"), // 左手肘
+   Pxr_RIGHT_ELBOW = 19 UMETA(DisplayName = "RIGHT_ELBOW"), // 右手肘
+   Pxr_LEFT_WRIST = 20 UMETA(DisplayName = "LEFT_WRIST"), // 左手腕
+   Pxr_RIGHT_WRIST = 21 UMETA(DisplayName = "RIGHT_WRIST"),  // 右手腕
+   Pxr_LEFT_HAND = 22 UMETA(DisplayName = "LEFT_HAND"), // 左手
+   Pxr_RIGHT_HAND = 23 UMETA(DisplayName = "RIGHT_HAND"),  // 右手
+   Pxr_NONE_ROLE = 24 UMETA(DisplayName = "NONE_ROLE")
+};

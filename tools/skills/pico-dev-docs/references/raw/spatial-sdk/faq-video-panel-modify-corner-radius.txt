@@ -1,0 +1,120 @@
+能否修改窗口圆角或创建方角窗口？
+========================================
+*问题描述
+PICO OS 6 的 WindowContainer 默认带有圆角，是否可修改圆角大小？是否可创建方角窗口？
+*原因分析
+WindowContainer 的窗口圆角属于 PICO OS 6 的系统级设计规范——为保证多应用窗口在空间中并存时的视觉一致性，圆角半径为固定值且无法修改，且 WindowContainer DSL 与 manifest 配置均未暴露相关入口。因此应用层无法通过 API 直接修改窗口圆角，也无法创建方角窗口；可控的部分仅限于"窗口背景面板是否渲染"以及"窗口内部承载视频的 Mesh 自身的圆角"。
+*解决方案
+WindowContainer 圆角由 PICO OS 6 系统级设计规范统一定义，为固定值，应用层无法通过 API 修改。
+WindowContainer DSL 未提供 cornerRadius 参数，该约束属于系统级设计规范，与 VideoComponent 或 VideoPlayerComponent 无关。
+*更多信息
+*通过enableMaterialBackground关闭窗口的毛玻璃背景面板
+虽然圆角大小不可修改，但你可通过 enableMaterialBackground = false 关闭窗口的毛玻璃背景面板：
+* 
+ 
+或在 AndroidManifest.xml 中配置：
+ 
+enableMaterialBackground 的效果：
+*true（默认值）：窗口呈现毛玻璃或半透明背景面板（带 32 dp 圆角视觉效果）。
+*false：窗口背景面板不渲染，视觉上无毛玻璃效果。
+*视频播放场景的实践方案
+视频播放器场景的典型配置如下：
+ 
+同时在 Mesh 层面与窗口圆角保持一致：
+ 
+*视频播放场景可修改的窗口参数总览
+**
+*窗口圆角约束与替代方案
+*系统级约束：窗口圆角属于 PICO OS 系统级设计规范，应用层未提供修改入口。
+*enableMaterialBackground = false：可关闭毛玻璃背景，但圆角裁切依然生效。
+*视频面板圆角独立：由 Mesh 的 cornerRadius 控制，与窗口圆角相互独立。
+*视觉对齐建议：将视频 Mesh 的 cornerRadius 设为与窗口圆角半径匹配的 meter 值（通过 PhysicalLengthConverter 转换），使视频圆角与窗口圆角视觉一致。
+
+*即使关闭 enableMaterialBackground，窗口边缘仍为圆角，仅是背景不再渲染毛玻璃。
+
+import com.pico.spatial.ui.foundation.dsl.Form
+import com.pico.spatial.ui.foundation.dsl.WindowContainer
+
+WindowContainer(
+    id = "video-window",
+    form = Form.Planar,
+    // 关闭毛玻璃背景：窗口背景面板不渲染
+    enableMaterialBackground = false,
+) {
+    // 视频内容
+}
+
+<meta-data
+    android:name="pico.spatial.windowcontainer.materialbackground"
+    android:value="0" />
+
+import android.media.MediaPlayer
+import com.pico.spatial.ui.foundation.dsl.Form
+import com.pico.spatial.ui.foundation.dsl.WindowContainer
+import com.pico.spatial.ui.foundation.dsl.WindowContainerSize
+import com.pico.spatial.ui.platform.resize.ContainerResizeType
+import com.pico.spatial.ui.platform.resize.windowConstraints
+
+WindowContainer(
+    id = "video-player",
+    form = Form.Planar,
+    defaultSize = WindowContainerSize(width = PANEL_WIDTH, height = PANEL_HEIGHT),
+    resizeType = ContainerResizeType.ContentSize,
+    // 关闭毛玻璃背景，使视频面板直接呈现
+    enableMaterialBackground = false,
+) {
+    val mediaPlayer = remember { MediaPlayer() }
+    DisposableEffect(mediaPlayer) { onDispose { mediaPlayer.release() } }
+
+    Box(
+        modifier = Modifier
+            .windowConstraints(width = PANEL_WIDTH, height = PANEL_HEIGHT)
+            .fillMaxSize()
+    ) {
+        // 复用「视频没有填满整个窗口」中的 VideoFillWindowContent
+        VideoFillWindowContent(mediaPlayer)
+    }
+}
+
+import com.pico.spatial.core.ecs.resource.MeshResource
+import com.pico.spatial.ui.platform.LengthUnit
+
+// 视频面板 Mesh 圆角与窗口圆角匹配
+val cornerRadiusInMeter = converter.dpToLength(32.dp, LengthUnit.Meters)
+val mesh = MeshResource.createVideoPanel(
+    panelWidthMeter,
+    panelHeightMeter,
+    cornerRadius = cornerRadiusInMeter,  // 与窗口圆角匹配
+)
+
+
+
+*场景
+
+*是否可修改
+
+*方法
+
+*WindowContainer 窗口圆角
+
+*不可修改
+
+*系统设计规范，无对应 API
+
+*窗口毛玻璃背景面板
+
+*可关闭
+
+*enableMaterialBackground = false
+
+*视频面板网格（Mesh）圆角
+
+*可修改
+
+*MeshResource.createVideoPanel 的 cornerRadius 参数
+
+*Subwindow / Sheet / Popup 等子窗口
+
+*可修改
+
+*各组件自带 cornerRadius 参数

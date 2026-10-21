@@ -1,0 +1,68 @@
+调试 Pipeline 中的 Tensor
+========================================
+在 SecureMR 的 Pipeline 中，Tensor 被用作数据流的主要数据结构。其中包含两种类型：全局 Tensor（可在不同 Pipeline 间共享）和局部 Tensor（仅在其所属 Pipeline 内部创建和使用）。此外，占位符（Placeholder）用于将全局 Tensor 映射到单个 Pipeline 内部使用。
+然而，Tensor 通常在应用层不可访问——你可以向 Tensor 写入数据，但无法读取或保存其内容。这种限制会给调试工作（特别是在集成机器学习模型时）带来挑战。
+本文档将介绍几种检查 SecureMR Pipeline 内部的张量值的方法。这些技术旨在帮助你更高效地进行调试，以及使用SecureMR 构建应用程序。
+*使用文本渲染器来渲染 Tensor 值
+*RenderText 操作接收一个 "text" 操作数（Operand）作为输入，该输入可以是 UTF-8 编码的字符串或任意 Tensor 类型（如 Matrix、Vector 或 Scalar）。当输入为 Tensor 时，渲染器会以矩阵形式显示其内容，直观呈现 Tensor 中的数值。
+默认情况下，渲染器最多显示 5×5 矩阵来概括 Tensor 数据。该功能适用于在 Pipeline 执行过程中快速检查 Tensor 内容，尤其适合调试中间输出或验证模型推理结果。
+ 
+
+private void CreateTextRenderer(var textTensor)
+{        
+    // Operand 1: start
+    var start  = new float[] {0.1f, 0.3f};
+    var startDim = new[] { 1 };
+    var startTensorShape = new TensorShape(startDim);
+    var startTensor = pipeline.CreateTensor<float, Point>(2, startTensorShape, start);
+    
+    // Operand 2: colors
+    var colors = new byte[] {255, 255, 255, 255, 0, 0, 0, 255}; // white text, black background
+    var colorDim = new[] { 2 }; //we have two colors
+    var colorTensorShape = new TensorShape(colorDim);
+    var colorTensor = pipeline.CreateTensor<byte, Color>(4, colorTensorShape, colors);
+    
+    //Create global gltf tensor
+    gltfTensor = provider.CreateTensor<Gltf>(tvGltfAsset.bytes);
+    
+    //Create placeholder tensor in pipeline
+    gltfTensorPlaceholder = pipeline.CreateTensorReference<Gltf>();
+    
+    //Operand 4: textureID
+    var textureID = new ushort[] {0};
+    var texIDDim = new[] { 1 };
+    var texIDShape = new TensorShape(texIDDim);
+    var textureIDTensor = pipeline.CreateTensor<ushort, Scalar>(1, texIDShape, textureID);
+    
+    //Operand 5: font size
+    var fontSize = new [] {72.0f};
+    var fontSizeDim = new[] { 1 };
+    var fontSizeShape = new TensorShape(fontSizeDim);
+    var fontSizeTensor = pipeline.CreateTensor<float, Scalar>(1, fontSizeShape, fontSize);
+
+    // Create render text operator
+    var renderTextOperatorConfiguration = new RenderTextOperatorConfiguration(SecureMRFontTypeface.SansSerif, "en-US", 1440, 960);
+    var renderTextOperator = pipeline.CreateOperator<RenderTextOperator>(renderTextOperatorConfiguration);
+
+    renderTextOperator.SetOperand("text", textTensor);
+    renderTextOperator.SetOperand("start", startTensor);
+    renderTextOperator.SetOperand("colors", colorTensor);
+    renderTextOperator.SetOperand("texture ID", textureIDTensor);
+    renderTextOperator.SetOperand("font size", fontSizeTensor);
+    renderTextOperator.SetOperand("gltf", gltfTensorPlaceholder);
+
+    // update gltf operator
+    var pose = new float[] {0.5f, 0.0f, 0.0f, 0.0f,
+        0.0f, 0.5f, 0.0f, 0.0f,
+        0.0f, 0.0f, 0.5f, -0.5f,
+        0.0f, 0.0f, 0.0f, 1.0f};
+    var poseDim = new[] { 4, 4 };
+    var poseShape = new TensorShape(poseDim);   
+    var poseTensor = pipeline.CreateTensor<float, Matrix>(1, poseShape, pose);
+    var renderGltfOperator = pipeline.CreateOperator<SwitchGltfRenderStatusOperator>();
+    
+    renderGltfOperator.SetOperand("gltf", gltfTensorPlaceholder);
+    renderGltfOperator.SetOperand("world pose", poseTensor);
+    renderGltfOperator.SetOperand("view locked", poseTensor);
+    renderGltfOperator.SetOperand("visible", isTestPassed);
+}

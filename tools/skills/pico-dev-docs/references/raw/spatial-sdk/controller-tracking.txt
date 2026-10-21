@@ -1,0 +1,405 @@
+手柄追踪
+========================================
+通过 ControllerTrackingProvider，你可以获取手柄在物理世界中的位姿（位置与方向）和输入动作（按键、摇杆、扳机等），从而在虚拟场景中实现丰富、精确的交互。
+你可以通过该 DataProvider 获取手柄位姿（Pose）或手柄输入动作 (Action)：
+*获取手柄位姿：通过 dataFlow 以数据流的形式，实时获取手柄的 6DoF 位姿数据 (ControllerTrackingData)。适用于需要将虚拟物体（如虚拟面板、武器）与物理手柄保持位置同步的场景。
+*获取手柄输入动作：通过注册 ControllerActionListener 监听器，在 onControllerAction() 回调中获取每一帧的手柄按键、摇杆、扳机等输入状态的完整快照 (ControllerActionData)。适用于以下场景：实时读取 A/B/X/Y、Trigger、Grip、Thumbstick 等输入状态；基于双手输入实现双手交互（如双手缩放/抓取）；基于“每帧状态快照”自行实现滤波/防抖/手势判定。
+*推荐阅读
+*建议阅读《DataProvider 使用说明》一文，了解如何使用 DataProvider 获取追踪数据、判断数据的可用性以及 DataProvider 的状态。
+*使用限制
+*仅当应用的模式为 Full Space 时，ControllerTrackingProvider 提供的所有能力（包括位姿与输入动作回调）才可用。
+* 
+*前提条件
+*添加 build 依赖项（推荐使用版本目录文件 libs.versions.toml）。
+*在 libs.versions.toml 的 [libraries] 部分添加以下内容：
+* 
+*在模块的 build 脚本文件 build.gradle.kts 的 dependencies {} 部分添加以下内容：
+* 
+*开发流程
+*ControllerTrackingProvider 提供了两种主要的数据获取方式：通过 dataFlow 获取手柄位姿，以及通过 ControllerActionListener 获取手柄输入动作。你可以根据需求选择其一或结合使用。
+*获取手柄位姿
+你可以通过订阅 dataFlow 来实时获取手柄的位姿数据，适用于需要将虚拟物体与物理手柄位置同步的场景。
+*在 Composable 函数中创建 ControllerTrackingProvider 实例。
+* 
+*使用 DisposableEffect 在 Composable 进入时调用 start()，退出时调用 stop()。
+* 
+*使用 collectAsState 将 dataFlow 转换为状态数据，以在 Composable 中响应数据变化。
+* 
+* 
+*在 SpatialView 的 update 回调中，读取数据并更新场景中实体的位姿。
+* 
+*获取手柄输入动作
+你可以通过注册 ControllerActionListener 来接收每一帧的手柄输入状态快照，是处理按键、摇杆、扳机等交互的推荐方法。
+* 
+*创建 ControllerTrackingProvider 实例。
+* 
+*创建一个 ControllerActionListener 实例，然后调用 start() 启动 ControllerTrackingProvider 实例。
+* 
+* 
+*当你不再需要获取手柄输入动作时，需要移除 ControllerActionListener 实例并停止 ControllerTrackingProvider 实例。
+* 
+*数据结构与字段说明
+*手柄位姿
+*ControllerTrackingData
+*ControllerTrackingData 表示双手柄的追踪数据。
+*left: ControllerPose：左手柄位姿。
+*right: ControllerPose：右手柄位姿。
+*ControllerPose
+*ControllerPose表示世界坐标系下手柄的位姿。
+*position: Vector3：手柄的位置。
+*rotation: Quat：手柄的旋转方向。
+*手柄输入动作
+*ControllerActionData
+*ControllerActionData 表示同一帧的双手柄输入状态快照，包含以下字段：
+*left: ControllerAction：左手柄输入状态（X/Y、Trigger、Grip、Thumbstick）。
+*right: ControllerAction：右手柄输入状态（A/B、Trigger、Grip、Thumbstick）。
+你可以使用这份“同帧快照”同时处理左右手柄输入，从而简化双手交互逻辑。
+*ControllerAction
+*ControllerAction 包含按钮、扳机、握把和摇杆等输入信息。左右手柄的按钮命名不同：左手柄通常使用 X/Y，右手柄通常使用 A/B。下表列出了主要字段及其说明：
+*
+*ThumbstickValue
+*ThumbstickValue 表示摇杆的二维值，包含以下字段：
+*x: Float（水平轴，范围 [-1, 1]）
+*y: Float（垂直轴，范围 [-1, 1]）
+不同设备或运行态下，坐标方向可能存在差异（例如上推可能为正或为负）。建议你先验证摇杆二维值代表的实际方向，再将其用于移动/转向逻辑。
+*完整代码示例
+*获取手柄位姿
+以下代码展示了如何将左手柄的真实位置设置到虚拟场景的 leftEntity 上，使 leftEntity 与真实左手柄的位置保持同步。
+* 
+*获取手柄输入动作
+*非 Compose 用法
+以下示例覆盖了完整的开发流程：创建 ControllerTrackingProvider、注册 ControllerActionListener、启动ControllerTrackingProvider、处理数据（包含按下沿检测），以及最后移除 ControllerActionListener 并停止ControllerTrackingProvider。
+ 
+*Compose 用法
+*本示例使用 remember 来注册 ControllerActionListener，以确保其实例在 Composable 函数重组时保持稳定。回调函数在后台线程执行。因此，你必须使用 Handler 切换回主线程，才能安全地更新由 mutableStateOf 创建的 UI 状态。
+ 
+*API 参考
+ControllerTrackingProvider 类提供手柄追踪的相关接口，详情参阅 API 参考。根据你所处的地理位置选择合适的文档链接：
+*中国大陆：https://developer-cn.picoxr.com/spatial-api/index.html
+*非中国大陆：https://developer.picoxr.com/spatial-api/index.html
+
+建议你在启动追踪前或启动后，检查 provider.supportState 的值，以确认当前是否满足运行条件，并根据不同状态做相应的 UI 提示或逻辑降级。常见值包括：
+*SUPPORTED：可正常提供数据。
+*DEVICE_NOT_SUPPORTED：设备/连接状态暂不满足（例如控制器未连接），后续可能自动恢复。
+*WITHOUT_PERMISSION：缺少权限，授权后可恢复。
+*NOT_IN_FULL_SPACE：不在 Full Space，进入 Full Space 后可恢复。
+
+[libraries]
+*// ...
+spatial-tracking = { group = "com.pico.spatial.tracking", name = "tracking" }
+
+dependencies {
+    // ...
+    implementation("com.pico.spatial.tracking:tracking")
+}
+
+@Composable
+fun ControllerTrackingSample() {
+    val controllerTrackingProvider = remember { ControllerTrackingProvider() }
+    // ...
+}
+
+@Composable
+fun ControllerTrackingSample() {
+    // ...
+    DisposableEffect(controllerTrackingProvider) {
+        controllerTrackingProvider.start()
+        onDispose { controllerTrackingProvider.stop() }
+    }
+    //...
+}
+
+你可以根据具体场景选择不同的获取方式。此处，在 Composable 函数中，可以使用 dataFlow 获取数据；在 ECS 中，可以通过 latestData 获取最新数据。
+
+@Composable
+fun ControllerTrackingSample() {
+    // ...
+val controllerTrackingData by
+    controllerTrackingProvider.dataFlow.collectAsState(
+        initial = ControllerTrackingData(null, null, 0L)
+    )
+    // ...
+}
+
+@Composable
+fun ControllerTrackingSample() {
+    // ...
+    val rootEntity: Entity = remember { Entity() }
+    val leftEntity: Entity = remember { Entity() }
+    SpatialView(
+        update = { _, _ ->
+            controllerTrackingData.left?.let { left ->
+                val transformComponent = leftEntity.components[TransformComponent::class.java]
+                transformComponent?.apply {
+                    val position = rootEntity.convertPositionFrom(left.position, null)
+                    val rotation = rootEntity.convertRotationFrom(left.rotation, null)
+                    setPosition(position)
+                    setQuaternion(rotation)
+                }
+            }
+        }
+    ) { content, _ ->
+        rootEntity.addChild(leftEntity)
+        content.addEntity(rootEntity)
+    }
+    // ...
+}
+
+在处理手柄输入时，请参考以下建议：
+*检测按键事件：如需检测按键的“按下”(down) 和“抬起”(up) 事件，你可以通过缓存上一帧的 ControllerActionData，并与当前帧的数据进行比较来实现。
+*避免逐帧日志：为防止性能问题，避免在每一帧都输出日志。
+*UI 刷新节流：在调试界面时，建议对刷新操作进行节流，例如每 50-100 毫秒更新一次，或仅在数值变化时更新。
+
+val provider = ControllerTrackingProvider()
+
+*start() 用于开始从底层数据源接收数据。如果当前条件不满足，start() 可能返回 StartResult.PENDING；当条件满足后，会自动开始提供数据。
+*onControllerAction() 回调在底层数据源线程触发，触发频率接近设备输出频率。因此，不要在回调中执行耗时操作（如阻塞 IO、大量日志、复杂计算）。如果你需要更新 UI，或调用仅允许在主线程执行的逻辑，请先在回调中“拷贝/缓存数据”，再切回主线程处理。
+
+val listener = ControllerTrackingProvider.ControllerActionListener { actionData ->
+    // actionData.left / actionData.right
+}
+
+provider.addControllerActionListener(listener)
+provider.start()
+
+provider.removeControllerActionListener(listener)
+provider.stop()
+
+
+
+*输入项
+
+*左手柄字段 (actionData.left)
+
+*右手柄字段 (actionData.right)
+
+*说明
+
+主按钮 1 (Press)
+
+xButtonPressed: Boolean
+
+aButtonPressed: Boolean
+
+true 表示按键当前被物理按下。
+
+主按钮 2 (Press)
+
+yButtonPressed: Boolean
+
+bButtonPressed: Boolean
+
+*
+
+主按钮 1 (Touch)
+
+xButtonTouched: Boolean
+
+aButtonTouched: Boolean
+
+true 表示手指触摸到按键表面（部分设备支持）。
+
+主按钮 2 (Touch)
+
+yButtonTouched: Boolean
+
+bButtonTouched: Boolean
+
+
+
+Trigger (扳机)
+
+triggerPressed: Boolean
+triggerTouched: Boolean
+triggerValue: Float
+
+triggerPressed: Boolean
+triggerTouched: Boolean
+triggerValue: Float
+
+triggerValue 是 [0, 1] 范围的模拟量，表示扳机被按下的程度。
+
+Grip (握把键)
+
+gripPressed: Boolean
+gripValue: Float
+
+gripPressed: Boolean
+gripValue: Float
+
+gripValue 是 [0, 1] 范围的模拟量，表示握把键被握紧的程度。
+
+Thumbstick (摇杆)
+
+thumbstickPressed: Boolean
+thumbstickTouched: Boolean
+thumbstickValue: ThumbstickValue
+
+thumbstickPressed: Boolean
+thumbstickTouched: Boolean
+thumbstickValue: ThumbstickValue
+
+thumbstickValue 包含 x 和 y 两个浮点数，范围均为 [-1, 1]，表示摇杆的偏离。
+
+@Composable
+fun ControllerTrackingSample() {
+    // 创建 ControllerTrackingProvider
+    val controllerTrackingProvider = remember { ControllerTrackingProvider() }
+
+    // 从 dataFlow 中获得实时追踪数据
+    val controllerTrackingData by
+        controllerTrackingProvider.dataFlow.collectAsState(
+            initial = ControllerTrackingData(null, null, 0L)
+        )
+
+    // 在 Composable 生命周期内使用追踪数据
+    DisposableEffect(controllerTrackingProvider) {
+        controllerTrackingProvider.start()
+        onDispose { controllerTrackingProvider.stop() }
+    }
+
+    // 创建场景中的两个实体：根节点和左手柄节点
+    val rootEntity: Entity = remember { Entity() }
+    val leftEntity: Entity = remember { Entity() }
+
+    SpatialView(
+        modifier = Modifier.size(1.dp),
+        update = { _, _ ->
+            controllerTrackingData.left?.let { left ->
+                val transformComponent = leftEntity.components[TransformComponent::class.java]
+                transformComponent?.apply {
+                    // 将追踪数据的数据转换到根节点坐标系下，并设置给左手柄实体
+                    val position = rootEntity.convertPositionFrom(left.position, null)
+                    val rotation = rootEntity.convertRotationFrom(left.rotation, null)
+                    setPosition(position)
+                    setQuaternion(rotation)
+                }
+            }
+        }
+    ) { content, _ ->
+        rootEntity.addChild(leftEntity)
+        content.addEntity(rootEntity)
+    }
+}
+
+import android.os.Handler
+import android.os.Looper
+import androidx.appcompat.app.AppCompatActivity
+import com.pico.spatial.tracking.DataProvider
+import com.pico.spatial.tracking.controller.ControllerActionData
+import com.pico.spatial.tracking.controller.ControllerTrackingProvider
+
+class GameActivity : AppCompatActivity() {
+
+    private val provider = ControllerTrackingProvider()
+    private val mainHandler = Handler(Looper.getMainLooper())
+
+    @Volatile
+    private var lastAction: ControllerActionData? = null
+
+    private val actionListener =
+        ControllerTrackingProvider.ControllerActionListener { action ->
+            // 注意：回调线程不是主线程，且频率很高；不要阻塞
+
+            // 例：检测右手柄 A 按键“按下沿”（down edge）
+            val prev = lastAction
+            val wasAPressed = prev?.right?.aButtonPressed ?: false
+            val isAPressed = action.right.aButtonPressed
+            if (!wasAPressed && isAPressed) {
+                // A 按下：建议只做轻量逻辑（发消息/入队），避免重计算
+            }
+
+            lastAction = action
+
+            // 若需要更新 UI，请切回主线程
+            mainHandler.post {
+                val trigger = action.right.triggerValue
+                // triggerValueTextView.text = "%.2f".format(trigger)
+            }
+        }
+
+    override fun onStart() {
+        super.onStart()
+
+        // 可选：启动前检查（便于提示/降级）
+        when (provider.supportState) {
+            DataProvider.SupportState.SUPPORTED -> Unit
+            DataProvider.SupportState.NOT_IN_FULL_SPACE -> {
+                // TODO: 提示用户进入 Full Space（沉浸态/对应 Stage）
+            }
+            DataProvider.SupportState.WITHOUT_PERMISSION -> {
+                // TODO: 申请所需权限
+            }
+            DataProvider.SupportState.DEVICE_NOT_SUPPORTED -> {
+                // TODO: 允许稍后自动恢复（例如等待控制器连接）
+            }
+            DataProvider.SupportState.NONE -> Unit
+        }
+
+        provider.addControllerActionListener(actionListener)
+        provider.start()
+    }
+
+    override fun onStop() {
+        provider.removeControllerActionListener(actionListener)
+        provider.stop()
+        super.onStop()
+    }
+}
+
+import android.os.Handler
+import android.os.Looper
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import com.pico.spatial.tracking.controller.ControllerActionData
+import com.pico.spatial.tracking.controller.ControllerTrackingProvider
+
+@Composable
+fun ControllerActionPanel() {
+    val provider = remember { ControllerTrackingProvider() }
+    val mainHandler = remember { Handler(Looper.getMainLooper()) }
+
+    var latestAction: ControllerActionData? by remember { mutableStateOf(null) }
+
+    val listener = remember {
+        ControllerTrackingProvider.ControllerActionListener { action ->
+            mainHandler.post { latestAction = action }
+        }
+    }
+
+    DisposableEffect(provider) {
+        provider.addControllerActionListener(listener)
+        provider.start()
+
+        onDispose {
+            provider.removeControllerActionListener(listener)
+            provider.stop()
+        }
+    }
+
+    val left = latestAction?.left
+    val right = latestAction?.right
+
+    Column {
+        Text("Left: X=$${left?.xButtonPressed ?: false}, Y=$${left?.yButtonPressed ?: false}")
+        Text("Right: A=$${right?.aButtonPressed ?: false}, B=$${right?.bButtonPressed ?: false}")
+
+        Row {
+            Text("R Trigger=$${"%.2f".format(right?.triggerValue ?: 0f)}  ")
+            Text("R Grip=$${"%.2f".format(right?.gripValue ?: 0f)}")
+        }
+
+        Row {
+            val x = right?.thumbstickValue?.x ?: 0f
+            val y = right?.thumbstickValue?.y ?: 0f
+            Text("R Stick x=$${"%.2f".format(x)} y=$${"%.2f".format(y)}")
+        }
+    }
+}

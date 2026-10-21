@@ -168,7 +168,7 @@ content-sdk/
 tests/protocol-sim/
 ├── simulators/     # agent_sim.py / controller_sim.py
 ├── scenarios/      # 测试场景
-├── run.py/
+├── run.py
 └── requirements.txt
 ```
 

@@ -1,0 +1,211 @@
+常见瓶颈与问题排查
+========================================
+你可以使用 PICO Spatial Profiler 快速诊断性能。该工具能获取空间应用进程及 PICO 空间引擎进程的 FPS、CPU 使用率和全局 GPU 使用率，帮助你快速评估二者的性能状况。如果发现帧率不稳定或持续低于预期，你就需要定位性能瓶颈。详情请参阅《PICO Spatial Profiler》。
+*常见瓶颈排查
+*理想情况下，每个空间应用及 PICO 空间引擎都应满速运行。在 90Hz 刷新率的设备上，这意味着帧率（FPS）需稳定在 90。只有这样，才能确保每一帧画面都准时显示，保障优质体验。
+* 
+基于当前统一渲染的帧同步机制，空间应用会等待 PICO 空间引擎消费完当前帧后才开始下一帧的处理，因此空间应用的帧率不会高于 PICO 空间引擎的帧率。大多数情况下，空间应用和 PICO 空间引擎的帧率应相等且均为 90 FPS，否则就说明出现了性能瓶颈，具体可以分为下文中的几种情况。
+*仅空间应用出现性能瓶颈
+*现象：
+*空间应用的帧率低于 90 FPS，但 PICO 空间引擎的帧率为 90 FPS（即满速运行）。
+*感知：
+*在 Shared Space 下，仅当前应用的内容卡顿，其余视觉元素（如其他应用、系统 UI）保持流畅。
+*在 Full Space 下，由于该应用是唯一内容源，视野中的所有内容都可能卡顿。
+*分析：
+*这种情况的典型原因是应用自身的单帧处理耗时过长。以下图为例，第 N+1 帧执行超时，错过了 PICO 空间引擎的消费窗口，只能顺延至 PICO 空间引擎的 X+2 帧，而第 N+2 帧又必须等待第 N+1 帧被消费后才能开始，若此情况频繁发生，就会导致应用帧率下降，出现卡顿。
+* 
+*排查建议：
+*针对空间应用的性能瓶颈，可以参考《性能优化》中的 “问题排查” 部分，尝试定位具体的问题类型，并重点排查《获取并分析 Trace 记录》中提到的与帧循环相关的 Trace。
+*仅 PICO 空间引擎出现性能瓶颈
+*现象：
+*空间应用与 PICO 空间引擎的帧率均低于 90 FPS，且两者的帧率相等。
+*感知：
+*无论在 Shared Space 还是 Full Space，视野中的所有内容（包括其他应用和系统 UI）都会出现卡顿。
+*分析：
+*这通常意味着 PICO 空间引擎遇到了瓶颈。为准确定位，建议在仅运行单个空间应用的情况下进行调试，以排除其他应用的干扰。瓶颈主要分为 CPU 和 GPU 两类。
+PICO 空间引擎的 CPU 瓶颈
+*原因：
+*在统一渲染架构下，CPU 瓶颈通常源于单帧内渲染任务过多（例如绘制调用数量过大），导致准备绘制命令列表的耗时过长。具体原因可分为 2D 和 3D 两个方面：
+*2D 渲染：包含过多的渲染任务，例如大量文字转贴图、复杂矢量图形绘制，或使用了过多的 View Attachments 和 3D-Effect Views。
+*3D 渲染：包含大量未实例化的 Mesh、重复的材质资源，或未能有效使用实例化技术。
+*示例：
+*以下图为例，帧 N+1 在 CPU 阶段的执行时间过长，导致 GPU 在完成了帧 N 后，长时间收不到新的绘制命令队列，只能处于空闲状态。
+* 
+*排查建议：
+*参考《性能优化》中的 “模型数量” 部分，并且重点排查《获取并分析 Trace 记录》中提及的场景渲染相关 Trace。Trace 中展示了一段时间内 PICO 空间引擎中各类绘制命令的数量统计。
+*PICO 空间引擎的 GPU 瓶颈
+*原因：
+*GPU 瓶颈主要由过于复杂的单帧绘制任务引起，这会导致 GPU 渲染耗时过长。其原因可从以下两个方面分析：
+*2D 渲染：当渲染任务包含毛玻璃、透明等复杂 UI 特效时，容易引发 GPU 瓶颈。这些特效通过引入额外的后处理 Pass、增加 Overdraw 和消耗显存带宽，导致 GPU 负载显著增加。
+*3D 渲染：过高的场景复杂度是导致 GPU 瓶颈的常见原因。例如，过于复杂的模型、过多的三角面数、尺寸过大的纹理、或过多的光源与阴影，都会显著增加 GPU 渲染管线的执行时间。
+*示例：
+*以下图为例，帧 N 在 GPU 阶段的执行时间过长，导致帧 N+1 在 CPU 阶段需要等待帧 N 完成后才能进行绘制命令队列的提交，CPU 长时间处于阻塞状态。
+* 
+*排查建议：
+*参考《性能优化》中的如何优化 3D 场景章节中 “模型复杂度”、“三角面数量”、“纹理大小”、“光源和阴影数量” 等部分，并且重点排查《获取并分析 Trace 记录》中提及的场景渲染相关 Trace。
+*空间应用和 PICO 空间引擎均出现性能瓶颈
+*现象：
+*空间应用和 PICO 空间引擎的帧率均低于 90 FPS，且空间应用的帧率低于 PICO 空间引擎的帧率。这是上述两种情况的叠加，状况最为复杂。
+*感知：
+*无论在 Shared Space 还是 Full Space 下，视野中所有内容均出现明显卡顿。
+*排查建议：
+*首先，在仅运行单个应用的状态下调试。
+*请参考上文 ”仅 PICO 空间引擎出现性能瓶颈“ 部分的排查建议，优先解决引擎的性能瓶颈，将其帧率优化至 90 FPS。
+*引擎性能达标后，再参考 “仅空间应用出现性能瓶颈” 部分的排查建议，优化你的空间应用性能。
+*常见问题排查
+而在实际的空间应用开发中，往往会有很多因素影响空间应用的性能，针对已经发现的和潜在的性能问题，可以采用各种工具来进行排查。
+*空间应用的常见问题
+*冷启动慢
+冷启动时长，在用户感知上表现为点击应用图标后，到应用内容显示完全、应用可以正常使用的时间。对于空间应用来说，冷启动这段时间除了常规应用会做的 2D 视图布局和绘制、核心模块初始化以外，往往还会进行 3D 资产的加载或创建。
+对于空间应用的冷启动，除了传统应用的注意事项外，还有以下值得注意的事项：
+*在启动时仅加载默认容器所需的资产，以避免不必要的资产加载。
+*对资产进行优化，比如压缩纹理、降低模型面数等，以降低资产加载耗时。
+*如果你的应用需要在进入应用后展示复杂的场景，可以考虑在加载完成之前展示 splash screen，而不是一片空白/漆黑。
+当你开始排查冷启动问题时，可以通过 Android Studio Profiler 的 System Trace 或者 Perfetto，抓取应用启动阶段的 Trace 记录，并进行分析。除了查看 Android 应用的常规冷启动信息之外，也请关注在冷启动阶段，是否有资产加载的 Slice 信息。
+比如如下代码在运行时就会由于在主线程加载了 AssetBundle 和 Entity 而导致卡顿：
+ 
+Trace 中就会出现：
+* 
+*经过分析 Trace 记录，如果发现其他 Slice 有预期外的耗时，可以通过 Android Studio Profiler 的 Find CPU Hotspots 功能，记录并分析冷启动阶段耗时较长的方法，并进行针对性优化：
+* 
+资产加载相关的 Trace 信息如下：
+*
+*响应慢和 ANR
+当应用长时间占用主线程时，就会发生卡顿，甚至是 ANR。通常来讲，超过 100ms 就会让用户有明显感知，超过 5s 就会触发 ANR。
+对于空间应用，要特别注意在 System.update 和 SpatialView 的 initial 和 update 块中，避免长时间阻塞，因为这些方法都是运行在主线程之中的。对此有如下注意事项：
+*避免在 System.update 和 SpatialView 的 initial 和 update 块中同步加载 3D 资产，加载 3D 资产往往需要数十毫秒以上的时间。
+*在 SpatialView 中，如果可以，通过 remember 块来提前获取到所需的 Entity 对象，而不是在每次 update 中查找。
+*在 System.update 中，通过 EntityQueryCondition.hasComponent() 来查找所需的 Entity 对象。
+*在 System.update 和 SpatialView 的 update 块中，减少对象分配次数，由于这两个方法会频繁执行，在其中分配对象会显著增加内存压力和 GC 频率。
+在排查卡顿问题时，可以通过 Android Studio Profiler 的 System Trace 或者 Perfetto，抓取应用运行过程中的 Trace 记录，并进行分析。在 Trace 记录中，你可以在主线程找到每一个 System 的 Slice：
+* 
+* 
+*对于 SpatialView 的 initial 和 update 块，可以使用 Android Studio Profiler 的 Find CPU Hotspots 功能，在其中搜索 “SpatialView”，就可以找到在重组时 SpatialView 中的执行状况：
+* 
+又或者，你可以使用 Compose UI 提供的 Composition tracing 工具来排查 SpatialView 重组引发的卡顿。
+*PICO 空间引擎的常见问题
+*渲染掉帧
+如果一个空间应用的 3D 场景过于复杂，就会带来较大的渲染压力，甚至会掉帧。用户感受为整个画面卡顿，转头或者移动时画面不流畅。
+在排查渲染掉帧问题时，可以通过 Android Studio Profiler 的 System Trace 或者 Perfetto，抓取应用运行过程中的 Trace 记录。在 Perfetto UI 中打开 Trace 记录并分析，在 Trace 记录中你可以找到运行时 3D 资源和特性的使用情况。你可以着重关注光照、物理、粒子、PBR 材质等消耗较大的特性。
+* 
+ 
+*这里需要着重关注的特性和 Trace 信息有：
+*物理模拟
+*使用物理相关组件均会在 Trace 记录中留下 Counter 信息，包括：
+**
+*当为较多物体添加了物理特性后，会显著增加 CPU 运算开销，这时可以考虑这些方式来降低开销：
+*减少不必要的参与物理模拟的物体。
+*为碰撞体设置合适的碰撞模式和碰撞分组。
+*为物理刚体设置合适的连续碰撞检测模式，平衡精度和性能。
+*通过添加 PhysicsWorldComponent：
+*将环境中不会发生交互的部分分成不同的物理世界。
+*在合理的范围降低迭代次数、提高物理更新时间间隔。
+*动态光照
+*当场景中存在动态光照时，会显著增加渲染压力。在大多数情况下，使用烘焙光照或者 IBL 都可以获得良好的效果，并且不会有显著的性能开销。如果你的场景需要使用动态光照来实现效果，请尽量控制光源数量。
+*使用动态光照相关组件均会在 Trace 记录中留下 Counter 信息，包括：
+**
+若想分析当前在渲染的模型面数、绘制调用数量等数据，需要使用 Perfetto UI 查看 com.pico.spatial.runtime 进程的 Trace 记录：
+* 
+ 
+*对于模型面数和绘制调用数量，可以简单的理解为数量越低，渲染压力越小。整个场景中建议的模型面数和 DrawCall 数量如下：
+*模型面数：不超过 350000
+*DrawCall 数量：Shared Space 中不超过 80 个；Full Space 中不超过 90 个
+当模型面数过多时，需要在合理的范围内降低模型面数，通过法线贴图等方式弥补模型显示效果。
+当绘制调用过多时，可以通过合并多个模型来减少模型数从而降低绘制调用数量，或者使用 MeshInstance 来展示多个相同物体。
+*Trace 列表
+关于空间应用独有的 Trace 信息，参阅《获取并分析 Trace 记录》。
+
+如何避免系统优化策略对性能诊断的影响：
+*空间应用的帧率受限：基于当前资源使用情况，在高负载时，系统会主动降低非焦点 WindowContainer 的帧率。因此，需确保当前调试中应用的 WindowContainer 处于焦点状态。
+*PICO 空间引擎的帧率受限：当 HMD 几乎静止、无交互输入且无内容更新时，为降低功耗，PICO 空间引擎可能会进入低帧率模式。因此，建议在真机上调试应用时避免同时出现以上情况。
+
+@Composable
+fun HomeScreen(modifier: Modifier) {
+    Column(modifier = modifier.fillMaxSize()) {
+        SpatialView { content, _ ->
+            val bundle = AssetBundle.load("asset://hi.bundle")
+            val entity = Entity.load(modelName = "Hi", bundle = bundle)
+            bundle.close()
+            
+            entity?.let {
+                content.addEntity(it)
+            }
+        }
+    }
+}
+
+
+
+Trace 名称
+
+描述
+
+*LoadEntity: {name}
+
+*在 UI 线程中，从 Path 创建 Entity 对象。
+
+*LoadEntity_Asset: {name}
+
+*在 UI 线程中，从 Bundle 创建 Entity 对象。
+
+*LoadAsset: {name}
+
+*在 UI 线程中，创建 AssetBundle 对象。
+
+*LoadMesh: {name}
+
+*在 UI 线程中，从 Path 创建 MeshResource 对象。
+
+*LoadTexture: {name}
+
+*在 UI 线程中，从 Path 创建 TextureResource 对象。
+
+对于每个被注册过的 System，每次运行时都会在 Trace 记录中留下 “System_update: {name}” 命名的 Slice。这里 System 的名字会是运行时的 System 类名，也就是说如果 System 类名被混淆，这里显示的也会是混淆后的名字。
+
+Profiler 不会展示 Trace 记录中的 Counter 信息，这部分计数信息需要在 Perfetto UI 中查看。
+
+
+
+Trace 名称
+
+描述
+
+*collisionComponentCount
+
+*当前已加载的 CollisionComponent 的数量。
+
+*rigidBodyComponentCount
+
+*当前已加载的 RigidBodyComponent 实例的数量。
+
+*physicsVelocityComponentCount
+
+*当前已加载的 PhysicsVelocityComponent 实例的数量。
+
+*physicsForceComponentCount
+
+*当前已加载的 PhysicsForceComponent 实例的数量。
+
+*physicsWorldComponentCount
+
+*当前已加载的 PhysicsWorldComponent 实例的数量。
+
+
+
+Trace 名称
+
+描述
+
+*pointLightComponentCount
+
+*当前已加载的 PointLightComponent 实例的数量。
+
+*spotLightComponentCount
+
+*当前已加载的 SpotLightComponent 实例的数量。
+
+*directionalLightComponentCount
+
+*当前已加载的 DirectionalLightComponent 实例的数量。
+
+对于在该进程中的每帧的模型面数、绘制调用数量等数据，都是当前系统中正在运行的所有进程的总和。在 Shared Space 下，可以通过对比容器启动前后的数量差来得出当前容器的数量。

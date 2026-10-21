@@ -1,0 +1,17 @@
+签名关联的 APK 数量超出限制如何处理？
+========================================
+自设备系统版本 5.11.0 起，一个签名（Key）最多可关联 50 个 APK 文件。超出该限制的 APK 文件将无法在 PICO 设备中运行。若出现此问题，可以参考以下步骤为你的 Unity 项目配置新的签名。
+*前往 Edit > Project Settings > Player > Publishing Settings，勾选 Custom Keystore 选框，然后点击 Keystore Manager... 按钮。
+* 
+*在 Keystore Manager 窗口左上角，选择 Keystore... > Create New > Anywhere...，然后在弹窗中确认新 Keystore 的存储位置。
+* 
+*在 Keystore Manager 窗口中，设置 Keystore 的密码以及新 Key 的名称和密码。
+* 
+*点击窗口右下角的 Add Key 按钮。
+*你将看到 Keystore and Key created 弹窗。
+* 
+*点击 Yes 按钮。
+*刚刚创建的 Keystore 和 Key 将被用于当前项目。
+* 
+
+

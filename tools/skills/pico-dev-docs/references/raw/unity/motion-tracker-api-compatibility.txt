@@ -1,0 +1,270 @@
+运动追踪接口兼容性说明
+========================================
+本文罗列全身动捕和独立追踪相关接口，并标明每个接口适用的 PICO 体感追踪器版本。
+*PICO 体感追踪器（Beta）版相关
+下表为 PICO 体感追踪器（Beta）版相关接口，所有接口在 PICO 体感追踪器（正式版）上依旧适用。
+*
+*PICO 体感追踪器（正式版）相关
+以下为全身动捕相关接口：
+*
+以下接口用于获取 PICO 体感追踪器相关信息：
+ 
+*
+*外部设备相关
+*
+
+
+
+接口
+
+说明
+
+适用设备
+
+GetBodyTrackingPose
+
+获取 PICO 体感追踪器的所有追踪数据。
+
+*PICO 体感追踪器（Beta）
+*PICO 体感追踪器（正式版）
+
+GetMotionTrackerConnectStateWithID
+曾用名：GetFitnessBandConnectState
+
+获取当前所有 PICO 体感追踪器的连接状态。
+
+
+
+GetMotionTrackerBattery
+曾用名：GetFitnessBandBattery
+
+获取指定 PICO 体感追踪器的电量。
+
+
+
+GetMotionTrackerCalibState
+曾用名：GetFitnessBandCalibState
+
+获取当前 PICO 体感追踪器的校准状态。
+
+
+
+SetBodyTrackingMode
+曾用名：SetSwiftMode
+
+设置 PICO 体感追踪器的人体追踪模式（默认或高精度模式）。若未调用此接口，则使用默认模式。
+
+
+
+SetBodyTrackingBoneLength
+
+
+设置 Avatar 不同部位的骨骼长度。数据将被发送至 PICO 的算法，以使 Avatar 的姿势更加准确。
+
+
+
+MotionTrackerNumberOfConnections
+曾用名：FitnessBandNumberOfConnections
+
+通过该回调可以获取 PICO 体感追踪器当前的连接状态变化通知。
+
+
+
+MotionTrackerBatteryLevel
+曾用名：FitnessBandElectricQuantity
+
+通过该回调可以获取 PICO 体感追踪器的电量变化通知。
+
+
+
+BodyTrackingAbnormalCalibrationData
+曾用名：FitnessBandAbnormalCalibrationData
+
+通过该回调可以获取校准数据异常通知，收到该通知后建议重新校准。
+
+
+
+
+
+接口
+
+说明
+
+适用设备
+
+StartMotionTrackerCalibApp
+曾用名：StartBodyTrackingCalibApp
+废弃接口：OpenFitnessBandCalibrationAPP
+
+打开 “ PICO 体感追踪器” APP 进行校准。PICO 体感追踪器（正式版）为一眼校准，Beta 版需按照页面提示流程进行校准。
+
+*PICO 体感追踪器（Beta）
+*PICO 体感追踪器（正式版）
+
+
+GetBodyTrackingSupported
+
+查询当前设备是否支持全身动捕能力。
+
+
+
+StartBodyTracking
+
+开始全身动捕。
+
+
+
+StopBodyTracking
+
+停止全身动捕。
+
+
+
+GetBodyTrackingState
+
+获取 PICO 体感追踪器的全身动捕数据状态及异常原因。
+
+
+
+GetBodyTrackingData
+
+获取全身动捕数据。
+
+
+
+BodyTrackingStateError
+
+通过该回调可以获取全身动捕的状态码与错误码通知。
+
+
+
+BodyTrackingAction
+
+通过该回调可以获取全身动捕的 Action 状态变化通知。
+
+
+
+提示
+调用以下接口前，无需先调用 StartBodyTracking 接口。
+
+
+
+接口
+
+说明
+
+适用设备
+
+GetMotionTrackerConnectStateWithSN
+曾用名：GetMotionTrackerConnectState
+
+获取当前所有 PICO 体感追踪器的连接状态。
+
+PICO 体感追踪器（正式版）
+
+GetMotionTrackerDeviceType
+曾用名：GetMotionTrackerType
+
+获取已连接的 PICO 体感追踪器的版本。
+
+
+*PICO 体感追踪器（Beta）
+*PICO 体感追踪器（正式版）
+
+GetMotionTrackerMode
+
+获取 PICO 体感追踪器当前的追踪模式。
+
+PICO 体感追踪器（正式版）
+
+CheckMotionTrackerModeAndNumber
+
+检查当前 PICO 体感追踪器的追踪模式和数量是否符合预期。若与预期不一致，则会打开 “PICO 体感追踪器” APP 进行相关配置。
+
+PICO 体感追踪器（正式版）
+
+GetMotionTrackerLocations
+
+获取独立追踪模式下的 PICO 体感追踪器的位置。
+
+PICO 体感追踪器（正式版）
+
+MotionTrackerKeyAction
+
+通过该回调可以获取 PICO 体感追踪器的键值事件。
+
+PICO 体感追踪器（正式版）
+
+MotionTrackingModeChangedAction
+
+通过该回调可以获取运动追踪模式变化通知。
+
+PICO 体感追踪器（正式版）
+
+
+
+接口
+
+说明
+
+适用设备
+
+GetExtDevTrackerConnectState
+
+获取外部设备的连接状态。
+
+PICO 体感追踪器（正式版）
+
+SetExtDevTrackerMotorVibrate
+
+为外部设备设置振动反馈。
+
+
+
+SetExtDevTrackerPassDataState
+
+设置外部设备数据透传接口的使用状态。
+
+
+
+SetExtDevTrackerByPassData
+
+设置外部设备的透传数据。
+
+
+
+GetExtDevTrackerByPassData
+
+获取外部设备的透传数据。
+
+
+
+GetExtDevTrackerBattery
+
+获取外部设备的电量。
+
+
+
+GetExtDevTrackerKeyData
+
+获取外部设备的键值。
+
+
+
+ExtDevConnectAction
+
+外部设备连接状态发生变化的回调。
+
+
+
+ExtDevBatteryAction
+
+外部设备电量和充电状态发生变化的回调。
+
+
+
+ExtDevPassDataAction
+
+外部设备与头戴间的数据透传事件。监听该事件来决定是否需要调用 GetExtDevTrackerByPassData 来获取透传数据。
+
+

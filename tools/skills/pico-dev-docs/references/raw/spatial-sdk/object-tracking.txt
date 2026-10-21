@@ -1,0 +1,189 @@
+独立追踪
+========================================
+PICO 体感追踪器（下文简称 “追踪器”）可被绑定于物体上进行位置追踪。在独立追踪模式下，如已连接配对的体感追踪器在 PICO VR 一体机的可见范围内，则可实时追踪并输出体感追踪器的 6DoF 信息，用于追踪体感追踪器本体或绑定的物体。
+*推荐阅读
+*建议阅读《DataProvider 使用说明》一文，了解如何使用 DataProvider 获取追踪数据、判断数据的可用性以及 DataProvider 的状态。
+*使用限制
+*仅当应用的模式为 Full Space 时，才可以获取独立追踪数据。
+*只有将 PICO 体感追踪器的追踪模式切换至独立追踪后，才可以使用相关接口获取数据。
+*独立追踪模式与全身动捕模式互斥，在开启独立追踪模式后，无法输出全身动捕数据。
+*接入独立追踪功能
+*开发流程
+*下图展示接入独立追踪功能的流程。
+* 
+*获取 MotionTrackingProvider 实例。
+* 
+* 
+*调用 start() 启动 MotionTrackingProvider，添加 TrackerRequestCompleteListener 以获得可用的追踪器的 ID 列表，然后在不再需要追踪时移除监听并调用 stop()。
+* 
+*使用 dataFlow 获取各个追踪器的位姿数据。
+* 
+* 
+*读取各个追踪器的位姿数据，转换数据的坐标系，然后将结果设置给实体。
+* 
+*完整代码示例
+*以下代码展示如何获取多个追踪器的实时位姿，并将其设置到虚拟场景中对应的实体上。
+* 
+*监听追踪器的连接状态
+*你可以监听追踪器的连接状态，以实时获取当前追踪器的连接状态变化。
+ 
+*监听追踪器的电量
+*你可以监听追踪器的电量，以实时获取当前追踪器的电量信息，提醒用户及时充电或者更换电量低的追踪器。
+ 
+*监听追踪器的按键事件
+*追踪器上有一个按键，你可以监听追踪器的按键事件，在用户按下按键时获取回调，以和用户进行互动。
+ 
+*API 参考
+MotionTrackingProvider 类提供独立追踪相关的接口。详细说明参阅 API 参考。根据你所处的地理位置选择合适的文档链接：
+*中国大陆：https://developer-cn.picoxr.com/spatial-api/index.html
+*非中国大陆：https://developer.picoxr.com/spatial-api/index.html
+
+
+
+
+@Composable
+fun MotionTrackingSample() {
+    val motionTrackingProvider = remember { MotionTrackingProvider }
+    // ...
+}
+
+MotionTrackingProvider 实例为单例，整个进程共享同一个实例。
+
+@Composable
+fun MotionTrackingSample() {
+    // ...
+    val trackerIds: MutableList<Long> = remember { mutableStateListOf() }
+    DisposableEffect(motionTrackingProvider) {
+        val requestCompleteListener =
+            MotionTrackingProvider.TrackerRequestCompleteListener {
+                trackerIds.clear()
+                trackerIds.addAll(it.ids)
+            }
+        motionTrackingProvider.addRequestCompleteListener(requestCompleteListener)
+        motionTrackingProvider.start()
+        
+        onDispose {
+            motionTrackingProvider.removeRequestCompleteListener(requestCompleteListener)
+            motionTrackingProvider.stop()
+        }
+    }
+    // ...
+}
+
+你可以根据具体场景选择不同的获取方式。此处，在 Composable 函数中，可以使用 dataFlow 获取数据；在 ECS 中，可以通过 latestData 获取最新数据。
+
+@Composable
+fun MotionTrackingSample() {
+    // ...
+    val motionTrackingData by
+        motionTrackingProvider.dataFlow.collectAsState(MotionTrackingData(emptyList(), 0L))
+    // ...
+}
+
+@Composable
+fun MotionTrackingSample() {
+    // ...
+    SpatialView(
+        update = { _, _ ->
+            val entities = rootEntity.getChildren()
+            
+            // 使用获取到的追踪器 ID 来获取对应追踪器的数据
+            trackerIds.forEachIndexed { index, id ->
+                motionTrackingData[id].let { pose ->
+                    entities[index].apply {
+                        components[TransformComponent::class.java]?.apply {
+                            val position = rootEntity.convertPositionFrom(pose.position, null)
+                            val rotation = rootEntity.convertRotationFrom(pose.rotation, null)
+                            setPosition(position)
+                            setQuaternion(rotation)
+                        }
+                    }
+                }
+            }
+        }
+    ) { content, _ ->
+        // 初始化你的实体
+    }
+    // ...
+}
+
+@Composable
+fun MotionTrackingSample() {
+    // 获取 MotionTrackingProvider
+    val motionTrackingProvider = remember { MotionTrackingProvider }
+
+    // 从 dataFlow 中获得实时追踪数据
+    val motionTrackingData by
+        motionTrackingProvider.dataFlow.collectAsState(MotionTrackingData(emptyList(), 0L))
+    
+    // 当前可用的追踪器 ID 列表
+    val trackerIds: MutableList<Long> = remember { mutableStateListOf() }
+
+    // 在 Composable 生命周期内使用追踪数据
+    DisposableEffect(motionTrackingProvider) {
+        // 追踪器请求监听器，当追踪器请求完成时会返回分配的追踪器 ID 列表
+        val requestCompleteListener =
+            MotionTrackingProvider.TrackerRequestCompleteListener {
+                // 更新当前的追踪器 ID 列表
+                trackerIds.clear()
+                trackerIds.addAll(it.ids)
+            }
+        motionTrackingProvider.addRequestCompleteListener(requestCompleteListener)
+        motionTrackingProvider.start()
+        
+        onDispose {
+            motionTrackingProvider.removeRequestCompleteListener(requestCompleteListener)
+            motionTrackingProvider.stop()
+        }
+    }
+
+    // 创建场景中的根节点
+    val rootEntity: Entity = remember { Entity() }
+
+    SpatialView(
+        update = { _, _ ->
+            val entities = rootEntity.getChildren()
+            
+            // 遍历所有可用的追踪器
+            trackerIds.forEachIndexed { index, id ->
+                // 获取对应追踪器的数据
+                motionTrackingData[id].let { pose ->
+                    entities[index].apply {
+                        components[TransformComponent::class.java]?.apply {
+                             // 将追踪数据的数据转换到根节点坐标系下，并设置给对应节点
+                            val position = rootEntity.convertPositionFrom(pose.position, null)
+                            val rotation = rootEntity.convertRotationFrom(pose.rotation, null)
+                            setPosition(position)
+                            setQuaternion(rotation)
+                        }
+                    }
+                }
+            }
+        }
+    ) { content, _ ->
+        // 初始化你的实体
+    }
+}
+
+val connectionInfoListener =
+    MotionTrackingProvider.TrackerConnectionInfoListener { 
+        // 处理连接状态变化
+        Log.i("MotionTracker", "id: $${it.id} is now $${it.connectionState}")
+    }
+motionTrackingProvider.addConnectionInfoListener(connectionInfoListener)
+
+val batteryInfoListener =
+    MotionTrackingProvider.TrackerBatteryInfoListener { 
+        if (it.batteryLevel <= 0.1f && it.chargingState == UNCHARGED) {
+            // 提醒用户及时充电或者更换电量低的追踪器
+            Log.i("MotionTracker", "id: $${it.id} battery low.")
+        }
+    }
+motionTrackingProvider.addBatteryInfoListener(batteryInfoListener)
+
+val keyEventListener =
+    MotionTrackingProvider.TrackerKeyEventListener { 
+        // 处理按键事件
+        Log.i("MotionTracker", "id: $${it.id} has been click.")
+    }
+motionTrackingProvider.addKeyEventListener(keyEventListener)

@@ -1,0 +1,5 @@
+SpatialML 概览
+========================================
+*SpatialML 是一个专为混合现实（MR）打造的数据驱动型运行时框架，旨在深度释放 PICO 的空间计算潜能。
+*你可向 SpatialML 部署自定义算法，包括基于 OpenCV 实现的算法或通过 PyTorch、TensorFlow、ONNX 等主流框架训练的机器学习模型。SpatialML 通过 Google AI LiteRT 框架进行模型部署，利用 PICO 搭载的 GPU（基于 OpenCL 库）和 Qualcomm NPU 对模型推理进行硬件级加速，并能快速集成双目相机、深度相机、空间定位及锚点数据作为输入，最终以算法输出直接驱动沉浸式的 MR 交互体验。
+*关于 SpatialML 的详细使用方法，参阅《SpatialML 手册》。

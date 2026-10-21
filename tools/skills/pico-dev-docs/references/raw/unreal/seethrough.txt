@@ -1,0 +1,85 @@
+视频透视
+========================================
+视频透视（Video Seethrough, VST）技术可以打破 VR 头显提供的全封闭式虚拟环境。该技术可通过头显上的摄像机实时采集周围环境的视图，然后通过图像处理算法将真实场景画面呈现在头显屏幕上，给用户一种可以直接通过头显屏幕浏览现实场景的感觉。最终，透视画面可以与应用内的虚拟场景融合，呈现混合现实效果。
+*透视画面由 PICO 系统直接处理并上屏展示，应用程序无法获取用户的任何物理环境信息。
+* 
+*核心概念
+*
+*环境要求
+*PICO 设备型号：PICO 4 Ultra 系列（若要在 PICO 4 系列设备上使用该功能，需使用 3.1.0 及更早版本的 SDK）
+*PICO 设备系统版本：5.12.0 及以上
+*注意事项
+*手柄请尽量不要使用透明材质，否则会出现打包后，场景内无法显示手柄的情况。如果必须要使用透明材质，请参考《透视背景下实现半透明效果》中的相关说明。
+*前提条件
+*已在项目中创建 Pawn。具体步骤，可参考搭建 XR 场景。
+*在编辑器中为项目启用透视功能
+*参考以下步骤在 UE 编辑器中为你的项目启用透视功能：
+*在编辑器左上角，点击 编辑（Edit） > 项目设置（Project Settings） > 插件（Plugins） > PICOXR Settings。 
+*移动到 Mixed Reality 选项卡下，勾选 Enable Video Seethrough。
+* 
+根据关卡设计需要，你可选择开启背景透视或窗口透视，具体步骤参考下文。
+*选项一：开启背景透视
+背景透视可以将现实世界作为背景实时显示在 PICO 头显屏幕上，场景中的虚拟物体将覆盖在背景图上，形成穿透式 AR 场景。以下为背景透视效果展示视频：
+* 
+开启背景透视步骤如下：
+*在 UE 编辑器右上方 世界大纲视图 中，选择以下两种方式中的一种对 Sky Sphere 进行操作：
+*删除或停用 Sky Sphere。
+* 
+*改变 Sky Sphere 材质，步骤如下：
+*点击 编辑 BP_Sky_Sphere。
+* 
+*在 创建动态 材质实例 > Source Material 下拉菜单中，搜索并选择 UnderlayMaterial。
+* 
+*点击窗口左上角 编译。
+*打开关卡蓝图，调用 SetSeeThroughBackground 接口开启透视。蓝图调用示例如下：
+* 
+*选项二：开启窗口透视
+为选定区域添加 Underlay Material 材质，并调用 SetSeeThroughBackground 接口，可使该区域在 PICO 头显中呈现透视效果。
+具体操作步骤如下：
+*在需要开启透视效果的区域放置 actor，如一个平面。
+*在 Unreal 编辑器右上角 世界大纲视图 中，选择刚才放置的 actor。
+*在 细节 > 材质 选卡的下拉菜单中，选择 Underlay Material。
+* 
+* 
+*打开关卡蓝图，调用 SetSeeThroughBackground 接口开启透视。调用示例如下：
+* 
+*重启透视
+*应用暂停后，透视将自动失效。在此情况下，你需监听重启事件，重新设置透视，以便应用重启后恢复透视。调用示例如下：
+ 
+*透视状态回调
+通过将 CustomEvent 绑定至 VSTDisplayChangedDelegate 可以获取 VST 的状态回调。具体示例如下：
+* 
+*VST 层与 Eye Buffer 的混合模式
+* 
+使用 r.Mobile.PICO.BlendModeSetting 来设置 VST 层与 Eye Buffer 的混合模式。
+* 
+*r.Mobile.PICO.BlendModeSetting 预设了以下三种混合模式：
+*r.Mobile.PICO.BlendModeSetting = 0：VST 层会叠加到 Eye Buffer，适用于 Passthrough 与 Eye Buffer 同时显示的场景。
+* 
+*r.Mobile.PICO.BlendModeSetting = 1（默认）：VST 层与 Eye Buffer 均会根据 Alpha 值做裁剪。该模式下，透明度混合的特效可能存在混合问题。
+* 
+*r.Mobile.PICO.BlendModeSetting =  2：Eye Buffer 会叠加到 VST 层，且只有 VST 层会根据 Alpha 值做裁剪。该模式下，包含透明度的特效可以与 VST 层正常混合。
+* 
+
+
+
+
+名称
+
+说明
+
+混合现实
+
+Mixed Reality（MR），指的是结合真实和虚拟世界创造一个虚实结合的场景，物理实体和数字对象共存于场景内并能实时相互作用。
+
+透视
+
+Seethrough，指基于头显外置摄像头实现透视功能，使用户能够通过头显感知真实的物理世界。
+
+合成服务
+
+合成服务是 PICO SDK 的能力，可以将不同应用/服务生成的图像合为一层，然后提供给左右眼显示。
+
+Underlay Material 位于 内容浏览器下 的 PICOXR 内容\Materials 文件夹下，你也可以直接拖动该材质至选定区域。
+
+仅 UE 5.4 及以上 可用。

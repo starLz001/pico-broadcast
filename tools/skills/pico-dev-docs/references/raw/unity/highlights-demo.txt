@@ -1,0 +1,23 @@
+高光时刻示例
+========================================
+HighlightsDemo 展示高光时刻服务相关功能，包括截屏、录屏、跨端分享等。
+* 
+*APK 安装包
+直接将 Demo 的 APK 文件安装至设备进行体验。
+ 
+*GitHub 仓库
+克隆 Demo 的 GitHub 仓库，查看代码示例、图形资产、脚本文件等。
+*地址：https://github.com/Pico-Developer/PlatformSample-Unity/tree/main/Assets/Samples/HighlightDemo
+*使用前提
+PICO 设备的系统版本需为 5.7.0 及以上。 
+*使用步骤
+*点击 StartSession 按钮，开启一个新的 Session。
+*按需进行截屏或录屏操作：
+*点击 Capture 按钮，截取当前屏幕。
+*点击 StartRecord/StopRecord 按钮，开始/停止录屏。
+*点击 ListMedia 按钮，展示当前 Session 中的截图和视频。
+* 
+*点击 See 按钮，查看截图或视频。
+*保存或分享截图或视频。
+*保存：点击 Choose 按钮，选中某个图片或视频，然后点击 Save 按钮，将资源保存至设备本地。
+*分享：点击 Choose 按钮，选中某个图片或视频，然后点击 Share 按钮，将资源分享至目标社交平台。

@@ -1,0 +1,20 @@
+VR 合成层
+========================================
+*PICO Unreal OpenXR Plugin 支持使用 VR 合成层（VR Compositor Layers）渲染场景中的焦点对象，例如信息、文本、光标等。PICO Unreal OpenXR Plugin 支持 FCylinderLayer、FEquirectLayer 及 FQuadLayer 三种类型的Layer。
+*环境要求
+*PICO 设备：PICO Neo3、PICO 4、PICO 4 Pro、PICO 4 Enterprise、PICO G3、PICO 4 Ultra 或 Project Swan（PICO OS 6）
+*前提条件
+你已在引擎中安装并启用了 PICO Unreal OpenXR 插件。详情参考 PICO Unreal OpenXR 快速开始。
+*创建步骤
+使用 PICO Unreal OpenXR 插件创建 VR 合成层与使用 PICO SDK 创建步骤相同。了解更多，参考 PICO Unreal Integration SDK 文档 创建 VR 合成层。
+你也可参考 UE 官方文档了解更多信息：
+* OpenXR立体图层概述
+* OpenXR立体图层快速入门
+*虚幻引擎 - PICO OpenXR 分支拓展能力
+*目前，UE 内置仅支持 FCylinderLayer、FEquirectLayer 及 FQuadLayer 三种类型的 Layer，且均不支持 Depth。但是，你可以通过 虚幻引擎 - PICO OpenXR 分支 获取 CubemapLayer 和 EAC Layer 类型 Layer 的支持。
+* 
+ 
+*在 Project Swan 设备上，你无需使用 PokeHoleComponentPICO 组件，只需开启 StereoLayerComponent 上的 Support Depth 属性，即可实现深度效果。此功能通过 XR_FB_composition_layer_depth_test 实现。目前，该功能支持 Quest 3，但暂不支持 PICO 4 Ultra 及更早的设备。
+* 
+
+你可以通过添加 PokeHoleComponentPICO 组件，来启用 Layer 的 Depth 能力。在 UE 5.6 及更高版本中不需要虚幻引擎 - PICO OpenXR 分支即可实现深度效果。

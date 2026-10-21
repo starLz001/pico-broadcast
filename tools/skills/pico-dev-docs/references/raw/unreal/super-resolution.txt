@@ -1,0 +1,59 @@
+图像超分辨率
+========================================
+图像超分辨率（Image Super Resolution）指通过一定算法，基于已知图像信息，获取并补充图像细节和其它数据信息，将图像从低分辨率提升至高分辨率的技术。PICO SDK 基于高通 Snapdragon Game Super Resolution 开发的超分辨率能力，适配 PICO 设备，支持使用超分辨率技术提升图像清晰度。
+*环境要求
+*SDK 版本：2.4.0 及以上版本 
+*PICO 设备：Neo3 和 PICO 4 系列 
+*PICO 设备系统版本：5.8.0 及以上版本
+*应用场景
+若你希望提升应用图像清晰度，你可考虑开启超分辨率能力。PICO 4 系列设备屏幕的显示分辨率为 4320 × 2160 像素，但为了平衡功耗与性能，默认的渲染分辨率（即 Eye Buffer）为 1504 x 1504 像素。因此，你的应用通常是以低于设备分辨率的方式渲染。在性能受限的情况下，开启 PICO SDK 提供的的超分辨率能力，可以在设备上为用户带来更好的视觉体验。
+若你的应用的渲染分辨率已低于默认的渲染分辨率，此时不建议开启超分辨率。这是因为使用超分辨率能力将会使图像噪点更加明显。另外，随着 Eye Buffer 分辨率接近设备屏幕的显示分辨率，使用超分辨率的效果将逐渐减弱。
+与直接提升 Eye Buffer 分辨率相比，使用超分消耗的 GPU 资源相对固定。在 GPU 负载较低的场景中，你可选择直接提升 Eye Buffer 分辨率；但在 GPU 负载较大的场景中，推荐你使用超分能力，更合理分配和控制 GPU 资源。
+*注意事项
+*超分会增加合成服务侧 GPU 的压力。对三个以上的图层开启超分可能导致合成服务侧 GPU 资源紧张而产生画面撕裂。SDK 会在 GPU 负载过大时自动关闭超分辨率能力，待 GPU 负载恢复正常后自动开启。
+*超分与锐化不能在同一个 Eye Buffer 内同时开启。若你通过控制台命令同时动态设置了超分与锐化能力，SDK 将只开启超分能力。
+*不建议同时使用超分与自适应分辨率。可能会出现超分区域不对齐的情况。该问题将在未来版本中解决。
+*超分与下采样暂时不支持同时开启。
+*操作步骤
+你可参考以下步骤启用图像超分辨率。
+*在 UE 编辑器中启用
+*在 UE 编辑器中打开项目。 
+*在上方工具栏，点击 编辑（Edit） > 项目设置（Project Settings） > 插件（Plugins） > PICOXR Settings。
+*移动到 Feature 选项卡下，勾选 Enable SuperResolution。
+* 
+*使用蓝图或 C++ 代码动态启用
+超分功能可以由控制台变量 r.Mobile.PICO.EnableSuperResolution 动态控制启停。以下为该控制台变量的定义和参数说明：
+ 
+启用超分功能的蓝图如下：
+* 
+C++ 代码示例如下：
+ 
+*使用建议
+图像超分辨率是提升画面清晰度的方法之一。你可在使用超分的同时，为项目设置抗锯齿倍数，为用户进一步提供更好的视觉效果。详细步骤可参考提升画面清晰度。
+*常见问题
+*超分和锐化的区别是什么？可以同时使用吗？
+*图像锐化可以提升图像中的高频信息，但仅增强图像中已有的高频成分，增强细节边缘和轮廓；超分辨率技术可估算并补充原始图像中没有表现出的图像细节。它们都可以提升图像的清晰度。
+*超分与锐化不能在同一个 Eye Buffer 内同时开启。若你通过控制台命令同时动态设置了超分与锐化能力，SDK 将只开启超分能力。了解更多锐化相关信息，参考图像锐化。
+*了解更多
+了解更多关于高通 Snapdragon Game Super Resolution 相关内容，阅读 Introducing Snapdragon Game Super Resolution。
+
+static TAutoConsoleVariable<int32> CVarPICOEnableSuperResolution(
+    TEXT("r.Mobile.PICO.EnableSuperResolution"),
+    0,
+    TEXT("0: Disable SuperResolution (Default)\n")              // 关闭超分功能
+    TEXT("1: Enable SuperResolution on supported platforms\n"), // 开启超分功能
+    ECVF_Scalability | ECVF_RenderThreadSafe);
+
+// 开启超分
+static const auto SuperResolutionCVar = IConsoleManager::Get().FindConsoleVariable(TEXT("r.Mobile.PICO.EnableSuperResolution"));
+if(SuperResolutionCVar )
+{
+    SuperResolutionCVar ->Set(1);
+}
+
+// 关闭超分
+static const auto SuperResolutionCVar = IConsoleManager::Get().FindConsoleVariable(TEXT("r.Mobile.PICO.EnableSuperResolution"));
+if(SuperResolutionCVar )
+{
+    SuperResolutionCVar ->Set(0);
+}

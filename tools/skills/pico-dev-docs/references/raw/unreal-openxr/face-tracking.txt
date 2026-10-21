@@ -1,0 +1,120 @@
+面部追踪
+========================================
+面部追踪（Face Tracking）功能可实时追踪面部表情和嘴型（Lipsync）。你可以通过相关 API 输出上半脸（眉毛、眼睛）、下半脸（鼻子、脸颊、嘴、下颌）的表情权重，以及基于语音的嘴型权重。通过这些数据，你可以驱动角色的脸部 Morph Target 或 Blend Shape，或基于权重数据实现你自定义的表情动画方案。
+*相关 OpenXR 扩展
+*PICO OpenXR 使用了 XR_BD_facial_simulation 扩展来实现面部追踪。
+*环境要求
+*PICO 设备：PICO 4 Pro 或 Project Swan（PICO OS 6）
+*PICO 设备系统版本：5.7.0 或以上版本
+*实现方法
+*启用面部追踪
+*选择 Edit > Project Settings > Plugins > PICO OpenXR，在 Movement 中勾选 Enable Face Tracking。
+* 
+* 
+*启用后，插件会在创建 OpenXR 会话时申请 XR_BD_facial_simulation 扩展。如果未勾选该选项：
+*扩展不会被加载，GetFaceTrackingSupportedPICO 会返回不支持。
+*StartFaceTrackingPICO和GetFaceTrackingDataPICO 等函数会失败。
+*FaceTrackingComponentPICO 组件会在 BeginPlay 时记录告警并自动停止 Tick。
+*获取面部追踪数据
+*你可以选择使用蓝图/C++ 函数或组件获取面部追踪数据：
+*蓝图/C++ 接口：通过静态函数直接获取原始权重数据。详情参阅  。
+*组件：通过 FaceTrackingComponentPICO 组件自动采样权重并驱动指定的 Skeletal Mesh 的 Morph Target。FaceTrackingComponentPICO 组件封装了从 Runtime 采样权重并驱动 Skeletal Mesh Morph Target 的完整流程，适合直接挂在角色蓝图中使用。FaceTrackingComponentPICO 组件包括以下属性：
+*FTTarget Mesh Component Name：目标 USkinnedMeshComponent 的组件名称（例如脸部 Mesh 组件的名称）。BeginPlay 时会通过 FindComponentByNamePICO<USkinnedMeshComponent> 在 Owner 上查找；为空或找不到时组件会记录告警并禁用 Tick。
+*Invalid Face Data Reset Time：当持续一段时间没有收到有效面部追踪数据（IsUpperFaceDataValid 和 IsLowerFaceDataValid 均为 false）时，超过该时间会自动将所有 Morph Target 权重清零，避免角色卡在上一帧表情。
+*Blend Shape Name Mapping：将 EFaceBlendShapePICO 中的枚举映射到 Skeletal Mesh 中实际的 Morph Target 名称。构造函数中仅内置了示例映射（例如 JawOpen -> "jawOpen"），实际项目中需要根据自己的脸部模型完整配置常用表情和嘴型的映射。
+*Update Face Tracking：为 false 时 Component 不再拉取新数据，仅保留当前 Morph Target 权重（可结合手动调用 SetBlendShapeValue 做叠加或调试）。
+*Mode：该组件在 BeginPlay 中调用 StartFaceTrackingPICO 时使用的默认模式。面部追踪支持以下运行模式：
+*Default：仅输出面部表情（上/下脸），不额外启用语音嘴型解算，适合只做表情驱动、开销最低。
+*WithAudio：在 Default 模式基础上结合音频信号进行表情解算，输出面部表情权重，适合在有语音输入时提升表情稳定性。
+*WithAudioLipsync：同时输出面部表情权重和 Lipsync 权重，适合需要同步语音口型的场景（例如说话角色）。
+*OnlyAudioWithLipsync：仅输出基于音频的 Lipsync 权重，面部表情权重通常无效，适合只关心口型的 UI 或头像场景。
+*另外，FaceTrackingComponentPICO 组件也提供了以下辅助函数（蓝图/C++）。详情参阅  。
+*SetBlendShapeValue
+*GetBlendShapeValue
+*ClearBlendShapeValues
+* 
+*API 参考
+*API 参考以蓝图接口为例介绍面部追踪的相关 API。
+*GetFaceTrackingSupportedPICO
+ 
+*返回当前设备是否支持面部追踪（以及项目是否启用了对应扩展）。建议在初始化时调用一次，用于后续模式选择。
+*输出引脚：
+*Supported Modes：用于返回设备实际支持的面部追踪模式列表。
+*Return Value：用于返回当前设备是否支持面部追踪（以及项目是否启用了对应扩展）。
+*StartFaceTrackingPICO
+ 
+*按指定模式创建底层 XrFaceTrackerBD 句柄。一般在角色初始化或关卡加载时调用一次。
+*输入引脚：
+*Mode：面部追踪模式。
+*Default：仅输出面部表情（上/下脸），不额外启用语音嘴型解算，适合只做表情驱动、开销最低。
+*WithAudio：在 Default 模式基础上结合音频信号进行表情解算，输出面部表情权重，适合在有语音输入时提升表情稳定性。
+*WithAudioLipsync：同时输出面部表情权重和 Lipsync 权重，适合需要同步语音口型的场景（例如说话角色）。
+*OnlyAudioWithLipsync：仅输出基于音频的 Lipsync 权重，面部表情权重通常无效，适合只关心口型的 UI 或头像场景。
+*输出引脚：
+*Return Value：用于返回当前操作是否成功。
+*StopFaceTrackingPICO
+ 
+*销毁底层 XrFaceTrackerBD 句柄。在关卡退出或不再需要时调用。
+*输出引脚：
+*Return Value：用于返回当前操作是否成功。
+*SetFaceTrackingCurrentModePICO
+ 
+*在不销毁 Tracker 的前提下动态切换当前模式，例如从 Default 切换到 WithAudioLipsync。
+*输入引脚：
+*Mode：面部追踪模式。
+*Default：仅输出面部表情（上/下脸），不额外启用语音嘴型解算，适合只做表情驱动、开销最低。
+*WithAudio：在 Default 模式基础上结合音频信号进行表情解算，输出面部表情权重，适合在有语音输入时提升表情稳定性。
+*WithAudioLipsync：同时输出面部表情权重和 Lipsync 权重，适合需要同步语音口型的场景（例如说话角色）。
+*OnlyAudioWithLipsync：仅输出基于音频的 Lipsync 权重，面部表情权重通常无效，适合只关心口型的 UI 或头像场景。
+*输出引脚：
+*Return Value：用于返回当前操作是否成功。
+*GetFaceTrackingCurrentModePICO
+ 
+*在不销毁 Tracker 的前提下查询当前模式。
+*输出引脚：
+*Mode：面部追踪模式。
+*Default：仅输出面部表情（上/下脸），不额外启用语音嘴型解算，适合只做表情驱动、开销最低。
+*WithAudio：在 Default 模式基础上结合音频信号进行表情解算，输出面部表情权重，适合在有语音输入时提升表情稳定性。
+*WithAudioLipsync：同时输出面部表情权重和 Lipsync 权重，适合需要同步语音口型的场景（例如说话角色）。
+*OnlyAudioWithLipsync：仅输出基于音频的 Lipsync 权重，面部表情权重通常无效，适合只关心口型的 UI 或头像场景。
+*输出引脚：
+*Return Value：用于返回当前操作是否成功。
+*GetFaceTrackingDataPICO
+ 
+*按指定的渲染时间戳查询最新面部追踪数据。
+*输入引脚：
+*Display Time：OpenXR 的渲染时间戳。当传入 0 时，会使用内部缓存的当前帧时间（由 Movement 扩展在 UpdateDeviceLocations 中维护），这是在游戏线程 Tick 中获取“当前帧”数据的推荐方式。
+输出引脚：
+*Out State：面部追踪数据。你可以通过 BreakFaceStatePICO 获取其中的字段。
+*Return Value：用于返回当前操作是否成功。
+*BreakFaceStatePICO
+ 
+获取 GetFaceTrackingDataPICO 返回的FaceStatePICO 中的字段：
+*输入引脚：
+*Face State PICO：GetFaceTrackingDataPICO 返回的 Out State。
+*输出引脚：
+*Sample Time：该帧数据对应的 OpenXR 时间戳，可与其他传感器数据对齐，或在下一次调用 GetFaceTrackingDataPICO 时作为 Display Time 传入。
+*Is Upper Face Data Valid：上半脸（眉、眼）数据是否有效。值为 true 时，才能使用上半脸（眉、眼）数据的对应权重。
+*Is Lower Face Data Valid：下半脸（鼻、脸颊、嘴、下颌）数据是否有效。值为 true 时，才能使用下半脸（鼻、脸颊、嘴、下颌）数据的对应权重。
+*Face Expression Weights：长度为 XR_FACE_EXPRESSION_COUNT_BD 的浮点数组，对应 FaceBlendShapePICO 中从 BrowDropLeft 到 TongueOut（索引 0–51）的面部表情权重，通常范围在 0–1。
+*Lipsync Expression Weights：长度为 XR_LIP_EXPRESSION_COUNT_BD 的浮点数组，对应 FaceBlendShapePICO 中从 PP 到 Sil（索引 52–71）的 Lipsync 权重。仅在带 Lipsync 的模式（WithAudioLipsync / OnlyAudioWithLipsync）下才有意义。
+*SetBlendShapeValue
+* 
+手动写入某个 Blend Shape 对应的 Morph Target 权重，可叠加或覆盖 Runtime 数据。
+*GetBlendShapeValue
+ 
+*读取当前写入管理器中的 Blend Shape 权重。
+*ClearBlendShapeValues
+ 
+*清空内部缓存的所有 Blend Shape 权重映射。
+*开发注意事项
+*开启扩展： 必须在 Project Settings > Plugins > PICO OpenXR > Movement 中勾选 Enable Face Tracking，Runtime 才会加载 XR_BD_facial_simulation 扩展；否则所有面部追踪接口都会返回不支持或调用失败。
+*模式选择： 建议在启动前先调用 GetFaceTrackingSupportedPICO 检查是否支持面部追踪，并根据返回的 SupportedModes 决定实际使用的模式（例如无语音场景使用 Default，有语音口型需求时使用 WithAudioLipsync）。
+*数据有效性： 使用 Is Upper Face Data Valid / Is Lower Face Data Valid 判断当前帧上/下脸数据是否可用；连续多帧无效时应视为追踪中断，可以依赖 FaceTrackingComponentPICO 内置的 InvalidFaceDataResetTime 属性自动清零逻辑，或在自定义蓝图中自行降级显示。
+*映射要求： Blend Shape Name Mapping 中的 FName 必须与目标 Skeletal Mesh 的 Morph Target 名称一一对应；未配置或名称拼写错误的 Blend Shape 会被标记为无效，不会驱动任何变形，并在调用 SetBlendShapeValue 或GetBlendShapeValue 时输出警告。
+*Tick 周期： 推荐在每帧 Tick 中调用 GetFaceTrackingDataPICO(0, OutState) 获取最新数据，再根据需要更新角色表情；如使用 FaceTrackingComponentPICO，它会自动在 Tick 中完成数据获取与 Morph Target 更新。
+*清理顺序与多组件： FaceTrackingComponentPICO 通过静态计数 FTComponentCount 管理 StartFaceTrackingPICO/StopFaceTrackingPICO：当第一个组件初始化成功时调用一次 StartFaceTrackingPICO，当最后一个组件在 EndPlay 中销毁时调用 StopFaceTrackingPICO。如果你在蓝图中手动调用 StartFaceTrackingPICO/StopFaceTrackingPICO，应注意与组件生命周期保持一致，避免重复启动或提前关闭。
+*性能提示： 相比 Default 模式，WithAudio / WithAudioLipsync / OnlyAudioWithLipsync 需要额外处理音频信号和嘴型解算，可能增加 CPU/GPU 和功耗开销。建议根据实际需求选择合适模式，在不需要 Lipsync 时优先使用 Default 或 WithAudio。
+
+
+该操作等同于在代码中设置 UPICOOpenXRRuntimeSettings::bEnableFaceTracking。

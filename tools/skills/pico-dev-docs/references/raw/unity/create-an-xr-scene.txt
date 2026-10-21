@@ -1,0 +1,57 @@
+5. 创建一个 XR 场景
+========================================
+*预计阅读和完成时间：15 分钟
+*本文档介绍如何创建一个包含 XR 摄像机、地面、手柄和射线的基础 XR 场景（下图所示）。此外，文档也会介绍用户权限校验和场景预览相关内容。
+* 
+*第一步：导入 XR Interaction Toolkit 提供的示例文件
+搭建基础 XR 场景需要用到 Unity 提供的基础功能和组件。其中，XR Interaction Toolkit 是 Unity 提供的高级工具包，包含许多跨平台的 XR 交互功能。
+* 
+*从上方菜单栏处，选择 Windows > Package Manager。
+*在 Package Manager 窗口中，将 Package 类型设置为 Unity Registry。
+*列表中将展示 Unity Registry 中提供的工具包。
+* 
+*在列表中找到 XR Interaction Toolkit 并点击。
+* 
+*展开右侧的 Samples 列表。
+*点击 Import，导入 Starter Assets 和 XR Device Simulator 示例文件。
+**
+* 
+*导入完成后，Unity 会弹出 Project Validation 窗口。如果存在 Issue，点击 Fix All 修复。修复完成后保存项目。
+* 
+*在 Assets/Samples/XR Interaction Toolkit/{version}/Starter Assets 中找到 DemoScene 并双击，即可看到下图所示的场景。
+* 
+*第二步：（可选）配置手柄
+除 XR 摄像机外，手柄也是 XR 应用的重要组成部分。用户可以通过手柄与虚拟世界进行互动，享受沉浸式 XR 体验。PICO Unity Integration SDK 为开发者提供了默认的手柄模型，包括 LeftControllerModel 和 RightControllerModel。你可以将它们添加至应用中，并让它们随着真实手柄的移动而移动。你可以直接使用 PICO Building Blocks 中的 PICO Controller Tracking 功能一键配置手柄。
+* 
+*从上方菜单栏处，选择 GameObject > PICO Building Blocks > PICO Controller > PICO Controller Tracking。然后保存项目。
+ 
+你可以在 Hierarchy 窗口看到添加的 PICO Building Block。
+ 
+*第三步：（推荐）开启用户权限校验
+用户权限校验用于保护应用的版权。应用上架后，只有获得权限的用户设备才可正常使用应用。具体信息可参考《用户权限校验》说明文档。
+*第四步：（可选） 预览场景并调试
+你可以在 PICO 开发者中心（即 PDC 工具）上实时预览应用内场景，然后根据实际情况进行调试。具体说明可参考《实时预览应用场景》说明文档。
+*后续操作
+*参考《打包并运行场景》文档，将 XR 场景打包为 APK 文件，然后在 PICO 设备上运行。
+
+
+
+
+建议使用 3.x 版本的 XR Interaction Toolkit。如果你需要升级 XR Interaction Toolkit 的版本，参考以下步骤：
+*在 Unity 项目打开的状态下，点击  com.unity.xr.interaction.toolkit 打开 Package Manager 并导航到 Add package by name 窗口。
+*在 Add package by name 窗口，输入你需要安装的 XR Interaction Toolkit 版本，例如 3.0.10，然后点击 Add。详细的版本号参见 XR Interaction Toolkit 文档。
+ 
+
+
+
+示例文件
+
+说明
+
+Starter Assets
+
+该示例文件默认位于 Assets/Samples/XR Interaction Toolkit/{version}/Starter Assets 目录下，提供了一套示范配置文件，包括一套默认的输入动作和预设。
+
+XR Device Simulator
+
+XR 设备模拟器，提供用于模拟 XR 头戴和手柄的资产，默认位于 Assets/Samples/XR Interaction Toolkit/{version}/XR Device Simulator 目录下。该示例文件允许通过鼠标和键盘输入来操控头戴和手柄。文件夹内包含与模拟器配套使用的示例 Binding，以及一个可以在场景中快速使用的预制体。

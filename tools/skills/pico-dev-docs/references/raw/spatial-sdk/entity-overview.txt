@@ -1,0 +1,28 @@
+实体概览
+========================================
+在 PICO Spatial SDK 中，Entity 是构成场景的基础对象，也是 ECS 架构中数据与能力的承载者。Entity 本身只是一个场景节点，不直接包含任何业务逻辑或可视化数据；其具体功能（例如变换、渲染、动画、音频等）由挂载于其上的各类组件（Component）决定，组件中存储的数据则由对应的系统（System）逐帧驱动。关于 ECS 三者之间的关系，参考《了解 ECS 架构》。
+ 
+*相关文档
+以下文档覆盖了实体相关的常见开发场景。你可以根据当前的开发任务，进入对应的文档查看接口说明与示例代码。
+*基础操作
+介绍 Entity 在场景中从创建、查询、生命周期管理到层级与组件挂载的全流程，是开发任意实体功能前都需要掌握的基础能力。
+*创建实体：直接创建空实体，或通过 asset://、file://、content://、InputStream + ModelFormat、AssetBundle 等多种来源加载模型并生成实体树。详情参考《创建实体》。
+*查询实体：通过 scene.queryEntity 按组件或自定义条件查询，或通过 entity.findEntity(name)、entity.getChildren() 在子树中定位目标实体。详情参考《查询实体》。
+*管理实体的生命周期：使用 enabled、valid、destroy() 控制实体是否参与渲染/更新、是否仍然有效以及如何释放资源。详情参考《管理实体的生命周期》。
+*管理实体之间的层级：通过 addChild/setParent、removeFromParent 等接口组织父子关系，构建场景树并按名称定位关键节点。详情参考《管理实体层级》。
+*管理在实体上挂载的组件：通过 entity.components 在运行时挂载、查询、获取或更新实体上的组件。详情参考《为实体挂载组件》。
+*行为与能力
+介绍如何为实体附加常用的运行时能力，例如朝向控制、空间度量和实体复用，适用于场景布局、UI 跟随、批量生成等业务场景。
+*控制实体朝向：使用 LookAtComponent 让实体始终朝向用户（HMD）或场景中的另一个实体，并支持 Y 轴对齐与朝向面切换。详情参考《控制实体的朝向》。
+*获取实体的包围盒：通过 getVisualBounds 获取实体在指定参考空间下的轴对齐包围盒（中心点、半尺寸、最大/最小顶点等），用于精确布局、碰撞判定与可视化。详情参考《获取实体的包围盒》。
+*克隆实体：使用 clone() 与 CloneOptions 快速生成实体副本，可控制是否递归克隆子树、是否共享材质实例。详情参考《克隆实体》。
+*跨实体或跨空间容器的坐标转换：使用 convertPositionTo/From、convertRotationTo/From、convertScaleTo/From、convertTransformTo/From 在不同实体或空间容器间换算位置、旋转、缩放。详情参考《坐标空间转换》。
+*事件与扩展
+介绍如何监听实体的运行时事件，以及通过实体驱动动画与空间音频，适合实现复杂交互逻辑与沉浸式体验。
+*监听实体事件：通过 Scene 或 SpatialViewContent 订阅 EntityEvents 与 SceneEvents，监听实体的启用、禁用、销毁、父级变更，以及场景级别的添加、移除、每帧更新等事件。详情参考《实体事件》。
+*通过实体播放动画：使用 playAnimation(...) 播放由 TweenAnimation 等生成的 AnimationResource，或通过 playTimeline() 播放随模型导入的 Timeline 数据。详情参考《动画系统》。
+*通过实体播放空间音频：为实体挂载 ObjectAudioComponent、AmbientAudioComponent 或 ChannelAudioComponent，并使用 playAudio(...) 或 prepareAudio(...) 控制空间音频的播放。详情参考《空间音频概览》。
+
+*每个 Entity 在创建时都会自动附加一个 TransformComponent，用于描述其在场景中的位置、旋转和缩放。
+*同一个 Entity 上，每种类型的 Component 最多只能有一个实例。如需更新组件状态，应获取已挂载的组件并修改其属性，而不是重复挂载同类型组件。
+*Entity 之间通过父子关系组织成场景树。父实体的启用/禁用、销毁状态会按层级传递到其子实体。

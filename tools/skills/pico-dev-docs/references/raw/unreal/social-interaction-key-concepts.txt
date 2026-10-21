@@ -1,0 +1,44 @@
+社交互动-核心概念
+========================================
+本文档介绍 “社交互动” 功能中涉及的核心概念及其在 PICO SDK 中的实现逻辑，如 Destination、Presence、Deeplink 等。
+*Destination
+在真实世界中，人们的社交活动通常需要一个具体的聚会场所，例如餐馆、音乐厅等。在 VR 应用里，这种聚会场所被称为 Destination，即跳转目的地。更具象地说，Destination 可以是游戏大厅、游戏关卡、房间等地点。用户可以向好友展示和分享自己的 Destination，并邀请对方加入。
+你可在 PICO 开发者平台中为应用创建多个 Destination，并为 Destination 配置图片、简介、API Name、Deeplink Message 等。详见社交互动-平台接入。
+*Lobby Session & Match Session
+在多人联机场景下，除了 Destination 外，你可能还需要用到 Lobby Session 和 Match Session：
+*
+* 
+*在社交互动场景下：
+*若用户 A 邀请其好友用户 B 前往某个关卡，加入对局，并且作为自己队伍的一员，则需要从 Launch Details 中获取并解析用户 A 的 Destination、Match Session ID 和 Lobby Session ID。
+*若用户 A 邀请其好友用户 B 前往某个关卡，两人 1v1 对战，则需要从 Launch Details 中获取并解析用户 A 的 Destination 和 Match Session ID。
+*Presence
+Presence 包含了用户在 VR 世界中的位置信息，例如 Destionation、Lobby Session 和 Match Session 信息，以及状态信息，例如是否为 “可加入”。你可以选择在合适的场合展示用户的 Presence 信息，例如展示于游戏大厅、匹配面板等，以便用户间互相获取对方的位置和状态信息，从而决定是否要邀请或加入他人。
+在设计应用时，建议你及时设置并更新用户的 Presence 信息。当用户离开房间或退出应用时，也应及时清空相应用户的 Presence 信息，以确保用户的位置和状态信息实时更新且准确。
+*Deeplink
+Deeplink 是一套链接服务，是实现跳转能力的基础。Deeplink 中包含目标位置信息。在社交互动中，Deeplink 主要应用于 “邀请”、“链接分享” 和 “应用间跳转” 场景。对于 PICO 应用来说，目前 Deeplink 的媒介是好友间相互发送的邀请消息卡片（下图所示）。用户点击卡片后可借助 Deeplink 能力精确地跳转至目标位置。
+* 
+在 PICO 开发者平台上配置 Destination 时，除了为其配置 Deeplink 能力外，还可以配置另一个 Deeplink 相关参数，即 Deeplink Message。
+*Deeplink Message
+Deeplink Message 用于存放动态配置，不一定会和 Destination 配套使用。在 “应用间跳转” 场景下，需单独通过 Deeplink Message 自定义具体的跳转规则。
+*Launch Details
+Launch Details 中包含了应用启动类型、Destination API Name、Lobby Session ID 和 Match Session ID 等信息。应用启动后，你需要获取并解析 Launch Details，从而将用户传送至目标位置。
+*应用启动的类型如下：
+*点击应用图标后启动
+*点击邀请卡片后启动
+*调用应用启动相关接口后启动
+
+
+
+
+名称
+
+说明
+
+Lobby Session 
+
+用于标识用户组或用户小队。处于同一支队伍的用户拥有相同的 Lobby Session ID。
+
+Match Session 
+
+
+用于标识处于同一个房间或对局中的所有用户，其拥有相同的 Match Session ID。不同 Lobby Session ID 的用户进行相同的对局时，将拥有相同的 Match Session ID。 

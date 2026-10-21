@@ -1,0 +1,67 @@
+开发已知问题
+========================================
+*画面显示异常
+勾选 Mobile HDR 选项，可能会出现画面显示模糊、转头卡顿、花屏、颜色泛白等一系列显示异常问题。尝试以下步骤解决该问题：
+*在编辑器左上方，点击 Edit > Project Settings > Engine > Rendering。
+*移动到 Mobile 选卡下，取消勾选 Mobile HDR。
+* 
+*阴影异常
+SDK 暂不支持调制阴影（Modulated Shadows）。由于某些 UE 模板默认启用该选项，会造成阴影异常。你尝试在定向光源（Directional Light）的灯光（Light）属性下禁用调制阴影解决问题：
+*选中关卡中的 Directional Light。
+*在编辑器右侧，在 Light 下的 Details 面板中，点击白色的小三角形展开 Advanced 选项。
+* 
+*取消勾选 Cast Modulated Shadows。
+* 
+*LandScape 地形渲染异常
+*开启 Vulkan 渲染设置下，如果你开启了注视点渲染功能（Enable Foveation Rendering），场景中的 LandScape 地形会有渲染异常。
+*打包的 .apk 文件在设备上运行时发生崩溃
+以下情况的综合可能会引起 .apk 文件安装到 PICO 设备上运行时发生崩溃：
+*你使用的是 UE 4.27。
+*你的项目添加了修改了 Number of components 属性的 Landscape。
+*打包项目时，你在选择了 Shipping 之外的选项进行打包。
+要避免该问题，你需要选择 Package Project > Build Configurations > Shipping 作为打包选项。
+*打包非 Shipping 的 .apk 文件不生效
+为使用 Multiview 功能，你需要修改 Shader 文件，详情见 混合现实捕捉。但修改 Shader 文件后，可能会引起打包非 Shipping 的 .apk 文件时不生效；因此，你需要选择 Shipping 作为打包选项。
+*应用启动延迟
+*在 PICO 4 Ultra 设备上启动 UE4 开发的应用时，启动时长会延长约一秒。
+*启动应用时可能出现因 Android 平台渲染线程断言失败导致的崩溃
+*问题描述: 在 Android 平台运行虚幻引擎时，BlockRendering 函数在派发任务时所依赖的 ENamedThreads::GetRenderThread() 方法并不可靠。该方法有时无法将任务正确转发到渲染线程，导致 BlockOnLostWindowRenderCommand 在非渲染线程上执行，进而触发 check(IsInRenderingThread()) 断言失败，并最终导致应用崩溃。
+* 
+*解决方法：你需要自行修改 虚幻引擎源码。通过在派发时强制指定渲染线程，即可修复该问题。
+*涉及文件：Engine/Source/Runtime/OpenGLDrv/Private/Android/AndroidEGL.cpp。
+*修改前：
+* 
+*修改后：
+* 
+
+Assertion failed: IsInRenderingThread() [File:./Runtime/OpenGLDrv/Private/Android/AndroidEGL.cpp] [Line: 1272] 
+LogAndroid: Error: === Critical error: === 
+LogAndroid: Error:  
+LogAndroid: Error: Assertion failed: IsInRenderingThread() [File:./Runtime/OpenGLDrv/Private/Android/AndroidEGL.cpp] [Line: 1272] 
+LogAndroid: Error:  
+LogAndroid: Error: [Callstack] 0x000000749B684488 libUnreal.so(0x0000000012557488)!BlockOnLostWindowRenderCommand(TSharedPtr<FEvent, (ESPMode)1>) [] 
+LogAndroid: Error: [Callstack] 0x000000749B6F1978 libUnreal.so(0x00000000125C4978)![Unknown]() [] 
+LogAndroid: Error: [Callstack] 0x0000007493F639D0 libUnreal.so(0x000000000AE369D0)!TGraphTask<TFunctionGraphTaskImpl<void (), (ESubsequentsMode::Type)0> >::ExecuteTask() [] 
+LogAndroid: Error: [Callstack] 0x0000007493F64E14 libUnreal.so(0x000000000AE37E14)!UE::Tasks::Private::FTaskBase::TryExecuteTask() [] 
+LogAndroid: Error: [Callstack] 0x0000007493F6F1A0 libUnreal.so(0x000000000AE421A0)!FNamedTaskThread::ProcessTasksNamedThread(int, bool) [] 
+LogAndroid: Error: [Callstack] 0x0000007493F6E1B8 libUnreal.so(0x000000000AE411B8)!FNamedTaskThread::ProcessTasksUntilIdle(int) [] 
+LogAndroid: Error: [Callstack] 0x000000749B0B22F0 libUnreal.so(0x0000000011F852F0)!FTickTaskSequencer::ReleaseTickGroup(ETickingGroup, bool) [] 
+LogAndroid: Error: [Callstack] 0x000000749B0AD804 libUnreal.so(0x0000000011F80804)!FTickTaskManager::RunTickGroup(ETickingGroup, bool) [] 
+LogAndroid: Error: [Callstack] 0x000000749A5AD738 libUnreal.so(0x0000000011480738)!UWorld::Tick(ELevelTick, float) [] 
+LogAndroid: Error: [Callstack] 0x000000749A2B4184 libUnreal.so(0x0000000011187184)!UGameEngine::Tick(float, bool) [] 
+LogAndroid: Error: [Callstack] 0x000000749B7CAA28 libUnreal.so(0x000000001269DA28)!FEngineLoop::Tick() [] 
+LogAndroid: Error: [Callstack] 0x000000749B7C628C libUnreal.so(0x000000001269928C)!AndroidMain(android_app*) [] 
+LogAndroid: Error: [Callstack] 0x000000749B7CEA70 libUnreal.so(0x00000000126A1A70)!android_main() [] 
+LogAndroid: Error: [Callstack] 0x000000749B7EF468 libUnreal.so(0x00000000126C2468)![Unknown]() [] 
+LogAndroid: Error: [Callstack] 0x00000077EBCC8148 libc.so(0x00000000000C5148)![Unknown]() [] 
+LogAndroid: Error: [Callstack] 0x00000077EBC61A68 libc.so(0x000000000005EA68)![Unknown]() []
+
+FGraphEventRef RTBlockTask = FFunctionGraphTask::CreateAndDispatchWhenReady([BlockedTrigger]() 
+{ 
+ BlockOnLostWindowRenderCommand(BlockedTrigger); 
+}, TStatId(), NULL, ENamedThreads::GetRenderThread()); 
+
+FGraphEventRef RTBlockTask = FFunctionGraphTask::CreateAndDispatchWhenReady([BlockedTrigger]() 
+{ 
+ BlockOnLostWindowRenderCommand(BlockedTrigger); 
+}, TStatId(), NULL, ENamedThreads::ActualRenderingThread);

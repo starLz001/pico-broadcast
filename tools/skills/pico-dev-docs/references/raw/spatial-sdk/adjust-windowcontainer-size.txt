@@ -1,0 +1,72 @@
+调整 WindowContainer 的尺寸与材质背景
+========================================
+本文介绍如何在运行时调整 WindowContainer 的尺寸与材质背景，以及如何使用 ExpandableView 构建可展开/折叠的视图容器。
+*调整 WindowContainer 尺寸
+SpatialContainerUtils 提供了调整当前 WindowContainer 尺寸的能力：
+ 
+*context：当前上下文。
+*widthPx / heightPx：目标宽、高，单位为像素（px）。
+*返回值：调整是否成功。
+示例：将当前 WindowContainer 调整为 1600 × 1200 像素。
+ 
+*切换 WindowContainer 的材质背景
+WindowContainerParamsUpdater 新增 toggleMaterialBackground(show: Boolean) 挂起函数，用于在运行时开启或关闭 WindowContainer 的材质（玻璃）背景：
+ 
+*show：true 显示材质背景，false 关闭材质背景。
+*返回值：UpdateResult，表示更新结果。
+*使用 ExpandableView 构建可展开容器
+ExpandableView 是一个可展开/折叠的视图容器，常用于「主内容 + 可展开面板」的布局：默认展示主内容，展开后额外呈现扩展面板并相应改变容器尺寸。
+ 
+*scope：WindowContainerConstraintsScope，用于约束容器尺寸。
+*modifier：作用于容器的 Modifier。
+*state：展开状态，默认通过 rememberExpandableViewState() 创建。
+*mainContent：主内容区域。
+*expandedPanel：展开后额外呈现的面板内容。
+ExpandableViewState 用于描述并控制展开状态，主要成员如下：
+*expand() / collapse() / toggle()：展开、折叠、切换展开状态。
+*isExpanded：当前是否处于展开状态。
+*currentWidth / currentHeight：当前容器的宽、高。
+你可以通过 rememberExpandableViewState(initialExpanded: Boolean = false) 创建并记忆一个展开状态。
+以下示例展示了一个默认折叠、点击按钮后展开侧边面板的容器：
+ 
+
+object SpatialContainerUtils {
+    fun resizeCurrentWindowContainer(context: Context, widthPx: Int, heightPx: Int): Boolean
+}
+
+val success = SpatialContainerUtils.resizeCurrentWindowContainer(
+    context = context,
+    widthPx = 1600,
+    heightPx = 1200
+)
+
+suspend fun toggleMaterialBackground(show: Boolean): WindowContainerParamsUpdater.UpdateResult
+
+@Composable
+fun ExpandableView(
+    scope: WindowContainerConstraintsScope,
+    modifier: Modifier = Modifier,
+    state: ExpandableViewState = rememberExpandableViewState(),
+    mainContent: @Composable (ExpandableViewState) -> Unit,
+    expandedPanel: @Composable (ExpandableViewState) -> Unit
+)
+
+@Composable
+fun ExpandableViewDemo(scope: WindowContainerConstraintsScope) {
+    val state = rememberExpandableViewState(initialExpanded = false)
+    ExpandableView(
+        scope = scope,
+        state = state,
+        mainContent = {
+            Column {
+                Text("主内容")
+                Button(onClick = { it.toggle() }) {
+                    Text(if (it.isExpanded) "收起" else "展开")
+                }
+            }
+        },
+        expandedPanel = {
+            Box(modifier = Modifier.fillMaxSize()) { Text("展开后的面板") }
+        }
+    )
+}

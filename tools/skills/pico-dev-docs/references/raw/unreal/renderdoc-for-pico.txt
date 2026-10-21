@@ -1,0 +1,250 @@
+RenderDoc for PICO
+========================================
+RenderDoc for PICO 是一款图像分析和调试工具。
+*更新历史
+**
+*应用场景
+*查看目标帧所调用的 OpenGLES 或 Vulkan 函数，分析纹理、图像网格、Pipeline 等信息，调试着色器等。
+*环境要求
+*操作系统：Windows
+*PICO 设备系统版本：5.6.0 及以上版本
+*支持的图形 API
+*OpenGLES 
+*Vulkan
+*注意事项
+使用 RenderDoc for PICO 时，须时刻保持设备与 RenderDoc for PICO 之间的 USB 数据线连接，否则调试过程将中断。
+*快速开始
+“快速开始” 部分介绍如何完成 RenderDoc for PICO 使用前的准备工作，以及如何对目标帧进行基础调试，包括查看目标帧所调用的 OpenGLES 或 Vulkan 函数，分析纹理、图像网格、Pipeline 等信息。
+*第一步：下载并安装 RenderDoc for PICO
+*
+*第二步：启动 RenderDoc for PICO
+*
+启动后，你将看到以下页面：
+* 
+*第三步：连接 PICO 设备与 RenderDoc for PICO
+连接 PICO 设备与 RenderDoc for PICO，然后在普通（Normal）模式下进行调试。
+前提条件
+连接 PICO 设备与 RenderDoc for PICO 前，须保持设备亮屏、处于设备开机后的默认桌面场景，且关闭定位追踪。
+* 
+操作步骤
+*使用 USB 数据线连接 PICO 设备与电脑。
+*在左下角 Replay Context：Local 列表处，选择设备与 RenderDoc for PICO 的连接模式。
+* 
+*若出现 Remote Server Ready 字样，说明连接成功。首次连接成功时，工具会自动安装 com.picoxr.renderdoccmd.arm32 和 com.picoxr.renderdoccmd.arm64 两个 APK 文件，并启动 64 位的 com.picoxr.renderdoccmd.arm64 文件。
+*第四步：启动目标 APK 文件中的 Activity
+*前往 Launch Application 窗口。
+*在 Executable Path 字段处，点击 ··· 按钮。
+* 
+*在 File Browser 窗口中，选择要抓帧调试的目标 APK 文件中的 Activity，然后点击 OK。若找不到目标 APK 文件，可勾选 File Browser 窗口底部的 Show hidden files 选框后再进行尝试。
+* 
+*点击 Launch Application 窗口右下角的 Launch 按钮。
+*在 PICO 设备内，系统将启动并进入该应用。
+* 
+*第五步：抓帧
+前往设备窗口，然后点击 Capture Frame(s) Immediately 按钮，进行抓帧。
+* 
+Captures collected 区域展示该帧的预览图片。
+* 
+相关提醒：
+由于GPU 驱动问题，若需要对 Vulkan 应用进行抓帧，需要将属性 persist.pxr.sdk.prop.vulkan_debug 的值设置为 1，并重启设备。
+ 
+当 RenderDoc for PICO 检测到你未完成该项设置时，会弹出以下对话框，询问是否需要帮你进行设置。若选择 Yes，RenderDoc for PICO 会完成该项设置并重启设备。
+* 
+RenderDoc for PICO 使用完毕后，可执行以下命令恢复配置环境。
+ 
+*第六步：(可选) 保存帧文件
+右击预览图片，然后在快捷菜单中选择 Save，将帧文件保存至本地。
+保存后，若后续要继续调试该帧，则无需重新抓帧，可前往 File > Open Capture 或 Open Capture with Options 导入该帧。
+* 
+*第七步：加载帧文件
+*
+加载成功后，Event Browser 窗口会展示该帧的渲染流。
+* 
+*第八步：调试帧文件
+基本调试行为如下表所示。
+*
+*查看日志
+*
+*问题排查
+*为何 RenderDoc for PICO 无法和 PICO 设备连接？
+参考以下解决方法：
+*打开 PDC 工具中的 设备常亮 开关，并保持 PICO 头戴处于桌面或 Launcher 状态下，再尝试重连 RenderDoc for PICO 客户端。
+*相关提示：
+*与 PICO 设备建立连接时，RenderDoc for PICO 需要先在 PICO 头戴中安装 APK，然后启动其 Activity，与 PC 端建立 Socket 连接，若头戴端处于 Seethrough 或灭屏状态，可能导致 Activity 启动失败，Socket 连接无法建立。例如，建立连接时可能出现以下弹窗，需要点击 退出并继续 后，再次尝试连接。
+* 
+
+*可能是端口占用问题，建议关闭其他可能使用 ADB 的程序。
+*为何找不到需要抓帧的 APK？
+勾选 File Browser 右下角的 Show hidden files 选框后，再进行尝试。另外，你需要保证你的 APK 为可调试 APK (Debuggable APK)，具体原因可参考 Andriod 官方的启用图层说明文档。
+* 
+*Capture Frames按钮显示为灰色，无法点击进行抓流
+* 
+*若你使用的是 Vulkan API，可能是没有开启分帧标记，可通过如下方式尝试解决：
+* 
+*若你使用的是 OpenGLES API，欢迎通过论坛反馈具体问题。
+*使用 RenderDoc for PICO 启动 Activity 时出现闪退
+对于使用 PICO Unreal Integration SDK 开发的应用，使用 RenderDoc for PICO 启动 Activity 时可能出现闪退的情况， 通过分析日志可以发现类似如下的调用栈。该问题可通过将 SDK 升级至 2.1.5 及以上版本解决。
+ 
+*启动 32 位应用失败 
+如果你的应用为 32 位应用，你需将其改为 64 位应用。这是因为运行 RenderDoc for PICO 时，应用需要更多的内存或显存。而 32 位应用对内存或显存大小有限制，可能导致申请内存或显存失败。
+你可通过日志中 kgsl_sharedmem_alloc() failed 关键词确认该问题：
+ 
+
+
+
+版本
+
+发布时间
+
+更新内容
+
+1.3
+
+2025 年 08 月
+
+*集成了官方 RenderDoc v1.38 的更新。 
+*启用了渲染阶段和绘制调用追踪功能。
+
+1.2
+
+2024 年 03 月
+
+移除绘制调用追踪和渲染阶段追踪功能。
+
+
+
+*方式一
+
+*方式二
+
+点击以下链接进行下载：http://lf-renderdoc-for-pico.picovr.com/obj/renderdoc-for-pico/RenderdocForPico_installer_edition_v1.3.msi
+
+
+*若通过该方式下载 RenderDoc for PICO，则只能通过 PDC 工具启动。下载步骤如下：
+*启动 PICO 开发者中心。
+*从左侧导航栏处，选择 下载中心。
+*在 工具包 列表处，点击 RenderDoc for PICO 区域的 下载 按钮。
+* 
+
+
+
+
+*方式一
+
+*方式二
+
+前往 RenderDoc for PICO 所在文件夹，双击 qrenderdoc.exe。
+* 
+
+
+*前往 下载中心 的 已安装 列表。
+*点击  启动 按钮。
+* 
+
+*设备常亮可通过打开 PDC (PICO Developer Center) 工具首页 系统设置 面板处的 设备常亮 开关实现。
+*定位追踪可前往设备 设置 > 通用 > 定位追踪 处进行关闭。
+
+adb shell setprop persist.pxr.sdk.prop.vulkan_debug 1
+adb reboot
+
+adb shell setprop persist.pxr.sdk.prop.vulkan_debug 0
+adb reboot
+
+
+
+*方式一
+
+*方式二
+
+若需要分析全新帧，推荐通过以下方式加载：
+在 Captures Collected 区域，直接双击该帧的预览图片，加载帧文件。
+
+
+再次打开 RenderDoc for PICO 后，若需要重新分析某一帧，通过以下方式加载先前保存的帧文件。当然，你也可以通过此方式加载全新帧进行分析。
+*在上方菜单栏处，选择 File > Open Capture 或 Open Capture with Options。 
+*若你选择 Open Capture，直接在弹窗中选择并导入目标帧文件。若你选择 Open Capture with Options，可在选择目标帧文件的同时，进行选项配置，步骤如下：
+* 
+*在 Capture File 字段处，点击 ··· 按钮，然后选择需要分析的文件。
+*在 GPU Selection Override 字段处，选择 GPU 类型。建议选择 Qualcomm Adreno GPU，即 PICO 设备的 GPU，以保证调试时硬件平台的一致性。
+*在 Replay optimisation level 字段处，选择重放优化等级。
+*No Optimisation：不做任何优化。
+*Conservative：进行些许优化，用户侧无感知。
+*Balanced (默认)：进行一些可觉察的影响较小的优化。
+*Fastest：进行更多的优化，这可能会导致分析过程中出现一些难以理解的或者“不可能”的数据。
+*提示：在 Profiling 模式下，无论选择 Blanced 还是 Fastest 等级，工具内部都会使用 Fastest 等级。重放优化等级的更多信息可参考 RenderDoc 官方说明。
+*点击 Open 按钮。
+
+
+
+
+
+
+
+调试类型
+
+说明
+
+查看渲染事件
+
+Event Browser 窗口里展示渲染该帧所调用的 OpenGL ES / Vulkan 函数。其中，带 “Draw” 关键词的函数为场景画面绘制函数。双击 “Draw” 函数后，RenderDoc 会对其进行重放，你可以在 Texture Viewer 中查看重放的渲染结果。
+更多信息可参考 RenderDoc 官方对 Event Browser 窗口的说明。
+* 
+
+分析纹理信息
+
+Texture Viewer 窗口展示该帧的纹理信息。更多信息可参考 RenderDoc 官方对 Texture Viewer 窗口的说明。
+* 
+
+分析网格信息
+
+Mesh Viewer 窗口展示该帧的网格信息。更多信息可参考 RenderDoc 官方对 Mesh Viewer 窗口的说明。
+* 
+
+调试着色器（Shader）
+
+
+你可以在 Pipeline State 窗口中调试该帧的 Shader，步骤如下：
+*点击 Pipeline 流程图中的某个 Shader 节点。
+*点击 Edit 按钮。
+*调试该 Shader。
+更多信息可参考 RenderDoc 官方对 Pipeline State 窗口的说明。
+ 
+ 
+
+
+查看 OpenGLES / Vulkan 资源
+
+你可以在 Resource Inspector 窗口中分析该帧所包含的所有 API 对象。更多说明可参考 RenderDoc 官方对 Resource Inspector 窗口的说明。
+*点击 Event Browser 窗口中的 openGLES（gl 开头）或 Vulkan 函数（vk 开头）。
+*  API Inspector 窗口中将展示该函数包含的 API 对象。
+*点击目标 API 对象。
+*  Resource Inspector 窗口的 Resource List 区域将展示该 API 对象包含的资源。
+* 
+
+
+
+日志对象
+
+查看方法
+
+PICO 设备
+
+使用以下 ADB 命令：
+*adb pull /data/logs 
+*adb logcat 
+
+PC 端 RenderDoc 工具
+
+*PC 端本地日志路径：C:\Users\<用户名>\AppData\Local\Temp\RenderDocForPico
+*RenderDoc 工具内查看：点击 Window > Diagnostic Log
+* 
+
+adb shell setprop persist.pxr.sdk.prop.vulkan_debug 1
+adb reboot
+
+03-24 10:36:55.540 21055 21055 F DEBUG   : backtrace:
+03-24 10:36:55.540 21055 21055 F DEBUG   :       #00 pc 0000000000000000  <unknown>
+03-24 10:36:55.540 21055 21055 F DEBUG   :       #01 pc 0000000000ee66ec  /data/app/org.renderdoc.renderdoccmd.arm64-RNtafzsBtaC3n_PDnERrJg==/lib/arm64/libVkLayer_GLES_RenderDoc.so (WrappedVulkan::vkImportFenceFdKHR(VkDevice_T*, VkImportFenceFdInfoKHR const*)+108) (BuildId: ece36887020d1dfb09c4964c651daffb8a1db122)
+03-24 10:36:55.540 21055 21055 F DEBUG   :       #02 pc 0000000000cd9ce4  /data/app/org.renderdoc.renderdoccmd.arm64-RNtafzsBtaC3n_PDnERrJg==/lib/arm64/libVkLayer_GLES_RenderDoc.so (hooked_vkImportFenceFdKHR(VkDevice_T*, VkImportFenceFdInfoKHR const*)+36) (BuildId: ece36887020d1dfb09c4964c651daffb8a1db122)
+
+42009:07-08 16:56:06.185  2640 12506 E Adreno-GSL: <gsl_memory_alloc_pure:3013>: ERROR: kgsl_sharedmem_alloc() failed! Allocation size: (20352 KB); Flags: (0xcd5f3375)

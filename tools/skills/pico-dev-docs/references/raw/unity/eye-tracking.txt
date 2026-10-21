@@ -1,0 +1,163 @@
+眼动追踪
+========================================
+通过眼动追踪功能，可在应用中实时追踪用户的注视点。眼动追踪本质上是一种传感器技术，可将用户的眼部移动转换为数据流，包含瞳距、双目注视向量以及注视点，作为设备的输入。设备通过对数据流进行解码，向用户实时呈现其眼球的注视画面。
+眼动追踪技术可大大提升应用画面的流畅性，减轻 VR 应用使用中可能导致的眩晕感。
+*环境要求
+以下为眼动追踪相关功能的环境要求。
+* 
+*
+*为应用开启眼动追踪 & 眼动追踪校准
+*在 Unity 编辑器中打开一个场景或创建一个新场景。
+*在 Hierarchy 窗口中，点击 + > XR > XR Origin (VR)，为场景添加 XR Origin。
+*选中 XR Origin。
+*Inspector 窗口中将展示 XR Origin 挂载的脚本和组件。
+*点击 Inspector 窗口底部的 Add Component 按钮，然后为 XR Origin 添加 PXR_Manager 脚本。
+*勾选 Eye Tracking 选框。
+*已为应用开启眼动追踪能力，SDK 会自动在 AndroidManifest.xml 文件中写入相关权限。
+* 
+*(可选) 勾选 Eye Tracking Calibration 选框。
+*开启后，你的应用可以唤起 PICO 系统提供的 ”校准视线追踪“ 功能，进行眼动追踪校准。
+*(可选) 为设备开启眼动追踪 & 完成眼动追踪校准
+*启动 VR 一体机。
+*前往 设置 > 实验室 > 视线追踪。
+*打开 视线追踪 开关。
+* 
+*点击 校准视线追踪 > 开始校准。
+* 
+*按照提示完成校准。
+*调用眼动追踪接口
+*根据实际需求，调用眼动追踪接口。
+*查询当前设备是否支持眼动追踪
+只有搭载眼动追踪摄像头的 PICO 设备，包括 PICO Neo3 Pro Eye、PICO 4 Pro 和 PICO 4 Enterprise 才支持眼动追踪。你可使用 GetEyeTrackingSupported 接口查询当前设备是否支持眼动追踪能力。
+*动态开始和停止眼动追踪
+调用 StartEyeTracking 和 StopEyeTracking 接口，动态开始和停止眼动追踪能力。目前仅支持开启双眼追踪（PXR_ETM_BOTH）模式。调用 GetEyeTrackingData 接口后，系统会通过弹窗向用户申请眼动追踪权限。
+*查询眼动追踪状态
+调用 GetEyeTrackingState 接口，查询眼动追踪状态，包括眼动追踪是否正常工作中、眼动追踪模式、状态码。
+*获取眼动追踪数据
+调用 GetEyeTrackingData 接口，获取眼动追踪数据，包括眼睛的位置和方向信息。必须先调用 StartEyeTracking，开始眼动追踪，然后获取眼动追踪数据。
+*代码示例
+以下为完整代码示例：
+* 
+*AndroidManifest 权限声明
+启用眼动追踪后，SDK 会自动在 AndroidManifest.xml 文件中写入相关权限声明：
+*<meta-data android:name="picovr.software.eye_tracking" android:value="1" />
+*<uses-permission android:name="com.picovr.permission.EYE_TRACKING" />
+若非必要，请不要修改相关的权限声明内容。如果使用自定义 Manifest，请根据相应功能添加对应的权限声明。
+*API 参考
+*下表罗列 PXR_MotionTracking 中重构的眼动追踪接口，SDK 2.3.0 及以上版本可用。若想了解参数和返回值说明能详细信息，参阅 PXR_MotionTracking API 参考。若想了解重构前的眼动追踪接口信息，参阅 PXR_EyeTracking API 参考。
+*
+
+眼动追踪相关接口在 SDK 2.3.0 版本进行了升级改造，推荐你升级 SDK 至 2.3.0 或以上版本、升级 PICO 设备系统至 5.7.0 或以上版本使用最新的眼动追踪接口。
+
+
+
+功能
+
+PICO 设备系统版本
+
+PICO 设备
+
+眼动追踪
+
+5.4.0 或以上
+
+仅支持搭载眼动追踪摄像头的 PICO 设备，包括 PICO Neo3 Pro Eye、PICO 4 Pro 和 PICO 4 Enterprise
+
+眼动追踪校准
+
+5.5.0 或以上
+
+
+
+
+private bool support = false;
+private EyeTrackingMode[] eyeTrackingModes;
+
+// Start is called before the first frame update
+void Start()
+{
+    // 查询当前设备是否支持眼动追踪
+    int supportModesCount = 0;
+    PXR_MotionTracking.GetEyeTrackingSupported(ref support, ref supportModesCount, ref eyeTrackingModes);
+    if (support)
+    {
+        // 开始眼动追踪 
+        EyeTrackingStartInfo eyeTrackingStartInfo = new EyeTrackingStartInfo();
+        eyeTrackingStartInfo.needCalibration = 1;
+        eyeTrackingStartInfo.mode = EyeTrackingMode.PXR_ETM_BOTH;
+        PXR_MotionTracking.StartEyeTracking(ref eyeTrackingStartInfo);
+    }
+}
+
+// Update is called once per frame
+void Update()
+{
+    if (support)
+    {
+        // 获取眼动追踪状态
+        bool tracking = false;
+        EyeTrackingState eyeTrackingState = new EyeTrackingState();
+        PXR_MotionTracking.GetEyeTrackingState(ref tracking, ref eyeTrackingState);
+
+        // 获取眼动追踪数据
+        EyeTrackingDataGetInfo info = new EyeTrackingDataGetInfo();
+        info.displayTime = 0;
+        info.flags = EyeTrackingDataGetFlags.PXR_EYE_DEFAULT
+        | EyeTrackingDataGetFlags.PXR_EYE_POSITION
+        | EyeTrackingDataGetFlags.PXR_EYE_ORIENTATION;
+        EyeTrackingData eyeTrackingData = new EyeTrackingData();
+        PXR_MotionTracking.GetEyeTrackingData(ref info, ref eyeTrackingData);
+    }
+}
+
+private void OnDisable()
+{
+    if (support)
+    {
+        // 停止眼动追踪
+        EyeTrackingStopInfo eyeTrackingStopInfo = new EyeTrackingStopInfo();
+        PXR_MotionTracking.StopEyeTracking(ref eyeTrackingStopInfo);
+    }
+}
+
+
+
+接口
+
+说明
+
+GetEyeTrackingSupported
+
+查询当前设备是否支持眼动追踪能力。
+
+StartEyeTracking
+
+开始眼动追踪。
+
+StopEyeTracking
+
+停止眼动追踪。
+
+GetEyeTrackingState
+
+获取眼动追踪状态
+
+GetEyeTrackingData
+
+获取眼动追踪数据。
+
+GetEyeOpenness
+
+获取左右眼的睁开度。仅支持 PICO 4 Enterprise。
+
+GetEyePupilInfo
+
+获取左右眼的瞳孔信息。仅支持 PICO 4 Enterprise。
+
+GetPerEyePose
+
+获取左右眼的姿态数据。仅支持 PICO 4 Enterprise。
+
+GetEyeBlink
+
+获取左右眼的眨眼数据。仅支持 PICO 4 Enterprise。

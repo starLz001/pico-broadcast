@@ -1,0 +1,54 @@
+已知问题
+========================================
+*UE 5.7 使用引擎内置 ASW 时，当前存在两个已知 Bug。若项目依赖该能力，建议确认引擎是否已包含以下修复提交：
+*https://github.com/EpicGames/UnrealEngine/commit/9a6da67d3f53af82c0a58289fef5563a642c906e
+*https://github.com/EpicGames/UnrealEngine/commit/dff72992d32e0e8c814454d174714028f896a0ea
+*开启 PICO OpenXR 插件后，默认关闭 Depth Layer，以避免额外性能损耗。
+*当前开启遮挡剔除会有性能损耗，插件默认关闭遮挡剔除，你可按需启用。详情参阅：https://developers.meta.com/horizon/documentation/unreal/po-fork-engine-perf。
+*调整启用 PICO OpenXR 插件后的默认渲染格式为 R8G8B8A8_SRGB。未启用插件时，引擎默认 B8G8R8A8_SRGB 在 PICO 4、Neo3 上可能导致崩溃闪退，在 PICO 4 Ultra 及后续设备上会带来约 2～4 ms 的额外性能损耗。
+*关闭了引擎内两次 wait frame 调用的兜底策略。PICO 运行时会负责保证同步，在部分场景可提升帧率并减少丢帧；如项目自定义了相关渲染链路，建议先做回归验证。
+* 
+*Project Swan (PICO OS 6) 设备偶发画面闪烁或有画面 / 无画面频闪，使用 Shipping 包通常可恢复正常。
+*不再建议通过 setVirtualBoundarySeeThroughVisible 强制打开 VST。当前应统一通过 xrSetSeethroughBackground 对应的能力路径控制透视背景。
+*启动应用时可能出现因 Android 平台渲染线程断言失败导致的崩溃。
+*问题描述: 在 Android 平台运行虚幻引擎时，BlockRendering 函数在派发任务时所依赖的 ENamedThreads::GetRenderThread() 方法并不可靠。该方法有时无法将任务正确转发到渲染线程，导致 BlockOnLostWindowRenderCommand 在非渲染线程上执行，进而触发 check(IsInRenderingThread()) 断言失败，并最终导致应用崩溃。
+* 
+*解决方法：你需要自行修改 虚幻引擎源码。通过在派发时强制指定渲染线程，即可修复该问题。
+*涉及文件：Engine/Source/Runtime/OpenGLDrv/Private/Android/AndroidEGL.cpp。
+*修改前：
+* 
+*修改后：
+* 
+
+
+Assertion failed: IsInRenderingThread() [File:./Runtime/OpenGLDrv/Private/Android/AndroidEGL.cpp] [Line: 1272] 
+LogAndroid: Error: === Critical error: === 
+LogAndroid: Error:  
+LogAndroid: Error: Assertion failed: IsInRenderingThread() [File:./Runtime/OpenGLDrv/Private/Android/AndroidEGL.cpp] [Line: 1272] 
+LogAndroid: Error:  
+LogAndroid: Error: [Callstack] 0x000000749B684488 libUnreal.so(0x0000000012557488)!BlockOnLostWindowRenderCommand(TSharedPtr<FEvent, (ESPMode)1>) [] 
+LogAndroid: Error: [Callstack] 0x000000749B6F1978 libUnreal.so(0x00000000125C4978)![Unknown]() [] 
+LogAndroid: Error: [Callstack] 0x0000007493F639D0 libUnreal.so(0x000000000AE369D0)!TGraphTask<TFunctionGraphTaskImpl<void (), (ESubsequentsMode::Type)0> >::ExecuteTask() [] 
+LogAndroid: Error: [Callstack] 0x0000007493F64E14 libUnreal.so(0x000000000AE37E14)!UE::Tasks::Private::FTaskBase::TryExecuteTask() [] 
+LogAndroid: Error: [Callstack] 0x0000007493F6F1A0 libUnreal.so(0x000000000AE421A0)!FNamedTaskThread::ProcessTasksNamedThread(int, bool) [] 
+LogAndroid: Error: [Callstack] 0x0000007493F6E1B8 libUnreal.so(0x000000000AE411B8)!FNamedTaskThread::ProcessTasksUntilIdle(int) [] 
+LogAndroid: Error: [Callstack] 0x000000749B0B22F0 libUnreal.so(0x0000000011F852F0)!FTickTaskSequencer::ReleaseTickGroup(ETickingGroup, bool) [] 
+LogAndroid: Error: [Callstack] 0x000000749B0AD804 libUnreal.so(0x0000000011F80804)!FTickTaskManager::RunTickGroup(ETickingGroup, bool) [] 
+LogAndroid: Error: [Callstack] 0x000000749A5AD738 libUnreal.so(0x0000000011480738)!UWorld::Tick(ELevelTick, float) [] 
+LogAndroid: Error: [Callstack] 0x000000749A2B4184 libUnreal.so(0x0000000011187184)!UGameEngine::Tick(float, bool) [] 
+LogAndroid: Error: [Callstack] 0x000000749B7CAA28 libUnreal.so(0x000000001269DA28)!FEngineLoop::Tick() [] 
+LogAndroid: Error: [Callstack] 0x000000749B7C628C libUnreal.so(0x000000001269928C)!AndroidMain(android_app*) [] 
+LogAndroid: Error: [Callstack] 0x000000749B7CEA70 libUnreal.so(0x00000000126A1A70)!android_main() [] 
+LogAndroid: Error: [Callstack] 0x000000749B7EF468 libUnreal.so(0x00000000126C2468)![Unknown]() [] 
+LogAndroid: Error: [Callstack] 0x00000077EBCC8148 libc.so(0x00000000000C5148)![Unknown]() [] 
+LogAndroid: Error: [Callstack] 0x00000077EBC61A68 libc.so(0x000000000005EA68)![Unknown]() []
+
+FGraphEventRef RTBlockTask = FFunctionGraphTask::CreateAndDispatchWhenReady([BlockedTrigger]() 
+{ 
+ BlockOnLostWindowRenderCommand(BlockedTrigger); 
+}, TStatId(), NULL, ENamedThreads::GetRenderThread()); 
+
+FGraphEventRef RTBlockTask = FFunctionGraphTask::CreateAndDispatchWhenReady([BlockedTrigger]() 
+{ 
+ BlockOnLostWindowRenderCommand(BlockedTrigger); 
+}, TStatId(), NULL, ENamedThreads::ActualRenderingThread);

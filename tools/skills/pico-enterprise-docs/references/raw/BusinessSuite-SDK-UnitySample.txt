@@ -1,0 +1,122 @@
+
+*更新记录
+*
+
+*说明
+*SDK包含了企业套件PC控制端的所有播控接口，开发者可以直接导入Unity使用。
+*SDK地址位于企业套件安装目录：
+*PICO Business Suite/SDK/client/PICO Business Suite Unity SDK 1.0.1.zip
+*版本要求
+*
+*SDK使用说明
+*导入Unity工程
+*导入前请先将压缩包解压
+* 
+
+*打开Package Manager
+* 
+*选择Add package from disk...
+* 
+*选择SDK文件夹内的package.json文件，点击Open。
+* 
+
+*导入后可以从Samples选项中导入实例。
+* 
+
+
+
+*核心组件介绍
+*PXRBusinessSuiteAPI ： 负责SDK的初始化和消息通信的预处理，并封装所有供外部访问的方法；
+
+* 
+
+*注意：同一时刻仅允许存在一个PXRBusinessSuiteAPI实例。
+
+*所有数据的更新及状态的反馈均通过PXRBusinessSuiteAPI.OnDeviceCmd事件派发，上层应该通过对此事件的侦听获得设备状态。例：
+* 
+
+
+*PXREAOpenApiCallbackType 枚举代表了所有服务端返回的消息类型，如有特殊需求，需要屏蔽相关消息的，可以自行通过Inspector面板设置ReceiveMask值：
+* 
+
+*Device ：设备基本数据的缓存对象；
+*所有Device数据的更新均是依赖于PXRBusinessSuiteAPI.OnDeviceCmd事件，如需要获取最新的设备数据，应该先调用对应的请求函数，然后等待OnDeviceCmd事件的响应，之后再读取对应数据。
+
+
+*YuvTexture2D ：YUV纹理类；
+
+*服务端返回的纹理数据默认为YUV420格式，YuvTexture2D类封装了从YUV420数据到Unity Texture2D的转化。
+*
+* 
+
+*你也可以选择自行处理YUV数据。例如通过编写Shader逻辑，将YUV的转化交给GPU计算。
+
+*另外：
+*如果你使用的企业套件版本为4.3.0或更高，则可以通过修改key-setting.ini配置中PixelFormat=1 来将格式改为BGRA。然后就可以直接使用Unity Texture2D对象：
+
+* 
+
+*详细代码逻辑可以参考SDK的Sample场景。
+*示例
+ 
+
+
+
+
+
+
+*版本
+*发版日期
+*发版说明
+*1.0.0
+*2024-9-20
+*正式发版
+1.0.1
+2024-12-18
+增加更多播控参数
+*软件
+*最低版本
+*企业套件PC端
+*4.2.0
+*Unity
+*2020
+private void Awake()
+{
+    PXRBusinessSuiteAPI.OnDeviceCmd += OnDeviceCMD;
+}
+
+private void OnDestroy()
+{
+    PXRBusinessSuiteAPI.OnDeviceCmd -= OnDeviceCMD;
+}
+//设备命令处理函数
+private void OnDeviceCMD(PXREAOpenApiCallbackType type, string deviceId, int status, byte[] custom)
+{
+if (!string.IsNullOrEmpty(deviceId))
+{ 
+Device device = PXRBusinessSuiteAPI.GetDevice(deviceId);
+}
+}
+private YuvTexture2D _yuvTexture;
+private void UpdateScreenMonitorTexture()
+{
+    if (_yuvTexture == null)
+    {
+        _yuvTexture = new YuvTexture2D(_device.ScreenFrame.Width, _device.ScreenFrame.Height);
+    }
+    
+    _yuvTexture.LoadRawYuvData(_device.ScreenFrame.Data);
+    Image.texture = _yuvTexture.Texture2D;
+    Image.transform.localScale = Vector3.one;
+}
+private Texture2D _rgbTexture;
+private void UpdateScreenMonitorTexture()
+{
+    if (_rgbTexture == null)
+    {
+    _rgbTexture = new Texture2D(_device.ScreenFrame.Width, _device.ScreenFrame.Height, TextureFormat.BGRA32, false);
+    }
+    
+    _rgbTexture.LoadRawTextureData(_device.ScreenFrame.Data);
+    _rgbTexture.Apply();
+}

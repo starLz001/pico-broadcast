@@ -1,0 +1,122 @@
+头显追踪
+========================================
+头显追踪可以获得当前头显在场景中的位姿信息。你可以用这些数据来判断用户视角所在的位置和朝向，或者制作一个跟随用户视野的 HUD。
+*推荐阅读
+*建议阅读《DataProvider 使用说明》一文，了解如何使用 DataProvider 获取追踪数据、判断数据的可用性以及 DataProvider 的状态。
+*使用限制
+*仅当应用的模式为 Full Space 时，才可以获取头显追踪数据。
+*开发流程
+*通过头显追踪可以实时获取头显的位姿数据，并将其设置给虚拟场景中的实体，实现真实头显与虚拟头显之间的运动的同步。整个开发流程如下：
+*创建 HMDTrackingProvider() 实例。
+* 
+*调用 start() 启动 HMDTrackingProvider，并在不再需要时调用 stop()。
+* 
+*获取头显的位姿数据。
+* 
+* 
+*读取头显的位姿数据，转换数据的坐标系，然后将结果设置给实体。
+* 
+*完整代码示例
+*以下代码展示了如何把真实头显的位置设置给虚拟场景中的 hmdEntity，使 hmdEntity 和真实头显的位置保持同步。
+ 
+*API 参考
+HMDTrackingProvider 类提供头显追踪的相关接口，详情参阅 API 参考。根据你所处的地理位置选择合适的文档链接：
+*中国大陆：https://developer-cn.picoxr.com/spatial-api/index.html
+*非中国大陆：https://developer.picoxr.com/spatial-api/index.html
+
+
+@Composable
+fun HMDTrackingSample() {
+    // ...
+    val hmdTrackingProvider = remember { HMDTrackingProvider() }
+    // ...
+}
+
+@Composable
+fun HMDTrackingSample() {
+    // ...
+    DisposableEffect(hmdTrackingProvider) {
+        hmdTrackingProvider.start()
+        onDispose { hmdTrackingProvider.stop() }
+    }
+    // ...
+}
+
+你可以根据具体场景选择不同的获取方式。此处，在 Composable 函数中，可以使用 dataFlow 获取数据；在 ECS 中，可以通过 latestData 获取最新数据。
+
+@Composable
+fun HMDTrackingSample() {
+    // ...
+    val hmdTrackingData by
+        hmdTrackingProvider.dataFlow.collectAsState(
+            initial = HMDTrackingData(HMDPose(Vector3.ZERO, Quat.identity()), 0L)
+        )
+    // ...
+}    
+
+@Composable
+fun HMDTrackingSample() {
+    // ...
+    val rootEntity: Entity = remember { Entity() }
+    val hmdEntity: Entity = remember { Entity() }
+    SpatialView(
+        update = { _, _ ->
+            hmdTrackingData.hmdPose.let {
+                val transformComponent = hmdEntity.components[TransformComponent::class.java]
+                transformComponent?.apply {
+                    val position =
+                        rootEntity.convertPositionFrom(it.position, null)
+                    val rotation = 
+                        rootEntity.convertRotationFrom(it.rotation, null)
+                    setPosition(position)
+                    setQuaternion(rotation)
+                }
+            }
+        }
+    ) { content, _ ->
+        rootEntity.addChild(hmdEntity)
+        content.addEntity(rootEntity)
+    }
+    // ...
+}
+
+@Composable
+fun HMDTrackingSample() {
+    // 创建 HMDTrackingProvider
+    val hmdTrackingProvider = remember { HMDTrackingProvider() }
+
+    // 从 dataFlow 中获得实时追踪数据
+    val hmdTrackingData by
+        hmdTrackingProvider.dataFlow.collectAsState(
+            initial = HMDTrackingData(HMDPose(Vector3.ZERO, Quat.identity()), 0L)
+        )
+
+    // 在 Composable 生命周期内使用追踪数据
+    DisposableEffect(hmdTrackingProvider) {
+        hmdTrackingProvider.start()
+        onDispose { hmdTrackingProvider.stop() }
+    }
+
+    // 创建场景中的两个实体：根节点和头显节点
+    val rootEntity: Entity = remember { Entity() }
+    val hmdEntity: Entity = remember { Entity() }
+    SpatialView(
+        update = { _, _ ->
+            hmdTrackingData.hmdPose.let {
+                val transformComponent = hmdEntity.components[TransformComponent::class.java]
+                transformComponent?.apply {
+                    // 将追踪数据转换到根节点坐标系下，并设置给头显实体
+                    val position =
+                        rootEntity.convertPositionFrom(it.position, null)
+                    val rotation = 
+                        rootEntity.convertRotationFrom(it.rotation, null)
+                    setPosition(position)
+                    setQuaternion(rotation)
+                }
+            }
+        }
+    ) { content, _ ->
+        rootEntity.addChild(hmdEntity)
+        content.addEntity(rootEntity)
+    }
+}

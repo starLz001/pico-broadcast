@@ -1,0 +1,18 @@
+毛玻璃
+========================================
+你可以为 WindowContainer 中的 view 添加毛玻璃背景效果。PICO Spatial SDK 提供 Thin、Regular、Thick 和 Thickest 四种类型的毛玻璃背景材质，分别对背景后的内容产生不同程度的模糊效果。
+* 
+*代码示例如下：
+ 
+*注意事项
+不要同时为窗口和其内部的全尺寸 View 设置毛玻璃效果。这种叠加会产生双倍的 buffer 渲染开销，大幅占用 CPU 和 GPU 资源。确保在同一区域只配置一层该效果。
+
+@Composable
+fun BackgroundMaterial(){
+    Box(
+        Modifier.size(100.dp).backgroundMaterial(
+            enable = true,
+            style = Material.Thickest
+        )
+    )
+}

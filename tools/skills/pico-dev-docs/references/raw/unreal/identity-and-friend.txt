@@ -1,0 +1,237 @@
+账号&好友
+========================================
+账号&好友服务提供了账号获取、社交关系管理等功能，包括获取指定账号信息、获取当前登录用户的好友列表、发送好友申请等。参考 Unreal 官方文档：身份接口和好友接口。
+*基本概念
+*
+*应用场景
+*使用 PICO 账号授权登录
+在应用中获取系统中已登录的 PICO 账号，实现授权登录，而无需在应用内单独实现注册、登录等功能；若用户首次打开应用，未在系统中未登录任何 PICO 账号，会调起授权登录。
+账号授权登录时会进行应用包签名校验，只有已在 PICO 开发者平台上传版本的应用才能够获得账号授权，要了解如何为应用上传版本，参考上传版本。
+*使用 PICO 账号获取好友列表
+在应用中获取系统中已登录的 PICO 账号的好友列表，可查看好友在线状态、邀请好友一起玩。
+*在应用里添加好友
+在应用中发送交友邀请，对方接受后即建立好友关系。互为好友的玩家可在 PICO 好友 App 中聊天。
+*用户授权管理
+你可通过调用 API 查询用户已授权的权限列表，或向用户申请授权。部分接口需要用户授权才能访问，未经授权访问会返回错误信息。
+*功能说明
+*申请权限和查看已获取权限
+调用账号&好友相关接口需要获取用户授权，你还可以查看已从用户处获取的权限，参考下表中的接口。
+*
+调用 RequestUserPermissions 可以申请的权限包括以下 5 个。其中权限枚举指你在虚幻引擎中调用接口时需要输入的字符串参数。
+*
+*获取用户信息和好友列表等
+获取用户授权后，你可以调用以下接口获取用户信息和好友列表、发送好友申请、查询社交关系等。
+*
+*准备工作
+详细步骤，参考配置平台服务。
+*使用示例
+PICO 提供账号&好友示例，包含蓝图和 C++ 代码两种接口调用方式，你可以根据引擎版本下载示例。示例已完成 SDK 相关配置，工程打包后，可以直接在 PICO 设备中安装 APK 文件以进行测试。
+该示例使用的引擎版本为 UE 4.27.2。
+*蓝图调用
+账号&好友的蓝图接口调用示例位于 Content\UMG\Version1\UI_Version1_Sample 中。
+*调用 PicoLogin 接口并通过代理绑定 Request 回调函数
+* 
+*C++ 代码调用
+账号&好友的 C++ 调用示例位于 PlatformSample\UIInteraction\Source\UIInteractionDemo\Private\PicoGameInstance.cpp 中。
+*接口类获取
+*输入 PICO 关键字 “FName(TEXT("Pico"))” 以获取实例化之后的 Subsytem 类，并获取 Friend 和 Identity 接口：
+* 
+*Request 函数调用
+* 
+*GetAccessToken 接口调用
+* 
+*回调函数处理：
+* 
+*Demo
+*前置条件
+确保你 PICO 设备的 PUI（ROM）版本为 4.8.0 及以上。
+*使用说明
+你可以前往 PICO GitHub 获取账号&好友 Demo。账号&好友 Demo 位于 Content\Maps\WindowMaps 中。Demo 的图形化界面如下：
+ 
+*Identity (账号)
+点击 IdentityLogin 或 PicoGetUser， Pico Nickname 和 Pico User ID 字段将展示目前登录的用户昵称和 UserID。
+ 
+*Friend (好友)
+*点击 ReadFriendList 以读取 Default 字段好友列表。
+*点击 SelectFriend 下拉菜单，将展示所有好友昵称。
+*选择好友后， Select Friend ID 字段将展示好友的 UserID。
+* 
+*用户权限
+*点击 GetAuthorizePermissions 获取用户已授予当前应用的权限列表；
+*点击 RequestUserPermissions，在 Permission 右侧点击 +，在 Permissions List 处输入要申请的权限，包括 user_info，friend_relation，sports_userinfo，sports_summarydata，然后点击 RequestUserPermissions 向该用户申请。
+* 
+*API 参考
+*账号功能相关 API 详情，可参考 API 文档。
+*好友功能相关 API 详情，可参考 API 文档。
+
+
+
+
+术语
+
+说明
+
+PICO 账号
+
+可在 PICO 官网、PICO VR 一体机、PICO VR 助手 中登录的账号。用户可实现自定义昵称、头像等操作。
+
+openID
+
+基于 PICO 账号授权生成的用户唯一标识。每位用户在不同应用（app_id）中的 openID 是唯一且固定的。
+
+AccessToken
+
+基于 PICO 账号和 APP ID 生成的 Token。验证成功的 Token 可以访问 PICO SDK 提供的服务，如游戏服务。
+
+用户授权
+
+应用访问用户私有数据时需要向用户申请授权，授权权限包括个人信息、好友信息、运动数据等。
+
+
+
+功能
+
+说明
+
+接口
+
+申请获取给定列表中的权限
+
+系统会弹窗提示用户进行授权。
+💬 提示
+弹窗提示时会忽略已经授予的权限，只提示未授予的权限。
+
+RequestUserPermissions
+
+获取用户已授予当前应用的权限列表
+
+返回的结构体中包含一个权限列表（以一个字符串数组表示）。权限及其对应的表示参考 RequestUserPermissions 接口。
+
+GetAuthorizePermissions
+
+
+
+权限名称
+
+枚举
+
+描述
+
+用户信息
+
+user_info
+
+获取用户的昵称、头像等数据。调用 GetAccessToken、GetLoginUser 等接口时需要此权限。
+
+好友信息
+
+friend_relation
+
+获取用户的好友列表、获取可邀请用户等。
+
+运动中心用户信息
+
+sports_userinfo
+
+获取运动中心用户信息。
+
+运动中心汇总信息
+
+sports_summarydata
+
+获取运动中心运动汇总信息。
+
+应用内录屏和截屏
+
+record_highlight
+
+获取用户在使用应用时截屏、录屏权限。使用高光时刻功能接口时需要此权限。
+
+
+
+功能
+
+说明
+
+接口
+
+获取用户信息
+
+获取当前登录应用的 PICO 账号用户信息。
+
+GetLoginUser
+
+
+
+获取指定用户信息。userID 为这个指定用户的 ID，用户信息返回字段同 GetLoggedInUser 一致。
+
+GetUserInfo
+
+发送好友申请
+
+输入账号 ID， 通过调起好友 App 面板发送添加好友请求。
+
+LaunchFriendRequestFlow
+
+获取好友列表
+
+获取当前登录账号的好友列表。返回用户信息结构体数组形式。
+提示：此接口返回的好友仅包括使用该应用并授权好友信息的用户。
+
+GetUserFriends
+ReadFriendList
+GetFriendList
+
+查询社交关系
+
+传入一个 userId 列表，返回这些用户和当前用户的社交关系。使用此接口前，应用需有用户的好友权限，否则查询失败。
+
+GetRelations
+
+获取下一页数据
+
+调用 GetUserFriends 后，若返回列表信息有多页，调用 GetNextUserPage 可获取下一页数据。
+
+GetNextUserPage
+
+获取 Access token
+
+Access token 可用于其他服务的初始化，比如多人游戏服务。
+
+GetAccessToken
+
+if (IOnlineSubsystem* Subsystem = IOnlineSubsystem::Get(FName(TEXT("Pico"))))
+{
+    PicoSubsystem = static_cast<FOnlineSubsystemPico*>(Subsystem);
+    if (PicoSubsystem)
+    {
+        FriendInterface = PicoSubsystem->GetFriendsInterface();
+        IdentityInterface = PicoSubsystem->GetIdentityInterface();
+    }
+}
+
+void UPicoGameInstance::PicoLogin(FString LocalUserNum, FString InType, FString ID, FString InToken)
+{
+    if (IdentityInterface.IsValid())
+    {
+        FOnlineAccountCredentials Credentials;
+        Credentials.Id = ID;
+        Credentials.Token = InToken;
+        Credentials.Type = InType;
+        IdentityInterface->OnLoginCompleteDelegates->AddUObject(this, &UPicoGameInstance::OnLoginComplete);
+        IdentityInterface->Login(0, Credentials);
+    }
+}
+
+PICOUserInterface = PICOSubsystem->GetPICOUserInterface();
+GetAccessTokenDelegate.BindDynamic(this, &UPICOGameInstance::OnGetAccessTokenComplete);
+PICOUserInterface->GetAccessToken(GetAccessTokenDelegate);
+
+void UPICOGameInstance::OnGetAccessTokenComplete(bool bIsError, const FString& ErrorMessage, const FString& AccessToken)
+{
+    if (bIsError)
+    {
+        UE_LOG(LogTemp, Error, TEXT("OnGetAccessTokenComplete Failed : %s"), *ErrorMessage);
+    }
+    UE_LOG(LogTemp, Display, TEXT("OnGetAccessTokenComplete AccessToken : %s"), *AccessToken);
+}

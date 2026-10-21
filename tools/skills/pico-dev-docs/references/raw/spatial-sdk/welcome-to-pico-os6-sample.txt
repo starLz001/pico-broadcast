@@ -1,0 +1,359 @@
+示例：欢迎来到 PICO OS 6！
+========================================
+该示例演示如何在一个空间应用中组合 2D 导航、Volumetric 3D 检视、Full Space 房间、AssetBundle 资源加载、ECS 行为、2D 面板挂载、IBL 光照等能力，并将它们组织成一个完整的应用流程。
+ 
+*前提条件
+*参阅《准备开发环境》配置 PICO Spatial SDK 开发环境。
+*准备一台 PICO 设备或启动 PICO Emulator。
+*获取示例项目
+前往《PICO Spatial SDK 示例》下载 欢迎来到 PICO OS 6 示例项目。
+*运行示例项目
+*把示例项目拉取到本地，然后用 Android Studio 打开示例项目。
+*连接 PICO 设备或启动 PICO Emulator。
+*运行 app 模块。
+运行示例后，应用主要包含两条流程：
+*进入家具库，点击卡片，在一个独立的 Volumetric WindowContainer 中查看 3D 模型，并通过手势和工具栏与它交互。
+*进入布置空间流程，打开一个 Full Stage，在房间场景中点亮对应的家具，让用户感知它被摆放到空间后的效果。
+建议按下面顺序运行并观察：
+*先进入家具库，确认卡片列表与 3D 检视窗口的联动。
+*在检视窗口里试一下旋转、缩放、灯光和名称牌。
+*回到首页，进入布置空间，观察 Stage 打开后的房间场景。
+*依次选择家具，查看目标模型在房间中的显隐与高亮反馈。
+ 
+*示例项目结构说明
+核心代码在 app/src/main/java/com/pico/spatial/sample/welcomespace/ 下，按职责拆分为：
+*Main.kt：声明 DefaultWindowContainer、Volumetric WindowContainer 与 Stage
+*data/
+*AssetBundle.kt：统一加载 editor-asset.bundle
+*ModelRepository.kt：维护 5 件家具的 ModelCard 目录（卡片 → 模型场景 → 房间目标节点）
+*di/
+*AppModule.kt：Koin 模块定义（家具库 / 布置空间两个 scope，分别托管对应 ViewModel）
+*KoinScopes.kt：FurnitureLibraryScope 与 DecorateSpaceScope 两个 KoinScopeComponent
+*ecs/Rotation.kt：RotationComponent + RotationSystem，驱动检视模型自动旋转
+*platform/
+*LaunchActivity.kt、SpatialApplication.kt：startKoin { modules(appModules) } 与 launch(::mainApp)
+*ui/
+*navigation/MainNavHost.kt：管理 Home / Furniture / Decorate 的页面流转
+*home/HomePage.kt：首页入口；触发家具库或布置空间流程
+*furniture/FurnitureLibraryPage.kt + FurnitureLibraryViewModel.kt：家具目录页；负责打开/关闭模型检视容器
+*display/ItemDisplayVolume.kt + ItemDisplayViewModel.kt：Volumetric 3D 检视窗口；处理模型加载、手势、名称牌、灯光和重置
+*decorate/DecorateSpacePage.kt + DecorateSpaceViewModel.kt：布置空间入口页；联动打开/关闭 Stage 与目标物件高亮
+*room/FullSpaceRoom.kt + FullSpaceRoomViewModel.kt：Stage 场景入口；加载房间与目标节点，控制显隐和 Fresnel 高亮
+*room/RoomLighting.kt：IblViewModel + IblEntity，提供 IBL 环境光实体
+*common/：跨页面复用的 UI 工具类（ItemModelCard、ItemSelection、ItemsLayout、NavTitleBar、PreviewExitController、SingleHandRotation、ItemInteractionMode）
+*基于多容器空间应用骨架实现 Welcome Space
+下面以示例项目为主线，分步骤说明如何把页面流、容器流、3D 资源流和交互反馈流组织在一起。
+*步骤一：在一个应用中同时声明三类空间容器
+示例在 Main.kt 中一次性声明了三个空间入口：
+*DefaultWindowContainer：承载主导航与 2D 页面
+*WindowContainer(form = Form.Volumetric)：承载 3D 模型检视窗口
+*Stage：承载 Full Space 房间场景
+ 
+这里的实现重点是：
+*主应用 UI 仍然从 DefaultWindowContainer 开始，因此 Compose 导航可以继续负责页面流转
+*模型检视放进独立的 Volumetric 容器，与主页面内容分离
+*房间展示放进 Stage，并通过 Immersion(default = 100) 配置 Full Space 体验
+运行时结构如下：
+*
+ 
+*步骤二：让页面流和容器流联动
+这个示例采用了下面的分工：
+*NavHost 负责页面级导航
+*LocalSpatialNavigator 负责空间容器的打开与关闭
+首页的两个入口分别对应两条不同的空间链路：
+ 
+这意味着页面跳转和空间状态切换可以同时发生，而 openStage() 这类 suspend 调用需要在协程中执行。
+布置空间页在 MainNavHost 中通过 LifecycleEventObserver 监听 ON_PAUSE / ON_DESTROY，在这两种情况下主动关闭 Stage 并回到 Home：
+ 
+*步骤三：从 2D 家具库打开 Volumetric 检视容器
+家具库页面的作用不是直接展示 3D 内容，而是打开一个独立的检视窗口。点击卡片后，示例调用：
+ 
+这段实现有两个关键点：
+*使用同一个 WindowContainer 定义，通过不同实例参数打开不同模型
+*用 Bundle 在容器之间传递最小必要信息，而不是直接共享复杂对象
+FurnitureLibraryPage 退出时还会遍历已选项并关闭对应的检视窗口，避免用户离开页面后残留多个 3D 查看窗。
+*步骤四：在 Volumetric 检视窗口中组合模型、手势、ECS 和挂载面板
+ItemDisplayVolume.kt 在一个容器中组合了多个常见需求：
+*异步加载 3D 模型
+*拖拽旋转
+*双指缩放
+*自动旋转开关
+*内置灯光开关
+*2D 名称牌挂载
+*一键重置 transform
+初始化核心逻辑如下：
+ 
+这里的实现重点是：
+*模型统一从 AssetBundle 加载
+*RotationComponent + RotationSystem 负责自动旋转（registerSystem<RotationSystem>() / unregisterSystem<RotationSystem>() 在 DisposableEffect 中成对调用）
+*InteractableComponent + CollisionComponent 让模型能参与空间交互
+*findEntity("Light") 表明模型内部可以预埋一个可被代码启停的灯光节点
+示例还通过 AttachmentPanel 把 2D 名称牌挂到 3D 内容中，并通过空间手势更新 TransformComponent。其中拖拽旋转需要先做坐标系转换：
+ 
+这对需要"基于手势旋转实体"的场景具有参考意义。缩放范围在 [MIN_SCALE = 0.3, MAX_SCALE = 1.8] 之间被夹紧，避免模型变形过大或贴近裁剪面。
+*步骤五：打开 Full Space 房间并加载目标场景
+进入布置空间后，示例不再聚焦"单个模型交互"，而是把某个目标物件放进一个完整房间场景中展示。
+FullSpaceRoom() 的主体逻辑如下：
+ 
+这里只做两件事：
+*加入 IBL 实体
+*加入房间场景实体
+也就是说，这个页面把渲染结构保持在较小范围内，而把更多逻辑放进了 ViewModel。
+*步骤六：用内容目录统一驱动卡片、检视和房间节点
+ModelRepository.kt 维护了一张关键的内容目录表：
+ 
+这张表同时承担了 3 件事：
+*定义 2D 卡片列表要展示哪些模型
+*告诉 Volumetric 检视窗口该加载哪个模型场景（targetItemSceneName）
+*告诉房间场景该去找哪个目标节点（targetItemNodeName）
+示例提供了 5 件家具的目录项：耳机、设备、台灯、挂画与花瓶。三个不同维度的列表（卡片 / 检视 / 房间）共享同一套映射关系，避免分散维护。
+*步骤七：在房间场景中显示目标物件并做高亮反馈
+FullSpaceRoomViewModel 会先加载整套房间场景 WelcomeSpace_VR，再从场景中找到预先埋好的目标节点：
+ 
+点击卡片后的核心调用是：
+ 
+showTargetItem() 会把目标物件显示出来，并开启 Fresnel 高亮：
+ 
+高亮逻辑的关键是对 ShaderGraphMaterial 写参数，并在一段时间后（FRESNEL_EFFECT_TIME = 15000L）自动移除高亮：
+ 
+这部分展示了运行时代码如何驱动 ShaderGraph 参数，以及页面点击事件如何联动到 Stage 中的材质效果。
+*步骤八：给 Stage 单独配置 IBL 环境光
+Welcome Space 在房间里单独创建了一个 IBL 实体：
+ 
+这种方式的作用是：
+*房间场景负责内容实体
+*IBL 实体负责环境光照
+*两者在 SpatialView.initial 中一起加入内容树
+这样在替换空间、切换主题或引入昼夜模式时，职责边界会更清晰。
+*步骤九：通过 Koin scope 共享跨页面与跨容器状态
+这个示例包含多个页面和多个空间容器，并通过 Koin 显式 scope 管理共享状态。SpatialApplication 在启动时注册 appModules：
+ 
+模块定义中区分了"家具库"与"布置空间"两个独立 scope：
+ 
+KoinScopes.kt 提供两个轻量 KoinScopeComponent 让 ViewModel 直接以 mixin 方式获取 scope：
+ 
+这使得：
+*FurnitureLibraryPage 和 ItemDisplayVolume 在不同容器里都能拿到同一个 FurnitureLibraryViewModel
+*DecorateSpaceViewModel 可以直接 inject<FullSpaceRoomViewModel>()，把"2D 卡片点击"驱动到"Stage 场景中的目标物件显隐与高亮"
+ 
+*延伸阅读
+*《声明 WindowContainer》
+*《打开或关闭 WindowContainer》
+*《声明 Stage》
+*《打开或关闭 Stage》
+*《将 2D 面板挂载至 3D entity》
+*《AssetBundle》
+*《基于图像的光照》
+*《ShaderGraphMaterial》
+
+// file:app/src/main/java/com/pico/spatial/sample/welcomespace/Main.kt
+fun mainApp(scope: SpatialAppScope) =
+    with(scope) {
+        DefaultWindowContainer {
+            PicoTheme { MainNavHost(Modifier.windowConstraints(width = 1280.dp, height = 720.dp)) }
+        }
+
+        WindowContainer(
+            id = WINDOW_CONTAINER_DISPLAY_BOX_ID,
+            resizeType = ContainerResizeType.ContentSize,
+            defaultSize = WindowContainerSize(width = VOLUME_SIZE, height = VOLUME_SIZE, depth = VOLUME_SIZE),
+            form = Form.Volumetric,
+            worldScale = WorldScale.Fixed,
+            enableMaterialBackground = false
+        ) {
+            PicoTheme { ItemDisplayVolume(...) }
+        }
+
+        Stage(
+            id = STAGE_ROOM_ID,
+            immersion = Immersion(default = 100, min = 0, max = 100),
+        ) {
+            PicoTheme { FullSpaceRoom() }
+        }
+
+        MainScope().launch { assetBundle.await() }
+    }
+
+// file:app/src/main/java/com/pico/spatial/sample/welcomespace/ui/navigation/MainNavHost.kt
+HomePage(
+    onNavToFurnitureLibrary = {
+        navController.navigate(NAV_ROUTE_FURNITURE_LIBRARY)
+    },
+    onNavToDecorateSpace = {
+        navController.navigate(NAV_ROUTE_DECORATE_SPACE)
+        coroutine.launch {
+            spatialNavigator.openStage(id = STAGE_ROOM_ID, style = StageStyle.Full)
+        }
+    }
+)
+
+// file:app/src/main/java/com/pico/spatial/sample/welcomespace/ui/navigation/MainNavHost.kt
+val observer = LifecycleEventObserver { _, event ->
+    if (event == Lifecycle.Event.ON_PAUSE || event == Lifecycle.Event.ON_DESTROY) {
+        coroutine.launch(Dispatchers.Main.immediate) {
+            closeStage()
+            navController.popBackStack(NAV_ROUTE_HOME, false)
+        }
+    }
+}
+
+// file:app/src/main/java/com/pico/spatial/sample/welcomespace/ui/furniture/FurnitureLibraryPage.kt
+spatialNavigator.openWindowContainer(
+    WINDOW_CONTAINER_DISPLAY_BOX_ID,
+    modelName,
+    Bundle().apply {
+        putString(CROSS_CONTAINER_BUNDLE_MODEL_NAME, modelName)
+        putString(CROSS_CONTAINER_BUNDLE_TITLE, title)
+    }
+)
+
+// file:app/src/main/java/com/pico/spatial/sample/welcomespace/ui/display/ItemDisplayVolume.kt
+item = withContext(Dispatchers.IO) { assetBundle.await().loadModel(modelName) }
+item?.apply {
+    components[TransformComponent::class.java]?.apply {
+        setPosition(initTransform.position)
+        setEulerAngles(initTransform.rotation)
+        setScaleVector(initTransform.scale)
+    }
+    components.set(RotationComponent(isEnabled = isRotateEnabled))
+    components.set(InteractableComponent())
+    components.set(
+        CollisionComponent(
+            collisionShape = listOf(ShapeResource.createBox(size = INTERACTABLE_BOX_SIZE)),
+            physicsMaterial = PhysicsMaterialResource(),
+        )
+    )
+    light = findEntity(LIGHT_ENTITY_NAME)
+    content.addEntity(this)
+}
+
+// file:app/src/main/java/com/pico/spatial/sample/welcomespace/ui/display/ItemDisplayVolume.kt
+val convertedRotation =
+    content.convertRotation(
+        rotation = quaternion,
+        from = ViewCoordinateSpace.Global,
+        to = content.localSpatialCoordinateSpace,
+    )
+setQuaternion(convertedRotation)
+
+// file:app/src/main/java/com/pico/spatial/sample/welcomespace/ui/room/FullSpaceRoom.kt
+SpatialView(
+    initial = { content, _ ->
+        val iblEntity = iblEntityDeferred.await()
+        content.addEntity(iblEntity)
+        roomViewModel.room.await()?.let { content.addEntity(it) }
+    }
+)
+
+// file:app/src/main/java/com/pico/spatial/sample/welcomespace/data/ModelRepository.kt
+data class ModelCard(
+    val modelBoundingBoxSize: DpSize,
+    val targetItemSceneName: String,
+    val titleResourceId: Int,
+    val descriptionResourceId: Int,
+    val targetItemNodeName: String,
+)
+
+// file:app/src/main/java/com/pico/spatial/sample/welcomespace/ui/room/FullSpaceRoomViewModel.kt
+val room =
+    viewModelScope.async {
+        try {
+                withContext(Dispatchers.IO) { assetBundle.await().loadModel(SCENE_ROOM) }
+            } catch (e: ResourceLoadingException) {
+                Log.e(TAG, "Failed to load scene [$$SCENE_ROOM] from bundle: $${e.message}")
+                null
+            }
+            ?.apply {
+                components[TransformComponent::class.java]?.apply {
+                    setPosition(ROOM_INITIAL_POSITION)
+                    setEulerAngles(ROOM_INITIAL_ROTATION)
+                }
+                findTargetItems()
+                hideTargetItems()
+            }
+    }
+
+// file:app/src/main/java/com/pico/spatial/sample/welcomespace/ui/decorate/DecorateSpaceViewModel.kt
+fun placeTargetItem(modelName: String) {
+    select(modelName)
+    roomViewModel.showTargetItem(modelName)
+}
+
+// file:app/src/main/java/com/pico/spatial/sample/welcomespace/ui/room/FullSpaceRoomViewModel.kt
+fun showTargetItem(modelName: String) {
+    itemsToAdd[modelName]?.apply {
+        toggleFresnelEffect(true, this)
+        enabled = true
+    }
+}
+
+// file:app/src/main/java/com/pico/spatial/sample/welcomespace/ui/room/FullSpaceRoomViewModel.kt
+(entity.components[ModelComponent::class.java]?.materials?.get(0) as? ShaderGraphMaterial)
+    ?.apply {
+        toGlobal()
+        if (playFresnel) {
+            setParameter(SHADER_GRAPH_PARAMETER_NAME, 1f)
+            // After a certain amount of time, remove the fresnel effect
+            viewModelScope.launch {
+                delay(FRESNEL_EFFECT_TIME)
+                setParameter(SHADER_GRAPH_PARAMETER_NAME, 0f)
+                close()
+            }
+        } else {
+            setParameter(SHADER_GRAPH_PARAMETER_NAME, 0f)
+        }
+    }
+
+// file:app/src/main/java/com/pico/spatial/sample/welcomespace/ui/room/RoomLighting.kt
+class IblEntity : Entity() {
+    suspend fun initialize() {
+        val iblTexture =
+            withContext(Dispatchers.IO) {
+                TextureResource.load(
+                    path = IBL_PATH,
+                    loadType = LoadType.FROM_ASSETS,
+                )
+            }
+        iblTexture.use {
+            val iblSource = ImageBasedLightSource.Single(it)
+            val iblComponent = StageEnvironmentLightingComponent(iblSource, INTENSITY_EXPONENT)
+            components.set(iblComponent)
+        }
+    }
+}
+
+// file:app/src/main/java/com/pico/spatial/sample/welcomespace/platform/SpatialApplication.kt
+override fun onCreate() {
+    super.onCreate()
+    startKoin {
+        androidLogger(Level.DEBUG)
+        modules(appModules)
+    }
+    launch(::mainApp)
+}
+
+// file:app/src/main/java/com/pico/spatial/sample/welcomespace/di/AppModule.kt
+val furnitureLibraryModule = module {
+    scope(named(FURNITURE_LIBRARY_SCOPE_ID)) {
+        scopedOf(::FurnitureLibraryViewModel)
+        scopedOf(::ItemDisplayViewModel)
+    }
+}
+
+val decorateSpaceModule = module {
+    scope(named(DECORATE_SPACE_SCOPE_ID)) {
+        scopedOf(::DecorateSpaceViewModel)
+        scopedOf(::FullSpaceRoomViewModel)
+    }
+}
+
+// file:app/src/main/java/com/pico/spatial/sample/welcomespace/di/KoinScopes.kt
+class FurnitureLibraryScope : KoinScopeComponent { ... }
+class DecorateSpaceScope : KoinScopeComponent { ... }
+
+// file:app/src/main/java/com/pico/spatial/sample/welcomespace/ui/decorate/DecorateSpaceViewModel.kt
+class DecorateSpaceViewModel :
+    ViewModel(), KoinScopeComponent by DecorateSpaceScope(), ItemSelector by ItemSelectorImpl() {
+    private val roomViewModel: FullSpaceRoomViewModel by inject()
+    ...
+}

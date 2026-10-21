@@ -1,0 +1,4 @@
+如何获取 DEBUG 级别日志？
+========================================
+默认输出 INFO 级别日志。DEBUG 日志的级别低于 INFO 日志。因此，若想获取 DEBUG 级别日志，须使用 adb shell setprop persist.log.tag V 命令对日志进行降级。
+

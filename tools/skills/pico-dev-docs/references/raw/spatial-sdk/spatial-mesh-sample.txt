@@ -1,0 +1,514 @@
+示例：利用空间网格创建射击游戏
+========================================
+该示例演示如何利用空间网格（Spatial Mesh）构建一个简单的 MR 射击游戏：扫描真实环境生成可碰撞网格，发射子弹命中网格后记分，并在命中位置播放空间化音效。
+ 
+*前提条件
+*参阅《准备开发环境》配置 PICO Spatial SDK 开发环境。
+*准备一台 PICO 设备或启动 PICO Emulator。
+*获取示例项目
+前往《PICO Spatial SDK 示例》下载 利用空间网格创建射击游戏 示例项目。
+*运行示例项目
+*把示例项目拉取到本地，然后用 Android Studio 打开示例项目。
+*连接 PICO 设备或启动 PICO Emulator。
+*运行 app 模块。
+如果是在真机上运行，示例默认使用空间点击手势触发发射；如果在 PICO Emulator 上运行，则会显示一个按钮用于点击发射。
+运行示例后，你会体验到一个基于真实环境的射击玩法：
+*启动后进入 Stage，开始扫描并可视化周围空间网格
+*用户点击或执行空间点击手势后发射一个球形弹丸
+*弹丸以 HMD 朝向为瞄准方向前进，与空间网格碰撞后命中
+*被命中的网格会从线框变为填充，分数加 1
+*背景音乐持续播放，开火音跟随玩家，命中音在真实命中位置空间化播放
+ 
+*整体链路如下：
+* 
+*示例项目结构说明
+核心代码位于 app/src/main/java/com/pico/spatial/sample/spatialmesh/，按职责拆分为以下子目录：
+*Main.kt：应用入口（DefaultStage + 资源预热；前后台重建逻辑由 ui/GameScene.kt 中的 MainStage() 内部 restartKey + key(restartKey) 实现）
+*data/
+*AssetBundle.kt：3D 资源捆绑包与模型常量（如 SCENE_AMMO_MODEL = "Sphere"）
+*Audio.kt：背景音乐、枪声、命中音的资源加载、控制器与发射器池管理
+*GlobalConfig.kt：全局配置项
+*ecs/
+*components/：自定义 ECS 组件
+*AmmoComponent.kt：子弹运行时状态（ammoId、命中网格、是否进入 despawn）
+*ShooterComponent.kt：发射器组件（持有 HMDTrackingProvider 与 canFire 标记）
+*SpatialMeshComponent.kt：空间网格标记组件（isHit 等）
+*entities/InteractionReceiver.kt：用于在真机上接收空间点击的不可见交互实体
+*systems/
+*AmmoSystem.kt：子弹越界回收 / 命中后延迟 despawn
+*ShooterSystem.kt：读取 HMD 姿态，将子弹从对象池取出并赋初速度
+*manager/
+*MeshScanManager.kt：空间网格扫描、订阅更新、网格实体创建/更新/销毁
+*AmmoManager.kt：子弹对象池（创建/取用/回收/重置）
+*GameplayManager.kt：射击 / 命中判定后的计分、材质变更、音效触发
+*ui/
+*GameScene.kt：MainStage() 实现，组织根节点、订阅碰撞事件、注册系统、生命周期清理
+*GameViewModel.kt：分数、提示与游戏状态的 UI 层数据
+*GameUIBridge.kt：连接 ECS/Manager 与 GameViewModel 的桥接单例
+*util/Utils.kt：通用工具方法（随机颜色、向量长度等）
+*platform/：LaunchActivity 与 SpatialApplication 平台样板
+阅读建议：从 Main.kt 入口出发，先看 ui/GameScene.kt 把握整体装配，再依次进入 manager/ 与 ecs/systems/，最后看 data/Audio.kt 了解音频组织方式。
+*基于空间网格实现 MR 射击游戏
+下面以示例项目为主线，分步骤说明如何实现"持续扫描空间网格 + 按需射击 + 碰撞命中 + 计分与音效"的完整链路。
+*步骤一：应用入口：DefaultStage 和资源预热 
+示例直接使用 DefaultStage 承载主场景，并在启动时预热 3D 资源与音频资源：
+ 
+AndroidManifest.xml 中配置了 Stage 的 ID 与初始样式（示例使用 Mixed）：
+ 
+这意味着：
+*应用启动后直接进入 Stage
+*真实环境仍可见，同时叠加虚拟内容
+*空间网格、子弹和提示 UI 都在这个沉浸场景中运行
+为了让应用从后台恢复时能够整体重建子树并重新初始化资源，MainStage() 内部用 restartKey + key(restartKey) 监听 ON_PAUSE / ON_RESUME 并递增 restartKey，使被 key() 包裹的 MainStageContent() 整体重建：
+ 
+这样，MainStageContent() 内部的 LaunchedEffect 初始化与清理逻辑就能成对运行。
+*步骤二：向场景添加核心实体
+MainStage() 会把几个核心根节点加入 SpatialView：
+ 
+它们分别负责：
+*AudioRepository.root：背景音乐与命中音发射器池
+*GameplayManager.ground：子弹发射后挂载到这个根节点，参与物理模拟
+*MeshScanManager.root：空间网格实体的统一父节点
+*cameraTarget：跟随相机的锚点，挂载射击器与 UI 面板
+其中 cameraTarget 是一个 AnchorEntity(AnchorTarget.createCameraTarget())，并带有位置偏移：
+ 
+这使得"武器/发射器"始终位于用户视角前下方。
+*步骤三：启动空间网格扫描
+示例的空间网格逻辑集中在 MeshScanManager 中。
+*开始扫描与订阅更新
+ 
+示例处理了 3 类事件：
+*ADDED：新增一块网格
+*UPDATED：已有网格形状或姿态变化
+*REMOVED：某块网格被移除
+为避免同一 anchorUUID 上的加载/更新事件相互覆盖，示例在 MeshScanManager 中引入了一个并发协调机制：
+*meshLoadJobs: MutableMap<UUID, Job>：记录每个 anchor 当前正在执行的加载协程
+*pendingTransforms: MutableMap<UUID, TransformData>：在加载未完成期间缓存最新的位姿
+*协程作用域使用 CoroutineScope(Dispatchers.Main.immediate + SupervisorJob())，保证回调按顺序在主线程上下文中处理，单个网格的失败不会影响其他网格
+当新事件到达时，会先取消同一 anchorUUID 上未完成的旧任务，再启动新的加载，并在加载完成后应用最近一次缓存的位姿。
+*把 MeshAnchor 转成可渲染、可碰撞的实体
+当收到 ADDED 事件时，示例通过 MeshResource.loadFromMeshAnchor(anchorUUID) 生成网格资源，并创建 ModelEntity：
+ 
+这里有两个关键点：
+*视觉层：网格材质默认使用 LINE 线框模式，便于区分哪些区域已被扫描
+*碰撞层：使用 ShapeResource.createStaticMesh(mesh) 作为碰撞体，让子弹能真正打在真实环境网格上
+本示例中的碰撞分组关系如下：
+*
+碰撞分组常量定义在 AmmoManager 中：
+ 
+*处理更新与移除
+当空间网格发生变化时，示例会重新加载对应 mesh，并更新实体的 transform；移除时则销毁实体：
+ 
+*步骤四：通过对象池实现子弹发射
+射击类玩法里，弹丸创建频率很高。示例没有在每次开火时 Entity() 新建子弹，而是用了一个固定大小的对象池：
+ 
+初始化时，从 AssetBundle 载入一次球体模型，再克隆 32 个实体作为弹丸池。为了让所有弹丸共享同一份材质实例，克隆时显式启用了 shouldShareMaterialInstance：
+ 
+SCENE_AMMO_MODEL 为：
+ 
+*子弹有哪些组件
+每颗子弹在池中都带有：
+*AmmoComponent：记录 ammoId、命中网格、是否进入 despawn 状态
+*RigidBodyComponent：用于物理运动
+*CollisionComponent：球形碰撞体
+ 
+注意：
+*子弹在池中是"锁定平移"的，避免未激活时参与模拟
+*子弹只和空间网格组碰撞，不与其他对象混杂
+*步骤五：基于空间点击和 HMD 朝向触发射击
+*真机：空间点击手势
+示例在真机上使用一个专门的 InteractionReceiver 捕获空间点击：
+ 
+InteractionReceiver 本身是一个带大球形触发区的 Entity：
+ 
+它不参与真实碰撞，只负责接收空间点击。
+*PICO Emulator：按钮触发
+如果运行在 Emulator，示例显示一个普通按钮，点击后同样调用：
+ 
+*射击方向：来自 HMDTrackingProvider
+ShooterSystem 每帧检查 ShooterComponent.canFire。当它为 true 时，读取 HMD 当前姿态并计算前向向量；为减少对象分配，示例将查询/缓存抽到了系统单例上：
+ 
+为防止极快连续触发导致同一帧多次发射，相邻两次发射之间有一个最小间隔 SPAWN_GAP = 0.06f 秒。
+随后把子弹从 shooter 节点移到 GameplayManager.ground，解锁平移，并赋予线速度：
+ 
+这里的实现要点是：
+*瞄准方向：来自 HMD 当前朝向
+*发射位置：HMD 前方 1 米
+*运动驱动：通过 PhysicsVelocityComponent 赋予初速度（示例中 speed = 10f）
+*步骤六：基于物理碰撞实现命中判定
+示例没的命中判定完全依赖碰撞事件：
+*子弹：CollisionComponent + RigidBodyComponent
+*空间网格：CollisionComponent(static mesh)
+*物理系统：产生 CollisionEvents.Enter
+在 SpatialView.initial 中统一订阅碰撞事件：
+ 
+GameplayManager.onHit() 会从碰撞双方中找出：
+*哪个是空间网格（带 SpatialMeshComponent）
+*哪个是子弹（带 AmmoComponent）
+命中后执行 4 件事：
+*网格标记为已命中，避免重复记分
+*通过 GameUIBridge.viewModel?.incrementScore() 把分数同步到 UI 层
+*网格材质从 LINE 改为 FILL
+*子弹切为 TRIGGER_LITE，停止运动，进入延迟回收
+ 
+GameUIBridge 是一个轻量单例，作为 ECS/Manager 与 Compose ViewModel 之间的桥接：
+ 
+MainStage() 在初始化时把当前 GameViewModel 注入桥接，退出时清空。这样，ECS 层就不需要直接持有 Compose 状态。
+*步骤七：实现子弹回收
+AmmoSystem 每帧扫描激活中的子弹：
+*如果离原点太远（MAX_RANGE = 10f），直接回收
+*如果已命中，走一个 2 秒的 despawn 计时器，然后回收
+ 
+回收时，AmmoManager.free() 会完整重置状态：
+*TransformComponent
+*PhysicsVelocityComponent
+*CollisionResponseMode
+*RigidBodyComponent.isTranslationLocked
+*命中过的网格会恢复为 LINE 模式
+这就是对象池能稳定复用的关键。
+*步骤八：实现空间音效
+这一部分同时说明了示例中的音频组织方式（实现集中在 data/Audio.kt 的 AudioRepository 中）。
+*背景音乐
+AudioRepository 预加载 bgm.ogg 并在场景初始化后播放：
+ 
+暂停/恢复时随生命周期处理：
+ 
+*枪声：跟随玩家
+开火时由 GameplayManager.onShoot() 触发，最终调用 AudioRepository.playFireSFX(entity)，把控制器附着到 shooter 实体上：
+ 
+这里的含义是：枪声始终从玩家/武器位置发出。
+*命中音：在命中位置播放
+命中音没有挂到每一颗子弹或每一块网格上，而是使用一个 命中发射器池（AudioRepository 内部维护固定数量的 HitEmitter 实体）：
+ 
+命中时，把一个空闲 emitter 移到碰撞点位置，再播放随机命中音：
+ 
+这种"对象池 + 位移到命中点"的方式可用于高频一次性音效，避免把音频组件挂到大量临时实体上。
+*步骤九：退出与清理
+*MainStage() 中的核心初始化逻辑使用 LaunchedEffect(Unit) 包裹（外层 key(restartKey) 触发整体重建后 LaunchedEffect 会自动重启），并采用 try { ... awaitCancellation() } finally { runCatching { ... } } 的成对模式，保证从 Stage 退出或在 key(restartKey) 触发的子树重建时执行完整清理：
+ 
+这种模式可以避免 Stage 退出后仍然持有感知订阅或后台音频，也能在生命周期重建时干净地从头开始。
+*延伸阅读
+*《空间网格》
+*《空间锚点》
+*《空间手势》
+*《头显追踪》
+*《添加碰撞和外部作用》
+
+// file:app/src/main/java/com/pico/spatial/sample/spatialmesh/Main.kt
+fun mainApp(scope: SpatialAppScope) =
+    with(scope) {
+        DefaultStage { MainStage() }
+
+        MainScope().launch {
+            assetBundle.await()
+            AudioRepository.loadAudio()
+            AudioRepository.prepareAudio()
+        }
+    }
+
+<!-- file: app/src/main/AndroidManifest.xml -->
+<meta-data android:name="pico.spatial.stage.id" android:value="DefaultStage" />
+<meta-data android:name="pico.spatial.stage.style" android:value="1" />
+
+// file:app/src/main/java/com/pico/spatial/sample/spatialmesh/ui/GameScene.kt
+@Composable
+fun MainStage() {
+    val lifecycleOwner = LocalLifecycleOwner.current
+    var restartKey by remember { mutableIntStateOf(0) }
+    var hasPaused by remember { mutableStateOf(false) }
+
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            when (event) {
+                Lifecycle.Event.ON_PAUSE -> hasPaused = true
+                Lifecycle.Event.ON_RESUME -> {
+                    if (hasPaused) {
+                        hasPaused = false
+                        restartKey += 1
+                    }
+                }
+                else -> {}
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
+
+    key(restartKey) { MainStageContent() }
+}
+
+// file:app/src/main/java/com/pico/spatial/sample/spatialmesh/ui/GameScene.kt
+content.addEntity(AudioRepository.root)
+content.addEntity(GameplayManager.ground)
+content.addEntity(MeshScanManager.root)
+content.addEntity(cameraTarget)
+
+// file:app/src/main/java/com/pico/spatial/sample/spatialmesh/ui/GameScene.kt
+AnchorEntity(AnchorTarget.createCameraTarget()).apply {
+    components[AnchorComponent::class.java]?.positionOffset =
+        Vector3(0f, -0.15f, -0.6f)
+    addChild(GameplayManager.shooter.apply {
+        components.set(ShooterComponent(hmdTrackingProvider))
+    })
+}
+
+// file:app/src/main/java/com/pico/spatial/sample/spatialmesh/manager/MeshScanManager.kt
+MeshTrackingManager.start()
+subscription = MeshTrackingManager.subscribeAnchorUpdate { anchorUpdate -> ... }
+
+// file:app/src/main/java/com/pico/spatial/sample/spatialmesh/manager/MeshScanManager.kt
+val mesh = withContext(Dispatchers.IO) { MeshResource.loadFromMeshAnchor(anchorUUID) }
+val material =
+    PhysicallyBasedMaterial.create().apply {
+        setBaseColor(randomColor4())
+        setOpacity(0.7f)
+        setPolygonFillMode(PolygonFillMode.LINE)
+    }
+val entity =
+    ModelEntity(mesh, material).apply {
+        components.set(SpatialMeshComponent())
+        components.set(
+            CollisionComponent(
+                collisionShape = listOf(ShapeResource.createStaticMesh(mesh)),
+                physicsMaterial = PhysicsMaterialResource(),
+                collisionFilter =
+                    CollisionFilter(
+                        group = CollisionGroup(GROUP_SPATIAL_MESH),
+                        mask = CollisionGroup(GROUP_AMMO)
+                    )
+            )
+        )
+    }
+
+
+
+*组
+
+*实体
+
+*group
+
+*mask
+
+*用途
+
+*空间网格
+
+*SpatialMeshComponent 所在实体
+
+*GROUP_SPATIAL_MESH
+
+*GROUP_AMMO
+
+*只与子弹碰撞
+
+*子弹
+
+*AmmoComponent 所在实体
+
+*GROUP_AMMO
+
+*GROUP_SPATIAL_MESH
+
+*只命中空间网格
+
+*交互接收器
+
+*InteractionReceiver
+
+*GROUP_INTERACTION
+
+*GROUP_INTERACTION
+
+*只接收空间点击，不参与真实碰撞
+
+// file:app/src/main/java/com/pico/spatial/sample/spatialmesh/manager/AmmoManager.kt
+const val GROUP_INTERACTION = 1u
+const val GROUP_AMMO = 2u
+const val GROUP_SPATIAL_MESH = 4u
+
+// file:app/src/main/java/com/pico/spatial/sample/spatialmesh/manager/MeshScanManager.kt
+entity.components[ModelComponent::class.java]?.mesh = newMesh
+...
+spatialMeshMap.remove(anchorUUID)?.destroy()
+
+// file:app/src/main/java/com/pico/spatial/sample/spatialmesh/manager/AmmoManager.kt
+private const val MAX = 32
+private lateinit var ammoArray: Array<Entity>
+
+// file:app/src/main/java/com/pico/spatial/sample/spatialmesh/manager/AmmoManager.kt
+ammoModel = assetBundle.await().loadModel(SCENE_AMMO_MODEL)
+ammoArray = Array(MAX) { makeAmmo() }
+...
+val ammo = ammoModel.clone(
+    Entity.CloneOptions(recursive = true, shouldShareMaterialInstance = true)
+)
+
+// file:app/src/main/java/com/pico/spatial/sample/spatialmesh/data/AssetBundle.kt
+const val SCENE_AMMO_MODEL = "Sphere"
+
+// file:app/src/main/java/com/pico/spatial/sample/spatialmesh/manager/AmmoManager.kt
+ammo.components.apply {
+    set(AmmoComponent())
+    set(RigidBodyComponent().apply { isTranslationLocked = Bool3(true) })
+    set(
+        CollisionComponent(
+            collisionShape = listOf(ShapeResource.createSphere(colliderRadius)),
+            physicsMaterial = PhysicsMaterialResource(),
+            collisionFilter =
+                CollisionFilter(
+                    group = CollisionGroup(GROUP_AMMO),
+                    mask = CollisionGroup(GROUP_SPATIAL_MESH)
+                )
+        )
+    )
+}
+
+// file:app/src/main/java/com/pico/spatial/sample/spatialmesh/ui/GameScene.kt
+detectSpatialTapGesture(context, TargetEntity.hit(it)) {
+    GameplayManager.markAsReadyToFire()
+    gameViewModel.hideTip()
+}
+
+// file:app/src/main/java/com/pico/spatial/sample/spatialmesh/ecs/entities/InteractionReceiver.kt
+CollisionComponent(
+    collisionShape = listOf(ShapeResource.createSphere(3f)),
+    collisionResponseMode = CollisionResponseMode.TRIGGER_LITE,
+    collisionFilter =
+        CollisionFilter(
+            group = CollisionGroup(GROUP_INTERACTION),
+            mask = CollisionGroup(GROUP_INTERACTION)
+        )
+)
+
+// file:app/src/main/java/com/pico/spatial/sample/spatialmesh/ui/GameScene.kt
+Button(
+    onClick = { GameplayManager.markAsReadyToFire() },
+) {
+    Text("FIRE")
+}
+
+// file:app/src/main/java/com/pico/spatial/sample/spatialmesh/ecs/systems/ShooterSystem.kt
+val newData = component.hmdTrackingProvider?.latestData ?: return@forEach
+fireAmmo(shooter, component, newData.hmdPose)
+...
+private fun fireAmmo(
+    shooter: Entity,
+    component: ShooterComponent,
+    pose: HMDPose,
+    speed: Float = 10f
+) {
+    val forward = pose.rotation.rotateVector(Vector3(0f, 0f, -1f))
+    val firePosition = pose.position + forward * 1f
+    ...
+}
+
+// file:app/src/main/java/com/pico/spatial/sample/spatialmesh/ecs/systems/ShooterSystem.kt
+components[RigidBodyComponent::class.java]?.apply {
+    isTranslationLocked = Bool3(false)
+}
+components.set(
+    PhysicsVelocityComponent().apply { linearVelocity = forward * speed }
+)
+
+// file:app/src/main/java/com/pico/spatial/sample/spatialmesh/ui/GameScene.kt
+content.subscribe(eventType = CollisionEvents.Enter::class.java) { collision ->
+    val entityA = collision.entityA ?: return@subscribe
+    val entityB = collision.entityB ?: return@subscribe
+    GameplayManager.onHit(entityA, entityB, collision.position)
+}
+
+// file:app/src/main/java/com/pico/spatial/sample/spatialmesh/manager/GameplayManager.kt
+mesh.components[SpatialMeshComponent::class.java]?.isHit = true
+GameUIBridge.viewModel?.incrementScore()
+material.setPolygonFillMode(PolygonFillMode.FILL)
+ammo.components[CollisionComponent::class.java]?.collisionResponseMode =
+    CollisionResponseMode.TRIGGER_LITE
+ammo.components[PhysicsVelocityComponent::class.java]?.linearVelocity = Vector3.ZERO
+
+// file:app/src/main/java/com/pico/spatial/sample/spatialmesh/ui/GameUIBridge.kt
+object GameUIBridge {
+    var viewModel: GameViewModel? = null
+}
+
+// file:app/src/main/java/com/pico/spatial/sample/spatialmesh/ecs/systems/AmmoSystem.kt
+if (pos != null && pos.length() > MAX_RANGE) {
+    AmmoManager.free(currentId)
+}
+
+if (isDespawning) {
+    despawnTimer -= context.deltaTime
+    if (despawnTimer <= 0) {
+        AmmoManager.free(currentId)
+    }
+}
+
+// file:app/src/main/java/com/pico/spatial/sample/spatialmesh/ui/GameScene.kt
+AudioRepository.playBGM()
+
+// file:app/src/main/java/com/pico/spatial/sample/spatialmesh/ui/GameScene.kt
+if (event == Lifecycle.Event.ON_PAUSE) {
+    AudioRepository.pauseBGM()
+} else if (event == Lifecycle.Event.ON_RESUME) {
+    AudioRepository.playBGM()
+}
+
+// file:app/src/main/java/com/pico/spatial/sample/spatialmesh/data/Audio.kt
+fun playFireSFX(entity: Entity) {
+    val soundName = listOf("shoot_01", "shoot_02", "shoot_03").random()
+
+    // Initialize shooter controllers if this is a new entity
+    if (shooterEntity != entity) {
+        shooterEntity = entity
+        shooterControllerMap.clear()
+        if (!entity.components.has(AmbientAudioComponent::class.java)) {
+            entity.components.set(AmbientAudioComponent())
+        }
+    }
+
+    val controller =
+        shooterControllerMap.getOrPut(soundName) {
+            val res = resources[soundName]!!
+            entity.prepareAudio(res)
+        }
+
+    controller.apply {
+        setVolume(1.0f)
+        stop()
+        play()
+    }
+}
+
+// file:app/src/main/java/com/pico/spatial/sample/spatialmesh/data/Audio.kt
+private const val MAX_HIT_EMITTERS = 10
+private val hitEmitterPool = List(MAX_HIT_EMITTERS) {
+    Entity().apply {
+        components.set(AmbientAudioComponent())
+        components.set(TransformComponent())
+    }
+}
+
+// file:app/src/main/java/com/pico/spatial/sample/spatialmesh/data/Audio.kt
+emitter.components[TransformComponent::class.java]?.position = position
+emitterControllerMap[emitterIdx to soundName]?.apply {
+    setVolume(1.0f)
+    stop()
+    play()
+}
+
+// file:app/src/main/java/com/pico/spatial/sample/spatialmesh/ui/GameScene.kt
+LaunchedEffect(Unit) {
+    try {
+        // ... 初始化系统、订阅事件、启动扫描 ...
+        awaitCancellation()
+    } finally {
+        runCatching {
+            // 注销 ECS 系统
+            // 停止 HMDTrackingProvider
+            // 清空 GameplayManager
+            // 取消空间网格订阅（内部会 MeshTrackingManager.stop()）
+            // 停止背景音乐
+            // 重置 GameUIBridge 与 ViewModel 状态
+        }
+    }
+}

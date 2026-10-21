@@ -1,0 +1,47 @@
+通用渲染管线（URP）
+========================================
+本文以 Unity 2020.3.30f1 为例介绍如何使用通用渲染管线。
+通用渲染管线（Universal Render Pipeline，URP）是一个预建的可编写脚本的渲染管线，由 Unity 制作。URP 提供开发者友好的工作流，让开发者快速而轻松地创建优化后的图形。更多信息请参考 Unity 官方文档。
+*安装 URP
+按以下步骤安装通用渲染管线。
+*在 Unity 编辑器中打开项目。
+*在上方菜单栏处，选择 Window > Package Manager。
+*你将看到 Package Manager 弹窗。
+*将 Packages 筛选条件设置为 Unity Registry。
+*选择 Universal RP。
+*点击 Install。
+* 
+*使用 URP
+在使用 URP 之前，需要对 URP 进行配置，包括添加 URP Asset 并将其添加至 Graphics 配置中。
+*创建 URP Asset
+按以下步骤创建 URP Asset。
+*在 Project 面板处，从 Assets 目录中选择一个已有文件夹，或创建并选中新文件夹。
+*在上方菜单栏处，选择 Assets > Create > Rendering > Universal Render Pipeline > Pipeline Asset (Forward Renderer)。
+*Pipeline Asset 被添加至所选文件夹。
+* 
+*添加 URP Asset 至 Graphics 配置
+按以下步骤将新建的 URP Asset 添加至 Graphics 配置中。若不进行该操作，Unity 将继续使用内置的渲染管线。
+*在上方菜单栏处，选择 Edit > Project Settings。
+*你将看到 Project Settings 弹窗。
+*在左侧导航栏处，选择 Graphics。
+*在 Scriptable Render Pipeline Settings 字段处，添加之前创建的 URP Asset。
+* 
+*禁用 HDR
+按以下步骤在 URP Asset 中禁用 HDR。
+*进入 URP Asset 所在文件夹。
+*点击 Universal Render Pipeline Asset。
+* 
+*在右侧 Inspector 面板处，展开 Quality 目录，取消勾选 HDR。
+* 
+*升级 Materials
+将项目中的 Materials 更新为 URP Materials：
+在上方菜单栏处，选择 Edit > Render Pipeline > Universal Render Pipeline > Upgrade Project Materials to UniversalRP Materials。
+*已知问题
+在 Unity 修复以下问题前，请谨慎使用通用渲染管线。
+*针对 Unity 2021 及以上版本，若在使用通用渲染管线（URP）时设置抗锯齿倍数（MSAA），会发生掉帧。
+*针对 Unity 2020 及以上版本，若将 Vulkan 添加至 Graphics API，与 OpenGLES 相比，存在帧率低、内存和 GPU 占用率高的问题。
+*若同时使用 Vulkan、URP 和 HDR，Underlay 层和视频透视（VST）层无法显示。
+*针对 Unity 2021 及以上版本，若在 URP 渲染器中启用屏幕空间环境光屏蔽（Screen Space Ambient Occlusion，SSAO），会导致低帧率、高内存和 GPU 消耗。
+*针对 Unity 2022 及以上版本，如果在项目中使用了 OpenGLES 和 MutilView，且添加了 URP 但未使用，则需要主动删除 URP Package，删除场景中现有的灯光并重新添加灯光，否则程序运行过程中可能会崩溃。
+*若同时使用 Unity6、URP、OpenGL、Multi-pass、MSAA（非 Disabled 状态），则会导致 Eye Buffer 的内容无法渲染，改变上述任意配置便可以解决该问题。
+

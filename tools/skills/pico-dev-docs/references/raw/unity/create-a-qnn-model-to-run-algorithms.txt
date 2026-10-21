@@ -1,0 +1,195 @@
+使用 QNN 模型来运行算法
+========================================
+本文介绍了一种使用 QNN 模型推理的方法，以运行现有 SecureMR Operatpr 不支持的算法或由于过于复杂而无法通过原生 SecureMR Pipeline 组件实现的算法。在这些情况下，你可以使用熟悉的框架（如 PyTorch、TensorFlow 或 ONNX）设计和训练模型，将其导出为支持的格式，并使用 QNN 模型转换工具将其转换为 QNN Context Binary 文件。然后，可以通过 RunModelInference 操作符在 SecureMR 中执行这些二进制文件。
+*工作流
+ 
+*示例
+*算法描述：将旋转向量（Rotation Vector）从 v1 计算到 v2
+*本算法用于计算轴-角表示（axis-angle representatio，亦称旋转向量），该表示描述了将向量 v1 旋转至向量 v2 所需的 3D 旋转。
+ 
+ONNX 模型：
+ 
+ 
+QNN 模型（上下文二进制文件）：
+ 
+ 
+
+def calculate_rotation_vector(v1, v2):
+    # 规范化输入向量
+    v1 = v1 / np.linalg.norm(v1)
+    v2 = v2 / np.linalg.norm(v2)
+    # 计算叉积以找到旋转轴
+    r = np.cross(v1, v2)
+    # 计算点积以找到角度
+    cos_theta = np.dot(v1, v2)
+    theta = np.arccos(np.clip(cos_theta, -1.0, 1.0))  # Clip to handle numerical errors
+    # 规范化旋转轴
+    if np.linalg.norm(r) > 0:  # 避免除以零
+        r = r / np.linalg.norm(r)
+    # 按角度缩放旋转轴
+    rotation_vector = theta * r
+    return
+
+import numpy as np
+import onnx
+from onnx import helper
+from onnx import TensorProto
+
+def create_rotation_vector_model():
+    # 创建两个 3D 向量的输入张量
+    v1 = helper.make_tensor_value_info('v1', TensorProto.FLOAT, [1, 3])
+    v2 = helper.make_tensor_value_info('v2', TensorProto.FLOAT, [1, 3])
+
+    # 计算向量的范数
+    v1_norm = helper.make_node('ReduceL2', inputs=['v1'], outputs=['v1_norm'], keepdims=0)
+    v2_norm = helper.make_node('ReduceL2', inputs=['v2'], outputs=['v2_norm'], keepdims=0)
+
+    # 规范化向量
+    v1_normalized = helper.make_node('Div', inputs=['v1', 'v1_norm'], outputs=['v1_normalized'])
+    v2_normalized = helper.make_node('Div', inputs=['v2', 'v2_norm'], outputs=['v2_normalized'])
+
+    # 拆分规范化向量为分量
+    v1_split = helper.make_node('Split', inputs=['v1_normalized'], outputs=['v1_x', 'v1_y', 'v1_z'], axis=1)
+    v2_split = helper.make_node('Split', inputs=['v2_normalized'], outputs=['v2_x', 'v2_y', 'v2_z'], axis=1)
+
+    # 手动计算叉积分量
+    # x = v1.y * v2.z - v1.z * v2.y
+    cross_x_1 = helper.make_node('Mul', inputs=['v1_y', 'v2_z'], outputs=['temp_x_1'])
+    cross_x_2 = helper.make_node('Mul', inputs=['v1_z', 'v2_y'], outputs=['temp_x_2'])
+    cross_x = helper.make_node('Sub', inputs=['temp_x_1', 'temp_x_2'], outputs=['cross_x'])
+
+    # y = v1.z * v2.x - v1.x * v2.z
+    cross_y_1 = helper.make_node('Mul', inputs=['v1_z', 'v2_x'], outputs=['temp_y_1'])
+    cross_y_2 = helper.make_node('Mul', inputs=['v1_x', 'v2_z'], outputs=['temp_y_2'])
+    cross_y = helper.make_node('Sub', inputs=['temp_y_1', 'temp_y_2'], outputs=['cross_y'])
+
+    # z = v1.x * v2.y - v1.y * v2.x
+    cross_z_1 = helper.make_node('Mul', inputs=['v1_x', 'v2_y'], outputs=['temp_z_1'])
+    cross_z_2 = helper.make_node('Mul', inputs=['v1_y', 'v2_x'], outputs=['temp_z_2'])
+    cross_z = helper.make_node('Sub', inputs=['temp_z_1', 'temp_z_2'], outputs=['cross_z'])
+
+    # 连接叉积分量
+    rotation_axis = helper.make_node('Concat', inputs=['cross_x', 'cross_y', 'cross_z'], outputs=['rotation_axis'], axis=0)
+
+    # 创建用于重塑的形状张量
+    reshape_shape = helper.make_tensor('reshape_shape', TensorProto.INT64, [2], [1, 3])
+    # Change dot_shape to explicitly specify scalar shape [1]
+    dot_shape = helper.make_tensor('dot_shape', TensorProto.INT64, [1], [1])
+    
+    # 重塑规范化向量以进行矩阵乘法
+    v1_reshape = helper.make_node('Reshape', inputs=['v1_normalized', 'reshape_shape'], outputs=['v1_reshaped'])
+    v2_reshape = helper.make_node('Reshape', inputs=['v2_normalized', 'reshape_shape'], outputs=['v2_reshaped'])
+    
+    # 转置 v2 向量以进行点积
+    v2_transpose = helper.make_node('Transpose', inputs=['v2_reshaped'], outputs=['v2_transposed'])
+    
+    # 以正确维度计算点积
+    dot_product = helper.make_node('MatMul', inputs=['v1_reshaped', 'v2_transposed'], outputs=['dot_product_2d'])
+    
+    # 将点积重塑为标量（形状为 [1]）
+    dot_reshape = helper.make_node('Reshape', inputs=['dot_product_2d', 'dot_shape'], outputs=['dot_product'])
+
+    # 将点积限制在 [-1, 1] 范围内（使用 opset 11）
+    clipped_dot = helper.make_node('Clip', inputs=['dot_product'], outputs=['clipped_dot'], 
+                                 min=-1.0, max=1.0)  # 使用基于属性的剪切（适用于较旧的 opset）
+
+    # 使用分段线性插值逼近反余弦函数
+    # 我们将使用: acos(x) ≈ π/2 - x - x³/6 for x in [-1, 1]
+    
+    # 反余弦函数逼近的常数
+    pi_half = helper.make_tensor('pi_half', TensorProto.FLOAT, [], [1.5707963267948966])
+    one_sixth = helper.make_tensor('one_sixth', TensorProto.FLOAT, [], [0.16666667])
+    
+    # 计算 x³
+    x_squared = helper.make_node('Mul', inputs=['clipped_dot', 'clipped_dot'], outputs=['x_squared'])
+    x_cubed = helper.make_node('Mul', inputs=['x_squared', 'clipped_dot'], outputs=['x_cubed'])
+    
+    # 计算 x³/6
+    x_cubed_div_6 = helper.make_node('Mul', inputs=['x_cubed', 'one_sixth'], outputs=['x_cubed_div_6'])
+    
+    # 计算 π/2 - x
+    minus_x = helper.make_node('Sub', inputs=['pi_half', 'clipped_dot'], outputs=['minus_x'])
+    
+    # 最终近似值: π/2 - x - x³/6
+    theta = helper.make_node('Sub', inputs=['minus_x', 'x_cubed_div_6'], outputs=['theta'])
+
+    # Calculate norm of rotation axis
+    axis_norm = helper.make_node('ReduceL2', inputs=['rotation_axis'], outputs=['axis_norm'], keepdims=0)
+
+    # 计算旋转轴的范数
+    normalized_axis = helper.make_node('Div', inputs=['rotation_axis', 'axis_norm'], outputs=['normalized_axis'])
+
+    # 按角度缩放旋转轴
+    rotation_vector = helper.make_node('Mul', inputs=['normalized_axis', 'theta'], outputs=['rotation_vector'])
+
+    # 创建图表输出
+    output = helper.make_tensor_value_info('rotation_vector', TensorProto.FLOAT, [3])
+
+    # 创建图表
+    graph = helper.make_graph(
+        [v1_norm, v2_norm, v1_normalized, v2_normalized,
+         v1_split, v2_split,
+         cross_x_1, cross_x_2, cross_x,
+         cross_y_1, cross_y_2, cross_y,
+         cross_z_1, cross_z_2, cross_z,
+         rotation_axis, v1_reshape, v2_reshape, v2_transpose, dot_product, dot_reshape,
+         clipped_dot, x_squared, x_cubed, x_cubed_div_6, minus_x, theta,
+         axis_norm, normalized_axis, rotation_vector],
+        'rotation_vector_calculation',
+        [v1, v2],
+        [output],
+        [reshape_shape, dot_shape, pi_half, one_sixth]
+    )
+
+    # 创建 ONNX 模型（使用 opset 11）
+    model = helper.make_model(graph)
+    model.opset_import[0].version = 11
+
+    # 保存模型
+    onnx.save(model, 'rotation_vector_model.onnx')
+
+if __name__ == '__main__':
+    create_rotation_vector_model()
+
+{
+    "model_name": "rotation_vector_model",
+    "path_to_zoo": "rotation_vector_model.serialized.bin",
+    "engine_type": "qnn",
+    "input": [
+        {
+            "name": "v1",
+            "shape": [
+                1,
+                3
+            ],
+            "encoding_type": "FP32",
+            "alias_name": "v1"
+        },
+        {
+            "name": "v2",
+            "shape": [
+                1,
+                3
+            ],
+            "encoding_type": "FP32",
+            "alias_name": "v2"
+        }
+    ],
+    "output": [
+        {
+            "name": "rotation_vector",
+            "shape": [
+                3,
+                1
+            ],
+            "encoding_type": "FP32",
+            "alias_name": "rotation_vector"
+        }
+    ],
+    "specific_config": {
+        "runtime_order": [
+            "HTP_FIXED8_TF"
+        ],
+        "enable_dynamic_runtime": false
+    }
+} 

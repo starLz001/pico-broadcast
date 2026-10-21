@@ -1,0 +1,195 @@
+成就-场景教学
+========================================
+本文档介绍 PICO Unreal Integration SDK 提供的成就服务中具体的场景及其代码示例。你可根据场景需求，参考代码示例和 API 参考，在你的应用中开发更多丰富的场景。
+*使用 PICO 框架接口
+PICO SDK 的成就服务提供了 PICO 框架和 UE 框架两套接口，在使用成就服务开发新应用时，建议你使用功能更完善的 PICO 框架。以下为使用 PICO 框架的成就接口代码示例。更多信息参考UE 框架与 PICO 框架说明。
+*获取成就定义信息
+你可以调用 GetAllDefinitions() 接口获取获取所有成就的基础定义信息，包括成就的 API Name、类型、简介、解锁目标\是否归档、是否隐藏等信息。了解所有定义信息，参考 UPico_AchievementDefinition。
+*蓝图示例如下：
+* 
+*C++ 示例如下：
+* 
+*更新成就进度
+当用户取得新的成就进度时，需要及时为其更新：
+*对于计数类成就，需要为其增加相应的计数。 
+*对于完成率类成就，需要为其解锁对应的任务。 
+*简单成就无进度，只有 “解锁” 和 “未解锁” 之分。
+以下为更新计数类成就的蓝图示例：
+* 
+C++ 示例如下：
+ 
+*为指定排名的用户解锁成就
+若用户在排行榜内获得指定排名，例如 Top 1，则为其解锁相关成就。代码示例如下：
+ 
+解锁成就的蓝图示例如下：
+* 
+*使用 UE 框架接口
+PICO SDK 的成就服务提供了 PICO 框架和 UE 框架两套接口，若你已使用 UE 接口开发了 VR 应用，你可使用 PICO 提供的 UE 框架使你的应用适配 PICO 设备。以下为使用 UE 框架的成就接口代码示例。
+*获取成就定义信息
+*获取所有成就定义信息
+*调用 QueryAchievementDescriptions() 接口获取获取玩家所有成就的基础定义信息：
+* 
+*获取单个成就定义信息
+*调用 GetCachedAchievementDescription() 获取玩家某个成就的描述信息：
+* 
+*获取成就解锁进度
+*获取用户的成就进度信息，从而帮助应用判断是否需要为用户解锁当前成就。
+*获取所有成就解锁进度
+*调用 QueryAchievements() 获取所有成就的解锁进度：
+* 
+*获取某个成就解锁进度
+*调用 GetCachedAchievement() 获取玩家某个成就的解锁进度：
+* 
+*更新成就进度
+当用户取得新的成就进度时，需要及时为其更新。调用 WriteAchievements() 更新玩家成就进度：
+ 
+*获取缓存的成就
+调用 GetCachedAchievements() 获取已缓存的成就信息：
+ 
+
+TSharedPtr<FPicoAchievementsInterface> Interface; 
+Interface = PicoSubsystem->GetPicoAchievementsInterface(); 
+FGetAllDefinitions Delegate; 
+Delegate.BindUFunction(this, "TestDelegate"); 
+Interface->GetAllDefinitions(0, 5, Delegate); 
+
+TSharedPtr<FPicoAchievementsInterface> Interface; 
+Interface = PicoSubsystem->GetPicoAchievementsInterface(); 
+FAddCount Delegate; 
+Delegate.BindUFunction(this, "TestDelegate"); 
+Interface->AddCount(FString("AchievementName"), 1, FString(), Delegate); 
+
+auto interface = new FPicoLeaderboardsInterface(*PicoSubsystem);
+FGetEntries GetEntries;
+GetEntries.BindUFunction(this, "OnLeaderboardGetEntries");
+interface->GetEntries(YourLeaderboardName, 0, 5, ppfLeaderboard_FilterNone, ppfLeaderboard_StartAtTop, GetEntries);
+
+void Test::OnLeaderboardGetEntries(bool bIsError, const FString& ErrorMessage, UPico_LeaderboardEntryArray* LeaderboardEntryList)
+{
+    if (!bIsError)
+    {
+        for (int32 i = 0; i < LeaderboardEntryList->GetSize(); i++)
+        {
+            UPico_LeaderboardEntry* entry = LeaderboardEntryList->GetElement(i);
+            auto rank = entry->GetRank();
+            auto userId = entry->GetUser()->GetID();
+            if (rank == 1 && userId == YourUserId)
+            {
+                auto achievementsInterface = new FPicoAchievementsInterface(*PicoSubsystem);
+                FUnlock UnlockDelegate;
+                UnlockDelegate.BindUFunction(this, "OnAchievementUnlock");
+                achievementsInterface->Unlock(YourAchievementName, FString(), UnlockDelegate);
+            }
+        }
+    }
+}
+
+void UPicoGameInstance::RefreshAllAchievementsDefinition()
+{
+    auto UserId = IdentityInterface->GetUniquePlayerId(0);
+    if (!UserId.IsValid())
+    {
+        // print log
+        OnGameSessionStateChanged(FString::Printf(TEXT("RefreshAllAchievementsDefinition Please login first!")));
+        return;
+    }
+    // use QueryAchievementDescriptions
+    AchievementInterface->QueryAchievementDescriptions(
+        *UserId,
+        FOnQueryAchievementsCompleteDelegate::CreateUObject(this, &UPicoGameInstance::OnRefreshAllAchievementsDefinitionComplete));
+}
+void UPicoGameInstance::OnRefreshAllAchievementsDefinitionComplete(const FUniqueNetId& PlayerId, bool bSuccessful)
+{
+    // print log 
+    OnGameSessionStateChanged(FString::Printf(TEXT("OnRefreshAllAchievementsDefinitionComplete PlayerId: %s, bSuccessful: %s"), *PlayerId.ToString(), bSuccessful?TEXT("true"):TEXT("false")));
+}
+
+void UPicoGameInstance::GetCachedAchievementDescription(const FString& AchievementName)
+{
+    FOnlineAchievementDescPico AchievementDesc;
+    AchievementDesc.Title = FText::FromString(TEXT("USEPICODESC"));
+    const EOnlineCachedResult::Type Type = AchievementInterface->GetCachedAchievementDescription(AchievementName, AchievementDesc);
+    OnGameSessionStateChanged(FString::Printf(TEXT("GetCachedAchievementDescription Type: %s, AchievementDesc DebugString: %s"), Type == 0?TEXT("Success"):TEXT("NotFound")
+        , *AchievementDesc.ToDebugString()));
+}
+
+void UPicoGameInstance::RefreshAllAchievementsProgress()
+{
+    auto UserId = IdentityInterface->GetUniquePlayerId(0);
+    if (!UserId.IsValid())
+    {
+        // print log
+        OnGameSessionStateChanged(FString::Printf(TEXT("RefreshAllAchievementsProgress Please login first!")));
+        return;
+    }
+    OnGameSessionStateChanged(FString::Printf(TEXT("RefreshAllAchievementsProgress UserId: %s"), *UserId->ToString()));
+    // use QueryAchievements
+    AchievementInterface->QueryAchievements(
+        *UserId,
+        FOnQueryAchievementsCompleteDelegate::CreateUObject(this, &UPicoGameInstance::OnRefreshAllAchievementsProgressComplete));
+}
+void UPicoGameInstance::OnRefreshAllAchievementsProgressComplete(const FUniqueNetId& PlayerId, bool bSuccessful)
+{
+    // print log 
+   OnGameSessionStateChanged(FString::Printf(TEXT("OnRefreshAllAchievementsProgressComplete PlayerId: %s, bSuccessful: %s"), *PlayerId.ToString(), bSuccessful?TEXT("true"):TEXT("false")));
+}
+
+void UPicoGameInstance::GetCachedAchievement(const FString& AchievementName)
+{
+    auto UserId = IdentityInterface->GetUniquePlayerId(0);
+    if (!UserId.IsValid())
+    {
+        OnGameSessionStateChanged(FString::Printf(TEXT("GetCachedAchievement Please login first!")));
+        return;
+    }
+    FOnlineAchievement Achievement;
+    const EOnlineCachedResult::Type Type = AchievementInterface->GetCachedAchievement(*UserId, AchievementName, Achievement);
+    OnGameSessionStateChanged(FString::Printf(TEXT("GetCachedAchievement Type: %s, Achievement.Id: %s, Achievement.Progress: %f")
+        , Type == 0?TEXT("Success"):TEXT("NotFound"), *Achievement.Id, Achievement.Progress));
+}
+
+void UPicoGameInstance::WriteAchievements(const FString& AchievementName, const FString& Value)
+{
+    auto UserId = IdentityInterface->GetUniquePlayerId(0);
+    if (!UserId.IsValid())
+    {
+        OnGameSessionStateChanged(FString::Printf(TEXT("WriteAchievements Please login first!")));
+        return;
+    }
+    FOnlineAchievement Achievement;
+    Achievement.Id = TEXT(""); // empty
+    OnGameSessionStateChanged(FString::Printf(TEXT("WriteAchievements Trying to get cached achievement: %s"), *AchievementName));
+    AchievementInterface->GetCachedAchievement(*UserId.Get(), AchievementName, Achievement);
+    if (!Achievement.Id.IsEmpty()) {
+        OnGameSessionStateChanged(FString::Printf(TEXT("WriteAchievements Trying to update player achievements to server....")));
+        const FOnlineAchievementsWritePtr WriteObject = MakeShareable(new FOnlineAchievementsWrite());
+        WriteObject->SetIntStat(FName(AchievementName), FCString::Atoi(*Value));
+        FOnlineAchievementsWriteRef WriteObjectRef = WriteObject.ToSharedRef();
+        AchievementInterface->WriteAchievements(
+            *UserId.Get(),
+            WriteObjectRef,
+            FOnAchievementsWrittenDelegate::CreateUObject(this, &UPicoGameInstance::OnAchievementsWriteComplete));
+    }
+}
+void UPicoGameInstance::OnAchievementsWriteComplete(const FUniqueNetId& PlayerId, bool bSuccessful)
+{
+    OnGameSessionStateChanged(FString::Printf(TEXT("OnAchievementsWriteComplete PlayerId: %s, bSuccessful: %s"), *PlayerId.ToString(), bSuccessful?TEXT("true"):TEXT("false")));
+}
+
+void UPicoGameInstance::GetCachedAchievements()
+{
+    auto UserId = IdentityInterface->GetUniquePlayerId(0);
+    if (!UserId.IsValid())
+    {
+        OnGameSessionStateChanged(FString::Printf(TEXT("GetCachedAchievements Please login first!")));
+        return;
+    }
+    TArray<FOnlineAchievement> Achievements;
+    const EOnlineCachedResult::Type Type = AchievementInterface->GetCachedAchievements(*UserId, Achievements);
+    OnGameSessionStateChanged(FString::Printf(TEXT("GetCachedAchievements Type: %s, TArray Num: %d"), Type == 0?TEXT("Success"):TEXT("NotFound"), Achievements.Num()));
+    for (int i = 0; i < Achievements.Num(); i++)
+    {
+        OnGameSessionStateChanged(FString::Printf(TEXT("GetCachedAchievements i: %d, Achievement.DebugString: %s")
+        , i, *Achievements[i].ToDebugString()));
+    }
+}

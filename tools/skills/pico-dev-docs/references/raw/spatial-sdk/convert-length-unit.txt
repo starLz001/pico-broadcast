@@ -1,0 +1,250 @@
+长度单位转换
+========================================
+在 Android 开发中，dp 是构建自适应界面的标准长度单位，而在与硬件交互或精确布局测量时，需要使用 px。因此，dp 与 px 的相互转换是 Android 应用开发中的基础操作。随着空间应用的发展，meter 也被引入，用于表示与物理世界对齐的尺寸。这使得长度单位的管理变得更加复杂。
+本文将说明 dp、px 与 meter 的概念及特点，并提供它们之间的转换方法。
+*关于 px、dp 和 meter
+*px、dp 和 meter 的说明及对比如下。
+*
+*转换长度单位
+*在开发中，长度单位选择取决于当前工作所处的领域。每个领域都有其官方单位，因此需要在正确的领域中使用正确的单位。
+*2D 界面设计
+*该领域关注视觉一致性，官方单位为 dp，用于界面布局和控件尺寸，确保跨设备显示效果的一致性。
+*硬件交互
+*该领域关注与物理屏幕的直接交互，官方单位为 px，用于绘制、事件坐标、渲染后的尺寸获取等。
+*物理空间
+*该领域关注的是与现实世界的对齐，官方单位为 meter，用于空间应用中的坐标、距离、尺寸，保证与现实 1:1 对齐。
+从一个领域到另一个领域，需要进行单位转换。结合 Jetpack Compose，PICO Spatial SDK 提供了相关接口。
+*dp ↔ px
+ 使用 Jetpack Compose 提供的 Density 类，实现 dp 和 px 间的转换。
+ 
+*dp ↔ meter
+使用 PICO Spatial SDK 提供的 PhysicalLengthConverter 类，实现 dp 和 meter 间的转换。
+ 
+*meter ↔ px
+*使用 PICO Spatial SDK 提供的 PhysicalLengthConverter 类，实现 meter 和 px 间的转换。
+ 
+*示例教程
+*此节通过一个简单示例来说明如何在真实场景中实现 dp、px 和 meter 间的转换。
+场景中存在一个 2D 窗口，窗口中存在一个按钮，点击该按钮可加载一个立方体。此后，可以在该窗口内任意拖拽此立方体，改变其位置。要求如下：
+*2D 窗口大小：0.4米 x 0.7米
+*立方体大小：窗口短边尺寸的一半
+*交互操作：用户可以通过拖拽在窗口内移动立方体
+ 
+*第一步：使用 dp 设计并实现 2D 界面
+*在整个应用的初始阶段，需要设计 2D 界面。界面中的各类尺寸，如窗口大小、页边距、组件间距等，统一使用 dp 作为长度单位。 
+* 
+然后，使用 Jetpack Compose 实现所设计的界面，使用的长度单位仍为 dp。
+ 
+*第二步：将 px 转换为 meter 并创建立方体实体
+立方体这一 3D 模型的大小需根据窗口短边尺寸进行设置，其大小为短边尺寸的一半。因此，首先要获取承载立方体模型的组件（SpatialView）的尺寸，然后依据其短边长度来创建立方体模型。步骤如下：
+*通过 SpatialView 的 onSizeChanged 回调函数获取组件的 px 尺寸。
+*根据该 px 尺寸计算立方体的尺寸。
+*使用 toMeter() 函数，将 px 转换为 meter，得到立方体的实际大小。
+*使用 meter 单位创建立方体实体。
+ 
+*第三步：实现立方体实体的拖拽操作
+*拖拽事件产生的偏移量单位为 px，需再次将其转换为 meter，才能计算立方体实体所需移动的距离，然后更新其在 3D 空间中的位置。
+ 
+*API 参考
+PhysicalLengthConverter 接口提供了长度单位转换相关的函数，详情参阅 API 参考。根据你所处的地理位置选择合适的文档链接：
+*中国大陆：https://developer-cn.picoxr.com/spatial-api/index.html
+*非中国大陆：https://developer.picoxr.com/spatial-api/index.html
+
+
+
+
+长度单位
+
+定义
+
+核心理念
+
+与物理世界的关系
+
+*在 Android 中的应用
+
+局限性
+
+px
+
+*像素（Pixel，px）是一个物理屏幕点，是屏幕上最小的物理显示单元，也是构成数字图像的基本单位。
+
+*px 是对显示硬件的直接映射，代表屏幕可控制的最小发光单元。
+
+*单个 px 的物理大小依赖于屏幕分辨率，不能作为统一物理尺寸标准。
+
+底层绘图、图像渲染、获取实际渲染尺寸（如 onSizeChanged）
+
+依赖具体设备，如果直接使用 px 定义 UI 布局，在不同屏幕密度下会导致视觉尺寸显著不一致。
+
+dp
+
+密度无关像素（Density-Independent Pixel，dp）是一种基于屏幕物理密度的虚拟单位，是构建自适应 2D 界面的最佳且唯一的选择。
+
+为 2D 界面构建统一“虚拟标尺”，保障 UI 在不同密度的屏幕上的视觉尺寸一致性。
+
+在 160 dpi 的屏幕上，1 dp = 1 px。基于此基准，Android 系统采用以下公式在 dp 和 px 之间进行转换：px = dp * (设备 dpi / 160)。
+
+Jetpack Compose 中进行 UI 布局的标准单位。所有尺寸、边距、内边距参数均以 dp 声明（如 Modifier.size(100.dp))。
+
+在需要与物理世界进行精确 1:1 映射的 3D 或空间计算场景中，dp 失去了“密度无关”的特性。在这些场景中，如果多个平面与相机保持相同距离，dp 仍然可以作为 2D 的虚拟单位使用。
+
+meter
+
+米（meter）是国际单位制 (SI) 定义的标准物理长度单位。
+
+用于追求绝对的物理真实性，使虚拟对象在视觉上能够与现实世界的物体实现尺寸上的 1:1 对齐。
+
+直接代表现实世界的长度（1 = 1 米）。
+
+空间应用中，所有 3D 坐标、物体尺寸、距离都必须以 meter 为单位（如 setPosition(Vector3(0f, 0.5f, 0f)))。
+
+不关心屏幕密度和视觉感知这些 2D UI 的核心问题，因此全不适用于 2D 屏幕界面的布局。
+
+@Composable
+fun Sample() {    
+    val density = LocalDensity.current
+    
+    // ...
+
+    with(density) {
+        // 从 dp 转换为 px
+        pointInPx = pointInDp.toPx()
+        // 从 px 转换为 dp
+        pointInDp = pointInPx.toDp()
+    }
+}
+
+@Composable
+fun Sample() {    
+    val physicalLengthConverter = LocalPhysicalLengthConverter.current
+    
+    // ...
+
+    // 从 dp 转换成 meter
+    pointInMeter = physicalLengthConverter.dpToLength(pointInDp, LengthUnit.Meters)
+    // 从 meter 转换为 dp
+    pointInDp = physicalLengthConverter.lengthToDp(pointInMeter, LengthUnit.Meters)
+}
+
+@Composable
+fun Sample() {
+    val density = LocalDensity.current
+    val physicalLengthConverter = LocalPhysicalLengthConverter.current
+
+    // ...
+    
+    with(density) {
+        // 从 meter 转换成 px
+        pointInPx = physicalLengthConverter
+            .lengthToDp(pointInMeter, LengthUnit.Meters)
+            .toPx()
+        // 从 px 转成 meter
+        pointInMeter = physicalLengthConverter
+            .dpToLength(pointInPx.toDp(), LengthUnit.Meters)
+    }
+}
+
+// 创建一个 WindowContainer，单位为 dp
+WindowContainer(id = "sample",
+    defaultSize = WindowContainerSize(width = 540.dp, height = 960.dp),
+    form = Form.Volumetric,
+    enableMaterialBackground = true,
+) {
+    // 其他内容的实现 ...
+    Column(
+        Modifier
+            .fillMaxSize()
+            .padding(24.dp)
+    ) {
+        // 用于承载 3D 模型的视图组件
+        SpatialView(
+        ) { content, _ ->
+        }
+
+        Spacer(Modifier.height(16.dp))
+
+        // 按钮控件，用于触发加载 3D 模型
+        TextButton(
+            text = "Load 3D Model",
+            modifier =  Modifier.fillMaxWidth(),
+            textStyle = PicoTheme.typography.labelLarge
+        ) {
+            // 点击事件：触发加载模型
+        }
+    }
+}
+
+val density = LocalDensity.current
+val physicalLengthConverter = LocalPhysicalLengthConverter.current
+
+var entity by remember { mutableStateOf<Entity?>(null) }
+
+// 立方体实体的尺寸，单位为 meter
+var sizeOfEntity by remember { mutableStateOf(Vector3.ZERO) }
+
+LaunchedEffect(load) {
+    entity = createBoxEntity(sizeOfEntity)
+}
+
+Column(
+    Modifier
+        .fillMaxSize()
+        .padding(24.dp)
+) {
+    key(entity) {
+        SpatialView(
+            modifier = Modifier
+                // 使用 onSizeChanged 回调获取组件的尺寸
+                .onSizeChanged { intSize ->
+                    // intSize 的单位是 px，需要把它转换成 meter
+                    val sideLengthInMeter =
+                        min(intSize.width, intSize.height)
+                            .toFloat()
+                            .toMeter(density, physicalLengthConverter) * 0.5f
+                   
+                    // 将 meter 赋值给实体的尺寸变量
+                    sizeOfEntity = Vector3(sideLengthInMeter)
+                }
+        ) { content, _ ->
+            // 将实体添加到 SpatialView 中渲染
+            entity?.let {
+                content.addEntity(it)
+            }
+        }
+    }
+    
+    // 界面的其他部分 ...
+}
+
+detectSpatialDragGesture(
+    context = context,
+    targetedToEntity = entity?.let { TargetEntity.hit(it) },
+) { dragValue ->
+    // 拖拽事件的 dragValue 的 dragAmount 以 px 为单位，将其转换成以 meter 为单位的变量
+    val offsetXInMeter = with(density) {
+        physicalLengthConverter.dpToLength(dragValue.dragAmount.x.toDp(), LengthUnit.Meters)
+    }
+    val offsetYInMeter = with(density) {
+        physicalLengthConverter.dpToLength(dragValue.dragAmount.y.toDp(), LengthUnit.Meters)
+    }
+    val offsetZInMeter = with(density) {
+        physicalLengthConverter.dpToLength(dragValue.dragAmount.z.toDp(), LengthUnit.Meters)
+    }        
+    
+    // 更新立方体实体的 TransformComponent，将拖拽偏移应用到实体在物理空间中的位置
+    entity?.apply {
+        components[TransformComponent::class.java]?.apply {
+            val currX = position.x
+            val currY = position.y
+            val currZ = position.z
+            setPosition(
+                Vector3(
+                    currX + offsetXInMeter,
+                    currY - offsetYInMeter,
+                    currZ + offsetZInMeter
+                )
+            )
+        }
+    }
+}

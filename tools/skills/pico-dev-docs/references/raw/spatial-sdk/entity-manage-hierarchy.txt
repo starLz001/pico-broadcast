@@ -1,0 +1,55 @@
+管理实体层级
+========================================
+本文介绍如何管理实体之间的层级。
+*实现方法
+*Entity 之间可以构成父子层级（场景树）。常见功能的实现方式如下：
+**
+*示例代码
+*以下代码展示了如何在 SpatialView 中把实体加入到内容里，并建立父子关系。
+ 
+以下代码展示了如何给关键实体设置名字，并在实体子树中按名字查找节点。
+ 
+ 
+*注意事项
+*findEntity(name) 会在当前实体及其整棵子树中按名称进行深度搜索。如果存在多个同名实体，将只返回第一个匹配项。
+*setName(name) 的推荐命名规范为：长度不超过 2048 个字符，且仅包含字母、数字和下划线 (a-zA-Z0-9_)。若传入的名称不符合上述推荐规范，SDK 仍会接受该名称并继续执行，仅输出一条告警日志（此前版本会直接拦截不符合规范的名称）。建议你为关键实体设置符合规范且唯一的名称，以方便调试和自动化测试。
+*API 参考
+对于Entity 类中有关实体层级的函数，详情参阅 API 参考。根据你所处的地理位置选择合适的文档链接：
+*中国大陆：https://developer-cn.picoxr.com/spatial-api/index.html
+*非中国大陆：https://developer.picoxr.com/spatial-api/index.html
+
+
+
+功能
+
+相关接口
+
+将实体添加为子实体
+
+addChild/setParent
+
+从父节点移除
+
+removeFromParent/removeChild/removeAllChildren
+
+遍历子节点
+
+getChildren/getChildrenCount
+
+在当前子树内按名称查找
+
+findEntity
+
+SpatialView(modifier = Modifier.size(100.dp, 100.dp)) { content, _ ->
+    content.addEntity(viewModel.windowContainerEntity)
+    viewModel.windowContainerEntity.addChild(viewModel.entityForMoving)
+}
+
+val entityForMoving =
+    BoxEntity().apply {
+        setName("CrossingWindowContainerEntity")
+        color(Color.Blue)
+    }
+
+val timelineEntity = entity.findEntity("CrossingWindowContainerEntity")
+timelineEntity?.playTimeline()

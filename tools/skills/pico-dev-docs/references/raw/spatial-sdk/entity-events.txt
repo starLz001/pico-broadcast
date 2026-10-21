@@ -1,0 +1,78 @@
+实体事件
+========================================
+PICO Spatial SDK 提供了多种实体事件相关的回调。你可以通过 Scene 或 SpatialViewContent 订阅相关事件，以接收回调并实现自定义逻辑。
+*重要提示
+*仅当事件发生在 Scene 或 SpatialView 内时，才能接收到相应的事件回调。
+*事件列表
+*EntityEvents 对象定义了与实体生命周期和父子级关系相关的事件，如下表所示：
+*
+*SceneEvents 对象定义了与场景及其内实体变化相关的事件，如下表所示：
+*
+*通过 Scene 订阅事件
+*通过 Scene 订阅事件时，你可以监听整个容器内发生的事件，包括所有已加入该 Scene 的实体。例如，当实体被添加至 SpatialView 后，可以通过以下方式监听实体的 Enable 事件：
+ 
+*通过 SpatialViewContent 订阅事件
+通过 SpatialViewContent 订阅事件时，只会监听当前视图内发生的事件，其作用范围局限于特定的 SpatialView。通过以下方式，可以监听当前视图内实体的 Enable 事件，而不会影响其他视图或全局 Scene：
+ 
+*API 参考
+*EntityEvents 和 SceneEvents 对象提供了实体相关的事件，详情参阅 API 参考。根据你所处的地理位置选择合适的文档链接：
+*中国大陆：https://developer-cn.picoxr.com/spatial-api/index.html
+*非中国大陆：https://developer.picoxr.com/spatial-api/index.html
+
+
+
+
+事件
+
+描述
+
+Enable
+
+当实体在容器内被启用时，触发 EntityEvents.Enable 事件。
+
+Disable
+
+当实体在容器内被禁用时，触发 EntityEvents.Disable 事件。
+
+Destroy
+
+当实体在容器中被销毁时，触发 EntityEvents.Destroy 事件。
+
+ParentChanged
+
+当实体在容器中的父级节点变更时，触发 EntityEvents.ParentChanged 事件。
+
+
+
+事件
+
+描述
+
+EntityAdded
+
+当实体被添加到容器中时，触发 SceneEvents.EntityAdded 事件。
+
+EntityRemove
+
+当实体从容器中被移除时，触发 SceneEvents.EntityRemove 事件。
+
+Update
+
+当容器每帧更新时，触发 SceneEvents.Update 事件。
+
+// 创建一个 SpatialView，用于在场景中显示 3D 内容或实体
+SpatialView( 
+    modifier = Modifier.padding(bottom = 10.dp).background(color = Color.Transparent)
+) { content, _ ->
+    content.addEntity(entity)
+    // 订阅实体的 `enable` 事件，当实体被启用时会触发该回调
+    entity.scene?.subscribe(EntityEvents.Enable::class.java) {}
+}
+
+// 创建一个 SpatialView，用于在场景中显示 3D 内容或实体
+SpatialView(
+    modifier = Modifier.padding(bottom = 10.dp).background(color = Color.Transparent)
+) { content, _ -> 
+    // 订阅实体的 `enable` 事件，当实体被启用时会触发该回调
+    content.subscribe(EntityEvents.Enable::class.java) {}
+}

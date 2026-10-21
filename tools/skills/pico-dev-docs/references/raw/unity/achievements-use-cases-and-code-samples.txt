@@ -1,0 +1,232 @@
+场景教学 & 代码示例
+========================================
+本文介绍 “成就服务” 在不同场景下的应用并提供相应的代码示例。
+*示例成就
+以下示例中，你预先在 PICO 开发者平台上创建了一个计数类成就，名为“COLLECT_SEVEN_RINGS”（收集 7 枚戒指）。当玩家成功收集 7 枚戒指之后，则解锁成就。否则，游戏持续进行，系统将持续统计并更新玩家的戒指收集情况。代码示例如下：
+ 
+*获取成就基础信息
+成就基础信息包括成就的 API Name、描述、成就类型、解锁目标等。
+ 
+*获取成就进度
+获取用户的成就进度信息，从而帮助应用判断是否需要为用户解锁当前成就。
+ 
+*更新成就进度
+当用户取得新的成就进度时，需要及时为其更新。
+*对于计数类成就，需要为其增加相应的计数。
+*对于完成率类成就，需要为其解锁对应的任务。
+*简单成就无进度，只有 “解锁” 和 “未解锁” 之分。
+ 
+*解锁成就
+当用户达到成就解锁目标时，需及时为用户解锁成就。
+*
+ 
+若希望向用户发送成就解锁通知，你需要在开发者平台上为成就勾选 是否启用通知。
+* 
+*为指定排名的用户解锁成就
+若用户在排行榜内获得指定排名，例如 Top 3 和 Top5，则为其解锁相关成就。关于创建排行榜的详细步骤，参考此文档。
+* 
+*成就墙
+成就墙可展示用户在游戏中取得的所有成就，对用户的好友或其他用户可见。若解锁某个成就，则点亮对应成就的图标。
+* 
+
+using UnityEngine;
+using System.Collections;
+using Pico.Platform;
+using Pico.Platform.Models;
+public class AchievementsService : MonoBehaviour
+  {
+    // 在 PICO 开发者平台上定义的成就的 API Name，例如：COLLECT_SEVEN_RINGS
+    private const string COLLECT_SEVEN_RINGSOptional= "COLLECT_SEVEN_RINGS";
+    // 当玩家成功收集 7 枚戒指后，传入 true
+    private bool m_collectSevenRingsUnlocked;
+    
+    public bool CollectSevenRings
+    {
+        get { return m_collectSevenRingsUnlocked; }
+    }
+    public void CheckForAchievmentUpdates()
+    {
+        Achievements.GetProgressByName(new string[]{ COLLECT_SEVEN_RINGSOptional}).OnComplete(
+            (Message<AchievementProgressList> msg) =>
+            {
+                foreach (var achievement in msg.Data)
+                {
+                    if (achievement.Name == COLLECT_SEVEN_RINGS)
+                    {
+                        m_collectSevenRingsUnlocked = achievement.IsUnlocked;
+                    }
+                }
+            }
+        );
+    }
+    public void RecordWinForLocalUser()
+    {
+        Achievements.AddCount(COLLECT_SEVEN_RINGS, 1);
+        CheckForAchievmentUpdates();
+    }
+}
+
+// 获取指定成就的基础信息
+AchievmentsService.GetDefinitionsByName(new string[]{"yourAchievementName"}).OnComplete(
+    (msg)=>{ // Message<AchievementDefinitionList>
+        if (!msg.IsError)
+        {
+            var list = msg.Data.GetEnumerator();
+            while (list.MoveNext())
+            {
+                var item = list.Current;
+                Debug.Log($$"Name: {item.Name}" +
+                $$"Target: {item.Target}" +
+                $$"Type: {item.Type}" +
+                $$"BitfieldLength: {item.BitfieldLength}" +
+                $$"Description: {item.Description}" +
+                $$"Title: {item.Title}" +
+                $$"IsArchived: {item.IsArchived}" +
+                $$"IsSecret: {item.IsSecret}" +
+                $$"ID: {item.ID}" +
+                $$"UnlockedDescription: {item.UnlockedDescription}" +
+                $$"WritePolicy: {item.WritePolicy}" +
+                $$"LockedImageURL: {item.LockedImageURL}" +
+                $$"UnlockedImageURL: {item.UnlockedImageURL}";)
+            }
+        }
+    }
+);
+
+// 获取指定页成就的基础信息。以下示例中，获取第 1 页（ 页面索引为 0）的成就信息，每页显示 5 个成就的信息。
+AchievmentsService.GetAllDefinitions(0, 5).OnComplete(
+    (msg)=>{ // Message<AchievementDefinitionList>
+        if (!msg.IsError)
+        {
+            var list = msg.Data.GetEnumerator();
+            var totalSize = msg.Data.TotalSize; // 可知成就总数
+            while (list.MoveNext())
+            {
+                var item = list.Current;
+                Debug.Log($$"Name: {item.Name}" +
+                $$"Target: {item.Target}" +
+                $$"Type: {item.Type}" +
+                $$"BitfieldLength: {item.BitfieldLength}" +
+                $$"Description: {item.Description}" +
+                $$"Title: {item.Title}" +
+                $$"IsArchived: {item.IsArchived}" +
+                $$"IsSecret: {item.IsSecret}" +
+                $$"ID: {item.ID}" +
+                $$"UnlockedDescription: {item.UnlockedDescription}" +
+                $$"WritePolicy: {item.WritePolicy}" +
+                $$"LockedImageURL: {item.LockedImageURL}" +
+                $$"UnlockedImageURL: {item.UnlockedImageURL}";)
+            }
+        }
+    }
+);
+
+AchievementsService.GetProgressByName(new string[]{"yourAchievementName"}).OnComplete(
+    (msg)=>{ // Message<AchievementProgressList>
+        var list = obj.GetEnumerator();
+        while (list.MoveNext())
+        {
+            var item = list.Current;
+            Debug.Log($$"IsUnlocked: {item.IsUnlocked}" + // Simple 类型成就无进度，只有解锁和未解锁之分
+                $$"UnlockTime: {item.UnlockTime}" +
+                $$"ID: {item.ID}" +
+                $$"Name: {item.Name}" +
+                $$"Bitfield: {item.Bitfield}" + // Bitfield 类型成就的进度
+                $$"Count: {item.Count}" + // Count 类型成就的进度
+                $$"ExtraData: {Encoding.UTF8.GetString(item.ExtraData)}";)
+        }
+    }
+);
+
+// 更新计数成就进度
+int count = 1;
+byte[] bytes = new byte[]{};
+AchievementsService.AddCount("yourAchievementName", count, bytes).OnComplete(
+    (msg)=>{ // msg:Message<AchievementUpdate>
+        if (!msg.IsError)
+        {
+            var updateData = msg.Data;
+            Debug.Log($$"achievementName: {updateData.Name}");
+            Debug.Log($$"JustUnlocked: {updateData.JustUnlocked}");
+        }
+    }
+);
+
+// 更新完成率成就进度
+byte[] bytes = new byte[]{};
+string fields = "100011"
+AchievementsService.AddFields("yourAchievementName", fields, bytes).OnComplete(
+    (msg)=>{ // msg:Message<AchievementUpdate>
+        if (!msg.IsError)
+        {
+            var updateData = msg.Data;
+            Debug.Log($$"achievementName: {updateData.Name}");
+            Debug.Log($$"JustUnlocked: {updateData.JustUnlocked}");
+        }
+    }
+);
+
+
+
+成就类型
+
+解锁方式
+
+计数 & 完成率
+
+你需要调用 AchievementsService.AddCount() 和 AchievementsService.AddFields() 接口来确保用户的成就进度能够被及时写入，当用户达成目标计数或完成最后一个任务的时候，成就将自动解锁。若想在进度未完成前便解锁成就，可调用 AchievementsService.Unlock() 。
+
+简单
+
+调用 AchievementsService.Unlock() 接口，在用户完成某个任务后解锁成就。
+
+// 计数和完成率成就达到目标后自动解锁，也可以调用 AchievementService.Unlock 接口解锁。简单成就需要由开发者判定并调用 AchievementService.Unlock 接口进行解锁。
+byte[] bytes = new byte[]{};
+AchievementsService.Unlock("yourAchievementName", bytes).OnComplete(
+    (msg)=>{ // msg:Message<AchievementUpdate>
+        if (!msg.IsError)
+        {
+            var updateData = msg.Data;
+            Debug.Log($$"achievementName: {updateData.Name}");
+            Debug.Log($$"JustUnlocked: {updateData.JustUnlocked}");
+        }
+    }
+);
+
+public void CheckUnlockAchievementByLeaderboardRank(string yourUserID)
+{
+    LeaderboardService.GetEntries(
+        "yourLeaderboardName", 
+        0, 
+        5, 
+        LeaderboardFilterType.None, 
+        LeaderboardStartAt.Top)
+        .OnComplete((message)=>{ // Message 类型为 Message<LeaderboardEntryList>。
+            if (!message.IsError)
+            {
+                var entryList = message.Data;
+                var list = entryList.GetEnumerator();
+                while (list.MoveNext())
+                {
+                    var item = list.Current;
+                    if (item.User.ID == yourUserID)
+                    {
+                        UnlockAchievement("yourAchievementName");
+                        break;
+                    }
+                }
+            }
+        });
+}
+
+public void UnlockAchievement(string yourAchievementName)
+{
+    AchievementsService.Unlock(yourAchievementName, null).OnComplete(OnAchievementUnlockComplete);
+    void OnAchievementUnlockComplete(Message<AchievementUpdate> message)
+    {
+        if (!message.IsError)
+        {
+            Debug.Log($$"{message.Data.Name} unlock success");
+        }
+    }
+}

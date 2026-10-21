@@ -1,0 +1,38 @@
+语音转文字示例
+========================================
+SpeechToTextDemo 展示 “语音转文字” 服务的相关功能，包括初始化 ASR 引擎、开始/停止语音识别等。
+* 
+*APK 安装包
+直接将 Demo 的 APK 文件安装至设备进行体验。
+ 
+*GitHub 仓库
+克隆 Demo 的 GitHub 仓库，查看代码示例、图形资产、脚本文件等。
+*地址：https://github.com/Pico-Developer/PlatformSample-Unity/tree/main/Assets/Samples/ASRDemo
+*使用前提
+PICO 设备的系统版本需为 5.7.0 及以上。 
+*使用步骤
+*完成自定义设置。
+**
+*点击 Init 按钮，初始化 ASR 引擎。
+*点击 Start 按钮，开始说话和语音识别。
+*ASR text 处会显示从语音处转换的文字。
+*点击 Stop 按钮，停止语音识别。
+*若勾选了 AutoStop 选框，当系统检测到用户已停止说话后，会自动停止语音识别。 
+
+
+
+参数
+
+说明
+
+VadMaxDuration
+
+单次语音识别允许的最大时长。
+
+AutoStop
+
+当检测到用户停止说话时，是否主动停止语音识别。
+
+ShowPunctual
+
+是否在转换后的文字中显示标点。

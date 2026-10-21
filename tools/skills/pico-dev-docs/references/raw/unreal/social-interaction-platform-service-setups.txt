@@ -1,0 +1,79 @@
+社交互动-平台接入
+========================================
+*使用 “社交互动” 服务前，你需要在 PICO 开发者平台完成平台接入，具体包括创建 Destination 和上传应用包。本文档主要介绍如何创建 Destination。
+*前提条件
+*创建 Destination 前，你需要先为 UE 项目配置平台服务。参考配置平台服务。
+*创建 Destination
+*在真实世界中，人们的社交活动通常需要一个具体的聚会场所，例如餐馆、音乐厅等。在 VR 应用里，这种聚会场所被称为 Destination，即跳转目的地。更具象地说，Destination 可以是游戏大厅、游戏关卡、房间等地点。用户可以向好友展示和分享自己的 Destination，并邀请对方加入。
+你可以在开发者平台中为应用创建多个 Destination，并配置图片、描述、DeepLink 等相关信息。步骤如下：
+*登录 PICO 开发者平台。
+*在左侧导航栏中，点击 我的应用。
+*你将前往 我的应用 页。
+*点击目标应用，进入其 概览 页。
+*在左侧导航栏中，点击 平台服务。
+*你将前往 PPS 开发平台。
+*在左侧导航栏中，点击 Destinations。
+*在 Destinations 管理面板中，点击 创建 Destination。
+*你将进入 新建 Destination 面板。
+* 
+*配置 Destination：
+*选择 Destination 的应用地区。
+*配置 Destination 信息，包括 基础信息 和 开发者信息。
+*下表为基础信息填写说明：
+**
+*下表为开发者信息填写说明：
+**
+*点击 保存 或 保存并提交。
+*若点击 保存，Destination 将进入“草稿”状态。
+*若点击 保存并提交，Destination 将进入“审核中”状态。
+*上传应用
+用户接受邀请后，设备将解析邀请通知中携带的包名参数，然后唤起相关应用。因此，创建 Destination 后，你还需要在 PICO 开发者平台上传应用包。具体步骤参考上传版本。
+
+
+
+字段
+
+说明
+
++ 管理语言
+
+设置 Destination 在应用内的展示语言。
+
+显示名称
+
+Destination 的显示名称，用于在应用内向用户展示。
+
+简介
+
+Destination 的描述内容，用于在应用内向用户展示。
+
+图片信息
+
+Destination 的图片，用于在应用内向用户展示。
+
+
+
+字段
+
+说明
+
+API Name
+
+Destination 的唯一标识。
+
+DeepLink Message
+
+用于存放动态配置，例如更精准的位置信息。示例如下：
+ 
+
+是否启用DeepLink
+
+开启后，用户可通过 Deeplink 能力跳转至目标位置。
+
+可见范围
+
+选项有：
+*仅开发者：Destination 仅对你自己可见
+*所有人：对所有 PICO 用户可见
+
+{"room_name":"sports game","game_type":"pingpong","game_level":"easy"}

@@ -1,0 +1,25 @@
+USD 概述
+========================================
+本文介绍什么是 USD 以及 PICO 如何使用 USD。
+*什么是 USD
+USD (Universal Scene Description，通用场景描述) 是由 Pixar 发起并开源的 3D 场景描述与交换框架。USD 不仅是一种文件格式，更是一套用于描述和组合 3D 场景的开源框架。它通过分层（layering）、引用（referencing）等组合（composition）机制，以可扩展、可复用的方式组织几何、材质、骨骼动画、灯光和相机等内容，并支持跨工具、跨团队的协作。
+USD 已成为影视、游戏、工业和空间计算 (Spatial Computing) 领域主流的 3D 内容交换标准，并获得了 Maya、3ds Max、Houdini、Blender 等主流 DCC 软件的广泛支持。
+常见的 USD 文件格式包括：
+*.usda：文本格式，可读性强，便于调试。
+*.usdc：二进制格式，文件体积小，加载速度快。
+*.usdz：打包格式，包含贴图等资源，便于分发与交付。
+*什么是 AOUSD
+AOUSD (Alliance for OpenUSD, OpenUSD 联盟) 是一个推动 USD 标准化与开放治理的行业联盟，致力于统一 USD 规范，促进跨厂商互操作。
+字节跳动已于 2026 年正式加入 AOUSD。作为字节跳动旗下的 XR 品牌，PICO 同样参与了 OpenUSD 的标准化与开放治理，并以 USD 作为空间计算内容的主要 3D 格式，以此推动跨厂商、跨平台的 3D 内容互通。
+*PICO 为何选择 USD 作为主要 3D 内容格式
+*成熟的行业标准：USD 已获得主流 DCC 工具与引擎的广泛支持，有助于降低你的内容接入成本。
+*强大的组合与分层能力：USD 适合用于大规模、可协作、可复用的 3D 内容生产。
+*面向空间计算：在空间计算场景中，USD 已成为主流内容格式，有利于实现跨平台的内容互通。
+*高度可扩展：通过 USD 的 Schema 机制，你可以方便地根据平台需求进行扩展，从而兼顾标准化与定制化。
+*PICO 如何使用 USD
+PICO Spatial SDK 和 PICO Spatial Editor 以 USD 作为主要的 3D 内容格式，用于构建空间应用中的 3D 场景、角色和动画。
+典型工作流如下：
+*在 DCC 软件（如 Maya、3ds Max、Houdini、Blender）中制作模型、材质、骨骼和动画。
+*按照推荐配置将资产导出为 USD 格式（推荐使用 .usdz）。
+*将导出的文件导入 PICO Spatial Editor，进行场景搭建和运行时预览。
+

@@ -1,0 +1,47 @@
+使用 ChannelAudioComponent
+========================================
+Channel Audio 将音频资源的声道直接映射到输出设备，不经过任何空间化或混响处理，也不考虑声源的空间位置或方向。对于双声道音频，无论听者面朝哪个方向，左声道的声音总是从左侧传来，右声道的声音总是从右侧传来。对于单声道音频，声音会从一个固定方向播放。
+*使用场景
+*基于 Channel Audio 的声音传播方向固定性，它主要用于忠实呈现原始音效和提供稳定的听觉反馈，无论在传统多声道播放，还是在系统的界面交互中，都能确保声音的清晰性和一致性，同时兼顾性能和兼容性。
+*原始混音效果还原
+*Channel Audio 适合还原原始混音效果，例如传统音乐、电影配乐或多声道音频资源，确保用户听到的内容与制作者预期一致，不受用户头部移动或位置变化影响。
+*系统提示与音效
+*Channel Audio 常用于系统提示音和界面音效，如按钮点击、通知提醒或界面反馈。这类声音通常不依赖空间定位，但要求稳定、清晰，以避免用户因视角变化而错过关键信息。
+*兼容性与性能优化
+*Channel Audio 在多媒体兼容性和性能优化场景中也非常实用。直接输出声道信号可以减少空间化计算，提高处理效率，适合移动端应用或在线视频播放等对延迟和资源消耗敏感的场景。
+*空间音频开发流程
+*关于空间音频的通用使用流程，参考《空间音频概览》中的 “空间音频使用流程” 小节。
+*使用 Channel Audio
+*以下代码演示了如何使用 Channel Audio，包括创建实体，加载音频文件，并通过播放器控制器对该音频进行播放、暂停和停止的操作。
+* 
+*API 参考
+ChannelAudioComponent 类提供 Channel Audio 相关的属性。详细说明参阅 API 参考。根据你所处的地理位置选择合适的文档链接：
+*中国大陆：https://developer-cn.picoxr.com/spatial-api/index.html
+*非中国大陆：https://developer.picoxr.com/spatial-api/index.html
+
+
+// 创建 `Entity` 实例
+val entity = Entity()
+
+// 加载音频文件
+val audioResource =
+    AudioResource.load(
+        "your_custom_name",
+        "asset://your_channel_audio_file.wav",
+        LoadType.FROM_ASSETS
+    )
+
+// 将 ChannelAudioComponent 添加至 `Entity` 实例
+val channelAudioComponent = ChannelAudioComponent(volume = 1.0f)
+entity.components.set(channelAudioComponent)
+
+// 获取音频播放器控制器（任选一个方式）
+// 方式一：
+val audioPlayerController = entity.prepareAudio(audioResource)
+// 方式二：
+val audioPlayerController = entity.playAudio(audioResource)
+
+// 控制音频播放，包括开始播放、暂停播放、停止播放
+audioPlayerController.play()
+audioPlayerController.pause()
+audioPlayerController.stop()

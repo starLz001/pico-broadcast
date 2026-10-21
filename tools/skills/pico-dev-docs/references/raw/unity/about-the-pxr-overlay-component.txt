@@ -1,0 +1,271 @@
+合成层参数说明
+========================================
+*PXR_Composition Layer 组件用于配置合成层相关参数。此外，PXR_Manager 组件也提供部分合成层参数。
+*PXR_Composition Layer 组件中的参数
+*Type (合成层类型)
+SDK 提供两种类型的合成层：Overlay 和 Underlay。
+*
+*Shape (合成层形状)
+SDK 提供五种形状的合成层：Quad、Cylinder、Equirect、Cubemap 和 Equi-Angular Cubemap (EAC)。具体说明如下：
+*
+*Depth (合成层深度)
+合成层深度（Depth）用于定义合成层在场景中的顺序。数值越小，越靠近 Eye Buffer。假设一个场景中添加了三层 Overlay 和三层 Underlay，深度值设定可以为[Camera](Overlay)2/1/0[EyeBuffer]0/1/2(Underlay)。
+*Texture Type (纹理类型)
+SDK 提供三种纹理类型：外部纹理（External Surface）、动态纹理（Dynamic Texture）和静态纹理（Static Texture）。每个纹理都有最佳使用场景。
+*
+*Texture (纹理)
+*Texture 参数用于指定左右眼透传的纹理。
+* 
+*Radius (半径) 
+*将 Shape (合成层形状) 设置为 Equirect（球体纹理）时，需要配置 Radius 参数，指定圆柱的半径。
+*Texture Rects (纹理矩形)
+*勾选 Texture Rects 选框后，可配置 Source Rects 和 Destination Rects 相关参数。
+ 
+*Source Rects (源矩形)
+*Source Rects 参数用于设置被渲染到物体表面的纹理区域。选项说明如下：
+**
+*Destination Rects (目标矩形)
+*Destination Rects 参数用于设置合成层所覆盖的目标区域。选项说明如下：
+**
+*Layer Blend (图层混合)
+*Layer Blend 用于设置 Source 层和 Destination 层的颜色值和透明度值。
+*图层混合可将源图层颜色和目标图层颜色进行混合，常用来绘制透明或半透明的物体。合成层默认从后往前进行混合，若当前场景有合成层 1、2、3、4，则图层混合顺序为：
+*合成层 4 和 3 优先被混合，作为 Destination 层 1。此时，合成层 2 将作为 Source 层。
+*Destination 层 1 与合成层 2 进行混合，作为 Destination 层 2。此时，合成层 1 将作为 Source 层。
+*Destination 层 2 与合成层 1 进行混合。
+*相关参数说明如下：
+* 
+*
+ 
+*Override Color Scale (覆盖全局颜色设置)
+*若想覆盖该层的全局颜色设置，可勾选 Override Color Scale，然后配置以下参数：
+* 
+**
+* 
+*外部纹理补充说明
+若使用外部纹理，可按需配置以下参数：
+ 
+参数说明如下：
+*
+*PXR_Manager 组件中的参数
+*Use Premultiplied Alpha（使用预乘 Alpha）
+*启用内容的预乘 Alpha 效果，将 RGB 颜色通道与 Alpha 值相乘，即 (RxA,G×A, B×A)。适用于以下场景：
+*带透明度的 UI 界面、粒子特效。
+*使用 Alpha 混合的材质或频繁透明混合的内容。
+*Layer Blend (图层混合)
+*Layer Blend 用于设置 Source 层和 Destination 层的颜色值和透明度值。
+*图层混合可将源图层颜色和目标图层颜色进行混合，常用来绘制透明或半透明的物体。合成层默认从后往前进行混合，若当前场景有合成层 1、2、3、4，则图层混合顺序为：
+*合成层 4 和 3 优先被混合，作为 Destination 层 1。此时，合成层 2 将作为 Source 层。
+*Destination 层 1 与合成层 2 进行混合，作为 Destination 层 2。此时，合成层 1 将作为 Source 层。
+*Destination 层 2 与合成层 1 进行混合。
+*相关参数说明如下：
+* 
+*
+ 
+
+
+
+类型
+
+说明
+
+Overlay
+
+Overlay 类型的合成层将纹理呈现在 Eye Buffer 前面，默认为该选项。使用该类型的合成层时，需注意以下事项：
+*勾选 Texture Rects 选框后，若选择自定义 Source Rects 和 Destination Rects（即选择 Custom 选项），则需确保 X、Y、W、H 的值位于以下指定区间内：
+*X：[0,1)
+*Y：[0,1)
+*W：(0,1]
+*H：(0,1]
+*使用 Overlay 类型的合成层，并且将 Shape 设置为 Equirect（球体纹理）时，需注意以下事项：
+*Radius 参数用于指定圆柱的半径，当设置为 0 或者正无限大（1.0f/0.0f）时，表示无限大的半径。球面半径无限大时，其展示效果如同空场景中的天空盒。
+*Destination Rects 下的 X 参数无用；W 参数映射到中心角，关于中心点坐标 (0, 0) 对称。
+
+Underlay
+
+Underlay 类型的合成层将纹理呈现在 Eye Buffer 后面。
+由于 Underlay 层依赖于渲染目标上的 alpha 通道。场景中的所有对象绘制到 Eye Buffer 后，你需要在 Eye Buffer 上构建一个 “洞”，使 Underlay 纹理透过这个 “洞” 显示出来。你可以在 Packages/PICO Integration/Assets/Resources/Shader 目录下获取 PXR_UnderlayHole 脚本，然后使用该脚本来构建“洞”，或根据应用需求编写 shader 来构建 “洞”。
+*提示：若你在项目中使用了通用渲染管线（URP），同时需使用 Underlay 层时，则需要禁用 HDR，否则 Underlay 层无法生效。
+
+
+
+形状
+
+说明
+
+Quad
+
+具有四个顶点的平面纹理，通常用来显示场景中的文本或信息。默认为该选项。
+
+Cylinder
+
+具有柱面弧度的圆柱形纹理，通常用于显示曲面 UI 界面。
+若使用 Cylinder，则：
+*Transform 中心将作为 Cylinder 的中心，Transform 的尺寸将作为 Cylinder 的尺寸，且 Cylinder 中 Transform 的尺寸均为全局尺寸（Global Scale）。其中，Z 作为 Cylinder 的半径，Y 作为 Cylinder 的高，X/Z 作为 Cylinder 的弧长。
+*必须将摄像机放置在圆柱内切球内。如果摄像机接近内切球表面，合成层将无法显示。
+
+Equirect
+
+球体纹理，通常用于显示 360/180 全景纹理。
+
+Cubemap
+
+立方体贴图。一个立方形贴图为六个正方形纹理的集合，用来表示环境反射。这六个立方体构成了围绕某物体的假想立方体的面，每个面都代表了对应世界轴方向（上、下、左、右、前、后）的视图。立方体贴图常用来捕捉物体的反射或周围环境。
+
+Equi-Angular Cubemap (EAC)
+
+
+等角立方体贴图是一种用于展示 360 度全景图片和视频的投影技术，是等距投影和立方体投影的结合体，支持 180 度投影。
+在 EAC 投影中，360 度全景图首先被分成六个立方体面，然后将来自每个立方体面的像素映射到一个球体上，从而创建一个可以从任何角度浏览的无缝全景图像。
+
+Blurred Quad
+
+模糊平面纹理，用于渲染空间图片或空间视频。
+
+
+
+类型
+
+说明
+
+外部纹理
+
+相应的合成层将从外部 Android Surface 直接获取纹理（例如：Android 播放器视频纹理）。该选项将创建一个 Android Surface 并将 Android Surface Texture 直接渲染到 VR 合成层上。创建的对象为 public IntPtr externalAndroidSurfaceObject = IntPtr.Zero;，可在 PXR_OverLay.cs 文件中查看。
+*若想提升 VR 视频的清晰度，建议使用 External Surface。
+
+动态纹理
+
+若要将动态内容渲染至该合成层，即为合成层每帧更新纹理，则需要使用动态纹理。例如：若想使用普通摄像机生成的 RenderTexture 图片，则需使用动态纹理。
+
+静态纹理
+
+若需要渲染静态内容，例如：在画廊中显示一幅画，则需使用静态纹理。
+
+左右眼必须指定同一张纹理且纹理宽高需保持一致。若想实现 3D 效果，可根据实际情况，为左右眼选择不同的纹理。
+
+
+
+选项
+
+说明
+
+Mono Scopic
+
+为左右眼摄像机选择不同的纹理，分别显示。
+
+Stereo Scopic
+
+纹理左右中分，左眼摄像机显示左半部分，右眼摄像机显示右半部分。
+提示：建议左右眼指定同一张纹理且纹理宽高需保持一致，否则可能会因为左右眼纹理差别过大而导致异样感。
+
+Custom
+
+自定义渲染到物体表面的纹理区域，其中：
+*X 和 Y 用于设置纹理上的起始点
+*W 用于设置纹理区域的宽度
+*H 用于设置纹理区域的高度
+举个例子，如果你将 X 和 Y 都设置为 0.5，然后将 W 和 H 都设置为 0.5，那么起始点为纹理的中心，纹理右上角 1/4 的区域将渲染至物体表面。
+
+
+
+选项
+
+说明
+
+Default
+
+保持目标区域的原始尺寸。
+
+Custom
+
+自定义合成层所覆盖的目标区域，其中：
+*X 和 Y 用于设置目标区域的起始点
+*W 用于设置目标区域的宽度
+*H 用于设置目标区域的高度
+举个例子，如果在 Source Rects 参数处，你将 X 和 Y 都设置为 0.5，并且将 W 和 H 都设置为 0.5，在此处，你将 X 和 Y 都设置成 0.5，并且将 W 和 H 都设置成 1，那么物体表面右上方 1/4 区域将被纹理右上方 1/4 区域所覆盖。
+
+
+
+参数
+
+说明
+
+Src Color
+
+设置的颜色值。
+
+Dst Color
+
+设置背景图层的颜色值。
+
+Src Alpha
+
+设置合成层的透明度值。
+
+Dst Alpha
+
+设置背景图层的透明度值。
+
+ 提示
+*最终颜色 = (srcColor × LayerBlend.srcColor) + (dstColor × dst.layerBlend)
+*最终透明度 = (srcColor × LayerBlend.srcAlpha) + (dstColor × dst.dstAlpha)
+
+
+
+参数
+
+说明
+
+Scale
+
+设置颜色值的缩放倍数。
+
+Offset
+
+设置颜色值的偏移量。
+
+提示
+Scale 和 Offset 参数中的 X、Y、Z、W 分别对应颜色通道的 R、G、B、A。最终颜色=(原始颜色×缩放倍数)+偏移量。
+
+
+
+参数
+
+说明
+
+DRM
+
+若需要对外部纹理进行版权保护，可勾选 DRM 。勾选后，用户截屏/录屏时，External Surface 部分将显示为黑色。
+
+3D Surface Type
+
+纹理显示类型：
+*Single：完整图像同时在左右眼摄像机上显示。
+*Left Right：图像左右中分，左眼摄像机显示左半部分，右眼摄像机显示右半部分。
+*Top Bottom：图像上下中分，左眼摄像机显示上半部分，右眼摄像机显示下半部分。
+
+
+
+参数
+
+说明
+
+Src Color
+
+设置的颜色值。
+
+Dst Color
+
+设置背景图层的颜色值。
+
+Src Alpha
+
+设置合成层的透明度值。
+
+Dst Alpha
+
+设置背景图层的透明度值。
+
+ 提示
+*最终颜色 = (srcColor × LayerBlend.srcColor) + (dstColor × dst.layerBlend)
+*最终透明度 = (srcColor × LayerBlend.srcAlpha) + (dstColor × dst.dstAlpha)

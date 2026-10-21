@@ -1,0 +1,242 @@
+使用 VR 合成层示例
+========================================
+目前，SDK 的 VR 合成层能力支持 Quad、Cylinder、Cubemap、Equirect 和 EAC 五种合成层形状。为了帮助你快速体验这些能力，PICO 提供了一个展示相关功能特性的示例。下文为示例的使用指南。
+*环境要求
+*UE 引擎版本： 4.26、4.27 及更高 UE4 版本
+*SDK 版本： 2.0.7 及更高版本
+*PICO 设备系统版本： 4.7.5 及更高版本
+*使用示例
+*点击该链接，在 GitHub 上下载 PICO 提供的示例源码。
+* 
+*解压示例压缩包。
+*将 PICO Unreal Integration SDK 中的 Plugins 文件夹复制到解压后的示例文件夹根目录下。
+*在示例文件夹的根目录下，双击 LayerSample.unproject 以在编辑器中打开该项目。
+*出现弹框提示 PICO XR 的插件模块没有编译。
+* 
+*点击 是（Yes）。
+*编辑器可能需要花上几分钟加载项目，加载完毕后即可打开。待项目打开后，你可在编辑器左下角的 内容浏览器（Content Browser） 面板下，展开 内容（Content ）> Layer > Maps 目录，找到该示例（Layer Sample）包含的以下四个关卡：
+*Equirect_Layer 展示了球形（Equirect）合成层的使用方法。
+*Layer 展示了四边形（Quad）、圆柱形（Cylinder）以及立方体（Cubemap） 合成层的使用方法。
+*Layer_LeftTexture 展示了如何使用合成层的 Left Texture 属性。
+*MediaLayer_Level 展示了如何使用合成层播放视频。
+*Equirect Layer 关卡
+Equirect_Layer 关卡展示了如何将一张 360° 全景纹理映射到球体上。
+选中 Equirect_Layer 下的 BP_StereoLayer > StereoLayer (Inherited)，你可在 Stereo Layer 选项卡下，修改相关参数。目前，你仅可修改 Left UVRect 和 Right UVRect，他们用于选取纹理的显示范围。
+ 
+参考以下参数说明：
+*Left UVRect：范围 [0,1]，左上角 UV (0,0)，右下角 UV (1,1)。
+*Right UVRect：范围 [0,1]，左上角 UV (0,0)，右下角 UV (1,1)。
+为了保证显示效果，建议使用 2:1 的 360° 全景纹理，如下图所示。
+ 
+在上图中，图片的中心，即 UV（0.5, 0.5），为我们视角正对的方向。U 的 0 到 1 代表了球形的水平 -180° ~ +180°。V 的 0 到 1 代表了球形的垂直 +90° ~ -90°。Demo 中 Left UVRect 为 UV（0, 0） 至 （1, 1），所以左眼可以看到整个球形显示的全景图。Right UVRect 为 UV（0.35, 0.35）至（0.75, 0.75），经过换算，可以看到以电视为起点，水平 144°((0.75-0.35) x 360)，垂直 72°((0.75-0.35) x 180°) 的球形的一部分弧面。
+*Layer 关卡
+该关卡中总共生成了 7 个合成层，其中包括两个 Quad Layer、一个 Cylinder Layer、一个 Cubemap Layer、一个绑定在左手柄上用于显示 Widget UI 的 Quad Layer、一个用于 Log 显示的 Debug Log Layer 和一个“面部锁定（Face Locked）”的 Quad Layer。
+ 
+下文将依次讲解这些合成层的具体使用方法。建议你将示例打包成 APK 文件，然后将其安装至一体机上运行以查看效果。
+ 
+*Quad layer
+Quad layer 展示了四个顶点的四边形平面纹理。选中 Layer 下的 BP_StereoLayer_Quad > StereoLayer (Inherited)，你可在 Stereo Layer 选项卡下，修改以下相关参数。
+ 
+*Live Texture： 如果纹理是需要每帧更新的实时内容，则需要勾选 Live Texture 以启用该属性。启用后，Widget UI 动画可以在手柄 Layer 上动态刷新。
+* 
+*Supports Depth： 默认情况下，合成层总是显示在场景中其他对象的上方。你也可以改变该规则。
+**
+*No Alpha Channel： 决定合成层纹理是否使用本身的 Alpha 通道。
+**
+*Quad Preserve Texture Ratio： 控制合成层的比例是否按照纹理的比例进行显示。
+**
+*Quad Size： 决定了 Quad layer 的自定义尺寸，单位为厘米（cm）。如下图所示，在 Widget UI 中，点击 PicoLogo，若 Quad Preserve Texture Ratio 为 false，PicoLogo 按照示例中指定的 Quad size（100 * 100 cm）显示。
+* 
+*UV Rect： 决定了 Quad Layer 的 UV 坐标。左上角为 UV(0,0)，右下角为 UV(1,1)。
+* 
+*Stereo Layer Type： 指定合成层参照哪个空间坐标系进行平移和旋转。
+**
+*Priority： 决定了同类型合成层的显示层级。等级越大，显示层级越高。高层级会覆盖低层级的显示内容。
+**
+* 
+*Cylinder Layer
+Cylinder Layer 可以模拟圆柱形状。选中 Layer 下的 BP_StereoLayer_Cylinder > StereoLayer (Inherited)，你可在 Stereo Layer 选项卡下，修改相关参数。柱面合成层的形状可通过 半径（Radius）、覆层弧形（Overlay Arc） 及 高度（Height） 三个参数设置。参数详情，见 参数配置。
+ 
+ 
+*Cubemap Layer
+*什么是 Cubemap
+*立方体贴图（Cubemap）是将多个纹理组合起来映射到一张纹理上的一种纹理类型。它由 6 个独立的 2D 纹理集合组成，包含了 6 个方向（Left、Right、Top、Front、Bottom、Back）上的环境投影，每个环境投影都是立方体的一个面。立方体贴图可以满足模拟巨大的场景的需求，比如天空盒，环境映射中的反射和折射效果等等。
+* 
+ 
+*优势分析
+*由于移动端 暂不支持 SSR（屏幕空间反射），很多在 PC 端上的场景效果在移动端上无法实现。并且相较 PC 端的性能，在移动端上，如果场景环境过于复杂，将会导致帧率降低。
+*解决方案
+*你可以先在 PC 上将场景渲染到 Cubemap 上，然后在移动端使用 Cubemap Layer，用于在移动端模拟天空盒，从而制作低性能消耗且效果更好的模拟环境。
+*数据对比
+**
+*使用 Cubemap Layer 功能模块
+下文介绍了如何使用 PICO Cubemap 生成器（PICO Cubemap Handler）来生成立方体贴图。
+ 
+*来到想要捕获输出 Cubemap 的关卡场景，在左下角 内容浏览器（Content Browser） 面板下，展开 PICOXR Content > Blueprint 文件夹，找到文件夹目录下的 BP_PXR_Cubemap，然后将其拖至场景中。
+* 
+*在场景中，选中这个名为 BP_PXR_Cubemap 的 Actor，在右侧 细节（Details） 面板中的 默认（Default） 选项卡下，你可以看到一个名为 PXR Cubemap Handler 的按钮。
+* 
+*点击此按钮，即可根据这个 Actor 的位置与朝向，捕获并保存一张 PNG 格式的包含 6 个方向环境映射纹理信息的场景图像。
+* 
+*将图像转置为 Texture Cube 资产。
+*下载 NVIDIA Texture Tools Exporter 工具（Standalone Application 版本）。
+*打开该工具中，导入之前通过 PICO Cubemap 生成器得到的 PNG 格式图像（你也可以参考导出立方体贴图使用 Photoshop 等工具自己制作此步骤所用到的图像）。
+*导入后，在界面左上角，将 Format 修改为 8.8.8.8 BGRA 32 bpp | unsigned，TextureType 设置为 Cube Map，然后导出为 dds 格式文件。
+* 
+*将这个 dds 格式的文件导入 UE 编辑器。
+* 
+*成功将 dds 文件导入后，选择你需要的 layer，然后在右侧 细节（Details） > Stereo Layer 下:
+* 
+*将 Stereo Layer Shape 设置为 Cubemap Layer。
+*设置 Texture。你可以使用之前通过 dds 生成的 Texture Cube 资产，也可以使用引擎自带的 Texture Cube 资产。
+*（可选）你可以通过勾选 Supports Depth 来控制能否看见其他物体。若取消勾选 Supports Depth，你仅能看到 Cubemap Layer 层，无法同时看到场景中的其他物体。
+*其他设置可参照参数配置。
+* 
+*Left Texture 关卡
+该关卡展示了合成层的 Left Texture 属性的作用。默认情况下（即不指定 Left Texture），左眼和右眼看到的画面均为 Texture 属性所使用的图片资源。通过指定 Left Texture，你可让左右眼看到的画面不一样。目前仅支持在 Quad layer 上指定 Left Texture。
+ 
+ 
+ 
+*MediaLayer 关卡
+*该关卡展示了如何使用合成层播放视频。你可以通过在场景中创建 Media Texture 和 Media Player 并指定视频源实现这一功能。你也可以查看该关卡蓝图了解如何在应用中播放视频。
+ 
+*使用 Stereo Layer 展示 widget UI
+BP_Pawn 展示了如何使用 Stereo Layer 显示 Widget UI 菜单。你可以在 /Game/Layer/Blueprints/ 目录下，找到 BP_Pawn。
+ 
+ 
+
+
+*要控制上图 Widget UI 中的按钮以切换显示效果，请用左手柄摇杆在界面上操纵一个白色小球，小球落在按钮的位置时，按下左手柄的扳机键即可触发按钮。
+
+每帧动态更新会造成较大的性能损耗。实际上，对于 UI 菜单类型的合成层，我们不必要每帧刷新其内容，仅需要在内容发生变化时刷新（如点击了某个按钮触发了按钮动画）。要实现该功能，我们可以将 Live Texture 设为 False，并且在需要刷新的时候，调用蓝图接口 Mark Texture for Update 执行一次刷新。参考以下蓝图接口示例：
+ 
+
+
+
+参数设置
+
+预览效果
+
+若 Supports Depth 为 false，你可以看到无论手柄多靠近视野，Quad layer 显示的内容依然会覆盖在手柄之上，该情况称之为 Overlay。
+
+ 
+
+
+若 Supports Depth 为 true，Quad layer 便具有了深度，这时候你可以看到  Quad layer 在手柄模型下方，该情况称之为 Underlay。
+
+💬 提示：
+Underlay 支持动态开关，比 Overlay 的性能损耗更高。Supports Depth 暂不支持 Equirect Layer。
+
+ 
+
+
+
+
+参数设置
+
+预览效果
+
+在 Widget UI 中，点击 PicoLogo。若你将 NoAlpha? 设为 false，PicoLogo 使用纹理本身的 Alpha 通道值来作为它的透明度通道输出，此时，纹理底色显示为透明。
+
+ 
+
+
+在 Widget UI 中，点击 PicoLogo。若你将 NoAlpha? 设 true，PicoLogo 不使用纹理本身的 Alpha 通道值，而是将其 Alpha 通道视作完全不透明，此时，你将看到纹理本身无像素填充的地方采用默认值，纹理底色显示为黑色。
+
+ 
+
+
+
+
+参数设置
+
+预览效果
+
+在 Widget UI 中，点击 PicoLogo。若你将 Quad Preserve Texture Ratio 设为 false，PicoLogo 的显示比例将按照你指定的该合成层的 Quad Size 进行显示。
+
+ 
+
+
+在 Widget UI 中，点击 PicoLogo。若你将 Quad Preserve Texture Ratio 设为 true，PicoLogo 的比例将按照纹理的实际比例显示。
+
+ 
+
+
+
+
+参数设置
+
+预览效果
+
+World Locked： 合成层的坐标系为世界坐标。
+
+在 Demo 中，对应放在关卡场景中的 Stereo Layer。
+ 
+
+
+Tracker Locked： 合成层的坐标系为 Tracking Space。
+💬 注意： 在该设置下，Layer 的坐标系与 Camera 的坐标系需保持一致。你可以通过 Set Relative Transform 更新 Layer 姿态；若 Layer 为世界坐标系，则需要将其改为 Tracking Space。
+ 
+
+
+对应 Demo 中 BP_Pawn 下的 Stereo Layer 组件，即玩家看到的 Widget UI 菜单。
+ 
+
+
+Face Locked： 同 Tracker Locked 的坐标系一致，均为 Tracking Space。然而，在该设置下，合成层的位置姿态会在运行的过程中与 Camera 玩家视角保持相对静止。即无论玩家如何转动视角，合成层内容在画面中均保持相对静止。
+💬 提示： 你依然可以通过 Set Relative Transform 修改 Layer 的相对姿态。
+
+对应 Demo 中 BP_Pawn 下的 StereoLayer_FaceLock 组件，即玩家看到的生命值条。
+ 
+
+
+
+
+参数设置
+
+预览效果
+
+Cylinder layer 的 Priority 参数为 1，Quad layer 的Priority 参数为 0，所以 Quad layer 被覆盖在下方。
+
+ 
+
+
+如果把 Quad layer 的Priority 参数调整为 2，Quad layer 便覆盖在了 Cylinder layer 之上。
+
+ 
+
+
+合成层的显示顺序规则：
+*Overlay > Eye Layer > Underlay
+*Face Locked Layer > World Locked Layer
+*Higher Priority > Lower Priority
+*Higher LayerID> Lower LayerID（LayerID 由创建的先后顺序决定，随机不受控）
+
+你可为 Cylinder Layer 修改的参数与 Quad Layer 一致，并且 Cylinder Layer 支持 Underlay。
+
+
+
+使用前
+
+使用后
+
+如下图，将复杂场景直接打包至 PICO 一体机上运行，少了很多渲染特性，使得画面暗、视觉效果有瑕疵，帧率在 36 帧左右。
+ 
+
+
+使用 Cubemap Layer 后，同样的场景在 PICO 一体机上运行，视觉效果较好，帧率在 72 左右。
+
+ 
+
+
+PICO Cubemap 生成器无法在 Shipping 模式下使用。
+
+*捕获的方向顺序依次为：Y 轴正方向、Y 轴负方向、Z 轴正方向、Z 轴负方向、X 轴正方向、X 轴负方向。
+*捕获的图像将存储在 .../Project Folder/Saved/Cubemaps/ 路径下。
+* 
+
+PICO 一体机上的录屏功能暂时无法正常捕获 Cubemap Layer。
+
+Stereo Layer 同样支持 Mipmap，但是目前 Left Texture 存在已知问题，暂不支持 Left Texture Mipmap，若你的 Left Texture 带 Mipmap，请关掉 Left Texture 的 Mipmap。
+
+Widget 组件大小需要与 Stereo Layer 显示的大小保持一致，否则，玩家和 UI 进行交互的时候会出现按键偏差。Widget 组件与 Stereo Layer 的方向正好在 Yaw 值上存在 180° 的偏差。因为我们使用 Stereo Layer 显示 UI，所以需要采用透明材质隐藏 Widget 原本显示的画面。

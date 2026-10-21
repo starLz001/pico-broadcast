@@ -1,0 +1,170 @@
+排行榜-参数详解
+========================================
+本文档介绍使用 PICO 框架接口获取排行榜条目数据时传入参数的含义，以及参数的不同枚举组合所返回的不同结果。
+*基础含义
+以下为参数 filter 、startAt 、pageSize 和 pageIdx 的含义说明。 
+*
+*filter & startAt 组合
+当你使用 GetEntries 获取条目数据时，系统会判断当前玩家是否在目标排行榜中，并结合 filter 和 startAt 参数的取值，返回目标条目并对条目进行布局。 
+若当前用户在排行榜中，情况如下： 
+*
+若当前用户不在排行榜中，情况如下： 
+*
+*startAt、pageSize 和 pageIdx组合
+当你使用 GetEntries 或 GetEntriesByIds 获取条目数据时，startAt 和 pageIdx 的取值以及 pageSize 参数取值的奇偶性会影响条目返回结果。情况如下： 
+*
+* 
+*
+
+
+
+参数
+
+说明
+
+枚举值
+
+相关接口
+
+filter
+
+用于定义筛选条件，限定返回结果的范围。
+
+
+*None：不进行筛选，返回所有条目。 
+*Friends：返回当前用户及其好友的条目。 
+*UserIds & Unknown：无效类型，不返回条目，无需使用。 
+
+GetEntries
+
+startAt
+
+用于定义从何处开始返回条目。
+
+
+*0: Top：从排行榜的第一个条目开始返回。 
+*1: CenteredOnViewer：把当前用户的条目放在页面中间，作为基准页，然后根据 pageSize 和 pageIdx 参数的取值返回条目。 
+*2: CenteredOnViewerOrTop：把当前用户的条目置于第一个，然后根据 pageSize 和 pageIdx 参数的取值返回条目。 
+*Unknown：无效类型，无需使用。 
+
+*GetEntries
+*GetEntriesByIds
+
+pageSize
+
+用于定义每页展示的条目数量，最大值为 100。 
+
+
+[1，100]
+
+*GetEntries
+*GetEntriesAfterRank
+*GetEntriesByIds
+
+pageIdx
+
+用于定义希望获取的条目页，公式为“目标页码减一”。若希望获取第一页条目，则传入 0。 
+
+从 0 开始，最大值根据排行榜数据而定。若传入值大于排行榜实际页数，则返回空。
+
+*GetEntries
+*GetEntriesAfterRank
+*GetEntriesByIds
+
+
+
+filter 和 startAt 参数取值
+
+返回情况
+
+None+1(CenteredOnViewer)
+
+返回所有条目，将当前用户的条目置于中间。 
+
+None+2(CenteredOnViewerOrTop)
+
+返回所有条目，将当前用户的条目置于首位。 
+
+Friends+0(Top)
+
+返回当前用户及其好友的条目，从第一个条目开始返回。 
+
+Friends+1(CenteredOnViewer)
+
+返回当前用户及其好友的条目，并把当前用户的条目置于中间。 
+
+Friends+2(CenteredOnViewerOrTop)
+
+返回当前用户及其好友的条目，并把当前用户的条目置于首位。 
+
+
+
+filter 和 startAt 参数取值
+
+返回情况
+
+None+1(CenteredOnViewer)
+
+不返回条目。 
+
+None+2(CenteredOnViewerOrTop)
+
+不返回条目。 
+
+Friends+0(Top)
+
+返回当前用户的好友的条目，从第一个条目开始返回。 
+
+Friends+1(CenteredOnViewer)
+
+返回当前用户的好友的条目。 
+
+Friends+2(CenteredOnViewerOrTop)
+
+返回当前用户的好友的条目。 
+
+
+
+startAt 参数取值
+
+pageSize 参数取值的奇偶性
+
+返回情况
+
+1(CenteredOnViewer)
+
+奇 
+
+以当前用户所在条目页为基准页（pageIdx=0），将当前用户的条目放在基准页中间，情况分类如下： 
+*往前和往后各查询到 [(pageSize-1)/2] 个条目。 
+例如，总条目数为 10，当前用户为第 4 名，则目标页条目返回情况如下： 
+*pageIdx=0，pageSize=5，则返回条目 2、3、4、5、6。 
+*pageIdx=1，pageSize=5，则返回条目 7、8、9、10。 
+*往前查询到的条目数小于 [(pageSize-1)/2] 个。 
+例如，总条目数为 6，当前用户为第 2 名，pageIdx=0，pageSize=5，则目标页返回条目 1、2、3、4、5。 
+*往后查询到的条目数小于 [(pageSize-1)/2] 个。 
+例如，总条目数为 6，当前用户为第 6 名，则目标页条目返回情况如下： 
+*pageIdx=0，pageSize=5，则返回条目 4、5、6。 
+*pageIdx=1，pageSize=5，则返回条目为空。 
+
+
+
+偶 
+
+以用户条目所在页为基准页（pageIdx=0），将当前用户的条目放在基准页中间，情况分类如下： 
+*往前可查询到 [(pageSize/2)-1] 个条目，往后可查询到 (pageSize/2) 个条目。 
+例如，总条目数为 6，当前用户为第 3 名，则目标页条目返回情况如下： 
+*pageIdx=0，pageSize=4，则返回条目 2、3、4、5。 
+*pageIdx=1，pageSize=4，则返回条目 6。 
+*往前查询到的条目数小于 [(pageSize/2)-1] 个。 
+例如，总条目数为 7，当前用户为第 2 名，则目标页条目返回情况如下： 
+*pageIdx=0，pageSize=4，则返回条目 1、2、3、4。 
+*pageIdx=1，pageSize=4，则返回条目 5、6、7。 
+*往后查询到的条目数小于 (pageSize/2) 个。 
+例如，总条目数为 3，当前用户为第 3 名，pageIdx=0，pageSize=4，则目标页返回条目 2、3。 
+
+2(CenteredOnViewerOrTop)
+
+奇/偶 
+
+将当前用户的条目放在首位，往后查询 (pageSize-1) 个。 

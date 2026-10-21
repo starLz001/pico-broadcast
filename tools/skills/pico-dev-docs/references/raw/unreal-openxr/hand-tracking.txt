@@ -1,0 +1,89 @@
+使用手势追踪
+========================================
+*本文档介绍如何使用 PICO Unreal OpenXR Plugin 在应用中开启手势追踪功能并提供相关蓝图示例。 
+*基本概念
+手势追踪功能将用户的手部动作作为 PICO 设备的输入，让用户和应用之间实现更加密切和自然的交互，从而提升用户的沉浸式 VR 体验。 你可以将手部追踪功能集成到应用中，这样用户就可以通过一些简单的手部动作（例如：戳、捏、握等）来进行点击、选择、拖放等操作。
+*设备要求
+*PICO 设备：PICO Neo3、PICO 4、PICO 4 Pro、PICO 4 Enterprise、PICO G3、PICO 4 Ultra 或 Project Swan（PICO OS 6）
+*前提条件
+*你已在引擎中安装并启用了 PICO Unreal OpenXR 插件。详情参考 PICO Unreal OpenXR 快速开始。
+*要在设备中调试手势追踪功能，你需要在 PICO 设备系统设置中开启手势识别功能。
+* 
+*启用步骤 
+*方式一：使用 UE 内置接口
+*在编辑器中，前往 编辑 >  插件 > 内置 > Virtual Reality，勾选 OpenXRHandTracking 插件，然后点击右下角的 立即重启。 
+*在编辑器中，前往 项目设置 >  插件 > PICO For OpenXR，在 Motion Tracking 选项卡下，勾选 Is Hand Tracking Used。
+* 
+*参考 UE 官方蓝图接口文档，实现手势追踪。
+* 
+*方式二：使用 PICO 接口
+*PICO 对手势追踪相关接口进行了二次封装。因此，除了使用内置的上述相关接口外，你还可以选择性地使用 PICO 插件内提供的手势追踪接口作为补充，从而更灵活地运用 PICO 的手势相关接口。
+* 
+*可用接口如下：
+*GetHandTrackingDataPICO：获取手势追踪数据
+*GetHandTrackingMeshScalePICO：获取手势追踪网格缩放比例
+*IsHandTrackingRunningPICO：查询手势追踪功能是否启用
+*IsHandTrackingSupportPICO：查询手势追踪功能是否支持
+*StartHandTrackingPICO：开启手势追踪功能
+*StopHandTrackingPICO：停止手势追踪功能
+*UpdateHandTrackingDataPICO：更新手势追踪数据
+*蓝图示例 
+本小节介绍实现手势追踪的一些蓝图示例和效果展示。
+*使用 DrawDebugCoordinateSystem 可视化手势
+在编辑器 内容浏览器 >  内容 > VRTemplate >Blueprints > VRPawn 中，添加如下的蓝图实现。
+* 
+* 
+*蓝图添加并编译成功后，在 PICO 设备中运行效果如下：
+ 
+*使用 XRVisualization 插件可视化
+*在 UE 编辑器中，前往 编辑 >  插件 > 内置 > Mixed Reality > XRVisualization，勾选 XRVisualization 插件，并点击 立即重启。
+* 
+* 
+*在 内容浏览器 >  内容 > VRTemplate >Blueprints > VRPawn 中，添加蓝图实现。
+* 
+*蓝图添加并编译成功后，在 PICO 设备中运行效果如下：
+* 
+*驱动骨骼模型
+*本小节介绍如何驱动 PICO OpenXR 插件自带的骨骼模型。以下步骤以左手为例。
+*在 VRPawn 中，添加 Hand Tracking Component PICO 组件，并将其命名为 PICOHandLeft。
+* 
+*在 PICO HandLeft 组件的 细节（Details）面板中， 在 骨骼网格资产（SkeletalAsset） 的下拉选项中点击设置按钮，勾选 显示引擎内容 和 显示插件内容。
+* 
+*在 PICO HandLeft 组件的 细节（Details）面板的 PICO Hand Tracking 目录下配置手势骨骼模型及相关参数，并在 Bone Mappings 中进行骨骼映射。具体的映射关系请参考 Open XR 官方文档。
+* 
+*复制以下左手模型的映射关系值：
+* 
+* 
+*在 PICO HandLeft 组件的 细节（Details） 面板中，右键单击 Bone mappings 选项卡，再单击 粘贴（Paste）。
+* 
+*配置正确的左手骨骼映射图如下：
+* 
+*参考以上步骤，配置右手骨骼模型。右手模型的映射关系值如下：
+* 
+*配置并编译成功后，在 PICO 设备中运行你的项目。效果如下：
+* 
+*驱动 Motion Controller
+*分别选中在左右手的 Motion Controller 组件，即 MotionControllerLeft 和 MotionControllerRight，在其 细节 面板中，将 Motion Source 分别设置为 Left Wrist 和 Right Wrist。
+* 
+*参考下图，分别设置 HandLeft 和 HandRight 的 Transform 参数。
+* 
+*配置并编译完成后，在 PICO 设备中运行效果如下：
+* 
+* 
+*相关 OpenXR 扩展
+PICO Unreal OpenXR 插件使用 XR_EXT_hand_tracking 扩展来实现手势追踪。
+
+
+你需要关闭内置的 OpenXRHandTracking 插件，同时在项目设置中勾选 Is PICO Hand Tracking Module Used，才能调用 PICO 插件内提供的手势追踪相关接口。
+
+DrawDebugCoordinateSystem 蓝图接口仅在打包 非 Shipping 模式下生效。
+
+XRVisualization 插件仅在打包 非 Shipping 模式下生效。
+
+*OpenXR 中 26 个骨骼节点对应的 radius 数据 PICO OpenXR 暂不支持。
+
+((Palm, "left_palm"),(Wrist, "left_wrist"),(ThumbMetacarpal, "left_thumb_metacarpal"),(ThumbProximal, "left_thumb_proximal"),(ThumbDistal, "left_thumb_distal"),(ThumbTip, "left_thumb_tip"),(IndexMetacarpal, "left_index_metacarpal"),(IndexProximal, "left_index_proximal"),(IndexIntermediate, "left_index_intermediate"),(IndexDistal, "left_index_distal"),(IndexTip, "left_index_tip"),(MiddleMetacarpal, "left_middle_metacarpal"),(MiddleProximal, "left_middle_proximal"),(MiddleIntermediate, "left_middle_intermediate"),(MiddleDistal, "left_middle_distal"),(MiddleTip, "left_middle_tip"),(RingMetacarpal, "left_ring_metacarpal"),(RingProximal, "left_ring_proximal"),(RingIntermediate, "left_ring_intermediate"),(RingDistal, "left_ring_distal"),(RingTip, "left_ring_tip"),(LittleMetacarpal, "left_little_metacarpal"),(LittleProximal, "left_little_proximal"),(LittleIntermediate, "left_little_intermediate"),(LittleDistal, "left_little_distal"),(LittleTip, "left_little_tip"))
+
+((Palm, "right_palm"),(Wrist, "right_wrist"),(ThumbMetacarpal, "right_thumb_metacarpal"),(ThumbProximal, "right_thumb_proximal"),(ThumbDistal, "right_thumb_distal"),(ThumbTip, "right_thumb_tip"),(IndexMetacarpal, "right_index_metacarpal"),(IndexProximal, "right_index_proximal"),(IndexIntermediate, "right_index_intermediate"),(IndexDistal, "right_index_distal"),(IndexTip, "right_index_tip"),(MiddleMetacarpal, "right_middle_metacarpal"),(MiddleProximal, "right_middle_proximal"),(MiddleIntermediate, "right_middle_intermediate"),(MiddleDistal, "right_middle_distal"),(MiddleTip, "right_middle_tip"),(RingMetacarpal, "right_ring_metacarpal"),(RingProximal, "right_ring_proximal"),(RingIntermediate, "right_ring_intermediate"),(RingDistal, "right_ring_distal"),(RingTip, "right_ring_tip"),(LittleMetacarpal, "right_little_metacarpal"),(LittleProximal, "right_little_proximal"),(LittleIntermediate, "right_little_intermediate"),(LittleDistal, "right_little_distal"),(LittleTip, "right_little_tip")) 
+
+PICO 手势无法驱动虚幻引擎 VR 模板预设的手模模型（如上述效果示例视频中所示），该手模需要通过手柄按键驱动骨骼动画，从而模拟手势动作。

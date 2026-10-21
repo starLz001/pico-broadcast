@@ -1,0 +1,192 @@
+è®¢é
+========================================
+ 
+订阅（Subscription）是一种周期性支付的机制，可让用户购买应用中的付费内容。PICO 提供的订阅服务为“自动续订类订阅 (Auto-Renewable Subscription)”。开发者接入订阅服务后，自动履约与扣款的过程将由 PICO 系统完成。
+订阅服务是 IAP 服务的一部分，当前 IAP 服务已支持创建“消耗类”、“非消耗类”和“订阅类” Add-on。订阅类 Add-on 拥有有效期，例如月度 VIP 会员，购买了订阅类 Add-On 的用户只在有效期内拥有商品的使用权。
+*功能说明
+*订阅模型
+当前支持以下订阅模型：
+*模型一：一个订阅类 Add-on 中仅包含一个订阅周期。
+*模型二：一个订阅类 Add-on 中包含多个不同的订阅周期。
+在应用内购服务 (IAP) 中的 SKU 概念的基础上，订阅服务中增加了 OuterID 的概念。其中，一个 Add-on 对应唯一的 SKU，一个订阅周期对应唯一的 OuterID。以下为示意图：
+* 
+*获取可购买的商品列表
+在 PICO 开发者平台为应用添加了商品后，你可以调用 GetProductsBySKU 获取当前应用内可购买的商品列表，对玩家进行展示。若是订阅类商品，则 AddonsType 字段会返回 Subscription。
+ 
+你可以通过 OnlineSubsystemPico 类获取相关接口。调用示例如下：
+ 
+*发起购买流程
+对于订阅类商品，需调用 LaunchCheckoutFlowV2 接口来发起购买流程。调用此接口时，你需要传入指定商品的价格，商品价格可通过 GetProductsBySKU 接口获取。
+ 
+*获取已购买的商品列表
+完成购买流程后，你可以调用 GetViewerPurchases 接口来向用户展示已购买的商品列表，包括永久型商品、尚未履约的消耗型商品、订阅类商品。
+ 
+*查询订阅状态
+对于订阅类商品，你可以调用GetSubscriptionStatus来获取订阅商品的订阅状态信息。调用此接口时，你需要传入指定商品的 SKU，商品的 SKU 可通过 GetViewerPurchases接口获取。
+ 
+*注意事项
+以下为订阅服务相关注意事项：
+*
+*完整接入流程
+订阅服务的完整接入流程包括：完成基础配置， 创建订阅类 Add-on 以及 API 调用。
+*完成基础配置
+详细步骤，参考配置平台服务。
+*创建订阅类 Add-on
+你可以在 PICO 开发者平台上创建订阅类 Add-on，并设置其对应的试用期、周期、价格、描述、SKU 等参数。你可以为一个订阅类 Add-on 创建一个或多个订阅周期。
+*登录 PICO 开发者平台，进入 我的应用 页。
+*点击目标应用卡片，进入其 概览 页。
+*从左侧导航栏中，选择   >  。
+*你将进入   配置页。
+*在页面右上角，点击   按钮。
+*在 创建 Add-on 窗口中，配置 Add-on 参数，包括： 、SKU、 、 、 、 。其中，  需设置为  。
+* 
+* 
+*点击   按钮。
+*列表中将显示新建的订阅类 Add-on。
+*在列表中，点击该 Add-on 的名称。
+*你将进入以下订阅类 Add-on 信息编辑页。
+* 
+*根据界面提示，编辑该订阅类 Add-on 的信息。
+*点击右上角的   按钮。
+*该订阅类 Add-on 进入审核阶段。
+*应用内集成
+你需要在代码中调用订阅服务接口，从而在应用内集成订阅服务。接口调用流程如下图所示，代码示例可参考文档末 Demo 部分。
+ 
+*创建非自动续费订阅
+*在 PICO 开发者平台上创建一个 “消耗品” 类型的 Add-On。详细步骤参考添加 Add-On。
+*自行定义该 Add-On 的有效期。
+*当 Add-On 过期时，调用 ConsumePurchase 接口，消耗该 Add-On。
+*测试订阅类 Add-on
+测试版本的订阅类 Add-on 与正式的订阅类 Add-on 是独立的，你可以通过测试版本来验证订阅服务的完整流程。订阅类 Add-on 创建完成后，将自动生成一个测试版本，可通过创建订阅的开发者账号来请求GetProductsBySKU() 接口，从而获取到测试版本的订阅并进行购买。基于正式订阅类 Add-on 的订阅周期和试用期配置，测试版拥有对应的测试周期和试用期（如下表所示）。
+测试版订阅 Add-on 会缩短扣款周期，例如，正式版 Add-on 为每月扣款，则测试版为每 10 分钟扣款。此外，用于测试的订阅类 Add-on 也具有宽限期。续订的自动扣款机制同正式订阅类 Add-on，详情可参考上文中的 “使用须知” 部分。更多 Add-on 测试相关注意事项可参考应用内购说明文档。
+*
+*订阅展示和管理
+用户可在 PICO 商店或 PICO VR 助手 APP 中查看应用内的订阅以及管理已购买的订阅。
+*PICO 商店
+ 
+用户在应用内开启订阅时，会弹出支付窗口。若你的应用可免费试用 7 天，用户可查看实际扣费日期。
+ 
+*用户可前往 PICO 商店，然后在应用的详情面板中查看该应用中的订阅。
+ 
+ 
+用户可以点击 应用管理按钮 > 订阅 ，查看已购买的订阅服务，点击某个订阅以查看该订阅的详情，续费/取消订阅。
+ 
+*用户点击正在订阅中的 Add-on，可查看本期订阅到期时间、支付方式和订阅计划。
+ 
+用户点击正在试用期的 Add-on，可查看试用结束时间、支付方式和订阅计划。
+ 
+*PICO VR 助手
+ 
+用户可打开手机端 PICO VR 助手，进入某个应用的详情页，查看该应用内的订阅。
+ 
+用户可前往 我的 > 购买记录 > 订阅管理，然后查看、续费或取消已购买的订阅。
+ 
+*Demo
+你可以前往 PICO GitHub 获取对应引擎版本的 IAP Demo。IAP Demo 位于 Content\Maps\WindowsMaps 路径下。以下为 Demo 的图形化界面，具体使用说明可参考应用内购说明文档。其中， OuterID 仅适用于订阅服务，为订阅周期的唯一标识； LaunchCheckoutFlow_V2 用于发起订阅类 Add-on 的购买流程。
+ 
+*API 参考
+*为了适配订阅服务，我们扩充了 IAP 服务部分接口的入参和返回，同时新增了 LaunchCheckoutFlowV2 接口用于发起订阅商品的购买流程。SDK 接口详情可参考 API 文档。
+
+
+对于中国大陆地区，若应用类型为“游戏”且未取得版号，则无法在应用中使用 IAP 服务。非中国大陆地区可正常使用。
+
+bool GetProductsBySKU(TArray<FString> ProductSKUs, int32 Count, FGetProductsBySKUDelegate InGetProductsBySKUDelegate);
+
+FOnlineSubsystemPico* Subsystem = static_cast<FOnlineSubsystemPico*>(Online::GetSubsystem(GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::ReturnNull), PICO_SUBSYSTEM));
+ if (Subsystem && Subsystem->GetPicoIAPInterface())
+ {
+     return Subsystem->GetPicoIAPInterface()->GetProductsBySKU(ProductSKUs, Count, OnGetProductsBySKUCompleteDelegate);
+ }
+
+bool LaunchCheckoutFlowV2(const FString& SKU, const FString& Price, const FString& Currency, const FString& OuterId, FLaunchCheckoutFlow_V2Delegate InLaunchCheckoutFlow_V2Delegate);
+
+bool GetViewerPurchases(FGetViewerPurchasesDelegate InGetViewerPurchasesDelegate);
+
+bool GetSubscriptionStatus(const FString& SKU, FGetSubscriptionStatusDelegate InGetSubscriptionStatusDelegate);
+
+
+
+开发者侧
+
+用户侧
+
+*目前，审核中与生效中的订阅类 Add-on 数量不得超过 20 个。
+*支持的订阅周期有 1 月、3 月、1 年。
+*审核中或已审核通过的订阅类 Add-on 不支持删除或修改已存在的价格、订阅周期和试用期。
+*已审核通过的订阅可以通过草稿的方式新增订阅周期，修改简描述、图片视频、应用分级。
+*审核通过的订阅类 Add-on 不可下架。若需要下架，请联系 PICO 对接人员处理。
+*建议将权益相同的不同订阅周期创建在同一个订阅类 Add-on 下。
+*同一个订阅类 Add-on 下若创建了不同的订阅周期，则所有周期对应的试用期相同。即只可为单个订阅类 Add-on 中的订阅周期设置唯一的试用期。
+*若你的应用未上架，仍可以在 PICO 开发者平台为应用创建订阅类 Add-on。
+*订阅类 Add-on 当前不支持关联 DLC 文件。
+
+*订阅类商品目前不支持用户退款。
+*订阅类 Add-on 仅支持在应用内进行首次购买。
+*用户可在 PICO Store 和 PICO VR 助手中查看订阅信息、续订、或取消订阅。
+*续订的自动扣款机制如下：
+*对于月度、季度和年度订阅，系统会分别以 30 天、90 天和 365 天为周期进行自动扣款。
+*距离当前订阅周期到期还剩 3 分钟时，系统会尝试进行第一次扣款；
+*若第一次扣款失败，会提供 5 分钟的宽限期。在剩余到期时间加宽限期内，系统会尝试进行第二次扣款；
+*若第二次扣款失败，且宽限期结束，订阅进入过期状态。
+*扣款成功或失败会以短信（中国大陆）或邮件（非中国大陆）形式告知用户。
+*在试用期期间，不收取订阅费用。试用期结束后，将开始收取订阅的费用。若用户在试用期内取消订阅，则试用期到期后订阅结束，并无需支付任何费用。
+*如果多个用户共享一个 PICO 设备，只有购买了订阅类 Add-on 的账户可获取相应的权益。
+*续订会提供宽限期：
+*若因余额不足导致订阅周期内自动续费扣款失败，我们会为用户提供订阅周期外的宽限期。宽限期时长为 24 小时。
+*宽限期内，若用户需要继续订阅，则需要前往 PICO Store 或 PICO VR 助手进行支付，否则宽限期到期后，订阅将失效。
+
+订阅服务目前仅支持在非中国大陆地区使用。
+
+
+
+
+
+正式版
+
+测试版
+
+订阅周期
+
+1 月
+
+10 分钟
+
+
+
+3 月
+
+20 分钟
+
+
+
+1 年
+
+30 分钟
+
+试用期
+
+7 天
+
+7 分钟
+
+
+
+14 天
+
+14 分钟
+
+
+
+30 天
+
+30 分钟
+
+
+
+365 天
+
+365 分钟
+
+仅 PICO 商店 3.5.5 及以上版本支持订阅服务。
+
+仅 PICO VR 助手 2.0.7 及以上版本支持订阅服务。

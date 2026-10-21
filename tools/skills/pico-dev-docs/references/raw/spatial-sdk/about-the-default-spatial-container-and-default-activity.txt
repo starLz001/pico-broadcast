@@ -1,0 +1,29 @@
+关于默认空间容器和默认 Activity
+========================================
+PICO Spatial SDK 的整体设计目标是弱化对 Activity 的直接依赖，即在常规开发过程中，你无需关注 Activity 的生命周期或显式管理 Activity，而只需关注空间容器的声明和容器内部的 Composable content。
+*启动界面的特殊性
+*应用的启动界面相对特殊。由于 Android 启动机制的要求，需要在 AndroidManifest.xml 中为 LaunchActivity 注册容器相关信息。
+*一般情况下，Activity 与空间容器是一一对应的关系。应用启动时，系统首先会触发 “打开默认容器” 的逻辑，然后打开与该容器绑定的 Activity。而 “默认容器所绑定的 Activity” 即 AndroidManifest.xml 中声明的 main Activity。该 Activity 需要继承自 SpatialLaunchActivity。
+例如：
+* Kotlin 代码中这样声明：
+* 
+*AndroidManifest.xml 中这样注册：
+* 
+那么在应用启动时，当系统打开默认容器，实际启动的就是这里声明的 LaunchActivity。
+*需要特别注意的是，在 DefaultWindowContainer {} 或 DefaultStage {} 的函数体中，你编写的是 content，而不是 SpatialContainer 实例本身。
+* 
+目前，PICO Spatial SDK 也支持自定义空间容器的 Activity。详细说明参考《自定义空间容器的 Activity》。
+*关于生命周期
+*默认空间容器的生命周期先于默认 Activity，即默认空间容器的 onCreate() 会在 SpatialLaunchActivity 的 onCreate() 之前被调用。 
+此外，在 SpatialLaunchActivity 的 onCreate() 中，SDK 会调用 setContent()，用于设置在 DefaultWindowContainer {} 或 DefaultStage {} 函数体中声明的 content。
+*常见问题
+*DefaultWindowContainer {} / DefaultStage {} 设置的空间容器属于什么级别？
+DefaultWindowContainer {} 或 DefaultStage {} 设置的是默认空间容器 的 content。默认空间容器会启动默认 Activity，而不是默认 Activity 启动了默认空间容器。
+*默认空间容器的内容是如何加载到默认 Activity 中的？
+在 DefaultWindowContainer {} / DefaultStage {} 中声明的 content，会在默认空间容器启动并绑定默认 Activity 之后，被加载到该 Activity 中。
+
+**
+
+* 
+
+* 

@@ -1,0 +1,239 @@
+管理 WindowContainer 的生命周期和状态
+========================================
+你可以管理 WindowContainer 的生命周期和状态，从而更好地控制空间应用的内容显示、用户交互和资源使用。
+*管理 WindowContainer 的生命周期
+*你可以直接使用 androidx.lifecycle 来监听 WindowContainer 的生命周期。WindowContainer 的生命周期和 androidx.lifecycle 有如下对应关系：
+*
+*通常情况下，WindowContainer 生命周期中各个环节的事件触发情况如下。
+ 
+*以下代码展示如何在 Composable 方法中监听该 Composable 所在的 WindowContainer 的生命周期。
+ 
+*注：以上对应关系仅适用于一个 WindowContainer 里包含单个 Activity 的情况。
+*管理 WindowContainer 的状态
+WindowContainer 的状态定义如下：
+**
+*你可以通过以下代码获取 WindowContainer 的状态：
+ 
+*你可以通过监听 WindowContainer 的状态变化，在特定状态下执行特定操作。和 WindowContainer 的状态相关的 SpatialContainerStateEvent 事件如下：
+**
+*一般而言，WindowContainer 的状态可能会有如下情况：
+ 
+*以下代码展示如何在 Composable 方法中监听该 Composable 所在的 WindowContainer 的状态变化。
+ 
+*API 参考
+*关于 Lifecycle.Event 的相关接口及说明，参阅 Android 官方文档。
+*关于 SpatialContainerStateEvent 的相关接口及说明，参阅 PICO Spatial SDK 的 API 参考。根据你所处的地理位置选择合适的文档链接：
+*中国大陆：https://developer-cn.picoxr.com/spatial-api/index.html
+*非中国大陆：https://developer.picoxr.com/spatial-api/index.html
+
+
+
+
+Lifecycle.Event
+
+WindowContainer 的生命周期
+
+ON_CREATE
+
+WindowContainer 已被创建，但对用户还不可见。
+*该事件在 WindowContainer 首次打开时首先被触发。如果需要再次触发该事件，需要关闭 WindowContainer 后再重新打开。
+
+ON_START
+
+WindowContainer 已启动并对用户可见，但还未进入前台交互状态。
+*该事件在 WindowContainer 打开时被触发。如果 WindowContainer 首次打开，该事件会紧跟着 ON_CREATE 事件触发；如果 WindowContainer 是从后台重新打开，则该事件会首先被触发。
+
+*ON_RESUME
+
+表示 WindowContainer 进入前台交互状态。
+*该事件紧跟着 ON_START 事件，在 WindowContainer 打开时被触发，常用于需要用户交互的操作，如启动相机预览、开始位置更新、恢复音视频播放等。
+
+ON_PAUSE
+
+表示 WindowContainer 仍然可见，但已经失去焦点。
+*该事件会在以下两种情况下被触发：
+*用户点击标题栏上的最小化按钮，WindowContainer 即将被置于后台。
+*用户点击标题栏上的关闭按钮，WindowContainer 即将被关闭。
+*常用于暂停相关的交互性操作，如暂停动画、暂停音视频播放、保存一些临时 UI 状态等。
+
+ON_STOP
+
+表示 WindowContainer 已经完全不可见。
+*该事件紧跟着 ON_PAUSE 事件，在 WindowContainer 即将被置于后台或关闭时被触发，常用于释放一些资源，如注销监听器、停止仅在界面可见时需要运行的任务等。
+
+ON_DESTROY
+
+表示 WindowContainer 即将被销毁。
+*当用户点击标题栏上的关闭按钮时，会先依次触发 ON_PAUSE 和 ON_STOP 事件，最后触发 ON_DESTROY 事件。
+
+[启动应用]
+ON_CREATE → ON_START → ON_RESUME
+
+[用户点击最小化按钮将 WindowContainer 置于后台]
+ON_PAUSE → ON_STOP
+
+[用户点击应用图标重新打开 WindowContainer]
+ON_START → ON_RESUME
+
+[用户点击关闭按钮；或 WindowContainer 通过其他方式被关闭，如 closeWindowContainer 函数]
+ON_PAUSE → ON_STOP → ON_DESTROY
+
+@Composable
+fun LifecycleExample() {
+    val lifecycleOwner = LocalLifecycleOwner.current
+    DisposableEffect(key1 = Unit) {
+        val observer = LifecycleEventObserver { _, event ->
+            Log.i("LifecycleExample", "onLifecycleEvent: $$event")
+            if (event == Lifecycle.Event.ON_CREATE) {
+            // 执行自定义逻辑
+            } else if (event == Lifecycle.Event.ON_START) {
+            // 执行自定义逻辑
+            } else if (event == Lifecycle.Event.ON_RESUME) {
+            // 执行自定义逻辑
+            } else if (event == Lifecycle.Event.ON_PAUSE) {
+            // 执行自定义逻辑
+            } else if (event == Lifecycle.Event.ON_STOP) {
+            // 执行自定义逻辑
+            } else if (event == Lifecycle.Event.ON_DESTROY) {
+            // 执行自定义逻辑
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
+    Box(modifier = Modifier.fillMaxSize().background(Color.White),contentAlignment = Alignment.Center) {
+        Text(text = "LifecycleExample", fontSize = 72.sp)
+    }
+}
+
+
+
+属性
+
+类型
+
+描述
+
+isFocused
+
+State<Boolean>
+
+当前 WindowContainer 是否获得焦点。
+
+isOnstage
+
+State<Boolean>
+
+当前 WindowContainer 是否完全处于视角内，且未被遮挡。
+*为 true 时， 当前 WindowContainer 未被其他 WindowContainer 遮挡，且无需移动视角即可完整看到该 WindowContainer。
+
+isSighted
+
+State<Boolean>
+
+当前 WindowContainer 是否进入视角内（任意像素可见）。
+*只要有部分像素进入视角内即为 true。
+
+@Composable
+fun GetContainerStateExample() {
+    val isFocus by LocalSpatialContainerStateManager.current.isFocused
+    val isOnstage by LocalSpatialContainerStateManager.current.isOnstage
+    val isSighted by LocalSpatialContainerStateManager.current.isSighted
+    Column {
+        Text(text = "isFocus = $$isFocus")
+        Text(text = "isOnstage = $$isOnstage")
+        Text(text = "isSighted = $$isSighted")
+    }
+}
+
+
+
+事件
+
+描述
+
+ON_FOCUSED
+
+该事件在 WindowContainer 获得焦点时触发。WindowContainer 打开时会自动获得焦点，因此也会立即触发此事件。
+
+ON_UNFOCUSED
+
+该事件在 WindowContainer 失去焦点时触发。
+
+*ON_STAGED
+
+该事件在 WindowContainer 完全处于视角内，且未被遮挡时触发。
+
+ON_UNSTAGED
+
+该事件在 WindowContainer 不再满足 “完全可见且未被遮挡” 的条件时触发。WindowContainer 此时可能部分处于视角外，或自身被其他内容遮挡。
+
+ON_SIGHTED
+
+该事件在 WindowContainer 的任何一部分开始进入视角时触发。
+
+ON_UNSIGHTED
+
+该事件在 WindowContainer 完全离开视角范围，完全不可见时触发。
+
+[启动应用]
+ON_FOCUSED
+
+[在所监听的 WindowContainer 获得焦点的状态下，用户按下手柄的 Home 键，弹出 Launcher]
+ON_UNFOCUSED → ON_UNSTAGED
+
+[在所监听的 WindowContainer 获得焦点的状态下，用户点击最小化按钮将 WindowContainer 置于后台]
+ON_UNFOCUSED
+
+[在所监听的 WindowContainer 获得焦点的状态下，用户点击关闭按钮；或该 WindowContainer 通过其他方式被关闭，如 closeWindowContainer 函数]
+ON_UNFOCUSED
+
+[用户点击应用图标重新打开 WindowContainer]
+ON_FOCUSED
+
+[在所监听的 WindowContainerA 获得焦点的状态下，用户打开另一个 WindowContainerB，导致 WindowContainerA 被遮挡]
+ON_UNFOCUSED → ON_UNSTAGED
+
+[在所监听的 WindowContainerA 获得焦点的状态下，用户打开另一个 WindowContainerB，且未遮挡住 WindowContainerA]
+ON_UNFOCUSED
+
+[在所监听的 WindowContainerA 获得焦点的状态下，用户选择另一个已经打开的 WindowContainerB（遮挡住 WindowContainerA），并来回拖动 WindowContainerB 至 WindowContainerA 的前面]
+ON_UNFOCUSED → ON_UNSTAGED →  ON_STAGED  →  ON_UNSTAGED  → ...
+|___________选择___________|__拖动并完全露出__|__拖动并遮挡__| ...
+
+[在所监听的 WindowContainerA 获得焦点的状态下，用户选择另一已经打开的 WindowContainerB（未遮挡住 WindowContainerA），并来回拖动 WindowContainerB 至 WindowContainerA 的前面] 
+ON_UNFOCUSED →  ON_UNSTAGED →  ON_STAGED  → ...
+|____选择____|___拖动并遮挡___|_拖动并完全露出_| ...
+
+[在所监听的 WindowContainer 失去焦点的状态下，用户重新选中该 WindowContainer]
+ON_FOCUSED → ON_STAGED
+
+[用户转动视角直至 WindowContainer 完全离开视野范围；然后重新回转视角直至视野内出现 WindowContainer 的一部分]
+ON_UNSIGHTED → ON_SIGHTED
+
+@Composable
+fun ObserveContainerStateExample() {
+    val stateOwner = LocalSpatialContainerStateOwner.current
+    DisposableEffect(key1 = Unit) {
+        val observer: SpatialContainerStateObserver = object : SpatialContainerStateObserver {
+            override fun onStateChanged(
+                source: SpatialContainerStateOwner,
+                event: SpatialContainerStateEvent
+            ) {
+                Log.d("SpatialContainerState", "onStateChange: $$event")
+                if (event == SpatialContainerStateEvent.ON_FOCUSED) {
+                    // 当容器获得焦点时，执行自定义逻辑
+                } else if (event == SpatialContainerStateEvent.ON_UNFOCUSED) {
+                    // 当容器失去焦点时，执行自定义逻辑
+                }
+            }
+        }
+        stateOwner.stateObservable.addObserver(observer)
+        onDispose {
+            stateOwner.stateObservable.removeObserver(observer)
+        }
+    }
+    Box(modifier = Modifier.fillMaxSize().background(Color.White),contentAlignment = Alignment.Center) {
+        Text(text = "ObserveContainerStateExample", fontSize = 72.sp)
+    }
+}

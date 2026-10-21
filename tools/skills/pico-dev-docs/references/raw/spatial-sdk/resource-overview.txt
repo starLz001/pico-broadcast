@@ -1,0 +1,346 @@
+资源概览
+========================================
+在空间应用开发中，资源是构建场景的核心组成部分，它管理着网格、材质、纹理、音频等关键数据。合理使用和管理资源不仅决定了场景的渲染效果和交互性能，也直接影响应用的内存占用与稳定性。因此，理解资源的类型和管理方式对于高效开发和优化空间应用至关重要。
+*资源的类型
+*PICO Spatial SDK 支持以下类型的资源： 
+*
+*内置资源库
+*Spatial Editor 中提供了内置的模型、材质、音频等资源，你可以直接在项目内使用。
+ 
+*资源的加载
+*加载网格资源
+*你可以从以下内容中加载或获取网格资源：
+*3D 模型：加载模型之后，通过 ModelComponent 实例获取网格：modelComponent.mesh。详情参考《模型》。
+*网格文件：通过 Mesh.load 方法加载 .obj 格式的文件，详情参考《网格》。
+*平面锚点：通过 MeshResource.loadFromPlaneAnchor 从空间平面锚点生成网格，详情参考《平面检测》。
+*网格锚点：通过 MeshResource.loadFromMeshAnchor 从空间网格锚点生成网格，详情参考《空间网格》。
+*加载纹理资源
+*你可以通过 TextureResource.load 方法直接加载纹理文件，详细的使用方式请参考《纹理》。
+*加载材质资源
+*你可以通过以下方式加载材质资源：
+*加载模型之后，通过 ModelComponent 实例获取 materials 列表，进而获取到对应的材质资源，详情参考《模型》。
+*调用 assetBundle.loadMaterial 从 Spatial Editor 项目中加载无光照材质（UnlitMaterial）、基于物理的渲染材质（PhysicallyBasedMaterial）和 ShaderGraph 材质（ShaderGraphMaterial），详情参考《AssetBundle》。
+*调用 ShaderGraphMaterial.loadFromAssetBundle 加载 Spatial Editor 项目中的 ShaderGraphMaterial，详情参考《ShaderGraphMaterial》。
+*加载模型资源
+*你可以通过以下方式加载模型资源，并得到返回的 entity：
+*通过 assetBundle.loadModel 将 Spatial Editor 项目中的场景（.usda 文件）加载为模型，详情参考《AssetBundle》。
+*通过 Entity.load 方法加载模型，支持 URI、InputStream、AssetBundle 等多种数据源，详情参考《模型》。
+*加载动画资源
+*你可以在加载模型之后，通过 entity.findSkinnedMeshEntity() 获取模型的蒙皮网格，然后通过蒙皮网格获取模型的骨骼动画资源，详情参考《骨骼动画》。
+*加载音频资源
+*你可以通过以下方式加载音频资源：
+*通过 assetBundle.loadAudioResource 从 Spatial Editor 项目中加载对应的音频资源，详情参考《AssetBundle》。
+*通过 AudioResource.load 方法加载音频资源，支持 URI、内存、AssetBundle 等多种数据源，详情参考《音频》。
+*加载视频文件
+*你可以使用 CypressMediaPlayer 类的实例，通过 assetFileDescriptor 加载 assets 文件夹中的视频文件，详情参考《视频文件》。
+*加载 AssetBundle
+*AssetBundle 作为多种资源（材质、模型、音频等）的容器，将各种资源打包放入 .bundle 文件中，其本身也是一种资源。你可以通过 AssetBundle.load 方法加载 AssetBundle，获得其实例。详情参考《AssetBundle》。
+*资源的创建
+*创建网格资源
+*你可以通过 MeshResource.createXXX 系列方法创建基础几何网格，或使用 MeshInstancesResource.create 生成实例化网格集合，详情参考《网格》。
+*创建纹理资源
+*你可以通过两种方式创建纹理资源：
+*通过 bitmap 创建：你可以调用构造函数 TextureResource() 或静态函数 TextureResource.create(Bitmap)，从 bitmap 数据生成纹理。
+*通过 SDR 图像创建：你可以调用 TextureResource(String, LoadType) 构造函数，从 assets 目录或存储中，加载指定路径中的 SDR 图像（支持的格式包括 PNG、JPEG、WebP 和 KTX），然后生成纹理。
+*详情参考《纹理》。
+*创建材质资源
+*你可以通过类的静态函数，创建 UnlitMaterial和 PhysicallyBasedMaterial：
+*通过调用 UnlitMaterial.create(BlendingMode) 创建 UnlitMaterial。
+*通过调用 PhysicallyBasedMaterial.create(BlendingMode) 创建 PhysicallyBasedMaterial。
+*详情参考《材质》。
+*创建 ModelEntity
+*获得网格资源和材质后，你可以通过 ModelEntity(MeshResource, Material) 将网格与材质绑定，然后实例化模型实体。该函数将创建带有 ModelComponent 的 entity 实例，并将其返回。详情参考《模型》。
+*创建动画资源
+*你可以通过调用 AnimationResource.generateWithTweenAnimation 创建补间动画资源，详情参考《补间动画》。
+*创建物理相关的资源
+*形状资源和物理材质影响碰撞检测和碰撞响应，你可以通过以下方式进行创建：
+*形状资源：通过 ShapeResource.createXXX 系列方法构造物理碰撞形状。
+*物理材质资源：通过 PhysicsMaterialResource(staticFriction: Float, dynamicFriction: Float, restitution: Float) 定义物体的静摩擦、滑动摩擦、弹性系数。
+*详情参考《添加碰撞和外部作用》。
+*资源的使用与释放
+*在空间应用中，资源是一种特殊的数据结构，用于存储和管理应用中的核心数据资产。通过在 ECS 架构中使用资源，可以高效地搭建和展示整个 3D 场景。
+*然而，在 3D 场景中，资源通常需要占用较多内存。如果这些资源在不使用时无法及时释放，将严重影响应用性能，甚至可能导致程序崩溃。由于 Java 对象生命周期管理的限制，资源无法完全依赖实例的自动回收。因此，PICO Spatial SDK 对资源的使用进行了特殊设计，确保应用中的资源能在必要时机被正确释放。
+*Resource 类中的属性和函数
+*Resource 类包含以下属性和函数：
+*
+*资源使用异常
+*当资源已经被释放后，再使用它时 PICO Spatial SDK 会抛出异常。
+ 
+*生命周期管理
+*资源的生命周期依赖其使用者。
+*当资源被材质引用时，其生命周期由该材质决定：
+* 
+*entity 会通过 ModelComponent 持有所需材质和模型的引用计数，销毁时自动释放：
+* 
+*持久化资源
+*通过将资源持久化，可以使其不依赖于使用者的生命周期。
+ 
+*主动释放资源
+*对于未使用的资源，调用 close() 会立即将其释放。
+* 
+*对于被持久化的资源，即使没有任何使用者，也需要调用 close() 才能将其完全释放。
+* 
+*调用 close() 不会影响原来已经使用该资源的使用者，该资源会随使用者的释放而被释放。
+ 
+*会消耗资源的函数
+*目前，PICO Spatial SDK 中的以下两个函数会消耗掉传入的非 global 资源，并在使用后立即释放：
+* MassProperties.generateByShapesAndMass()
+* MassProperties.generateByShapesAndDensity()
+ 
+*可能导致资源泄漏的情况
+*如果在局部作用域内创建资源，但没有将其用于任何 entity 或材质，资源将无法被管理，可能造成泄漏。
+* 
+*被持久化的资源未调用 close() 进行释放。
+* 
+*资源被提前释放而导致无法使用的情况
+*在同一作用域中，如果资源随其使用者被提前释放，该资源将变为无效，后续使用会抛异常。
+ 
+*ECS 架构中的最佳实践
+使用同一个材质资源，在场景中动态生成不定形状的物体，统一调整他们的颜色。
+ 
+整个场景中有临时创建的模型资源和动画资源，它们都会随着 entity 的销毁而被释放，持久化的资源会通过调用 close() 而被释放。
+*释放 AssetBundle 及其加载的资源
+*关于如何释放 AssetBundle 加载的资源，以及释放 AssetBundle 自身，参考《AssetBundle》。
+
+
+
+
+*资源类型
+
+*类
+
+*描述
+
+*网格 
+
+MeshResource
+
+用于定义物体的几何数据，多用于渲染和动画，用于物理模拟时一般会简化。
+
+
+
+MeshInstancesResource
+
+用于定义同一几何体的多个实例化数据，支持高效渲染大量相同形状的物体，通过共享单个网格数据，存储变换矩阵、材质变体（尽可能复用材质）等实例特定属性，来实现GPU实例化渲染优化，显著减少draw call数量，提升渲染性能。
+
+*纹理贴图 
+
+TextureResource
+
+用于管理纹理贴图资源，目前支持 PNG、JPG 和 JPEG 格式的图片。
+
+渲染材质
+
+UnlitMaterial
+
+用于不受光照影响的渲染，适用于 2D 图形和特定的 3D 效果。
+
+
+
+PhysicallyBasedMaterial
+
+即 PBR（基于物理的渲染）材质，用于模拟真实世界的光照、反射、折射等光学现象，适用于 3D 渲染。
+
+
+
+ShaderGraphMaterial
+
+基于 Shader Graph 创建的材质。
+
+模型
+
+/
+
+3D 模型，由网格和材质组成，可以是简单的几何体、也可以是精细的角色模型、复杂的 3D 场景等。PICO Spatial SDK 支持 USD 和 glTF 格式的模型。
+
+*动画 
+
+AnimationResource
+
+用于播放作用于某个 Entity 实例的动画。
+
+*
+*物理相关
+
+ShapeResource
+
+用于在碰撞检测和物理模拟中描述物体的物理形状，通常会简化物体的几何。
+
+
+
+PhysicsMaterialResource
+
+用于定义物体在物理模拟中的材料属性，影响物体对物理作用的反应。
+
+*音频相关
+
+AudioResource
+
+用于音频播放，包括普通音频和空间音频。
+
+*视频相关 
+
+VideoMaterial
+
+用于将视频作为材质应用到模型上。
+
+AssetBundle
+
+AssetBundle
+
+Spatial Editor 打包的、组合了各种类型资源的捆绑包。你可以按照项目需求将网格、纹理贴图、材质、音频等资源组合在 AssetBundle 中，从而高效地组织和加载资源。
+
+
+
+名称
+
+类型
+
+描述
+
+valid
+
+属性
+
+判断当前资源是否处于有效状态。当资源被释放后，该属性的值为 false。
+
+toGlobal()
+
+函数
+
+将资源持久化。资源被持久化后，除非调用 close()，否则该资源不会被释放。
+
+close()
+
+函数
+
+解除资源的持久化。当资源未被引用时，立即释放。
+
+val texture = TextureResource("XXX.png")
+texture.close()
+val physicallyBasedMaterial= PhysicallyBasedMaterial.create() 
+physicallyBasedMaterial.setBaseColorTexture(texture) // 抛出 IllegalStateException
+
+val texture = TextureResource("XXX.png")
+val physicallyBasedMaterial = PhysicallyBasedMaterial.create() 
+physicallyBasedMaterial.setBaseColorTexture(texture) // physicallyBasedMaterial 实例将持有纹理的引用计数
+val unlitMaterial = UnlitMaterial.create()
+unlitMaterial.setBaseColorTexture(texture) // unlitMaterial 实例将持有纹理的引用计数
+// physicallyBasedMaterial 和 unlitMaterial 被释放时，会释放对应的纹理
+
+val texture = TextureResource("XXX.png")
+val physicallyBasedMaterial = PhysicallyBasedMaterial.create() 
+physicallyBasedMaterial.setBaseColorTexture(texture)
+val sphere = MeshResource.createSphere(10f)
+val entity = ModelEntity(sphere, physicallyBasedMaterial) // entity 将持有材质和模型的引用计数
+entity.destroy() // entity 被销毁后，对应所有的资源都将被按引用情况释放
+
+val texture = TextureResource("XXX.png")
+texture.toGlobal()
+{
+    val physicallyBasedMaterial = PhysicallyBasedMaterial.create() 
+    physicallyBasedMaterial.setBaseColorTexture(texture)
+    val sphere = MeshResource.createSphere(10f)
+    val entity = ModelEntity(sphere, physicallyBasedMaterial) // entity 将持有材质和模型的引用计数
+    entity.destroy() // entity 被销毁后，材质和模型将被释放，贴图资源仍可继续使用
+}
+{
+    val unlitMaterial = UnlitMaterial.create()
+    unlitMaterial.setBaseColorTexture(texture) 
+}
+
+val portalMaterial = PortalMaterial()
+portalMaterial.close() // 资源没有使用者，立即将其释放
+portalMaterial.valid is false
+
+val audioResource =
+    AudioResource.load(
+        "test",
+        "asset://xxx.wav",
+        LoadType.FROM_ASSETS
+    )
+audioResource.toGlobal()
+val entity = Entity()
+entity.playAudio(audioResource)
+entity.destroy() // 音频是被持久化的资源，不会随 entity 的销毁而被释放
+audioResource.close() // 音频资源将被取消持久化并释放
+
+val texture = TextureResource("XXX.png")
+texture.toGlobal()
+val physicallyBasedMaterial = PhysicallyBasedMaterial.create() 
+physicallyBasedMaterial.setBaseColorTexture(texture)
+// 释放 BaseColorTexture，被释放后，BaseColorTexture 将不再可用，但已经应用了 BaseColorTexture 的材质仍然持有该资源的引用计数
+texture.close()
+// 释放 PhysicallyBasedMaterial，其持有的纹理也将被同步释放
+physicallyBasedMaterial.close()
+
+val shapeResource = ShapeResource.createBox(Vector3(1f, 1f, 1f))
+// MassProperties不具备储存资源的能力，将资源完全转换为了数据，所以将消耗掉该资源
+val massProperties = MassProperties.generateByShapesAndDensity(listOf(shapeResource), 1f)
+shapeResource.valid is false 
+// 如果需要持续使用该资源需要提前把资源持久化
+
+val mesh = MeshResource.createCone(2f, 2f)
+val entity = ModelEntity(MeshResource.createCone(2f, 2f), UnlitMaterial.create())
+entity.destroy()
+// mesh 没有被使用，出了作用域后仍存在未释放的资源
+
+val mesh = MeshResource.createCone(2f, 2f)
+mesh.toGlobal()
+val entity = ModelEntity(mesh, UnlitMaterial.create())
+entity.destroy() // 材质释放，但持久化的 mesh 仍存在
+
+val mesh = MeshResource.createCone(2f, 2f)
+val material = UnlitMaterial.create()
+val entity = ModelEntity(mesh, material)
+entity.destroy() //  模型和材质随 entity 被释放
+val entity2 = ModelEntity(mesh, material) // 使用已释放的资源会抛出异常
+mesh.valid is false 
+material.valid is false 
+
+// 创建持久化材质
+val unlitMaterial = UnlitMaterial.create()
+unlitMaterial.toGlobal()
+
+// 在 System 中更新材质的颜色
+class MaterialSystem : System() {
+    override fun update(context: SceneUpdateContext) {
+        val randomColorValueR = xxxx
+        unlitMaterial.setBaseColor(Color4(randomColorValueR, 0, 0, 1))
+    }
+}
+
+// 创建 cone 并播放 scale 动画，动画播放完毕后销毁 entity
+{
+    val entity = ModelEntity(MeshResource.createCone(1f, 1f), unlitMaterial)
+    val animation =
+        TweenAnimation.createTweenAnimation(
+            bindTarget = AnimationBindTarget.bindScale(),
+            from = Vector3(0.5F),
+            to = Vector3(2F),
+            duration = 2F
+        )
+    val sub = entity.scene?.subscribe<AnimationEvents.Completed>(entity) { 
+        entity.destroy()
+    }
+    entity.playAnimation(AnimationResource.generateWithTweenAnimation(animation))
+}
+
+// 创建 box 并播放 rotation 动画，动画播放完毕后销毁 entity
+{
+*    val entity = ModelEntity(MeshResource.createBox(Vector3(1f)), unlitMaterial)
+    val animation =
+        TweenAnimation.createTweenAnimation(
+            bindTarget = AnimationBindTarget.bindRotation(),
+            from = EulerAngles(0f, 0f, 0f),
+            to = EulerAngles(0f, 90f, 0f),
+            duration = 3F
+        )
+    val sub = entity.scene?.subscribe<AnimationEvents.Completed>(entity) { 
+        entity.destroy()
+    }
+    entity.playAnimation(AnimationResource.generateWithTweenAnimation(animation))
+}
+
+// 释放持久化材质
+unlitMaterial.close()

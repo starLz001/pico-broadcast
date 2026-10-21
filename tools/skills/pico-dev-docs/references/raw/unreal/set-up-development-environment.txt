@@ -1,0 +1,81 @@
+准备开发环境
+========================================
+PICO Unreal Integration SDK 支持基于虚幻引擎开发运行在 PICO 设备上的 XR 应用。本文档介绍置开发环境的具体步骤。
+*准备软硬件
+*你需要按照开发 PICO 应用的硬件和软件规格要求准备开发环境。
+*准备安卓开发环境
+PICO VR 一体机基于安卓系统，你需要将项目打包成 APK 文件，再安装到一体机中进行测试。为了确保你能在虚幻引擎中成功打包 APK 文件，请参考 UE 官方文档 Android 开发要求和设置 Android SDK 和 NDK 配置。以下为示例步骤。
+*安装 Android Studio 
+根据 UE 官方文档 Android 开发要求选择合适的 Android Studio 版本，点击此处下载 Android Studio 并按照提示进行安装。在出现如下配置弹窗时，你可取消勾选 Android Virtual Device （安卓虚拟机）。点击 Next，然后按照默认设置进行安装。 
+* 
+ 
+*设置 Android Studio 
+*打开 Android Studio，点击 More Actions > SDK Manager，进入 Settings 界面。 
+* 
+*在 Settings 界面左侧导航栏的 Android SDK 目录下，确认 Android SDK Location 为你需要的安装路径。 
+*在 SDK Platforms 面板下，根据你所下载的引擎选择适合的 Android API Level。 
+**
+* 
+*切换到 SDK Tools 面板，勾选此面板右下角的 Show Package Details。 
+*根据你所下载的引擎选择适合的 Android SDK Build-Tools，并卸载更高版本的 Android SDK Build-Tools。
+**
+* 
+* 
+*对于 NDK，参考 UE 官方说明，根据你所下载的引擎版本，选择要求的 NDK 版本。
+* 
+*对于 Android SDK Command-line tools，勾选最新版本即可。
+* 
+*点击 Apply 进行下载。
+*下载完毕后，请确认 SDK、NDK 是否在正确的路径下（SDK 的路径即为 Android SDK Location； NDK 应在 SDK 目录下）。
+*安装 JDK
+*UE 4.27：
+*Android Studio 安装后自带 JRE（Java 运行时环境），你无需再安装 JDK。若你要使用自己安装的 JRE，你需安装 1.8.0 或以上版本的 JDK。若你安装了 1.8.0 版本之前的 JDK，你需要全部卸载并安装新版本。
+*按以下步骤卸载 JDK：
+*进入 控制面板 > 程序 > 程序和功能。
+*卸载所有以 Java 开头的程序。例如： Java SE Development Kit、 Java SE Runtime 等等。
+*按以下步骤安装 JDK：
+*前往 Java JDK 下载地址。
+*在 Java SE Development Kit {x} downloads 下，选择 Windows，然后点击 x64 Installer 的下载链接。例如 jdk-8u351_windows-x64_bin.exe。
+*运行下载的安装程序，按照提示完成安装（接受所有的默认设置）。
+*UE 5.5：
+*Java 运行时：OpenJDK 17.0.6 2023-01-17。
+*UE 5.6：
+*Java 运行时：OpenJDK 17.0.6 2023-01-17。
+
+强烈建议使用默认安装位置。如果选择自定义安装位置， SetupAndroid 脚本将无法找到文件，除非你预先编辑了该文件。
+
+
+
+引擎版本
+
+推荐 Android API Level
+
+UE 4.27
+
+29
+
+UE 5.5
+
+34
+
+UE 5.6
+
+34
+
+
+
+引擎版本
+
+推荐 Android SDK Build-Tools 版本
+
+UE 4.27
+
+30.0.3
+
+UE 5.5
+
+*34.0.0
+
+UE 5.6
+
+*34.0.0

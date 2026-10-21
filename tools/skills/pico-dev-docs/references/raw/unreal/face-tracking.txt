@@ -1,0 +1,1529 @@
+面部追踪
+========================================
+面部追踪（Face Tracking），即在检测到人脸的前提下，在后续帧中持续捕捉人脸位置和面部表情等信息的技术。该技术通过实时采集或离线接收图像数据，预测面部表情动画系数（BlendShape），可驱动 3D 角色的面部表情动画。
+*在现实世界中，面部表情可以表现人物内心的情绪和情感，是十分重要的非语言社交手段。同样地，在虚拟世界中，若面部模型能及时且准确的根据用户的实际面部表情变化而做出相应的面部动作，将能使应用内互动更加逼真，提升临场感。
+PICO 4 Pro 和 PICO 4 Enterprise 一体机安装了面部追踪相机，可检测和捕捉用户的面部表情。PICO SDK 的面部追踪接口会将相机捕捉到的表情数据抽象成 52 维面部表情动画系数（BlendShapes）数据和 20 维 Viseme 数据，覆盖眼部、唇部、舌部、鼻部、面颊、额头和下巴区域，可驱动人脸模型做出微笑、眨眼、皱眉等各种动作。
+*面部追踪模式
+面部追踪提供以下四种模式：
+*
+*环境要求
+不同的面部追踪模式依赖的 SDK 版本、PICO 设备版本与型号不同，具体依赖情况如下表：
+ 
+*
+*使用面部追踪
+要在应用中使用面部追踪功能，你需要在 UE 编辑器中启用该能力，并在应用中配置接口。
+*前提条件
+你已在项目中导入 PICO Unreal Integration SDK。详情参考详情参考 导入 PICO SDK。
+*在编辑器中为项目启用面部追踪能力
+*在 Unreal 编辑器中创建一个项目或打开已有项目。
+*在编辑器左上角，点击 编辑（Edit）> 项目设置（Project Settings）> 插件（Plugins）> PICOXR Settings。
+*移动到 Feature 选项卡下，勾选 Enable Face Tracking。
+* 
+你已为应用开启面部追踪能力。
+*查询当前设备支持的面部追踪模式
+不同 PICO 设备支持不同的面部追踪模式。你可使用 GetFaceTrackingSupported 接口查询用户的设备是否支持面部追踪能力及支持哪些模式。
+* 
+*动态启停面部追踪并切换面部追踪模式
+你可使用 StartFaceTracking 和 StopFaceTracking 接口动态开启和停止面部追踪能力。要切换面部追踪模式，可在调用 StopFaceTracking 时选择 Pause，再调用 StartFaceTracking 选择一个新的模式。此方式可减少面部追踪启停的耗时，更快获取面部追踪数据。
+* 
+其中，Start Mode 对应的 EPXRFaceTrackingMode 枚举如下：
+ 
+*获取当前面部追踪模式和状态
+你可使用 GetFaceTrackingState 查询面部追踪能力是否开启、当前面部追踪模式等。
+* 
+如果追踪失败，将返回错误码提示，错误码枚举如下：
+ 
+*获取面部追踪数据
+你可使用 GetFaceTrackingData 获取面部追踪数据。目前仅支持将 Display Time 设置为 0 作为预测时间，即获取当前帧的眼动追踪数据。
+GetFaceTrackingData 返回一个 72 定长的数组，对应 52 维面部表情动画系数（BlendShapes）数据和 20 维 Viseme 数据共 72 维表情数据。你可查看本文档 BlendShape & Viseme 说明部分了解 EPXRFaceBlendShape 枚举值及每个值对应的含义。
+* 
+*驱动骨骼模型
+你可使用获取到的面部追踪数据驱动骨骼模型的混合变形。参考以下步骤：
+*在 UE 编辑器中打开你的项目。
+*在 内容浏览器（Content Drawer）中，找到并双击目标 VRPawn，进入 VRPawn 的编辑窗口。
+*为你的 VRPawn 添加一个你预先准备好的带有面部表情 BlendShape 的 Skeletal Mesh Component。在下图示例中，该 Component 被命名为 ceres_avatar_rig。
+*为你的 VRPawn 添加一个 PICO Face Tracking Component 组件。
+*在 PICO Face Tracking Component 的 细节（Details）面板下，将 FTTarget Mesh Component Name 修改为上述 Skeletal Mesh Component 的名称。
+*在 Blend Shape Name Mapping 选卡下，中添加面部表情的数据映射。例如，你可将面部追踪返回的数据之一 JawOpen 映射到骨骼模型中的 jawDrop 上。
+*添加完毕后，你就可以使用面部追踪数据驱动骨骼模型的混合变形了。
+* 
+*调用接口示例
+以下为调用面部追踪相关接口的蓝图示例：
+* 
+*可选：在设备端开启表情模拟
+若你需要在一体机上体验或调试 “面部追踪” 功能，则需要为设备开启 “面部追踪” 能力，步骤如下： 
+*启动 VR 一体机。 
+*前往 设置 > 实验室 > 表情模拟。 
+*打开 表情模拟 开关。 
+* 
+*AndroidManifest 权限声明
+根据所启用的面部追踪模式，SDK 会自动在 AndroidManifest.xml 文件中写入相关权限。若非必要，请不要修改相关的权限声明内容。如果使用自定义 Manifest，请根据相应功能添加对应的权限声明。 
+*
+*BlendShape & Viseme 说明
+*EPXRFaceBlendShape 枚举
+* 
+*BlendShapes
+52 维面部表情系数（BlendShapes）用于描述面部器官的移动。下表为 0 至 51 维 EPXRFaceBlendShape 枚举说明。
+**
+*Viseme
+PICO 的 Lipsync 能力运用了 20 维 Viseme 元素对音素进行视觉模拟，每个 Viseme 元素描述了一组特定的音素的嘴形，最终可以将发音映射为特定的口型。下表为 52 至 71 维 EPXRFaceBlendShape 枚举说明。
+**
+*接口列表
+以下为 SDK 2.3.0 及之后版本提供的面部追踪接口，依赖 PICO 设备系统 5.7.0 或之后版本。要了解 API 详情，查阅 API 参考。
+*
+
+
+
+
+模式
+
+接口参数名称
+
+是否使用面部追踪相机
+
+是否使用麦克风
+
+驱动部位
+
+适用素材
+
+BlendShapes & Viseme 数据使用情况
+
+图像驱动模式
+
+PXR FTM FACE
+
+是
+
+否
+
+整个面部，包括嘴部、眼部。由于摄像头角度限制，对于嘴部的细微动作驱动不够灵敏。
+
+ARKit 格式的头部模型。
+
+
+使用 0 至 51 维面部 BlendShapes。
+
+
+音频驱动模式
+
+
+PXR FTM LIPS
+
+
+否
+
+
+是 
+
+嘴部，同时增加眨眼、挑眉的随机动画。
+
+
+ARKit 格式的头部模型或支持采用 Viseme 驱动的嘴型。
+
+该模式下，可以选择使用 0 至 51 维 Blendshape 驱动 ARKit 风格素材，也可以选择使用 52 至 71 维 Blendshape 驱动 Viseme 风格素材。
+
+融合驱动 Viseme 模式
+
+PXR FTM FACE LIPS VIS
+
+是 
+
+
+是 
+
+整个面部，包括嘴部、眼部。
+
+*ARKit 格式头模和 Viseme 口型嘴部。如果要使用该模式，素材必须同时包括 ARKit 嘴部动画和 Viseme 动画。
+
+使用 0 至 71 维 BlendShapes，其中第 52 至 71 维用于驱动 Viseme 风格素材。如果只使用前 52 维数据，会出现一发声就嘴巴紧闭的现象。
+
+融合驱动 Blendshapes 模式
+
+PXR FTM FACE LIPS BS
+
+是
+
+是
+
+整个面部，包括嘴部、眼部。
+
+ARKit 格式头模。适用于没有制作 Viseme 的素材。
+
+使用 0 至 51 维面部 BlendShapes。其中唇部数据的输出格式为 BlendShapes，算法内部已经将 Viseme 的输出融入到前 52 维 Blendshapes 的结果中。
+
+注意
+面部追踪相关接口在 SDK 2.3.0 版本进行了升级改造，推荐你升级 SDK 至 2.3.0 或以上版本、升级 PICO 设备系统至 5.7.0 或以上版本使用最新的面部追踪接口。
+
+
+
+面部追踪模式
+
+SDK 版本
+
+PICO 设备系统版本
+
+设备型号
+
+图像驱动模式
+
+2.1.5 及以上
+
+5.5.0 及以上
+
+PICO 4 Pro 和 PICO 4 Enteprise
+
+音频驱动模式
+
+2.1.5 及以上
+
+5.5.0 及以上
+
+PICO Neo3 和 PICO 4 系列
+
+融合驱动 Viseme 模式
+
+2.1.5 及以上
+
+5.5.0 及以上
+
+PICO 4 Pro 和 PICO 4 Enteprise
+
+融合驱动 Blendshapes 模式
+
+2.3.0 及以上
+
+5.7.0 及以上
+
+PICO 4 Pro 和 PICO 4 Enteprise
+
+UENUM(BlueprintType)
+enum class EPXRFaceTrackingMode : uint8
+{
+    PXR_FTM_NONE          = (uint8)-1,   /// 不开启面部追踪
+    PXR_FTM_FACE          = 0,   /// 图像驱动模式
+    PXR_FTM_LIPS          = 1,  /// 音频驱动模式
+    PXR_FTM_FACE_LIPS_VIS = 2,  /// 融合驱动 Viseme 模式 
+    PXR_FTM_FACE_LIPS_BS  = 3   /// 融合驱动 Blendshapes 模式
+};
+
+UENUM(BlueprintType)
+enum class EPXRTrackingStateCode : uint8
+{
+    PXR_MT_SUCCESS                = 0,         // 追踪成功
+    PXR_MT_FAILURE                = (uint8)-1, // 追踪失败
+    PXR_MT_MODE_NONE              = (uint8)-2, // 未设置追踪模式
+    PXR_MT_DEVICE_NOT_SUPPORT     = (uint8)-3, // 设备不支持追踪
+    PXR_MT_SERVICE_NEED_START     = (uint8)-4, // 需要在 UE 编辑器中启动追踪服务
+    PXR_MT_ET_PERMISSION_DENIED   = (uint8)-5, // 未授予眼动追踪权限
+    PXR_MT_FT_PERMISSION_DENIED   = (uint8)-6, // 未授予脸部追踪权限
+    PXR_MT_MIC_PERMISSION_DENIED  = (uint8)-7, // 未授予麦克风权限
+    PXR_MT_SYSTEM_DENIED          = (uint8)-8, // 未授予系统权限
+    PXR_MT_UNKNOW_ERROR           = (uint8)-9  // 未知错误
+};
+
+
+
+模式
+
+权限声明
+
+融合驱动模式
+
+<meta-data android:name="picovr.software.face_tracking" android:value="false/true" />
+<uses-permission android:name="com.picovr.permission.FACE_TRACKING" />
+<uses-permission android:name="android.permission.RECORD_AUDIO" />
+
+图像驱动模式
+
+<meta-data android:name="picovr.software.face_tracking" android:value="false/true" />
+<uses-permission android:name="com.picovr.permission.FACE_TRACKING" />
+
+音频驱动模式
+
+<meta-data android:name="picovr.software.face_tracking" android:value="false/true" />
+<uses-permission android:name="android.permission.RECORD_AUDIO" />
+
+UENUM(BlueprintType)
+enum class EPXRFaceBlendShape : uint8
+{
+    BrowInnerUp = 3,
+    BrowDown_R = 4,
+    BrowDown_L = 16,
+    BrowOuterUp_L = 30,
+    BrowOuterUp_R = 36,
+    CheekSquint_L = 29,
+    CheekSquint_R = 37,
+    CheekPuff = 43,
+    EyeLookDown_L = 0,
+    EyeLookIn_L = 2,
+    EyeLookIn_R = 11,
+    EyeLookDown_R = 12,
+    EyeSquint_L = 26,
+    EyeBlink_L = 28,
+    EyeLookUp_L = 31,
+    EyeLookUp_R = 35,
+    EyeBlink_R = 38,
+    EyeSquint_R = 41,
+    EyeLookOut_L = 44,
+    EyeLookOut_R = 45,
+    EyeWide_R = 46,
+    EyeWide_L = 47,
+    JawOpen = 7,
+    JawRight = 15,
+    JawForward = 25,
+    JawLeft = 32,
+    MouthClose = 5,
+    MouthLowerDown_R = 6,
+    MouthUpperUp_R = 8,
+    MouthShrugUpper = 9,
+    MouthFunnel = 10,
+    MouthRollUpper = 14,
+    MouthShrugLower = 17,
+    MouthRollLower = 18,
+    MouthSmile_L = 19,
+    MouthPress_L = 20,
+    MouthSmile_R = 21,
+    MouthPress_R = 22,
+    MouthDimple_R = 23,
+    MouthLeft = 24,
+    MouthFrown_L = 27,
+    MouthStretch_L = 33,
+    MouthPucker = 34,
+    MouthUpperUp_L = 39,
+    MouthFrown_R = 40,
+    MouthStretch_R = 42,
+    MouthRight = 48,
+    MouthDimple_L = 49,
+    MouthLowerDown_L = 50,
+    NoseSneer_L = 1,
+    NoseSneer_R = 13,
+    TongueOut = 51,
+    PP = 52,
+    CH = 53,
+    o = 54,
+    O = 55,
+    I = 56,
+    u = 57,
+    RR = 58,
+    XX = 59,
+    aa = 60,
+    i = 61,
+    FF = 62,
+    U = 63,
+    TH = 64,
+    kk = 65,
+    SS = 66,
+    e = 67,
+    DD = 68,
+    E = 69,
+    nn = 70,
+    sil = 71,
+    COUNT = 72
+};
+
+
+
+Index
+
+BlendShapes
+
+图解
+
+说明
+
+*Face Only 模式
+
+*Lips Only 模式
+
+*Face and Lips 模式
+
+0
+
+EyeLookDown_L
+
+
+* 
+
+向下看时，左眼皮向下移动。需要同时让眼皮和眼球部分下移。
+
+
+*有效，ARKit 面部适用。
+*
+
+*默认为 0。
+
+*有效，ARKit 面部适用。
+
+1
+
+NoseSneer_L
+
+* 
+
+左侧鼻孔向上抬起。 在山根处加入一些皮肤褶皱会使表情更生动。
+
+
+*有效，ARKit 面部适用。
+
+*有效，ARKit 面部适用。
+
+*有效，ARKit 面部适用。
+
+2
+
+EyeLookIn_L
+
+* 
+
+向右看时，左眼皮向靠近鼻子一侧移动。需要同时处理眼皮和眼球部分。
+
+
+*有效，ARKit 面部适用。
+
+*默认为 0。
+
+*有效，ARKit 面部适用。
+
+3
+
+BrowInnerUp
+
+* 
+
+左右眼眉毛内侧上移。 眉骨和额头处加入一些褶皱会使表情更生动。
+
+
+*有效，ARKit 面部适用。
+
+*有效，ARKit 面部适用。
+
+*有效，ARKit 面部适用。
+
+4
+
+BrowDown_R
+
+
+* 
+
+右眼眉毛外侧下移。加入一些褶皱会使表情更生动。
+
+
+*有效，ARKit 面部适用。
+
+*有效，ARKit 面部适用。
+
+*有效，ARKit 面部适用。
+
+5
+
+MouthClose
+
+* 
+
+嘴唇闭合。需与 jawOpen 联合使用，JawOpen 系数与 mouthClose 系数一致时，上下嘴唇之间应该没有缝隙。
+
+
+*有效，ARKit 面部适用。
+
+*有效，ARKit 面部适用。
+
+*有效，ARKit 面部适用。
+
+6
+
+MouthLowerDown_R
+
+* 
+
+下唇右侧区域下移。与 MouthLowerDown_L 一起被同时激活到 1.0 时，下嘴唇整体下降（包括中间区域）。
+
+
+*有效，ARKit 面部适用。
+
+*有效，ARKit 面部适用。
+
+*有效，ARKit 面部适用。
+
+7
+
+JawOpen
+
+* 
+
+下巴张开。
+
+*有效，ARKit 面部适用。
+
+*有效，ARKit 面部适用。
+
+*有效，ARKit 面部适用。
+
+8
+
+MouthUpperUp_R
+
+* 
+
+上嘴唇的右侧部分上移。与MouthUpperUp_L 一起同被激活到 1.0 时, 嘴唇整体抬起（包括中间区域）。
+
+
+*有效，ARKit 面部适用。
+
+*有效，ARKit 面部适用。
+
+*有效，ARKit 面部适用。
+
+9
+
+MouthShrugUpper
+
+* 
+
+抬嘴，上嘴唇向上移动。与 MouthShrugLower一起同时被激活到 1.0 时，双唇紧闭并向上抬起，嘴唇之间无缝隙。
+
+
+*有效，ARKit 面部适用。
+
+*有效，ARKit 面部适用。
+
+*有效，ARKit 面部适用。
+
+10
+
+MouthFunnel
+
+* 
+
+双唇向内收缩，整个嘴部呈圆形张开状。
+
+
+*有效，ARKit 面部适用。
+
+*有效，ARKit 面部适用。
+
+*有效，ARKit 面部适用。
+
+11
+
+EyeLookIn_R
+
+* 
+
+向左看时，右眼皮向靠近鼻子一侧移动。需要同时处理眼皮和眼球部分。
+
+
+*有效，ARKit 面部适用。
+
+*默认为 0。
+
+*有效，ARKit 面部适用。
+
+12
+
+EyeLookDown_R
+
+* 
+
+向下看时，右眼皮向下移动。需要同时让眼皮和眼球部分下移。
+
+
+*有效，ARKit 面部适用。
+
+*默认为 0。
+
+*有效，ARKit 面部适用。
+
+13
+
+NoseSneer_R
+
+* 
+
+右侧鼻孔向上抬起。 在山根处加入一些皮肤褶皱会使表情更生动。
+
+
+*有效，ARKit 面部适用。
+
+*有效，ARKit 面部适用。
+
+*有效，ARKit 面部适用。
+
+14
+
+MouthRollUpper
+
+* 
+
+抿嘴动作，上嘴唇向口腔内部移动。与 MouthRollLower 一起同时被激活到 1.0 时，嘴唇完全抿住，无法看到上下唇。
+
+
+*有效，ARKit 面部适用。
+
+*有效，ARKit 面部适用。
+
+*有效，ARKit 面部适用。
+
+15
+
+JawRight
+
+* 
+
+下巴右移。
+
+*有效，ARKit 面部适用。
+
+*有效，ARKit 面部适用。
+
+*有效，ARKit 面部适用。
+
+16
+
+BrowDown_L
+
+
+* 
+
+左眼眉毛外侧下移。加入一些褶皱会使表情更生动。
+
+
+*有效，ARKit 面部适用。
+
+*有效，ARKit 面部适用。
+
+*有效，ARKit 面部适用。
+
+17
+
+MouthShrugLower
+
+* 
+
+抬嘴，下嘴唇向上移动。与 MouthShrugUpper一起同时被激活到 1.0 时，双唇紧闭并向上抬起，嘴唇之间无缝隙。
+
+
+*有效，ARKit 面部适用。
+
+*有效，ARKit 面部适用。
+
+*有效，ARKit 面部适用。
+
+18
+
+MouthRollLower
+
+* 
+
+抿嘴动作，下嘴唇向口腔内部移动。与 MouthRollUpper 一起同时被激活到 1.0 时，嘴唇完全抿住，无法看到上下唇。
+
+
+*有效，ARKit 面部适用。
+
+*有效，ARKit 面部适用。
+
+*有效，ARKit 面部适用。
+
+19
+
+MouthSmile_L
+
+* 
+
+左侧嘴角向上移动。需使左侧腮部也向上移动。与MouthSmile_R一起同时被激活到 1.0 时，中间区域不应该仍旧保持固定，嘴部整体呈微笑状。
+
+
+*有效，ARKit 面部适用。
+
+*有效，ARKit 面部适用。
+
+*有效，ARKit 面部适用。
+
+20
+
+MouthPress_L
+
+* 
+
+左下唇向上收紧。无需调动腮部肌肉, 与 MouthPress_R共同被激活到 1.0 时, 需观察唇部自然度，中间区域不应该是固定的。
+
+
+
+*有效，ARKit 面部适用。
+
+*有效，ARKit 面部适用。
+
+*有效，ARKit 面部适用。
+
+21
+
+MouthSmile_R
+
+* 
+
+嘴部右侧向上移动。需使右侧腮部也向上移动。与MouthSmile_L一起同时被激活到 1.0 时，中间区域不应该仍旧保持固定，嘴部整体呈微笑状。
+
+*有效，ARKit 面部适用。
+
+*有效，ARKit 面部适用。
+
+*有效，ARKit 面部适用。
+
+22
+
+MouthPress_R
+
+* 
+
+右下唇向上收紧。无需调动腮部肌肉, 与 MouthPress_L共同被激活到 1.0 时, 需观察唇部自然度，中间区域不应该是固定的。
+
+
+*有效，ARKit 面部适用。
+
+*有效，ARKit 面部适用。
+
+*有效，ARKit 面部适用。
+
+23
+
+MouthDimple_R
+
+* 
+
+右嘴角向后收紧。 MouthDimple_L 一起被共同激活到 1.0 时，整个嘴唇收紧但并不呈微笑状，需注意嘴型的自然度。
+
+
+*有效，ARKit 面部适用。
+
+*有效，ARKit 面部适用。
+
+*有效，ARKit 面部适用。
+
+24
+
+MouthLeft
+
+* 
+
+歪嘴，上下唇同时向左上方移动。左脸腮部也需上移。
+
+
+*有效，ARKit 面部适用。
+
+*有效，ARKit 面部适用。
+
+*有效，ARKit 面部适用。
+
+25
+
+JawForward
+
+* 
+
+下巴前移。
+
+*有效，ARKit 面部适用。
+
+*有效，ARKit 面部适用。
+
+*有效，ARKit 面部适用。
+
+26
+
+EyeSquint_L
+
+
+* 
+
+眯眼，左眼周围面部收缩。
+
+
+*有效，ARKit 面部适用。
+
+*默认为 0。
+
+*有效，ARKit 面部适用。
+
+27
+
+MouthFrown_L
+
+* 
+
+左侧嘴角向下移动。左脸腮部也需下移，与 MouthFrown_R 一起同时被激活到 1.0 时, 左右嘴角自然向下。
+
+
+*有效，ARKit 面部适用。
+
+*有效，ARKit 面部适用。
+
+*有效，ARKit 面部适用。
+
+28
+
+EyeBlink_L
+
+* 
+
+闭眼，左眼皮闭合。建议在取值为 0.8 时便让左眼完全闭合，不含缝隙。
+
+
+*有效，ARKit 面部适用。
+
+*有效，ARKit 面部适用。
+
+*有效，ARKit 面部适用。
+
+29
+
+CheekSquint_L
+
+* 
+
+左眼周围区域和下方脸颊向上移动。常用于呈现微笑表情。
+
+
+*有效，ARKit 面部适用。
+
+*默认为 0。
+
+*有效，ARKit 面部适用。
+
+30
+
+BrowOuterUp_L
+
+* 
+
+抬眉，左眼眉毛外侧区域上移。眉骨和额头处制作一些褶皱会更生动。
+
+
+*有效，ARKit 面部适用。
+
+*有效，ARKit 面部适用。
+
+*有效，ARKit 面部适用。
+
+31
+
+EyeLookUp_L
+
+* 
+
+向上看，左眼皮向上移动。需要同时让眼皮和眼球部分上下移。
+
+
+*有效，ARKit 面部适用。
+
+*默认为 0。
+
+*有效，ARKit 面部适用。
+
+32
+
+JawLeft
+
+* 
+
+下巴左移。
+
+
+*有效，ARKit 面部适用。
+
+*有效，ARKit 面部适用。
+
+*有效，ARKit 面部适用。
+
+33
+
+MouthStretch_L
+
+* 
+
+左侧嘴角向左移动。需配合左脸腮部肌肉使用，使嘴部整体变宽。与 MouthStretch_R 一起同时被激活到 1.0 时，需观察嘴部自然度。
+
+
+*有效，ARKit 面部适用。
+
+*有效，ARKit 面部适用。
+
+*有效，ARKit 面部适用。
+
+34
+
+MouthPucker
+
+* 
+
+嘟嘴，上下嘴唇同时向内收缩。
+
+
+*有效，ARKit 面部适用。
+
+*有效，ARKit 面部适用。
+
+*有效，ARKit 面部适用。
+
+35
+
+EyeLookUp_R
+
+* 
+
+向上看时，右眼皮向上移动。需要同时让眼皮和眼球部分上移。
+
+
+*有效，ARKit 面部适用。
+
+*默认为 0。
+
+*有效，ARKit 面部适用。
+
+36
+
+BrowOuterUp_R
+
+* 
+
+抬眉，右眼眉毛外侧区域上移。眉骨和额头处制作一些褶皱会更生动。
+
+
+*有效，ARKit 面部适用。
+
+*有效，ARKit 面部适用。
+
+*有效，ARKit 面部适用。
+
+37
+
+CheekSquint_R
+
+* 
+
+右眼周围区域和下方脸颊向上移动。常用于呈现微笑表情。
+
+*有效，ARKit 面部适用。
+
+*默认为 0。
+
+*有效，ARKit 面部适用。
+
+38
+
+EyeBlink_R
+
+* 
+
+闭眼，右眼皮闭合。建议在取值为 0.8 时便让右眼完全闭合，不含缝隙。
+
+
+*有效，ARKit 面部适用。
+
+*有效，ARKit 面部适用。
+
+*有效，ARKit 面部适用。
+
+39
+
+MouthUpperUp_L
+
+* 
+
+上唇左侧向上移动。与MouthUpperUp_R 一起同被激活到 1.0 时, 嘴唇整体抬起（包括中间区域）。
+
+
+*有效，ARKit 面部适用。
+
+*有效，ARKit 面部适用。
+
+*有效，ARKit 面部适用。
+
+40
+
+MouthFrown_R
+
+* 
+
+右嘴角向下移动。右脸腮部也需下移，与 MouthFrown_R 一起同时被激活到 1.0 时, 左右嘴角自然向下。
+
+*有效，ARKit 面部适用。
+
+*有效，ARKit 面部适用。
+
+*有效，ARKit 面部适用。
+
+41
+
+EyeSquint_R
+
+* 
+
+眯眼，右眼周围面部收缩。
+
+
+*有效，ARKit 面部适用。
+
+*默认为 0。
+
+*有效，ARKit 面部适用。
+
+42
+
+MouthStretch_R
+
+* 
+
+右嘴角向下移动。需配合右脸腮部肌肉使用，使嘴部整体变宽。与 MouthStretch_L 一起同时被激活到 1.0 时，需观察嘴部自然度。
+
+*有效，ARKit 面部适用。
+
+*有效，ARKit 面部适用。
+
+*有效，ARKit 面部适用。
+
+43
+
+CheekPuff
+
+* 
+
+鼓腮（例如吸气时），左右脸颊同时向外移动。
+
+*有效，ARKit 面部适用。
+
+*默认为 0。
+
+*有效，ARKit 面部适用。
+
+44
+
+EyeLookOut_L
+
+* 
+
+向左看时，左眼眼皮向外侧移动。需要同时处理眼皮和眼球部分。
+
+
+*有效，ARKit 面部适用。
+
+*默认为 0。
+
+*有效，ARKit 面部适用。
+
+45
+
+EyeLookOut_R
+
+* 
+
+向右看时，右眼眼皮向外侧移动。需要同时处理眼皮和眼球部分。
+
+
+*有效，ARKit 面部适用。
+
+*默认为 0。
+
+*有效，ARKit 面部适用。
+
+46
+
+EyeWide_R
+
+* 
+
+睁大眼睛时，右眼眼皮向上移动。若想呈现吃惊状，可露出整个眼球以及部分眼白。
+
+
+*有效，ARKit 面部适用。
+
+*默认为 0。
+
+*有效，ARKit 面部适用。
+
+47
+
+EyeWide_L
+
+* 
+
+睁大眼睛时，左眼眼皮向上移动。若想呈现吃惊状，可露出整个眼球以及部分眼白。
+
+
+*有效，ARKit 面部适用。
+
+*默认为 0。
+
+*有效，ARKit 面部适用。
+
+48
+
+MouthRight
+
+* 
+
+歪嘴，上下唇同时向右上方移动。右脸腮部也需上移。
+
+*有效，ARKit 面部适用。
+
+*有效，ARKit 面部适用。
+
+*有效，ARKit 面部适用。
+
+49
+
+MouthDimple_L
+
+
+* 
+
+左嘴角向后收紧。与 MouthDimple_R 一起被共同激活到 1.0 时，整个嘴唇收紧但并不呈微笑状，需注意嘴型的自然度。
+
+
+*有效，ARKit 面部适用。
+
+*有效，ARKit 面部适用。
+
+*有效，ARKit 面部适用。
+
+50
+
+MouthLowerDown_L
+
+* 
+
+下唇左侧区域下移。与 MouthLowerDown_R 一起被同时激活到 1.0 时，下嘴唇整体下降（包括中间区域）。
+
+*有效，ARKit 面部适用。
+
+*有效，ARKit 面部适用。
+
+*有效，ARKit 面部适用。
+
+51
+
+TongueOut
+
+-
+
+舌头全部伸出到嘴外面。
+
+*有效，ARKit 面部适用。
+
+*默认为 0。
+
+*有效，ARKit 面部适用。
+
+
+
+编号
+
+Viseme ID
+
+*音素（中）
+
+音素（英）
+
+图解
+
+*Face Only 模式
+
+*Lips Only 模式
+
+*Face and Lips 模式
+
+52
+
+PP
+
+p, b, m
+例：坡，波，末
+
+p, b, m
+例：pat, bat, mat
+
+* 
+
+*默认为 0。
+
+*有效，Viseme 口型适用。
+
+*有效，Viseme 口型适用。
+
+53
+
+CH
+
+zh, ch, sh
+例：知，吃，事
+
+dZ, tS, S
+例：join, chip, ship
+
+* 
+
+*默认为 0。
+
+*有效，Viseme 口型适用。
+
+*有效，Viseme 口型适用。
+
+54
+
+
+o
+
+
+o
+例：破，喔
+
+
+aw
+例：law
+
+
+* 
+
+*默认为 0。
+
+*有效，Viseme 口型适用。
+
+*有效，Viseme 口型适用。
+
+55
+
+O
+
+ou, ao
+例：走，好
+
+ow
+例：how
+
+
+* 
+
+*默认为 0。
+
+*有效，Viseme 口型适用。
+
+*有效，Viseme 口型适用。
+
+56
+
+I
+
+后 i（ai, ei, ui 等）
+例：海，黑，灰
+
+ih（重读）
+例：lip
+
+* 
+
+*默认为 0。
+
+*有效，Viseme 口型适用。
+
+*有效，Viseme 口型适用。
+
+57
+
+
+u
+
+ü
+例：绿
+
+-
+
+* 
+
+*默认为 0。
+
+*有效，Viseme 口型适用。
+
+*有效，Viseme 口型适用。
+
+58
+
+RR
+
+r
+例：日
+
+r
+例：room
+
+* 
+
+*默认为 0。
+
+*有效，Viseme 口型适用。
+
+*有效，Viseme 口型适用。
+
+59
+
+XX
+
+j, q, x, y
+例：及，期，戏，宜
+
+jh
+例：year
+
+
+* 
+
+*默认为 0。
+
+*有效，Viseme 口型适用。
+
+*有效，Viseme 口型适用。
+
+60
+
+aa
+
+a
+例：那
+
+*ɑː
+*例：car
+
+* 
+
+*默认为 0。
+
+*有效，Viseme 口型适用。
+
+*有效，Viseme 口型适用。
+
+61
+
+
+i
+
+
+i，前 i（ie, in, ian 等）
+例：列，林，连
+
+
+ih（轻读）
+例：lip
+
+
+* 
+
+*默认为 0。
+
+*有效，Viseme 口型适用。
+
+*有效，Viseme 口型适用。
+
+62
+
+FF
+
+f
+例：发，佛
+
+f, v
+例：for, vow
+
+* 
+
+*默认为 0。
+
+*有效，Viseme 口型适用。
+
+*有效，Viseme 口型适用。
+
+63
+
+U
+
+u, w
+例：露，舞
+
+ou
+例：book
+
+* 
+
+*默认为 0。
+
+*有效，Viseme 口型适用。
+
+*有效，Viseme 口型适用。
+
+64
+
+TH
+
+*th
+*
+
+th
+例：think, that
+
+* 
+
+*默认为 0。
+
+*有效，Viseme 口型适用。
+
+*有效，Viseme 口型适用。
+
+65
+
+kk
+
+*g, k, h
+*例：歌，可，河
+*
+
+g, h, k
+例：good, who, cool
+
+* 
+
+*默认为 0。
+
+*有效，Viseme 口型适用。
+
+*有效，Viseme 口型适用。
+
+66
+
+SS
+
+*z, c, s
+*例：思，紫
+
+z, s
+例：zoo, see
+
+* 
+
+*默认为 0。
+
+*有效，Viseme 口型适用。
+
+*有效，Viseme 口型适用。
+
+67
+
+
+e
+
+
+e
+例：么，呢
+
+-
+
+* 
+
+*默认为 0。
+
+*有效，Viseme 口型适用。
+
+*有效，Viseme 口型适用。
+
+68
+
+DD
+
+*d, t
+*例：得，特
+
+d, t
+例：doll, tall
+
+* 
+
+*默认为 0。
+
+*有效，Viseme 口型适用。
+
+*有效，Viseme 口型适用。
+
+69
+
+E
+
+*ie, ei
+*
+
+e
+例：bed
+
+* 
+
+*默认为 0。
+
+*有效，Viseme 口型适用。
+
+*有效，Viseme 口型适用。
+
+70
+
+nn
+
+*n, l
+*例：呢，乐
+
+n, l
+例：not, lot
+
+* 
+
+*默认为 0。
+
+*有效，Viseme 口型适用。
+
+*有效，Viseme 口型适用。
+
+71
+
+sil
+
+无发音
+
+无发音
+
+-
+
+*默认为 0。
+
+*有效，Viseme 口型适用。
+
+*有效，Viseme 口型适用。
+
+
+
+接口
+
+说明
+
+GetFaceTrackingSupported
+
+查询当前设备是否支持面部追踪。 
+
+StartFaceTracking
+
+开始面部追踪。 
+
+StopFaceTracking
+
+停止面部追踪。 
+
+GetFaceTrackingState
+
+获取面部追踪状态。 
+
+GetFaceTrackingData
+
+获取面部追踪数据。 

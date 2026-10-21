@@ -1,0 +1,11 @@
+Vulkan 渲染
+========================================
+PICO Unreal OpenXR Plugin 支持 Vulkan 渲染。本文档介绍如何开启 Vulkan 渲染功能。
+*环境要求
+*PICO 设备：PICO Neo3、PICO 4、PICO 4 Pro、PICO 4 Enterprise、PICO G3、PICO 4 Ultra 或 Project Swan（PICO OS 6）
+*前提条件
+你已在引擎中安装并启用了 PICO Unreal OpenXR 插件。详情参考 PICO Unreal OpenXR 快速开始。
+*开启步骤
+*在 Unreal Editor 上方工具栏，点击 Edit > Project Settings > Platforms > Android。
+*移动到 Build 选项卡下，勾选 Support Vulkan。
+* 

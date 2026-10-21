@@ -1,0 +1,125 @@
+深度与布局
+========================================
+在空间化 UI 中，深度表示对象在 Z 轴方向上的延伸，用于描述前后层次关系。它让 2D 与 3D 内容在同一布局体系中具备空间定位与对齐能力。通过深度设置，你可以精确控制对象的空间位置。
+*什么是深度？
+在 2D 空间中，物体通常仅具有长度（X 轴）和宽度（Y 轴）。深度用于描述物体在 Z 轴方向上的延伸（即厚度）。
+*以纸张为例，增加深度后相当于将纸张转换为一个具有前后面的盒体，前后表面之间的距离即为深度值。在渲染过程中，无论深度大小，2D 内容始终位于盒体的后表面上。
+对于 2D 对象，深度为其引入了可计算的第三维度，用于实现沿 Z 轴方向的空间变化效果。常见的计算场景包括：
+*Align：根据 Z 轴方向调整对齐方式。
+*Padding：在 Z 轴方向增加或减少间距。
+*Scale：沿 Z 轴进行缩放计算。
+对于 3D 对象，深度是可感知的物理属性。通过调整深度值，可控制模型在 Z 轴方向的尺寸、位置或动态变化，从而实现空间层次。
+*深度设置对视图中的 3D 内容的影响
+*在 SpatialView 和 SpatialModelView 中，3D 内容的原点位于 View 这个 “盒子” 的几何中心。在基于深度的布局中，SpatialView 会自动遵循 View 的默认深度（即窗口深度），并将 3D 内容沿 Z 轴抬起窗口深度的一半。当 depth 动态变化时，3D 内容的原点也会实时更新，从而始终保持与“盒子”几何中心一致的位置。
+* 
+*测量对象的深度
+*深度测量遵循 Compose 的标准测量流程。PICO Spatial SDK 在 LayoutModifierNode 与 MeasurePolicy 中分别提供了支持深度测量的方法。
+*使用 LayoutModifierNode
+*LayoutModifierNode 提供了用于测量对象的深度的方法：measure()。
+* 
+*如果你没有重写 measure() 方法，系统会自动退回到 2D 测量流程。此时，当前节点的测量结果 (MeasureResult) 中的深度值取决于其子节点的深度。
+*若你为当前的 LayoutModifierNode 重写了 measure() 方法，则 MeasureResult 中的深度值为你自己测量的深度。
+*使用 MeasurePolicy
+*MeasurePolicy 提供了用于测量对象的深度的重载方法：measure。
+* 
+*在 MeasurePolicy 中，如果你未重写 measure() 方法，则 SpatialUI 框架会为原有的 2D 测量流程自动补充一个默认的深度测量逻辑。该默认深度测量逻辑的结果取决于 NodeChain 中当前 NodeCoordinate 的子 NodeCoordinate 的测量结果。
+以下代码示例中，若 Box 向其子组件传递的深度约束范围为 0.dp 至 500.dp，则 Box 的 MeasurePolicy 所计算的深度值为其所有子节点中报告的最大深度值。若子节点的最大深度为 200.dp，则 Box 的 MeasureResult 深度值也将为 200.dp。
+ 
+*Constraints3D 的传递与测量结果
+在 3D 测量流程中，原本的 2D 布局（如 Row、Box 等）的 MeasurePolicy 不会对深度约束（Constraints3D）进行修改。因此，当未引入影响深度的 Modifier 时，depth 的实际生效与否，取决于空间容器传递下来的深度限制。例如：
+ 
+在 2D 测量流程中，深度的限制取决于当前空间容器提供的限制。假设容器的深度限制为 640.dp 至 1280.dp，则 Modifier.depth(200.dp) 无法在此固定范围内生效。最终的测量结果中，depth 将被约束为与 200.dp 更接近的 640.dp。
+如果你想强制将 depth 设置为一个自定义值，可通过以下方式实现：
+* 使用 Modifier.requiredDepth() 以强制使用自定义深度；
+* 在 Box3D 控件下进行布局。其中，Box3D 的 MeasurePolicy 会将当前的最小深度约束调整为 0，以确保深度测量逻辑能够正确生效。
+*自定义 3D 布局
+*你可以通过 layout3D 接口创建自定义的 3D 布局逻辑。此接口在原有 layout 基础上扩展了深度布局能力，可用于控制子 Measurable 的摆放位置及深度约束传递。
+ 
+*自定义对象的深度
+*MeasureScope 的 layout() 方法支持自定义对象的深度。你可以在 MeasureResult 中保存自定义的 3D 测量结果。
+ 
+*自定义对象在 Z 轴上的偏移
+*placeRelative3D：在摆放对象时，自定义对象（placeable）在 Z 轴方向上的偏移。在 X 轴方向上，适配 RTL（Right-To-Left）。
+* 
+*place3D：在摆放对象时，自定义对象（placeable）在 Z 轴方向上的偏移。
+* 
+*调整 3D 内容的位置
+*在支持深度的布局体系中，View 自身具有默认深度，所以 3D 内容的初始位置也会受到深度的影响。当希望结合深度与 3D Transform 来控制 3D 内容的位置时，有多种实现方式可选。
+以下以视频播放器为例，假设希望让用于播放视频的实体紧贴 WindowContainer 的背面，可以通过两种方式实现。
+*方法一：使用 depth 属性
+*将包含实体的 SpatialView 的 depth 设置为 0，并将父布局的深度对齐方式设置为 DepthAlignment.DepthBack 。
+* 
+*方法二：使用全局位置补偿
+*在更复杂的嵌套布局中，可以先计算 SpatialView 的 rootEntity 相对 WindowContainer 的 globalPositionZ，然后将 globalPositionZ 用于补偿目标实体的位移，从而精确对齐。
+* 
+
+为避免因深度冲突（Z-Fighting）导致视角变化时画面闪烁，不要为两个独立的渲染节点设置相同的 Z 轴高度。对于需要叠放的内容，你可以通过设置明确的深度差来避免此问题。
+
+interface LayoutModifierNode : DelegatableNode {
+ ...
+    fun MeasureScope.measure(measurable: Measurable, constraints: Constraints3D): MeasureResult {
+        val res = measure(measurable, constraints.constraints)
+        val impl = WrappedMeasureResult(res, constraints.maxDepth)
+        return impl
+    }
+
+fun interface MeasurePolicy {
+    fun MeasureScope.measure(
+        measurables: List<Measurable>,
+        constraints: Constraints3D
+    ): MeasureResult {
+        val res = measure(measurables, constraints.constraints)
+        return WrappedMeasureResult(res, constraints.maxDepth)
+    }
+
+Box(Modifier.depthIn(0.dp,500.dp)){  
+  Child(Modifier.depth(200.dp))
+  Child(Modifier.depth(100.dp))
+  Child(Modifier.depth(50.dp))
+}
+
+Box(Modifier.depth(200.dp))
+
+Column(
+        modifier =
+            Modifier.layout3D { measurable, con ->
+               // 测量深度
+                val place = measurable.measure(con)
+                currentConstraints = Pair(con.minDepth, con.maxDepth)
+                // 保存结果
+                layout(place.width, place.height, place.depth) { 
+                    // 自定义摆放物体
+                    place.place3D(0, 0, 0) 
+                }
+            }
+    )
+
+layout(place.width, place.height, place.depth) { 
+}
+
+layout(place.width, place.height, place.depth) { 
+                // 自定义摆放物体
+                place.placeRelative3D(0, 0, 0) 
+            }
+
+layout(place.width, place.height, place.depth) { 
+                // 自定义摆放物体
+                place.place3D(0, 0, 0) 
+            }
+
+Box(modifier = Modifier.alignDepth(DepthAlignment.DepthBack)) {
+    SpatialView(modifier = Modifier.depth(0.dp)
+}
+
+SpatialView { content, attachments ->
+    val entity = Entity()
+    content.addEntity(entity)
+    val rootEntity = content.entities.first().getParent()
+    val globalPosition = entity?.convertPositionTo(Vector3.ZERO, null)
+    val targetEntity = ... // 实际需要调节全局位置的实体
+    targetEntity.components.get<TransformComponent>()?.let {
+        it.position = Vector3(0f, 0f, -globalPosition.z)
+    }
+    content.add(targetPosition)
+    entity.destroy()
+}

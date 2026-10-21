@@ -28,5 +28,4 @@ pico-broadcast/
 
 ## AI 编码助手接入
 
-- Kimi：参见 `docs/ai-coding/kimi-guide.md`
-- Claude Code：参见 `docs/ai-coding/claude-code-guide.md`
+- 全角色统一参见《开发接入指南 v3》：`docs/ai-coding/dev-onboarding-guide.md`（取代 v1/v2）

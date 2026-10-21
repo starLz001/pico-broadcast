@@ -1,0 +1,103 @@
+PICO 开发者中心快速开始
+========================================
+ 
+*PICO 开发者中心（PICO Developer Center，下文简称 PDC 工具）是集成 ADB 指令调试工具、实时预览工具等核心工具的开发者服务平台。你可以通过 PDC 工具快速管理、开发、调试你的应用。
+*环境要求
+*操作系统：Windows 10 20H2 及以上、macOS Intel、macOS Apple Silicon
+*CPU：Intel Core i5-4590 / AMD Fx8350 及以上
+*RAM：8GB 及以上
+*显卡：NVIDIA GeForce GTX 1060 6GB / AMD Radeon RX 480 同等性能及以上
+*设备型号：PICO Neo3、PICO 4 和 PICO 4 Ultra 系列
+*设备系统版本：5.11.0 或以上
+*注意事项
+*使用 “PICO 互联” APP 会导致 PDC 串流服务异常。因此，使用 PDC 工具前，请确保 PC 端和头戴端都已退出 “PICO 互联” APP。
+*同时使用 PDC 工具和 “PICO 互联” 软件会导致 PDC 工具运行异常。因此，使用 PDC 工具前，请确保 PC 端和头戴端都已退出 “PICO 互联” 软件。
+* 
+*cmd 需为英文，否则 PDC 工具可能会认为串流服务未正常安装。
+*目前，若 PC 中存在虚拟显卡，使用 PDC 工具进行实时预览时仍会存在黑屏问题。需前往 设备管理器 > 显示适配器 进行禁用。
+*Windows 系统若开启节电模式，有可能会导致 PDC 工具无法识别到设备的 USB 连接状态。需前往 控制面板 > 硬件与声音 > 电源选项 > 编辑计划设置 > 更改高级电源设置，然后在 USB 设置 中禁用 USB 选择性暂停设置。
+**
+* 
+*准备工作
+正式使用前，你需要将 PDC 工具安装至本地电脑，为你的一体机开启 “开发者” 模式，然后使用 USB 数据线连接头戴和电脑。
+*安装 PDC 工具
+下载并安装 PICO Developer Center 至本地电脑。PDC 工具安装包需以管理员身份运行，安装时会弹出授权窗口，需授予权限。
+*安装串流服务
+*如果你需要将设备连接至 PDC 工具，则需要安装串流服务，详细说明参考《安装串流服务》。
+*为一体机开启 “开发者” 模式
+为你的 PICO VR 一体机开启 “开发者” 模式，否则，连接头戴和电脑后，PDC 工具界面无法显示设备信息。步骤如下：
+*开启 PICO VR 一体机。 
+*前往 设置 > 通用 > 关于本机。
+*光标移至 软件版本号 并连续点击多次，直到左侧导航栏下方出现 开发者 选项。
+*点击 开发者，进入开发者选项界面。 
+*打开右上角的 USB 调试开关。
+*(仅 PICO 4 Ultra) 前往 设置 > 通用，关闭 电脑互联自动发现 开关，然后再将其开启，从而为 PDC 工具开启串流模式。
+*连接头戴和电脑
+*打开 PDC 工具，选择你所在的地区，然后使用 PICO 开发者账号登录。
+* 
+*使用 USB 数据线连接头显与电脑。若连接成功，设备信息 面板将显示已连接的设备（下图所示）。
+* 
+*使用 PDC 工具
+*创建和调试 adb 命令
+*实时预览应用场景
+*监测设备性能
+*截屏、录屏与投屏
+*下载开发资源，包括 SDK、开发者工具和示例。
+*推送 URL 到 PICO 设备
+*提交反馈
+*设备状态说明
+使用 USB 数据线连接一体机和 PC 后，PDC 界面会显示以下设备状态之一：
+*
+*日志收集
+若在使用 PDC 工具过程中遇到了问题，可通过分析日志来协助定位问题。
+*开启 “日志记录”
+*在设备端，前往 设置 > 通用，开启 日志记录 功能，以记录 PDC 工具运行过程中产生的日志。
+ 
+*日志路径
+PC 端：
+*
+*头戴端：
+使用 adb shell setprop persist.log.tag D 命令开启 Debug 日志（PICO 4 Ultra 及 Project Swan 系列设备无需此操作），然后使用 adb pull data/logs 将日志拉到本地。
+
+
+若你使用的是 PICO Unreal Integration SDK，请阅读此文档。
+
+PICO 4 Ultra 或 Project Swan 系列设备无此限制。
+
+
+
+状态
+
+说明
+
+已连接
+
+设备与 PC 连接正常，串流服务畅通。
+
+串流中
+
+实时画面预览生效中。
+
+连接异常
+
+adb 或串流服务存在异常。
+
+
+
+操作系统
+
+日志路径
+
+Windows
+
+*PDC：C:\Users\${user}\AppData\Roaming\PICO Developer Center\logs
+*串流服务：
+*Project Swan：C:\ProgramData\PICO\PICO Streaming Service
+*其他设备型号：C:\Program Files\Streaming Service\ps_server.log 
+
+macOS
+
+*PDC：～/Library/Application Support/PICO Developer Center/logs
+*串流服务：
+*Project Swan：~/Library/Application Support/PICO Streaming Service/swan
+*其他设备型号：～/Library/Application Support/PICO Streaming Service

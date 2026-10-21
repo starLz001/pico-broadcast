@@ -1,0 +1,91 @@
+使用音频组资源
+========================================
+AudioGroupResource 代表一个音频资源的集合。
+当你播放一个 AudioGroupResource 时，系统会根据你设置的播放模式（AudioGroupResourcePlayMode），从集合中选择一个音频进行播放。音频的选择发生在每次调用 play() 方法时。例如，在 FORWARD（正序）模式下，每次执行 stop() 后再执行 play()，都会播放列表中的下一个音频。
+*播放模式
+*AudioGroupResource 支持以下播放模式，你可以通过 AudioGroupResourcePlayMode 来设置。
+*
+*代码示例
+以下示例演示了如何创建一个包含多种动物叫声的 AudioGroupResource，并以 RANDOM 模式进行播放。
+* 
+*API 参考
+关于 AudioGroupResource 类提供的接口的详细说明，参阅 API 参考。根据你所处的地理位置选择合适的文档链接：
+*中国大陆：https://developer-cn.picoxr.com/spatial-api/index.html
+*非中国大陆：https://developer.picoxr.com/spatial-api/index.html
+
+
+
+模式
+
+描述
+
+RANDOM
+
+随机模式：每次从音频组内随机选择一个音频进行播放。
+
+FORWARD（默认）
+
+正序模式：按照音频资源在组内的添加顺序依次播放。播放完最后一个后，会从第一个重新开始。
+
+BACKWARD
+
+倒序模式：按照音频资源在组内的添加顺序逆序播放。播放完第一个后，会从最后一个重新开始。
+
+UNKNOWN
+
+未知模式：保留值，用于向前兼容。开发者不应使用此模式。
+
+// 创建一个音频资源数组，用于存放多个音频片段
+val audioResourceArray = Array<AudioResource>()
+// 从 assets 中加载狗的音频资源
+val dogAudioResource = AudioResource.load(
+                                    "dog",
+                                    "asset://audio/dog.wav",
+                                    loadType = LoadType.FROM_ASSETS,
+                                     )
+// 从 assets 中加载猫的音频资源                                     
+val catAudioResource = AudioResource.load(
+                                    "cat",
+                                    "asset://audio/cat.wav",
+                                    loadType = LoadType.FROM_ASSETS,
+                                     )   
+// 从 assets 中加载鸟的音频资源                                                                       
+val birdAudioResource = AudioResource.load(
+                                    "bird",
+                                    "asset://audio/bird.wav",
+                                    loadType = LoadType.FROM_ASSETS,
+                                     ) 
+
+// 将多个音频资源加入数组，组成一个播放集合
+audioResourceArray.add(dogAudioResource)
+audioResourceArray.add(catAudioResource)
+audioResourceArray.add(birdAudioResource)
+
+// 创建音频组资源：
+// - 名称：audio group test
+// - 内容：audioResourceArray
+// - 播放模式：RANDOM（随机播放）                                                                        
+val animalAudioResource =AudioGroupResource("audio group test",audioResourceArray,RANDOM)
+
+// 创建一个实体
+val entity = Entity()
+
+// 为实体配置空间音频属性：音量衰减、声音指向性、距离衰减模式
+entity.components.set(ObjectAudioComponent(
+    0.5f,
+    Directivity(0.235f, 0.675f),
+    DistanceAttenuationMode.INVERSE_SQUARED,
+))
+
+// 将音频组绑定到实体，并获取播放控制器
+val audioPlayerController = entity.prepare(animalAudioResource)
+
+// 开始播放音频（随机播放 dog/cat/bird 中的一个）
+audioPlayerController.play()
+
+// 停止播放音频
+audioPlayerController.stop()
+
+// 再次播放，用于测试不同 AudioGroupResource 的播放行为
+// 在 RANDOM 模式下，每次 play() 可能播放不同的音频
+audioPlayerController.play()

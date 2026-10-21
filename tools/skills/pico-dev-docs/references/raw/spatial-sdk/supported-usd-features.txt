@@ -1,0 +1,170 @@
+支持的 USD 特性
+========================================
+PICO Spatial SDK 和 PICO Spatial Editor 使用 OpenUSD（版本 26.03）作为主要的 3D 内容格式。为了帮助你判断哪些 USD 特性可以直接使用、哪些存在兼容性限制，本文从几何、材质、动画与骨骼、场景结构四个方面，介绍各项特性在 PICO Spatial SDK 中的支持情况。
+支持情况用于评估 USD 文件中的特性是否能够被 PICO Spatial SDK 和 PICO Spatial Editor 正确导入。本文使用以下标记表示支持情况。
+*
+*几何
+*
+*材质
+*
+*动画与骨骼
+* 
+*
+*场景结构
+*
+
+
+
+
+*标记
+
+*含义
+
+✅ 支持
+
+该特性可以正确导入到 PICO Spatial SDK 和 PICO Spatial Editor。
+
+⚠️ 部分支持
+
+该特性通常可以正确导入，但存在已知限制。
+
+❌ 不支持
+
+该特性无法被 PICO Spatial SDK 正确导入。
+
+
+
+*特性
+
+*支持情况
+
+基础 Mesh
+
+✅ 支持
+
+带 Submesh 的 Mesh
+
+✅ 支持
+
+Primitive（Box 或 Sphere 等）
+
+⚠️ 部分支持
+* 
+
+Visibility 属性
+
+✅ 支持
+
+Vertex Normal
+
+✅ 支持
+
+Vertex Color（RGB）
+
+✅ 支持
+* 
+
+Vertex Color Alpha（A）
+
+✅ 支持
+* 
+
+UV0 & UV1
+
+✅ 支持
+
+UV2~7（作为自定义数据通道）
+
+✅ 支持
+
+
+
+*特性
+
+*支持情况
+
+USDPreviewSurface
+
+✅ 支持
+
+MaterialX
+
+⚠️ 部分支持
+* 
+
+纹理
+
+✅ 支持
+* 
+
+ColorSpace 属性
+
+✅ 支持
+
+*当前仅支持单个 skeleton。
+
+
+
+*特性
+
+*支持情况
+
+骨骼模型（单 Skeleton）
+
+✅ 支持
+
+骨骼动画
+
+✅ 支持
+
+BlendShape（支持位置和法线）
+
+✅ 支持
+
+BlendShape 动画
+
+✅ 支持
+
+Transform 动画
+
+✅ 支持
+
+
+
+*特性
+
+*支持情况
+
+Hierarchy
+
+✅ 支持
+
+Mesh Instancing (instanceable)
+
+✅ 支持
+
+Up Axis
+
+✅ 支持
+
+USD Variant Sets
+
+✅ 支持
+* 
+
+Unicode（例如中文等字符）
+
+❌ 不支持
+
+不支持 cylinder_1 和 capsule_1（即顶部和底部半径支持单独定义的圆柱体和胶囊体）。
+
+为确保颜色通道被正确识别，对应属性的命名需要符合 OpenUSD 推荐的标准 Primvar： primvars:displayColor。
+
+颜色和不透明度应分别使用 OpenUSD 推荐的标准 Primvar：primvars:displayColor 和 primvars:displayOpacity。不要使用自定义名称替代这两个标准 Primvar。
+
+*不同 DCC 工具导出的 MaterialX 支持程度存在差异。
+*支持的 MaterialX 版本为 1.38.7。
+
+纹理仅支持 .usdz 格式。使用 DCC 工具导出纹理时需要采用相对路径。
+
+*PICO Spatial SDK 支持导入，但 PICO Spatial Editor 暂不支持导入。

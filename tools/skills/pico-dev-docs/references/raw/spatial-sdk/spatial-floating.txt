@@ -1,0 +1,56 @@
+空间浮起
+========================================
+类似于传统 Android 开发中的 Offset(x, y)。在 PICO Spatial SDK 中，你可以设置 view 在 z 轴方向上的偏移量，从而令元素浮起。
+* 
+相关函数如下：
+*
+*代码示例如下：
+ 
+
+
+
+函数
+
+描述
+
+offset()
+
+让 view 沿 z 轴偏移指定的 Dp 值。
+
+zOffset()
+
+以像素（Px）为单位或动态计算方式设置 view 沿 z 轴的偏移量。
+
+/** 沿 z 轴静态偏移 */
+@Composable
+fun OffsetZSample() {
+    // 沿 z 轴偏移 10.dp，使 Box 在空间中浮起
+    Box(
+        modifier = Modifier
+            .offset(z = 10.dp) // 沿 z 轴偏移 10.dp，使 Box 在空间中浮起
+            .size(100.dp)
+            .background(color = Color.Red)
+    ) {
+        // Box 内容区域，可放置其他组件
+    }
+}
+
+
+
+/** 沿 z 轴动态偏移（可设置浮起/下沉动画） */
+@Composable
+fun AnimatedOffsetZSample() {
+    var isFloating by remember { mutableStateOf(false) } // 控制浮起状态
+    
+    // 根据 isFloating 状态生成动画值，0.dp -> 100.dp
+    val offsetZInDp by
+        animateDpAsState(targetValue = if (isFloating) 100.dp else 0.dp, label = "offsetZ")
+
+    Box(
+        modifier =
+            Modifier.zOffset { offsetZInDp.toPx() } // 将 Dp 转换为 Px 并应用 z 轴偏移，实现浮起动画
+                .size(100.dp) 
+                .background(color = Color.Black)
+                .clickable { isFloating = !isFloating } // 点击切换浮起状态，触发动画
+    )
+}

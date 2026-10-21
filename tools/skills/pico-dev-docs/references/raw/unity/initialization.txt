@@ -1,0 +1,177 @@
+初始化
+========================================
+*你可以通过同步初始化和异步初始化两种方式来初始化平台服务。无论采用哪种方式，都需确保在初始化成功后再调用其他平台服务接口。 
+*初始化平台服务
+*同步初始化 
+调用 CoreService.Initialize() 同步初始化平台服务。若同步初始化失败，则会抛出异常，需要在 catch 部分进行错误处理。 
+ 
+ 
+*异步初始化 
+调用 CoreService.AsyncInitialize() 异步初始化平台服务。若使用异步初始化，首先需要判断 m.IsError，然后判断 m.Data。若 m.Data 取值为 PlatformInitializeResult.Success 或 PlatformInitializeResult.AlreadyInitialized，则表示初始化成功。 
+ 
+在使用异步初始化的时候，一种错误例子如下所示。该例子中，异步初始化还未结束便执行 UserService.GetLoggedInUser()。 
+ 
+*初始化失败处理方式 
+初始化失败多由用户网络问题导致，当然也不排除其他原因。常用的初始化失败处理方式包括： 
+*应用支持离线模式，让用户在离线模式下进入应用。 
+*将用户引导至“重载页面”，“重载页面”提示用户网络问题或者联系开发者，用户点击页面上的刷新按钮后，重新进行初始化。
+*初始化游戏模块
+*前提条件
+*确保已完成基础配置并在 PICO 开发者平台上启用 Matchmaking 服务。详细说明参考《房间&匹配》指南。
+*操作步骤
+*调用 CoreService.GameInitialize 初始化游戏模块。
+* 
+*设置该请求的回调函数。 
+*若响应结果为 GameInitializeResult.Success，表示游戏模块初始化成功，你可以开始使用游戏模块包含的各项服务，例如房间、匹配、排行榜等。如果初始化失败，请按照返回的错误枚举分别处理，例如: 网络不通的话，提示玩家检查网络。
+*监听网络事件
+使用游戏模块时，你需要监听网络事件。当用户断网和重连时，你会收到以下事件推送。Lost 事件明用户断网，此时，你需要暂停向客户端侧发送请求。Resumed 表示用户网络重连成功。建议你在游戏画面中通过 “转圈图标” 或其他合理方式提示用户 “重连中” 状态。 
+ 
+*注意事项
+若将应用切换到后台，popMessage 接口会被暂停使用，导致服务器无法收到应用的心跳。若心跳断连过久，会导致应用和服务器之间的连接断开，断连期间的消息会丢失。重新将应用切换到前台后，应用和服务器之间会进行重连。
+*游戏模块相关指南
+*房间&匹配
+*排行榜
+*成就
+*挑战
+*API 参考
+*关于 CoreService 类接口的详细说明，参阅 API 参考。
+
+提示
+同步初始化过程中涉及到网络请求，使用该方式可能会导致应用启动时短暂卡顿。
+
+try
+{
+    CoreService.Initialize();
+    UserService.GetLoggedInUser().OnComplete(userMessage =>
+    {
+        if (userMessage.IsError)
+        {
+            Debug.Log($$"GetLoggedInUser failed:code= {userMessage.Error.Code} message={userMessage.Error.Message}");
+            return;
+        }
+
+        Debug.Log($$"name={userMessage.Data.DisplayName}");
+    });
+}
+// 在此处进行错误处理
+catch (UnityException e)
+{
+    Debug.Log($$"Init Platform SDK error:{e}");
+    throw;
+}
+
+CoreService.AsyncInitialize().OnComplete(m =>
+{
+    // 异步初始化返回一个错误的 Message
+    if (m.IsError)
+    {
+        Debug.Log($$"Async initialize failed: code={m.GetError().Code} message={m.GetError().Message}");
+        return;
+    }
+
+    // 若异步初始化成功，则返回 Message<PlatformInitializeResult> 类型的消息；如果 m.Data 字段表示不成功，则表明初始化失败 
+    if (m.Data != PlatformInitializeResult.Success && m.Data != PlatformInitializeResult.AlreadyInitialized)
+    {
+        Debug.Log($$"Async initialize failed: result={m.Data}");
+        return;
+    }
+
+    // 异步初始化成功，接下去可以正常调用其他平台服务接口
+    Debug.Log("AsyncInitialize Successfully");
+    UserService.GetLoggedInUser().OnComplete(userMessage =>
+    {
+        if (userMessage.IsError)
+        {
+            Debug.Log($$"GetLoggedInUser failed:code= {userMessage.Error.Code} message={userMessage.Error.Message}");
+            return;
+        }
+
+        Debug.Log($$"name={userMessage.Data.DisplayName}");
+    });
+});
+
+CoreService.AsyncInitialize().OnComplete(m =>
+{
+    if (m.IsError)
+    {
+        Debug.Log($$"Async initialize failed: code={m.GetError().Code} message={m.GetError().Message}");
+        return;
+    }
+
+    if (m.Data != PlatformInitializeResult.Success && m.Data != PlatformInitializeResult.AlreadyInitialized)
+    {
+        Debug.Log($$"Async initialize failed: result={m.Data}");
+        return;
+    }
+
+    Debug.Log("AsyncInitialize Successfully");
+});
+UserService.GetLoggedInUser().OnComplete(userMessage =>
+{
+    if (userMessage.IsError)
+    {
+        Debug.Log($$"GetLoggedInUser failed:code= {userMessage.Error.Code} message={userMessage.Error.Message}");
+        return;
+    }
+
+    Debug.Log($$"name={userMessage.Data.DisplayName}");
+});
+
+public static Task<GameInitializeResult> GameInitialize(string accessToken) 
+{ 
+    if (Initialized) 
+    { 
+        return new Task<GameInitializeResult>(CLIB.ppf_Game_InitializeWithToken(accessToken)); 
+    } 
+
+    Debug.LogError(UninitializedError); 
+    return null; 
+ }
+
+void Start()
+{
+    NetworkService.SetNotification_Game_ConnectionEventCallback(OnGameConnectionEvent);
+}
+
+...
+void OnGameConnectionEvent(Message<GameConnectionEvent> msg)
+{
+    var state = msg.Data;
+    LogHelper.LogInfo(TAG, $$"OnGameConnectionEvent: {state}");
+    if (state == GameConnectionEvent.Connected)
+    {
+        LogHelper.LogInfo(TAG, "GameConnection: success！");
+    }
+    else if (state == GameConnectionEvent.Closed)
+    {
+        Uninitialize();
+        LogHelper.LogInfo(TAG, "GameConnection: fail！Please re-initialize！");
+    }
+    else if (state == GameConnectionEvent.GameLogicError)
+    {
+        Uninitialize();
+        LogHelper.LogInfo(TAG, "GameConnection: fail！After successful reconnection, the logic state is found to be wrong，Please re-initialize！");
+    }
+    else if (state == GameConnectionEvent.Lost)
+    {
+        LogHelper.LogInfo(TAG, "GameConnection: Reconnecting, please wait！");
+    }
+    else if (state == GameConnectionEvent.Resumed)
+    {
+        LogHelper.LogInfo(TAG, "GameConnection: successful reconnection！");
+    }
+    else if (state == GameConnectionEvent.KickedByRelogin)
+    {
+        Uninitialize();
+        LogHelper.LogInfo(TAG, "GameConnection: Repeat login! Please reinitialize！");
+    }
+    else if (state == GameConnectionEvent.KickedByGameServer)
+    {
+        Uninitialize();
+        LogHelper.LogInfo(TAG, "GameConnection: Server kicks people! Please reinitialize！");
+    }
+    else
+    {
+        LogHelper.LogInfo(TAG, "GameConnection: unknown error！");
+    }
+}

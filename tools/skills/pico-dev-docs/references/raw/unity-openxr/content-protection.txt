@@ -1,0 +1,27 @@
+内容保护
+========================================
+开启内容保护后，若用户在应用内截屏、录屏或投屏，相关画面将呈现为黑色。
+*环境要求
+*PICO 设备型号：PICO Neo3 系列、PICO 4 系列、PICO 4 Ultra 系列
+*PICO 设备系统版本：5.7.0 及以上
+*开启内容保护
+*在 Unity 编辑器内打开你的项目。
+*前往 Edit > Project Settings > XR Plugin-in Management > OpenXR。
+*在 OpenXR Feature Groups 区域，完成以下操作：
+*勾选 OpenXR Composition Layer Secure Content。
+* 
+*点击 PICO Support 选框右侧的设置按钮。
+*你将看到 PICO Support 窗口。
+*勾选 Use Content Project 选框。
+* 
+*相关接口
+调用 SetSecureContentFlag 接口开启或关闭内容保护功能。
+ 
+
+LayerSecureContentFeature.SetSecureContentFlag(SecureContentFlag flag)
+
+public enum SecureContentFlag
+{
+    SECURE_CONTENT_OFF = 0, // 关闭内容保护功能
+    SECURE_CONTENT_REPLACE_LAYER =2 // 开启内容保护功能
+}

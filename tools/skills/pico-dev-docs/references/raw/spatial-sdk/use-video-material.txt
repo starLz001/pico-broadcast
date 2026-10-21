@@ -1,0 +1,163 @@
+使用 VideoMaterial
+========================================
+VideoMaterial 是用于承载视频纹理的专用材质。它不仅能将视频内容映射到物体表面进行显示，还提供了多种与渲染相关的属性，从而保证视频在不同场景下都能以合适的方式播放与呈现。通过灵活设置这些属性，你可以实现透明视频叠加、单面/双面渲染、平面与立体视频布局等效果。
+*属性说明
+*BlendingMode
+*BlendingMode 用于定义视频材质与背景或与其他材质的混合方式，从而控制渲染管线中的颜色混合行为。PICO Spatial SDK 提供的混合模式如下：
+*
+ 
+*MaterialCullingMode
+*MaterialCullingMode 用于控制渲染管线中多边形正反面的剔除逻辑，直接影响渲染性能与画面正确性。PICO Spatial SDK 提供的材质剔除模式如下：
+*
+*VideoDimensionMode
+*VideoDimensionMode 用于定义视频内容在 3D 或 VR 场景中的视图布局和编码方式，进而决定空间视频的兼容性、画质表现以及压缩效率。PICO Spatial SDK 提供的视频布局模式如下：
+*
+*创建视频材质
+*你可以使用构造函数创建视频材质，并自定义材质的 BlendingMode、VideoDimensionMode、MaterialCullingMode 和 Color4 属性。若不设置以上属性，则自动使用默认值。
+* 
+*为视频材质绑定 ShaderGraphMaterial 
+*你可以为视频材质绑定 ShaderGraphMaterial，从而为视频纹理实现自定义特效。
+*创建视频材质：
+* 
+*加载 ShaderGraphMaterial，并将其绑定至视频材质。
+* 
+*将视频材质设置给 VideoComponent 或者 VideoPlayerComponent。
+* 
+*API 参考
+*VideoMaterial 类提供了视频材质相关的函数，详情参阅 API 参考。根据你所处的地理位置选择合适的文档链接：
+*中国大陆：https://developer-cn.picoxr.com/spatial-api/index.html
+*非中国大陆：https://developer.picoxr.com/spatial-api/index.html
+
+
+
+
+模式
+
+描述
+
+适用场景
+
+OPAQUE（默认）
+
+不透明模式，材质完全遮盖背景，无透明度混合计算。
+
+实体物体
+
+TRANSPARENT
+
+透明混合模式，支持半透明效果。通过 alpha 通道值控制透明度。
+
+玻璃、液体等需要透光的材质
+
+ADD
+
+叠加混合模式，颜色值线性叠加。
+*计算公式：Result = SourceColor + DestColor
+
+发光体、光晕等需要亮度叠加的效果
+
+FADE
+
+渐隐混合模式，平滑过渡透明度，同时影响漫反射和高光反射的透明度。
+
+物体淡入淡出效果
+
+MASKED
+
+遮罩混合模式，基于阈值二值化。使用 opacityThreshold 参数作为透明度阈值，范围为（0-1），alpha 通道值大于等于 opacityThreshold 时，显示材质，否则完全透明。
+
+用于需要精确控制透明和不透明区域的材质，例如：树叶、栅栏、网格状的物体
+
+视频材质仅支持 OPAQUE 和 TRANSPARENT 两种混合模式。
+
+
+
+模式
+
+描述
+
+适用场景
+
+NONE
+
+禁用面片剔除，即双面均渲染。
+
+需要正反两面均可见的物体，如透明材质、布料等。
+
+FRONT
+
+剔除正面，仅渲染多边形背面。
+
+反向建模或需要观察物体内部结构的场景。
+
+BACK（默认）
+
+剔除背面，仅渲染多边形正面。
+
+仅需展示正面的常规 3D 模型，用于优化渲染性能。
+
+FRONT_AND_BACK
+
+双向剔除，不渲染任何面片。
+
+占位符或调试模式等特殊用途。
+
+
+
+模式
+
+描述
+
+适用场景
+
+MONO（默认）
+
+单眼模式。左右眼画面相同，渲染时复用同一帧画面到左右眼，节省渲染资源。
+
+*普通 2D 视频及 180°/360° 全景视频。
+
+TOP_AND_DOWN
+
+上下分屏模式。视频帧上半部分为左眼画面，下半部分为右眼画面。例如：帧分辨率 3840×1920 时，左右眼画面各为 3840×960。
+支持 3D 180°/360° 视频的水平压缩格式。
+
+*180°/360° 全景 3D 视频。
+
+SIDE_BY_SIDE
+
+左右分屏模式。视频帧左半部分为左眼画面，右半部分为右眼画面。例如：帧分辨率 3840×1920 时，左右眼各为 1920×1920。
+ 支持 3D 180°/360° 视频的水平压缩格式。
+
+*180°/360° 全景 3D 视频。
+
+MULTIPLE_VIEW
+
+多视图模式，双缓冲独立渲染，为左右眼分配独立视频缓冲区（如 MV-HEVC 编码）。该模式的画质最高，需要双倍显存和带宽。
+
+高性能设备的高分辨率 3D 视频。
+
+val videoMaterial =
+    VideoMaterial(
+        BlendingMode.OPAQUE,
+        VideoDimensionMode.MONO,
+        MaterialCullingMode.BACK,
+        Color4.BLACK
+    )
+
+val videoMaterial =
+    VideoMaterial(
+        BlendingMode.OPAQUE,
+        VideoDimensionMode.MONO,
+        MaterialCullingMode.BACK,
+        Color4.BLACK
+    )
+// 你也可以使用 VideoMaterial.create(BlendingMode) 接口来创建视频材质
+
+val bundle = AssetBundle.load("asset://your_shaderGraphMaterial_name.bundle")
+val shaderMat = ShaderGraphMaterial.loadFromAssetBundle(bundle, "relative_path_in_AssetBundle")
+shaderMat.toGlobal() //如果想复用该组件，需要先toGlobal
+videoMaterial.attachShaderGraphMaterial(shaderMat)
+
+val component = VideoComponent(mesh, videoMaterial)
+//或者 val component = VideoPlayerComponent(player,mesh, videoMaterial)
+entity.components.set(component)

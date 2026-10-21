@@ -1,0 +1,29 @@
+触觉反馈
+========================================
+PICO 4 系列设备配置了宽频线性马达，可通过手柄振动的形式提供触觉反馈。振动频率一般在 50 ~ 500Hz 之间，可精确模拟现实世界中大部分的触感输出，为用户提供丰富的触觉交互体验。
+*PICO Unreal OpenXR Plugin 支持两类与手柄振动相关的能力：
+*虚幻引擎标准触觉反馈： 支持虚幻引擎标准触觉反馈。
+*PHF 音频振动：PICO Unreal OpenXR Plugin 在 1.6.0 中支持 PHF(PICO Haptic File) 音频振动。PICO Haptic File (.phf) 是 PICO 自研的触觉数据文件格式，自定义程度高。
+*环境要求
+*PICO 设备：PICO Neo3、PICO 4、PICO 4 Pro、PICO 4 Enterprise、PICO G3、PICO 4 Ultra 或 Project Swan（PICO OS 6）
+*PICO 设备系统版本：5.7.0 或以上版本
+*前提条件
+你已在虚幻引擎中安装并启用了 PICO Unreal OpenXR 插件。详情参考 PICO Unreal OpenXR 快速开始。
+*实现方法
+*虚幻引擎标准触觉反馈
+*PICO Unreal OpenXR Plugin 支持虚幻引擎标准触觉反馈。你可以使用虚幻引擎内置的 Play Haptic Effect 实现标准触觉反馈。参考下面的蓝图了解具体实现方法。
+ 
+*PHF 音频振动
+*使用 PICO 触觉编辑器 将音频数据转换成 .phf 文件。
+ 
+*将 .phf 文件拖入虚幻引擎的 Content Browser。 .phf 文件会被解析成虚幻引擎可识别的资产数据结构。
+*通过以下蓝图接口实现振动反馈。
+*Play PHFHaptic Asset PICO
+* 
+*Play Haptic Effect PICO
+* 
+*Stop Haptic Effect PICO
+* 
+
+
+

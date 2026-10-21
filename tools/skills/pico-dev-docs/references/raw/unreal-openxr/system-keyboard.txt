@@ -1,0 +1,10 @@
+系统键盘
+========================================
+用户可通过应用内的键盘在各类文字场景下完成文本输入，例如：文字聊天、设置昵称等。PICO Unreal OpenXR Plugin 支持系统级键盘。
+*环境要求
+*PICO 设备：PICO Neo3、PICO 4、PICO 4 Pro、PICO 4 Enterprise、PICO G3、PICO 4 Ultra 或 Project Swan（PICO OS 6）
+*PICO 设备系统版本：5.7.0 或以上版本
+*前提条件
+你已在引擎中安装并启用了 PICO Unreal OpenXR 插件。详情参考PICO Unreal OpenXR 快速开始。
+*设置系统键盘
+参考 UE 官方文档-Android虚拟键盘 中提供的步骤设置系统键盘。键盘设置好后，射线点击输入框，会唤起系统键盘。

@@ -1,0 +1,143 @@
+Timeline 动画
+========================================
+Timeline 动画是通过 Spatial Editor 的 Timelines 动画效果器创建的动画。详情参阅《什么是 Timelines》。 
+*PICO Spatial SDK 仅提供了播放 Timeline 动画的功能。如果要创建或编辑 Timeline 动画，你必须使用 Spatial Editor。
+*播放 Timeline 动画
+由于 Timeline 动画的数据结构与传统类型的动画不同，场景被加载到 PICO Spatial SDK 后，你需要使用 entity.playTimeline() 函数播放场景中的 Timeline 动画。
+* 
+*场景被 PICO Spatial SDK 加载后，场景中的每个 Timeline 动画都会被加载为一个 Entity 对象。Entity 对象的名称就是你在 Spatial Editor 中创建的 Timeline 动画的名称。例如，在下图中名称为 Timeline_bird 的 Timeline 动画对应的 Entity 对象的名称就是 Timeline_bird。因此，你可以通过查找实体名称的方式找到 Timeline 动画对应的 Entity 对象。
+* 
+ 
+*参考以下步骤使用 PICO Spatial SDK 播放 Timeline 动画。
+*加载包含 Timeline 动画的场景。
+* 
+*根据名称找到 Timeline 动画对应的 Entity 对象。
+* 
+* 
+*调用 entity.playTimeline() 函数播放 Entity 对象中的 Timeline 动画。该函数会返回一个 TimelinePlayerController 对象。
+* 
+*接下来，你还可以：
+*通过 TimelinePlayerController 对象管理 Timeline 动画的播放。详情参阅  。
+*通过 TimelinePlayerEvents 对象订阅 Timeline 动画的播放事件。详情参阅  。
+*管理 Timeline 动画的播放
+*你调用 entity.playTimeline() 函数播放 Entity 对象中的 Timeline 动画后，该函数会返回一个 TimelinePlayerController 对象。该对象可用于管理 Timeline 动画的播放。
+下面的示例代码展示了如何通过 TimelinePlayerController 对象管理 Timeline 动画的播放。
+ 
+*订阅 Timeline 动画的播放事件
+*你可以通过 Scene 对象或 SpatialViewContent  对象来订阅 TimelinePlayerEvents 中定义的动画播放事件。TimelinePlayerEvents 对象包括以下事件：
+**
+*下面的示例代码展示了如何订阅 Scene 对象中发生的 Timeline 动画的播放事件。 
+ 
+*下面的示例代码展示了如何订阅 SpatialViewContent 对象中发生的 Timeline 动画的播放事件。 
+* 
+*管理 Timeline 动画的播放事件
+*当你需要处理大量事件时，你可以自定义一个 EventManager 来管理事件的订阅和取消订阅，以及事件被触发时的回调。
+ 
+*API 参考
+关于 Timeline 动画相关的以下函数和类，详情参阅 API 参考。
+*entity.playTimeline() 函数
+*TimelinePlayerController 类
+*TimelinePlayerEvents 类
+
+*根据你所处的地理位置选择合适的 API 参考文档链接：
+*中国大陆：https://developer-cn.picoxr.com/spatial-api/index.html
+*非中国大陆：https://developer.picoxr.com/spatial-api/index.html
+
+*entity.playAnimation() 函数不能用于播放 Timeline 动画。
+
+*建议在 Spatial Editor 中提前确认动画的播放效果，避免动画不符合预期。
+*场景被 PICO Spatial SDK 加载后，建议不要通过 SDK 修改或移除场景树中的属性，避免动画与在 Spatial Editor 中预览的不符。
+
+val root = withContext(Dispatchers.IO) {Entity.load("SpatialAudioScene", bundle)}
+
+*虽然 Timeline 动画的名称在其类别中是唯一的，但场景中的其他类型实体仍可能与它重名。因此，如果你仅按名称查找，可能会获取到错误的实体，而非你想要的 Timeline 动画。为确保能准确定位，建议你在查找前先熟悉场景的层级结构，以便进行更精确的筛选。
+
+val timelineEntity = root.findEntity("Timeline_bird")
+
+val controller = timelineEntity.playTimeline()
+
+// 再次播放 Timeline 动画
+controller.play()
+// 暂停播放 Timeline 动画
+controller.pause()
+// 停止播放 Timeline 动画
+controller.stop()
+// 恢复播放已暂停的 Timeline 动画
+controller.resume()
+
+// 判断 Timeline 动画是否在播放
+val isPlaying = controller.isPlaying()
+// 判断 Timeline 动画的播放是否停止
+val isStopped = controller.isStopped()
+// 判断 Timeline 动画的播放是否暂停
+val isPaused = controller.isPaused()
+// 判断 Timeline 动画的播放是否完成
+val isComplete = controller.isComplete()
+// 获取 Timeline 动画的实际播放时间
+val duration = controller.getDuration()
+
+
+
+事件
+
+说明
+
+TimelinePlayerEvents.Started
+
+Timeline 动画开始播放。该事件可以在以下情况下触发：
+*调用 entity.playTimeline() 函数。
+*调用TimelinePlayerController.play()函数。
+*Timeline 动画被关联的 Behavior Trigger 组件触发。详情参阅《为实体添加动画效果》。
+
+TimelinePlayerEvents.Completed
+
+Timeline 动画播放完成。TimelinePlayerController.stop()函数不会触发该事件。
+
+TimelinePlayerEvents.Terminated
+
+Timeline 动画播放终止。TimelinePlayerController.stop()函数会触发该事件。
+
+TimelinePlayerEvents.Paused
+
+Timeline 动画播放暂停。TimelinePlayerController.pause()函数会触发该事件。
+
+TimelinePlayerEvents.Resumed
+
+Timeline 动画播放恢复。TimelinePlayerController.resume()函数会触发该事件。
+
+entity.scene?.subscribe(TimelinePlayerEvents.Started::class.java) {}
+
+content.subscribe(TimelinePlayerEvents.Started::class.java) {}
+
+object EventManager { 
+    private var subscription: Cancellable? = null 
+ 
+    fun <T : Event> subscribeTimelineEvent(content: SpatialViewContent, timelineEvent: Class<T>) { 
+        when (timelineEvent) { 
+            // 订阅Timeline播放开始事件
+            TimelinePlayerEvents.Started::class.java -> { 
+                subscription = 
+                    content.subscribe(animEvent) {
+                        Log.d("EventManager", "Timeline Started!") 
+                        // Implement your logic here 
+                    }
+            } 
+            // 订阅Timeline终止事件 
+            TimelinePlayerEvents.Terminated::class.java -> { 
+                subscription = 
+                    content.subscribe(animEvent) {
+                        Log.d("EventManager", "Timeline Terminated!") 
+                        // Implement your logic here 
+                    }
+            } 
+            else -> { 
+                Log.e("EventManager", "No Matching Timeline Event Found!") 
+            } 
+        } 
+    } 
+ 
+    // 取消订阅所有Timeline事件 
+    fun unsubscribeAllTimelineEvents() { 
+        subscription?.cancel() 
+    } 
+}

@@ -1,0 +1,316 @@
+手柄&头戴输入映射
+========================================
+手柄和头戴是用户与应用交互的媒介。通过操作手柄或头戴，用户可在系统或应用内完成一系列操作，例如：按下返回键，退出当前场景；点击按钮，确认相关设置。每个手柄/头戴操作都会被映射为输入事件。PICO Unreal Integration SDK 使用 Unreal 官方键值进行手柄和头戴的输入事件映射。本文介绍如何在 UE 编辑器中设置 PICO 设备的输入映射，你也可参考虚幻引擎官方文档设置输入了解相关内容。
+*支持设备
+PICO Neo3，PICO 4 以及 PICO 4 Ultra 系列。
+*前提条件
+在输入映射之前，确保你已为 Pawn 定义了运动控制器组件并添加了对应的 PICO 手柄模型。详情参考搭建 XR 场景。
+*手柄输入映射
+*手柄按键展示
+*PICO 4 Ultra 系列设备
+以下为 PICO 4 Ultra 手柄按键示意图：
+* 
+*PICO 4  系列设备
+*以下为 PICO 4 设备的手柄按键示意图：
+* 
+
+* 
+下图为 PICO 4 手柄支持的键值和轴输入：
+ 
+*PICO Neo 3 系列设备
+*以下为 PICO Neo 3 系列设备的手柄按键示意图：
+* 
+* 
+*一键配置手柄输入映射
+*导入的 PICO SDK 会默认为你创建的项目添加手柄的输入映射。如果你使用的是 UE4，你可使用 PICOXRInput Toolbar Button 一键清除或添加默认的手柄映射。
+*前往 编辑（Edit）>项目设置（Project Settings）> 编辑器（Editor）>PICOXR Settings，勾选 Show PCIOXRInput Toolbar Button。
+* 
+*在 UE 编辑器上方工具栏，将出现 PICOXR 图标。
+*在 UE 编辑器上方工具栏，点击 PICOXR 图标 > Clear/Add Sample Inputs，一键清除或添加 PICO SDK 预置的输入映射。
+* 
+*手动配置手柄输入映射
+*参考以下步骤，基于你使用的虚幻引擎版本，配置手柄输入映射。
+*在 UE5 中配置手柄输入映射
+*虚幻引擎 5 提供了 Enhanced Input 插件来帮助你配置输入映射，原有的输入映射配置已废弃。参考以下步骤完成输入映射。
+*前往 世界场景设置（World Settings） > 游戏模式（Game Mode），确认 默认Pawn类（Default Pawn Class） 为 VRPawn。
+* 
+*前往 编辑（Edit） >  插件（Plugins） > 内置（Built-In） >Input，勾选 Enhanced Input 插件，并重启编辑器。
+* 
+*前往 内容浏览器（Content Drawer） > 内容（Content） > VRTemplate > Input，根据场景需要，对 输入映射上下文 的数据资产进行 PICO 手柄的按键映射。
+* 
+*你可参考以下示例添加 PICO 手柄的按键映射，也可以自定义你的按键映射。 
+*IMC_Default
+**
+*IMC_Hands
+**
+*IMC_Menu
+**
+*IMC_Weapon_Left 和 IMC_Weapon_Right
+**
+*(仅 VRPawn) 设置骨骼网格体来将手改为手柄，实现手柄输入映射的效果。
+* 
+*在 UE4 中配置手柄输入映射
+*在 UE4 编辑器中，前往 编辑（Edit）> 项目设置（Project Settings）> 引擎（Engine） > 输入（Input）。
+*在 绑定（Bingings） 选卡下，参考下表，为 PICO  系列设备配置手柄按键映射。其中，动作映射如下：
+**
+*参考下表配置轴映射，并将 Scale 设置为 1.0。
+**
+*头戴按键映射
+*PICO 4 Ultra 系列设备
+*头戴按键示意图如下：
+*
+* 
+下表是 PICO 4 头戴的按键与 UE 里的键值对应关系：
+**
+*PICO 4 系列设备
+*头戴按键示意图如下：
+* 
+下表是 PICO 4 头戴的按键与 UE 里的键值对应关系：
+*
+*PICO Neo3 系列设备
+*头戴按键示意图如下：
+* 
+* 
+下表是 PICO Neo3 头戴的按键与 UE 里的键值对应关系：
+*
+
+
+在 UE 中，VRPawn 是专为 VR 项目设计的 Pawn 类（或蓝图），用于管理玩家在 VR 场景中的交互、移动和视角控制。对于初学者来说，可以使用 VRPawn 进行简单操作。对于有经验的开发者，可以跳过第一步，直接使用自己的 Pawn 进行映射。
+
+
+
+字段
+
+PICO 设备按键映射
+
+IA_Move 
+
+PICO Touch (R) Thumbstick Y
+
+IA_Turn 
+
+PICO Touch (L) Thumbstick X
+
+IA_Grab_Left 
+
+PICO Touch (L) Grip Axis 
+
+IA_Grab_Right 
+
+PICO Touch (R) Grip Axis 
+
+IA_Menu_Toggle_Left 
+
+PICO Touch (L) Thumbstick 
+
+IA_Menu_Toggle_Right 
+
+PICO Touch (R) Thumbstick
+
+
+
+字段
+
+PICO 设备按键映射
+
+IA_Hand_Point_Left 
+
+PICO Touch (L) Trigger Touch 
+
+IA_Hand_Point_Right 
+
+PICO Touch (R) Trigger Touch 
+
+IA_Hand_ThumbUp_Left 
+
+PICO Touch (L) X Touch 
+PICO Touch (L) Y Touch 
+
+IA_Hand_ThumbUp_Right 
+
+PICO Touch (R) A Touch 
+PICO Touch (R) B Touch 
+
+IA_Hand_Grasp_Left 
+
+PICO Touch (L) Grip Axis 
+
+IA_Hand_Grasp_Right 
+
+PICO Touch (R) Grip Axis 
+
+IA_Hand_IndexCurl_Left 
+
+PICO Touch (L) Trigger Axis 
+
+IA_Hand_IndexCurl_Right 
+
+PICO Touch (R) Trigger Axis 
+
+
+
+字段
+
+PICO 设备按键映射
+
+IA_Menu_Interact_Left 
+
+PICO Touch (L) Trigger Axis 
+
+IA_Menu_Interact_Right 
+
+PICO Touch (R) Trigger Axis 
+
+IA_Menu_Cursor_Left 
+
+PICO Touch (L) Thumbstick X,
+* PICO Touch (L) Thumbstick Y
+
+IA_Menu_Cursor_Right
+
+PICO Touch (R) Thumbstick X,
+* PICO Touch (R) Thumbstick Y
+
+
+
+字段
+
+PICO 设备按键映射
+
+IA_Shoot_Left 
+
+PICO Touch (L) Trigger Axis
+
+IA_Shoot_Right
+
+PICO Touch (R) Trigger Axis 
+
+如果使用 VRPawn 进行映射，那么会显示 UE 自带的手的效果，所以需要完成此步骤。
+
+
+
+动作（Action）
+
+PICO 设备按键映射
+
+GrabLeft
+
+PICO Touch (L) Grip
+
+GrabRight
+
+PICO Touch (R) Grip
+
+MenuToggleLeft
+
+PICO Touch (L) Thumbstick
+
+MenuToggleRight
+
+PICO Touch (R) Thumbstick
+
+TriggerLeft
+
+PICO Touch (L) Trigger
+
+TriggerRight
+
+PICO Touch (R) Trigger
+
+
+
+动作（Action）
+
+PICO 设备按键映射
+
+GrabAxisLeft
+
+PICO Touch(L) Grip Axis
+
+GrabAxisRight
+
+PICO Touch(R) Grip Axis
+
+MovementAxisLeft_X
+
+PICO Touch(L) Thumbstick X
+
+MovementAxisLeft_Y
+
+PICO Touch(L) Thumbstick Y
+
+MovementAxisRight_X
+
+PICO Touch(R) Thumbstick X
+
+MovementAxisRight_Y
+
+PICO Touch(R) Thumbstick Y
+
+TriggerAxisLeft
+
+PICO Touch (L) Trigger Axis
+
+TriggerAxisRight
+
+PICO Touch (R) Trigger Axis
+
+
+
+HMD 按键
+
+UE 输入键
+
+音量增大键
+
+ 
+
+音量减小键
+
+ 
+
+
+
+HMD 按键
+
+UE 输入键
+
+音量增大键
+
+ 
+
+
+音量减小键
+
+ 
+
+
+
+
+HMD 按键
+
+UE 输入键
+
+Home 键
+
+Android 标准 HOME（系统占用，默认不开放）。
+
+确认键
+
+ 
+
+
+返回键
+
+ 
+
+
+音量增加键
+
+ 
+
+
+音量减小键
+
+ 
+

@@ -1,0 +1,12 @@
+播放 HDR 视频
+========================================
+External Surface 类型的纹理支持播放 HDR 视频。播放视频时，根据视频类型动态设置 HDR 类型（HDRFlags）。HDRFlags 枚举值如下：
+* 
+
+public HDRFlags hdr = HDRFlags.None;
+public enum HDRFlags
+{
+    None, // 关闭 HDR 视频透传
+    HdrPQ, // PQ 兼容显示模式，支持将符合 ST.2084 标准的 HDR 源重映射成 SDR，以得到正确的显示效果
+    HdrHLG, // HLG 兼容显示模式，支持将符合 HLG 标准的 HDR 源重映射成 SDR，以得到正确的显示效果
+ }

@@ -1,0 +1,134 @@
+基于射线的物体命中检测
+========================================
+你可以通过发射射线或投射几何体，对场景中的物体进行命中检测。
+*前置条件
+*确保已为被检测的物体添加 CollisionComponent。
+*若想获取命中点的 UV 坐标，确保碰撞体为通过 ShapeResource.createStaticMesh(mesh: MeshResource) 创建的静态网格。
+*通过发射射线检测
+*使用 scene.rayCast() 函数，通过发射射线来检测在路径上与之发生碰撞的物体。
+* 
+ 
+*以下示例代码以 rootEntity 的坐标系为基准，从位置 (0, 0, 0) 处向 (0, 0, 1) 方向发射一条长度为 10 米的射线。该查询会检测默认碰撞分组中的物体，并返回命中的最近（第一个）物体。
+* 
+ 
+*通过投射几何体检测
+使用 scene.convexCast() 函数，通过投射几何体来检测在路径上与之发生碰撞的物体。
+* 
+ 
+*以下示例代码以 rootEntity 的坐标系为基准，从位置 (0, 0, 0) 处向 (0, 0, 1) 方向投射一个边长为 0.1 m、姿态为默认（单位四元数）的立方体。该立方体将沿给定方向移动 10 米，查询默认碰撞分组中的物体，并返回命中的最近（第一个）物体。
+* 
+ 
+*处理检测结果
+物体命中检测完成后，函数会返回一个 CollisionCastHitResults 作为检测结果。CollisionCastHitResults 内包含 results: List<CollisionCastResult>，你可以从中获取命中结果列表。
+* 
+* 
+CollisionCastResult 包含以下字段：
+* 
+*
+*注意事项
+*在 ECS 架构中，referenceEntity 是坐标、方向、变换计算的参考系。使用 PICO Spatial SDK 进行物体命中检测时，传入的坐标、方向等参数应基于 referenceEntity 所在的坐标系；返回结果同样基于该坐标系。当 referenceEntity 为 null 时，则以其所在空间容器的坐标系作为基准。
+*scene.rayCast() 和 scene.convexCast() 的 hitMode 参数用于设置命中检测的模式。你可以将其设置为以下两种模式：
+*CollisionCastHitMode.NEAREST：只返回距离起点最近的命中结果。此模式的性能开销最小，适用于点击、指针选中等常规交互场景。
+*CollisionCastHitMode.ALL：返回沿射线或几何体投射路径上的所有命中结果。此模式适合需要多点命中信息的调试或高级交互，但你需要自行遍历和筛选结果，因此处理开销更高。
+*通过合理配置 CollisionGroup 可以在物理求交阶段过滤掉无需参与检测的碰撞体，例如将 UI、装饰物或背景几何体放在独立的碰撞分组中，并在调用 scene.rayCast() 或 scene.convexCast() 时仅传入真正需要交互的分组，从而显著减少无效检测并提升性能。
+*API 参考
+*Scene 类提供用于物体命中检测的 rayCast() 和 convexCast() 函数。
+*CollisionCastResult 类提供物体命中检测结果相关数据。
+*详细说明参阅 API 参考。根据你所处的地理位置选择合适的文档链接：
+*中国大陆：https://developer-cn.picoxr.com/spatial-api/index.html
+*非中国大陆：https://developer.picoxr.com/spatial-api/index.html
+
+
+如果射线的起点位于某个物体的碰撞体内部，则该物体不会作为命中结果返回。
+*因此，scene.rayCast() 函数更适合用于“从外向内”检测场景（例如从用户视角或指针指向场景表面）。如果你的交互需要从物体内部开始检测命中结果，可以适当前移射线起点，或改用 scene.convexCast() 重新设计交互流程。
+
+val results = scene.rayCast(
+    Vector3(0f, 0f, 0f),
+    Vector3(0f, 0f, 1f),
+    10f,
+    CollisionCastHitMode.NEAREST, 
+    CollisionGroup(CollisionGroup.COLLISION_GROUP_DEFAULT),
+    rootEntity,
+)
+
+只要物体的碰撞体与所投射的几何体存在交集，此次投射便命中了物体。因此，即使该物体位于几何体被投射的起点之前，也会被检测到。
+
+val shape = ShapeResource.createBox(Vector3(0.1f, 0.1f, 0.1f))
+val results = scene.convexCast(
+    shape,
+    Vector3(0f, 0f, 0f),
+    Quat.identity(),
+    Vector3(0f, 0f, 1f),
+    10f,
+    CollisionCastHitMode.NEAREST,
+    CollisionGroup(CollisionGroup.COLLISION_GROUP_DEFAULT),
+    rootEntity,
+)
+
+*模型播放骨骼动画或 BlendShape 动画时，顶点的空间位置变化是由 GPU 实时计算的。然而，射线检测等物理运算是由 CPU 完成的。因此，射线检测无法精确命中在 GPU 上通过骨骼动画或 BlendShape 动画变形的网格。
+*当前物理引擎的射线求交计算在 CPU 端进行，且仅适用于通过 ShapeResource.createStaticMesh(mesh: MeshResource) 创建的、未变形的静态网格。当射线或几何体命中静态网格碰撞体时，系统会先确定命中的三角形，再根据命中点在该三角形内的重心坐标，对顶点的 UV0、UV1 等属性进行插值，因此可返回命中点对应的 UV 坐标。
+因此，射线检测命中结果中的 uv0、uv1、materialIndex 信息对应的是模型在绑定姿势（Bind Pose）下的静态表面位置，而不是当前帧渲染出来的视觉表面。
+
+val results = scene.rayCast(
+    Vector3(0f, 0f, 0f),
+    Vector3(0f, 0f, 1f),
+    10f,
+    CollisionCastHitMode.NEAREST, 
+    CollisionGroup(CollisionGroup.COLLISION_GROUP_DEFAULT),
+    rootEntity,
+)
+val resultList = results.results
+resultList.forEach { hit ->
+    val entity = hit.entity
+    val shapeIndex = hit.shapeIndex
+    val position = hit.position
+    val normal = hit.normal
+    val distance = hit.distance
+    val uv0 = hit.uv0 
+    val uv1 = hit.uv1
+    val materialIndex = hit.materialIndex 
+}
+
+*一个模型可以有多套 UV 通道：uv0 代表第一套 UV 通道，最常用来做基础颜色、法线等主贴图采样；uv1 代表第二套 UV 通道，常用于额外用途，比如光照贴图、第二层贴花/遮罩等。
+*uv0、uv1 和 materialIndex 只有在射线或几何体命中了由 ShapeResource.createStaticMesh(mesh: MeshResource) 创建的静态网格碰撞体，且模型本身包含对应的 UV 通道时才表示有效信息。对于其他类型的碰撞体，或者模型缺少对应通道时，uv0 和 uv1 将返回 Vector2.ZERO，materialIndex 将返回 -1。
+
+
+
+字段
+
+描述
+
+entity: Entity
+
+射线或几何体所命中的 entity。
+
+shapeIndex: Int
+
+*被命中的碰撞体在该 entity 的 CollisionComponent.collisionShape（List<ShapeResource>）中的索引。
+
+position: Vector3
+
+碰撞点的位置。
+
+normal: Vector3
+
+碰撞点的法线。
+
+distance: Float
+
+命中时，从射线发射点或几何体投射点至碰撞点的距离。
+
+uv0: Vector2
+
+命中点在模型第一套 UV 通道（UV0）上的坐标。
+*只有在射线或几何体命中了由 ShapeResource.createStaticMesh(mesh: MeshResource) 创建的静态网格碰撞体且模型包含 UV0 时才返回命中点的坐标；否则为 Vector2.ZERO。
+
+uv1: Vector2
+
+命中点在模型第二套 UV 通道（UV1）上的坐标。
+*只有在射线或几何体命中了由 ShapeResource.createStaticMesh(mesh: MeshResource) 创建的静态网格碰撞体且模型包含第二套 UV（UV1）时才返回命中点的坐标；否则为 Vector2.ZERO。
+
+materialIndex: Int
+
+命中面片所属子网格的索引。你可以使用该索引从 ModelComponent.materials 列表中获取对应的材质实例。
+*如果碰撞体不是由 ShapeResource.createStaticMesh(mesh: MeshResource) 创建的静态网格碰撞体，该参数返回 -1。

@@ -1,0 +1,12 @@
+如何降低场景模型边缘明显的锯齿感？
+========================================
+你可以按照以下步骤降低模型边缘的锯齿感:
+*在编辑器左上角，点击 编辑（Edit） > 项目设置（Project Settings） > 引擎（Engine） > 渲染（Rendering）。
+*在 移动平台（Mobile） 下，将 移动 MSAA（Mobile MSAA） 改为 4x MSAA。
+* 
+*MSAA 倍数应如何设置？
+如果你不确定 MSAA 应该设置为几倍：
+*在编辑器左上角，点击 编辑（Edit） > 项目设置（Project Settings） > 插件（Plugins） > PICOXR Settings。
+*在 Feature 下，勾选 Use Recommended MSAA Level，来使用推荐的 MSAA 值。
+* 
+

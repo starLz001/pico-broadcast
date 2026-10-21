@@ -1,0 +1,281 @@
+独立追踪
+========================================
+PICO 体感追踪器（正式版）可被绑定于物体上进行位置追踪。在独立追踪模式下，如已连接配对的体感追踪器在 PICO VR 一体机的可见范围内，则可实时追踪并输出体感追踪器的 6DoF 信息，用于追踪体感追踪器本体或绑定的物体。
+* 
+*应用场景
+以下为 “独立追踪” 功能的部分应用场景。这些场景需要开发者自行开发，PICO 官方仅提供对 PICO 体感追踪器的追踪能力。
+*运动/游戏器械追踪
+*将追踪器固定在乒乓球拍、棒球拍、弓箭、枪等运动器械上，通过追踪器追踪现实中运动器械的位置，并在 XR 游戏中进行互动，为用户带来更真实的手感和更佳的发挥。结合追踪器自身的外部设备连接接口，使其可以接收或传递外设的数据，从而支持你实现如扣动扳机、击球振动反馈等能力。
+*办公用具追踪
+*将追踪器固定在办公用具（例如笔）上，通过追踪器推测笔尖位置，可在 XR 场景中提供更真实的书写体验。结合追踪器自身的外设接口，配合支持压感、按键的笔身，可带来更丰富的输入体验。
+*手势辅助
+*将追踪器固定在手部追踪手套或裸手上，通过追踪器追踪现实中人手的位置，结合手部追踪器或视觉的手势识别，为用户提供更精准、低延迟、可覆盖盲区的手部追踪能力。
+*注意事项
+*独立追踪模式下，若体感追踪器与一体机之间的距离超过 1 米或进入一体机盲区，则会导致追踪数据不准确或无法更新。请在调试或正式使用时确保体感追踪器在有效追踪范围内。
+*独立追踪模式与全身动捕模式互斥，在开启独立追踪模式后，无法输出全身动捕数据。
+*环境要求
+*PICO 设备型号：PICO 4 系列、PICO 4 Ultra 系列
+*PICO 设备系统版本：5.13.0 及以上
+*PICO 体感追踪器（正式版）
+*前提条件
+已在场景内添加 XR Origin 对象并为其挂载 PXR_Manager (Script) 组件。
+*接入独立追踪功能
+*第一步：为应用开启独立追踪能力
+*在 Inspector 窗口中的 PXR_Manager (Script) 面板上，勾选 Body Tracking 选框，为应用开启独立追踪能力。开启后，可以调用独立追踪相关接口在应用内实现该功能。
+* 
+*第二步：获取 PICO 体感追踪器信息
+调用接口，获取 PICO 体感追踪器数据，包括连接状态、型号、位置等信息。此外，在 “独立追踪” 模式下，你可以获取体感追踪器的位置。接口列表如下：
+*
+*你的应用在使用体感追踪器之前，必须先请求想要使用的体感追踪器数量。之后会根据实际连接的体感追踪器数量与所请求的数量进行对比来执行不同操作。
+*如果已连接的体感追踪器数量等于所请求的数量，那么你的应用将会接收到一个 PXR_MotionTracking.RequestMotionTrackerCompleteAction 事件。
+*如果已连接的体感追踪器数量与请求的数量不一致，Runtime 就会启动 “PICO 体感追踪器“ 应用，让用户去连接与所请求数量相同的体感追踪器。当用户完成体感追踪器的连接并退出 ”PICO 体感追踪器“ 应用后，你的应用会接收到 PXR_MotionTracking.RequestMotionTrackerCompleteAction 事件。
+*如果当前的追踪模式非独立追踪，Runtime 就会启动 “PICO 体感追踪器“ 应用，让用户在应用中将模式切换成独立追踪。
+*代码示例如下：
+ 
+*获取外部设备数据
+通过 PICO 体感追踪器的 Type-C 接口，可以将外部设备与 PICO 头戴相连接，然后在外部设备和你的应用间传递如外部设备电量、按键操作、振动指令等信息。例如，与带有振动能力的球拍相连后，可以在击中球的时候为用户提供振动反馈。此外，该功能支持开发者自定义的拓展协议。接口列表如下：
+*
+代码示例如下：
+ 
+*位姿赋值说明
+Unity 引擎默认使用左手坐标系，而 localLocation 使用右手坐标系。因此，赋值位姿时，需要将右手坐标系转换为左手坐标系，如下所示：
+ 
+*API 参考
+若想了解独立追踪接口的详细信息，包括参数说明、返回值说明等，参阅 API 参考。
+
+
+
+接口
+
+说明
+
+CheckMotionTrackerNumber
+
+请求指定数量的已连接的体感追踪器。
+
+GetMotionTrackerBattery
+
+获取 “独立追踪” 模式下的体感追踪器的电量。
+
+GetMotionTrackerLocation
+
+获取 “独立追踪” 模式下的体感追踪器的位置。
+
+MotionTrackerConnectionAction
+
+回调函数，用于获取体感追踪器的连接状态事件。
+
+MotionTrackerPowerKeyAction
+
+回调函数，用于获取体感追踪器的power键值事件。
+
+RequestMotionTrackerCompleteAction
+
+回调函数，用于获取调用CheckMotionTrackerNumber后的执行结果
+
+using System.Collections.Generic;
+using Unity.XR.PXR;
+using UnityEngine;
+using UnityEngine.Rendering;
+
+public class PXR_ObjectTrackingBlock : MonoBehaviour
+{
+    private Transform objectTrackers;
+    private bool updateOT = true;
+    private int objectTrackersMaxNum = 3;
+    int DeviceCount = 1;
+    List<long> trackerIds = new List<long>();
+   
+
+    // 第一帧更新前调用 Start
+    void Start()
+    {
+        objectTrackers = transform;
+        for (int i = 0; i < objectTrackersMaxNum; i++)
+        {
+            GameObject ga = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            ga.transform.parent = objectTrackers;
+            ga.transform.localScale = Vector3.one * 0f;
+#if UNITY_6000_0_OR_NEWER
+            if (GraphicsSettings.defaultRenderPipeline != null)
+#else
+            if (GraphicsSettings.renderPipelineAsset != null)
+#endif
+            {
+                Material material = new Material(Shader.Find("Universal Render Pipeline/Lit"));
+                Renderer renderer = ga.GetComponent<Renderer>();
+                if (renderer != null)
+                {
+                    renderer.sharedMaterial = material;
+                }
+            }
+        }
+        int res = -1;
+                PXR_MotionTracking.RequestMotionTrackerCompleteAction += RequestMotionTrackerComplete;
+                res = PXR_MotionTracking.CheckMotionTrackerNumber(MotionTrackerNum.TWO);
+        
+        
+        if (res == 0)
+        {
+            objectTrackers.gameObject.SetActive(true);
+           
+        }
+    }
+    private void RequestMotionTrackerComplete(RequestMotionTrackerCompleteEventData obj)
+    {
+        DeviceCount = (int)obj.trackerCount;
+        for (int i = 0; i < DeviceCount; i++)
+        {
+            trackerIds.Add(obj.trackerIds[i]);
+        }
+        
+        updateOT = true;
+    }
+    // 每帧调用一次 Update
+    void Update()
+    {
+#if UNITY_ANDROID
+       
+        for (int i = 0; i < objectTrackersMaxNum; i++)
+        {
+            var child = objectTrackers.GetChild(i);
+            if (child)
+            {
+                child.localScale = Vector3.zero;
+            }
+        }
+
+        // 更新体感追踪器的位姿
+        if (updateOT )
+        {
+            MotionTrackerLocation location = new MotionTrackerLocation();
+            for (int i = 0; i < trackerIds.Count; i++)
+            {
+                bool isValidPose = false;
+                int result = PXR_MotionTracking.GetMotionTrackerLocation(trackerIds[i], ref location, ref isValidPose);
+
+                // 若返回成功
+                if (result == 0)
+                {
+                    var child = objectTrackers.GetChild(i);
+                    if (child)
+                    {
+                        child.localPosition = location.pose.Position.ToVector3();
+                        child.localRotation = location.pose.Orientation.ToQuat();
+                        child.localScale = Vector3.one * 0.1f;
+                    }
+                }
+            }
+        }
+#endif
+    }
+}
+
+
+
+接口
+
+说明
+
+GetExpandDevice
+
+获取外部设备的 ID。
+
+SetExpandDeviceVibrate
+
+为外部设备设置振动反馈。
+
+SetExtDevTrackerPassDataState
+
+设置外部设备数据透传接口的使用状态。
+
+SetExpandDeviceCustomData
+
+设置外部设备的透传数据。
+
+GetExpandDeviceCustomData
+
+获取外部设备的透传数据。
+
+GetExpandDeviceBattery
+
+获取外部设备的电量。
+
+ExpandDeviceConnectionAction
+
+外部设备连接状态发生变化的回调。
+
+ExpandDeviceBatteryAction
+
+外部设备电量和充电状态发生变化的回调。
+
+ExtDevPassDataAction
+
+外部设备与头戴间的数据透传事件。监听该事件来决定是否需要调用 GetExtDevTrackerByPassData 来获取透传数据。
+
+
+bool enable = false;
+
+public void Start()
+{
+    // 启动独立外设透传数据接口的控制接口
+    PXR_MotionTracking.SetExtDevTrackerPassDataState(true);
+    PXR_MotionTracking.ExtDevPassDataAction += ExtDevPassDataAction;
+}
+
+public void OnDestroy()
+{
+    PXR_MotionTracking.ExtDevPassDataAction -= ExtDevPassDataAction;
+    // 关闭独立外设透传数据接口的控制接口
+    PXR_MotionTracking.SetExtDevTrackerPassDataState(false);
+}
+private void ExtDevPassDataAction(int value)
+{
+    if (value == 1) // 监听此事件，为 1 时，开始调用 GetExpandDeviceCustomData
+    {
+        enable = true;
+    }
+    else if (value == 0) // 监听此事件，为 0 时，停止调用 GetExpandDeviceCustomData
+    {
+        enable = false;
+    }
+}
+void Update()
+{
+    if (enable)
+    {
+        List<ExpandDevicesCustomData> expandDevicesCustomDatas;
+            int res = PXR_MotionTracking.GetExpandDeviceCustomData(out expandDevicesCustomDatas);
+            passDataResString  += "res: " + res + ", Length: " + expandDevicesCustomDatas.Count + "\n";
+            foreach (ExpandDevicesCustomData data in expandDevicesCustomDatas) {
+                passDataResString += "TrackerSN: " + data.deviceId + "\n" + "passData: ";
+                foreach (byte byteData in data.data) {
+                    passDataResString += byteData.ToString() + "";
+                }
+                passDataResString += "\n";
+            }
+    }
+}
+
+    public void SetExtDevTrackerByPassData() {
+        long[] devices;
+        int res1 = PXR_MotionTracking.GetExpandDevice(out devices);
+        ExpandDevicesCustomData[] expandDevicesCustomDatas  = new ExpandDevicesCustomData[devices.Length];
+        string setPassDataRes = "";
+        for (int i = 0; i < devices.Length; i++) {
+            setPassDataRes += "GetExpandDevice Res: " + res1 + ", Devices: " + devices[i] + ", ";
+        }
+        setPassDataRes += "\n";
+        for (int i = 0; i < devices.Length; i++) {
+            expandDevicesCustomDatas[i].deviceId = devices[i];
+            expandDevicesCustomDatas[i].data = new byte[]{0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x10, 0x11, 0x12, 0x13, 0x14};  // 设置 16 个数据，仅前面的 15 个有用
+        }
+      
+        int res = PXR_MotionTracking.SetExpandDeviceCustomData(ref expandDevicesCustomDatas);
+        Debug.Log("SetExpandDeviceCustomData res: " + res);
+        setPassDataRes += "Set Res: " + res;
+      
+    }
+
+child.localPosition = localLocation.pose.Position.ToVector3();
+child.localRotation = localLocation.pose.Orientation.ToQuat();

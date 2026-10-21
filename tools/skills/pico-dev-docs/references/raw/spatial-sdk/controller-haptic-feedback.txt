@@ -1,0 +1,238 @@
+手柄振动反馈
+========================================
+本文介绍如何为 Spatial UI 组件接入手柄振动反馈。手柄振动反馈适合用于点击、确认、悬停提示等关键交互节点，作为视觉与音频之外的补充反馈。
+* 
+*核心概念
+手柄振动反馈涉及两个核心概念：
+*HandControllerHapticType 用于定义振动的物理参数。
+*HandController 用于指定振动作用的手柄。
+*HandControllerHapticType
+HandControllerHapticType 用于描述一次手柄振动的物理参数。HandControllerHapticType 提供常用预设值，同时支持自定义构造。
+*预设振动类型
+HandControllerHapticType 提供以下预设振动类型，可满足大多数常见交互场景：
+*HandControllerHapticType.Press：按下类反馈，适用于按钮点击、确认操作等。对应 HandControllerHapticType(240, 127, 15)。
+*HandControllerHapticType.Hover：悬停类反馈，力度较轻、时长较短，适用于光标进入可交互区域时的提示。对应 HandControllerHapticType(38, 177, 5)。
+*HandControllerHapticType.Step：步进类反馈，适用于步进器、滑动列表、连续选择等场景。对应 HandControllerHapticType(51, 65, 10)。
+*HandControllerHapticType.None：不触发振动，可用于显式关闭某一交互环节的振动反馈。
+*自定义参数
+若预设类型无法满足需求，你可自行构造 HandControllerHapticType，参数说明如下：
+*
+*HandController
+HandController 为枚举类型，用于指定振动作用的目标手柄：
+*HandController.Left：左手柄。
+*HandController.Right：右手柄。
+*实现方法
+PICO Spatial SDK 提供三种接入方式，覆盖从单组件到全局、从声明式到命令式的不同需求。请根据应用场景选择合适的方式：
+*
+*方法一：使用 Modifier 为单个组件添加振动反馈
+*添加默认振动
+使用 Modifier.controllerHapticFeedback() 可以为任意 Composable 添加默认 Press 振动。下面的代码展示了如何在一个可点击组件上启用默认振动。
+* 
+ 
+*自定义振动参数
+如果预设振动不满足需求，可以直接构造 HandControllerHapticType，自定义振动强度、频率和持续时间，再通过 type 参数传入。
+* 
+ 
+*方法二：通过主题统一覆盖默认振动配置
+在某些场景下，你可能希望统一调整一组 Spatial UI 组件的默认振动反馈，而不是为每一个组件单独添加 Modifier。此时可以在 PicoTheme 作用域内通过 LocalControllerHapticConfiguration 覆盖默认配置。
+* 
+下面的示例将 Press 振动覆盖为自定义参数，作用域内的所有 Spatial UI 组件都会使用新配置：
+ 
+*方法三：获取实例并手动触发
+Spatial UI 通过 CompositionLocalProvider 在 Compose 上下文中传递振动对象。在任意 Composable 中，你都可以通过 LocalHandControllerHaptic.current 获取当前实例，并主动触发振动，适合自定义触发时机或区分左右手柄的场景。
+*主动触发振动
+下面的示例展示了如何在 clickable 中通过实例主动触发左手柄的 Press 振动：
+ 
+*区分左右手柄触发不同振动
+如果你需要根据左右手柄分别给出不同反馈，可以在 pointerInput 中读取交互来源，并通过 change.interactionKindExtra.toHandController() 映射到 HandController，再分别调用 feedback()。
+ 
+*注意事项
+*所有方式都需要在 PicoTheme 作用域内使用，否则无法正确获取主题配置和振动实例。
+*同一个组件同时使用 clickable 和 controllerHapticFeedback 时，应共享同一个 interactionSource。
+*自定义 HandControllerHapticType 时，需确保参数落在合法范围内。
+*方式二（主题覆盖）只对作用域内的组件生效，作用域外的组件仍使用默认配置。
+*API 参考
+Modifier.controllerHapticFeedback()、LocalControllerHapticConfiguration、LocalHandControllerHaptic 和HandControllerHapticType。详情参阅 API 参考。根据你所处的地理位置选择合适的文档链接：
+*中国大陆：https://developer-cn.picoxr.com/spatial-api/index.html
+*非中国大陆：https://developer.picoxr.com/spatial-api/index.html
+
+仅当交互方式为手柄交互时，手柄振动反馈才会生效。
+
+
+
+*参数
+
+*类型
+
+*取值范围
+
+*说明
+
+*level
+
+*Int
+
+*0 ~ 255
+
+*振动强度，数值越大震感越强。
+
+*frequency
+
+*Int
+
+*40 ~ 500
+
+*振动频率，单位 Hz。
+
+*duration
+
+*Int
+
+*0 ~ 1000
+
+*持续时间，单位毫秒。
+
+
+
+方式
+
+入口
+
+适用场景
+
+ 
+
+Modifier.controllerHapticFeedback()
+
+为单个 Composable 添加振动反馈，最常见、最简洁。
+
+ 
+
+LocalControllerHapticConfiguration
+
+统一调整一组 Spatial UI 组件的默认振动反馈。
+
+ 
+
+LocalHandControllerHaptic
+
+主动触发振动，例如区分左右手柄、自定义触发时机。
+
+当组件同时使用 clickable 和 controllerHapticFeedback 时，建议传入同一个 interactionSource，以便点击状态与振动触发状态保持一致。
+
+@Composable
+fun ControllerHapticFeedbackSample() {
+    PicoTheme {
+        val interactionSource = remember { MutableInteractionSource() }
+
+        Box(
+            modifier =
+                Modifier
+                    .size(100.dp)
+                    .controllerHapticFeedback(interactionSource = interactionSource)
+                    .clickable(interactionSource = interactionSource) {
+                        // 点击逻辑
+                    }
+        )
+    }
+}
+
+自定义参数时，level、frequency、duration 必须分别落在 0~255、40~500、0~1000 的有效范围内，否则可能导致振动不生效或异常。
+
+@Composable
+fun CustomControllerHapticFeedbackSample() {
+    PicoTheme {
+        val interactionSource = remember { MutableInteractionSource() }
+
+        Box(
+            modifier =
+                Modifier
+                    .size(100.dp)
+                    .controllerHapticFeedback(
+                        type = HandControllerHapticType(level = 200, frequency = 500, duration = 30),
+                        interactionSource = interactionSource,
+                    )
+                    .clickable(interactionSource = interactionSource) {
+                        // 点击逻辑
+                    }
+        )
+    }
+}
+
+当多个组件需要使用同一套自定义反馈时，优先使用本方式，避免逐个组件添加 Modifier 造成重复。
+
+@Composable
+fun OverrideButtonHaptic() {
+    PicoTheme {
+        val customHapticConfig: ControllerHapticConfiguration =
+            LocalControllerHapticConfiguration.current.copy(
+                press = HandControllerHapticType(level = 200, frequency = 500, duration = 30),
+            )
+
+        CompositionLocalProvider(
+            LocalControllerHapticConfiguration provides customHapticConfig,
+        ) {
+            Button(onClick = { }) {
+                Text("自定义振动配置，覆盖 Button 默认振动")
+            }
+        }
+    }
+}
+
+@Composable
+fun GetHapticFeedback() {
+    PicoTheme {
+        val controllerHaptic = LocalHandControllerHaptic.current
+
+        Box(
+            modifier = Modifier.clickable {
+                controllerHaptic.feedback(
+                    type = HandControllerHapticType.Press,
+                    handController = HandController.Left,
+                )
+            }
+        )
+    }
+}
+
+@Composable
+private fun LeftRightDistinctHapticDemo() {
+    PicoTheme {
+        val localHandControllerHaptic = LocalHandControllerHaptic.current
+
+        Box(
+            modifier =
+                Modifier
+                    .size(100.dp)
+                    .pointerInput(Unit) {
+                        awaitPointerEventScope {
+                            while (true) {
+                                val event = awaitPointerEvent(PointerEventPass.Initial)
+                                event.changes.forEach { change ->
+                                    if (change.pressed && !change.previousPressed) {
+                                        when (change.interactionKindExtra.toHandController()) {
+                                            HandController.Left -> {
+                                                localHandControllerHaptic.feedback(
+                                                    HandControllerHapticType.Press,
+                                                    HandController.Left,
+                                                )
+                                            }
+
+                                            HandController.Right -> {
+                                                localHandControllerHaptic.feedback(
+                                                    HandControllerHapticType.Step,
+                                                    HandController.Right,
+                                                )
+                                            }
+
+                                            else -> {}
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    .clickable { }
+        )
+    }
+}

@@ -1,0 +1,67 @@
+创建和调试 adb 命令
+========================================
+你可以使用 PDC 工具来调试系统默认命令或创建并调试自定义命令。
+*前提条件
+*参考《PICO 开发者中心概览》文档，完成准备工作，包括安装 PDC 工具、为 PICO 设备开启 “开发者” 模式、连接 PICO 设备和 PC。 
+*调试系统默认命令
+PDC 工具提供以下默认 adb 命令：
+*
+*创建并调试自定义命令
+按以下步骤添加自定义 adb 命令。添加完成后，你可以运行、编辑或删除该命令。
+*在 ADB Command 面板处，点击 + 创建命令 或 添加。
+* 
+*你将看到 添加命令 窗口：
+* 
+*输入 命令名称 和 命令内容。命令内容无需携带 adb 指令头，系统会自动添加，例如：若原始命令为 adb devices，则输入 devices；若原始命令为 adb shell getprop，则输入 shell getprop。
+*选择 是否在新窗口显示输出。若勾选，运行命令后会弹出以下窗口，显示命令执行信息：
+* 
+*点击 保存。
+*该 adb 命令将出现在列表中。
+*按需执行以下操作：
+* 
+**
+*
+
+
+
+
+功能
+
+命令
+
+开启/关闭 Wi-Fi
+
+开启：adb shell svc wifi enable
+关闭：adb shell svc wifi disable
+
+开启/关闭静音
+
+开启：adb shell media volume --stream 3 --set 0
+关闭：adb shell media volume --stream 3 --set 8
+*提示：PICO 4 Ultra 及 Project Swan 系列设备不支持直接调用静音控制命令，可通过多次调用 adb shell input keyevent 24 和 adb shell input keyevent 25 命令来达到开启/关闭静音的效果。
+
+设备关机
+
+adb shutdown
+
+设备重启
+
+adb reboot
+
+
+
+编号
+
+说明
+
+1
+
+点击 运行，运行该命令。
+
+2
+
+点击 编辑，编辑该命令。
+
+3
+
+点击 删除，删除该命令。

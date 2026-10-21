@@ -1,0 +1,95 @@
+UE5 特性支持与注意事项
+========================================
+本文档介绍 PICO SDK 对 UE5 特性的支持情况。
+*SDK 对 UE5 特性的支持
+SDK 支持基于 UE5 开发应用并提交 PICO 应用商店。下表为 SDK 对 UE5 各项特性的支持。请根据表格中的支持特性与建议，来决定是否在你的项目中开关某种特性。
+*√：表示可用
+*×：表示不可用
+*
+*开发注意事项
+目前，在 UE5 中使用 PICO Unreal Integration SDK 开发应用你需要注意以下事项：
+*需关闭 OpenXR 插件；
+*UE5 不支持 OpenGLES，仅支持 Vulkan；
+*若仅左眼视图被渲染，可通过勾选 Mobile Multi-View 解决。
+*SDK 不支持 Lumen。Lumen 不支持移动平台，有关 Lumen 的技术细节详见 官方文档。
+*SDK 不支持 Nanite。目前 Nanite 只用在延迟渲染管线中，暂不支持移动端的前向渲染管线，有关 Nanite 的技术细节，详见 官方文档。
+若你需在 UE5 中使用平台服务，除上述问题外，还需关注以下问题：
+*Visual Studio 无法编译 Android Development Target 代码。
+*WidgetInteraction 组件可能存在缺陷，会导致 3D UI 交互出现问题。
+*对于播放 Animation Sequence，需要将 SkeletalMeshActor 下的 Visibility Based Anim Tick Option 参数的值修改为 Always Tick Pose and Refresh Bones。
+
+
+
+
+功能
+
+渲染
+
+
+
+MRC
+
+Overlayer
+
+启动画面
+
+FFR
+
+Hand Tracking
+
+宽频马达
+
+
+
+Mutiview 关闭
+
+Mutiview 开启
+
+√
+
+√
+
+√
+
+√
+
+√
+
+*√
+
+Vulkan
+
+MSAA 关闭：√
+MSAA 开启：×
+
+√
+
+
+
+
+
+
+
+
+
+
+
+
+
+OpenGLES
+
+*×
+
+
+
+
+
+
+
+
+
+
+
+
+
+

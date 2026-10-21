@@ -1,0 +1,50 @@
+内容安全
+========================================
+应用和游戏必须遵循其发行地区的法律法规，否则可能面临罚款、下架、封禁等惩罚措施。PICO 平台服务提供 “内容安全” 服务。
+*应用场景
+内容安全服务支持检测文本内容中的敏感词。检测对象包括用户昵称、房间名称、聊天消息等。
+*重要提示
+*“内容安全” 服务仅在中国大陆地区可用。
+*环境要求
+*SDK 版本：2.1.5 及之后版本
+*PICO 设备系统版本：5.5.0 及之后版本
+*功能说明
+“内容安全” 服务包含敏感词检测、策略检测、模型检测三部分。三部分相互配合，在保证玩家可以正常表达自身的同时，最大可能地限制恶意 UGC 内容的发布。
+*
+*你可以调用 DetectSensitive() 接口查验用户输入的信息是否合规，并依据使用场景出入不同的枚举值，服务端将在 Delegate 函数中给出反馈信息。
+*使用示例
+*参考以下 C++ 代码和蓝图调用示例了解如何使用内容安全相关接口。
+*C++ 代码调用
+ 
+*蓝图调用
+* 
+*API 参考
+内容安全相关 API，可查看客户端 API 和 服务端 API。
+
+
+
+检测能力
+
+说明
+
+敏感词检测
+
+
+检测文本中的敏感词，对含有敏感词的文本进行拦截，可识别涉及政治、色情等底线原则的敏感词。
+
+策略检测
+(后台能力)
+
+将 UGC 内容中的特征加以组合和分析，找到特定样式的 UGC 样本。
+
+
+模型检测
+(后台能力)
+
+使用机器学习训练得到的模型来识别特定的 UGC 内容。
+
+    FOnlineSubsystemPico* Subsystem = static_cast<FOnlineSubsystemPico*>(Online::GetSubsystem(GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::ReturnNull), PICO_SUBSYSTEM));
+    if (Subsystem && Subsystem->GetPicoComplianceInterface())
+    {
+        return Subsystem->GetPicoComplianceInterface()->DetectSensitive(DetectSensitiveScene, InDetectContent, InDelegate);
+    }

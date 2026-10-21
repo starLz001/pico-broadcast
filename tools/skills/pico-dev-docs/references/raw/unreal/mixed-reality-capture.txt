@@ -1,0 +1,132 @@
+混合现实捕捉
+========================================
+“混合现实捕捉”（Mixed Reality Capture，MRC）实现了现实世界与虚拟世界的融合，允许真实人物直接进入虚拟场景并代替虚拟形象，从而无缝显示虚拟世界与真实人物之间的交互。
+“混合现实捕捉” 可极大地赋能 VR 视频创作。通过录制混合现实视频，用户可以记录自己与虚拟场景的交互过程，并在社交媒体上进行分享。此外，随着混合现实技术的不断完善，未来，“混合现实捕捉” 将有可能被应用于更多场景，包括教育、娱乐、会议等。
+*环境要求
+*SDK 版本：2.0.3 或以上。
+*PICO 设备系统版本：4.7.0 或以上。
+*虚幻引擎版本：以下为目前支持 MRC 功能的 UE 编辑器版本：
+**
+*参考下文修改引擎 Shader。
+*开启 Multiview
+*修改引擎 Shader
+UE 4.27 支持 Multiview。启用此功能，需修改引擎 Shader。请参照以下代码修改 Engine/Shaders/Private/MobileSceneCapture.usf 文件：
+ 
+ 
+ 
+*修改 MRC 相机捕获方式
+UE 4.27 需采用 LDR 的方式使用 SceneCapture。请参照以下代码，修改 Engine/Source/Runtime/Renderer/Private/MobileSceneCaptureRendering.cpp 文件：
+ 
+*调试 MRC
+你可以在 PICO 设备上为应用调试 MRC 能力。
+*准备工作
+开始调试前，需完成以下准备工作：
+*准备以下硬件：
+*一台 PICO 设备。型号为 PICO Neo3 或以上。
+*一部手机。若使用苹果手机，系统版本需为 iOS12 或以上；若使用安卓手机，则无系统版本要求。建议尽可能使用性能较好的机型。
+*一个三脚架，用于放置手机。
+*前往手机端的应用商店，下载 “PICO VR” 应用。
+*前往 PICO 设备端的应用商店，下载 “混合现实录制” 应用。
+*将手机和 PICO 设备连接至相同的局域网。
+*使用同一个 PICO 用户帐号登录 PICO 设备和手机端 “PICO VR” 应用。
+*调试步骤
+按以下步骤为应用调试 “混合现实捕捉” 能力：
+*将你的应用安装至 PICO 设备。
+*寻找合适位置，放置三脚架和手机，将手机的后置摄像头正对自己。
+*戴上头显，然后启动 “混合现实录制” 应用。
+*根据页面提示，完成相应操作，录制混合现实视频。
+
+
+
+
+
+4.27
+
+5.1 及更高
+*版本
+
+虚幻引擎 - PICO 分支 5.1 及更高版本
+
+
+OpenGL + 关闭 Multi-View（NoMV）
+
+✓
+
+✕
+
+✓
+
+
+OpenGL + Multi-View
+
+需修改引擎 Shader。
+
+✕
+
+✓
+
+
+Vulkan + 关闭 Multi-View（NoMV）
+
+✓
+
+✕
+
+✓
+
+
+Vulkan + Multi-View
+
+需修改引擎 Shader。
+
+✕
+
+✓
+
+修改 Shader 文件后，可能会引起打包非 Shipping 的 .apk 文件时不生效；因此你需要选择 Shipping 作为打包选项。
+
+        Output.UV = UVs;
+}
+
+#if MOBILE_MULTI_VIEW
+Texture2DArray InTexture;
+#else
+Texture2D InTexture;
+#endif
+SamplerState InTextureSampler;
+void MainCopyPS(
+        FScreenVertexOutput Input,
+        out float4 OutColor : SV_Target0
+        )
+{
+#if MOBILE_MULTI_VIEW
+        float4 SceneColor = Texture2DArraySample(InTexture, InTextureSampler, float3(Input.UV, 0));
+#else
+        float4 SceneColor = Texture2DSample(InTexture, InTextureSampler, Input.UV);
+#endif
+        OutColor = SceneColor;
+        // FP16 DeviceZ is stored in SceneColor.A
+
+MRC 使用引擎内的 SceneCapture2D 作为第三视角相机。如果你使用 UE 4.27 版本时，SceneCapture2D 无法正常使用 Multiview，也通过修改上述文件解决此问题。
+
+    const FGenerateMipsParams& GenerateMipsParams,
+    bool bDisableFlipCopyGLES)
+{
+    // If we're not using MobileHDR, any source other than FinalColorLDR is invalid
+    if (!IsMobileHDR())
+    {
+        ensure(SceneRenderer->ViewFamily.SceneCaptureSource == SCS_FinalColorLDR);
+    }
+    FMemMark MemStackMark(FMemStack::Get());
+        
+    // update any resources that needed a deferred update
+        
+    FDeferredUpdateResource::UpdateResources(RHICmdList);
+
+    // Always uses scene textures in non-mobileHDR, since it doesn't have a postprocess/tonemap pass to copy out
+
+    bool bUseSceneTextures = !IsMobileHDR() ||
+        (SceneRenderer->ViewFamily.SceneCaptureSource != SCS_FinalColorLDR &&
+         SceneRenderer->ViewFamily.SceneCaptureSource != SCS_FinalColorHDR);
+    {
+#if WANTS_DRAW_MESH_EVENTS

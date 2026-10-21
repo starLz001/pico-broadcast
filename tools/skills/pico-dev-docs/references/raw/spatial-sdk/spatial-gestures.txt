@@ -1,0 +1,494 @@
+空间手势
+========================================
+在空间应用中，常见的交互对象包括浮起的 UI 元素、带有旋转效果的控件，以及各类 3D 模型。为了让你在事件处理时能够获取更丰富的信息，从而在三维空间中更精确地操纵这些元素，PICO Spatial SDK 对空间手势进行了扩展，并在空间交互事件中提供了额外的 3D 数据，用于监听 3D 场景下物体的手势交互情况。
+*捕获空间手势事件
+*点击：SpatialTapGesture
+*SpatialUI 提供一系列 Modifier 与事件检测方法，用于在 3D 空间中捕获点击（Tap）事件，你可以为特定的 entity 设置点击响应逻辑。
+*SpatialUI 提供了两类点击事件检测 API：
+*PointerInputScope.detectTapGestures()：检测 2D 的点击事件，该接口由 Jetpack Compose 提供。
+*PointerInputScope.detectSpatialTapGesture()：检测 3D 的点击事件，该接口由 PICO Spatial SDK 提供。
+*你可以通过 targetedToEntity 参数指定要监听的目标 entity，从而实现对指定对象或条件下的空间点击事件的检测。
+*以下示例展示了如何结合 SpatialView 和 detectSpatialTapGesture() 实现点击 entity 后随机更换该 entity 的颜色。
+ 
+*拖拽：SpatialDragGesture
+*SpatialDragGesture 扩展了拖拽操作，增加了对 Z 轴（前后方向）的支持，从而为交互带来了空间纵深感。
+*SpatialUI 提供了两类拖拽事件检测 API：
+*PointerInputScope.detectDragGestures()/detectHorizontalDragGestures()/detectVerticalDragGestures()/detectDragGesturesAfterLongPress()：检测 2D 的拖拽事件。这些接口由 Jetpack Compose 提供。
+*PointerInputScope.detectSpatialDragGesture()：检测 3D 的拖拽事件，该接口由 PICO Spatial SDK 提供。
+*你可以通过 detectSpatialDragGesture() 函数获取 3D 位移变化量及设备（例如手或手柄）的位置和方向，并基于这些数据实现拖拽交互。
+*根据手势的 3D 位移变化量实现拖拽交互
+*以下代码示例展示了如何通过 detectSpatialDragGesture() 函数获取手势的 3D 位移变化量并将其应用到 2D UI。
+ 
+*根据设备（例如手或手柄）的位置和方向实现拖拽交互
+*以下代码示例展示了如何通过 detectSpatialDragGesture() 函数获取设备（例如手或手柄）的位置和方向，并基于这些数据实现拖拽交互。
+ 
+*旋转：SpatialRotateGesture
+SpatialRotateGesture 是 PICO OS 6 提供的空间旋转手势能力，用于在空间场景中对 2D 与 3D 内容进行自然、直观的旋转交互。
+*相比 Jetpack Compose 中基于平面触控的 2D 手势，SpatialRotateGesture 基于三维空间手势进行交互，支持对空间中的模型进行自由旋转，并可精确识别被交互的目标 entity。你可以使用detectSpatialRotateGesture()函数捕获 SpatialRotateGesture。
+*SpatialRotateGesture 支持 PICO OS 6 的全部空间交互方式（射线、眼手、Poke），支持指定被交互的 entity 并添加旋转的约束轴。当用户双手捏合并旋转 2D 或 3D 内容时，系统将触发对应的手势回调，并返回 SpatialRotateValue。
+*根据手势实现 2D 内容的空间旋转
+*以下代码示例展示了当用户在空间中用双手旋转 2D 视图时，视图如何实时响应并展示对应的三维旋转效果。
+* 
+*根据手势实现 3D 内容的空间旋转
+*以下代码示例中，当用户用手旋转空间中的 3D entity 时，系统会实时将手势产生的旋转应用到模型上。
+* 
+*缩放：SpatialScaleGesture
+*SpatialScaleGesture 是 PICO OS 6 提供的缩放手势能力，用于在空间场景中对 2D 与 3D 内容进行缩放。你可以调用 detectSpatialScaleGesture() 函数来捕获该手势。
+*相比 Android / Compose 中基于平面触控的 2D 手势，SpatialScaleGesture 基于三维空间手势进行交互，支持对空间中的模型进行缩放，并可精确识别被交互的目标 entity。
+下面的示例代码展示了如何使用 detectSpatialScaleGesture() 函数获取手势的 scale 值，然后根据此值来缩放物体。
+* 
+*空间变换：SpatialTransformGesture
+*SpatialTransformGesture 是 PICO OS 6 提供的空间变换手势能力，允许用户通过双手操作，同时对 2D 或 3D 对象进行平移、旋转和缩放。当用户用双手捏住目标对象时触发。SpatialTransformGesture 支持 PICO OS 6 上的所有交互方式，包括射线、眼手协同及近场戳刺（Poke）。用户可以指定交互的目标实体 (entity)，并为旋转操作设置约束轴。
+*相比 Jetpack Compose 中基于平面触控的 2D 手势，SpatialTransformGesture 基于三维空间手势进行交互，支持对空间中的模型进行自由平移、旋转和缩放，并可精确识别被交互的目标 entity。
+*你可以调用 detectSpatialTransformGesture() 函数来捕获该手势。该函数会返回一个 SpatialTransformValue 对象，其中包含了平移、旋转和缩放的增量数据。
+* 
+*根据手势实现 2D 内容的空间变换
+*下面的示例代码展示了如何使用 detectSpatialTransformGesture 函数捕捉 2D 对象的空间变换手势，并根据返回的增量数据对 2D 对象进行相应的平移、旋转和缩放操作。 
+ 
+*根据手势实现 3D 内容的空间变换
+*下面的示例代码展示了如何使用 detectSpatialTransformGesture 函数捕捉 3D 对象的空间变换手势，并根据返回的增量数据对 3D 对象进行相应的平移、旋转和缩放操作。 
+ 
+*手势事件的消费规则
+*使用 PointerInput 处理手势时，你需要注意其事件消费规则。在同一个 pointerInput 修饰符中：
+*多个手势（例如点击和拖拽）共享同一个事件流。
+*一旦某个手势识别并消费了事件，该事件就不会再传递给其他手势。
+因此，如果在同一个 pointerInput 中为不同对象分别定义手势，可能会发生冲突，导致只有一个手势能生效，例如：
+ 
+推荐将不同的手势拆分到不同的 pointerInput 中，从而避免事件消费冲突，让不同手势在各自作用域中独立生效，例如：
+* 
+*在 SpatialModelView 中自动配置交互组件
+*为了简化开发流程，在 SpatialModelView 中，系统会自动为模型实体（modelEntity）及其所有子实体添加 InteractableComponent 组件和 CollisionComponent组件，从而使模型实体成为可交互的对象。
+ 
+*当你使用以下任意一个函数在 SpatialModelView 中捕获空间手势事件时，如果函数的 targetedToEntity 参数被设置为 null或 TargetEntity.any()，则手势可以与 SpatialModelView 中的任何 2D 或 3D 实体进行交互。
+*detectSpatialTapGesture()
+*detectSpatialDragGesture()
+*detectSpatialRotateGesture()
+*detectSpatialScaleGesture()
+*detectSpatialTransformGesture()
+* 
+*示例代码 
+以下示例代码演示了如何在 SpatialModelView 中使用 detectSpatialTapGesture() 函数捕获 3D 空间内的点击事件。detectSpatialTapGesture() 函数的 targetedToEntity 参数设置为 null，表示不为交互指定明确的目标实体，因此手势可以与 SpatialModelView 中的任何 2D 或 3D 实体进行交互。 
+ 
+
+
+@Composable
+private fun SpatialTapToChangeColorDemo() {
+    // 定义 entity 的颜色
+    val entityColors: MutableMap<Entity, MutableState<Color>> = remember { mutableStateMapOf() }
+
+    Box(modifier = Modifier.fillMaxSize()) {
+        val context = LocalContext.current
+        SpatialView(
+            modifier =
+                Modifier.size(300.dp)
+                    .background(Color.DarkGray)
+                    .align(Alignment.Center)
+                    .pointerInput(Unit) {
+                        detectSpatialTapGesture(context, TargetEntity.any()) {
+                            // entity 被点击后，更新其颜色
+                            if (entityColors[it.targetEntity]?.value == null) {
+                                entityColors[it.targetEntity] =
+                                    mutableStateOf(ColorCollection.random())
+                            } else {
+                                entityColors[it.targetEntity]!!.value = ColorCollection.random()
+                            }
+                        }
+                    },
+            update = { content, _ ->
+                // 更新 entity 的颜色
+                content.entities.forEach {
+                    // 提示：Renderable 是 Demo 中自定义的工具类 API，非 SDK 提供的 API
+                    if (it is Renderable) {
+                        it.color(entityColors[it]?.value ?: Color(color = 0x75757575), true)
+                    }
+                }
+            },
+        ) { content, _ ->
+            val sphereEntity = SphereEntity(0.05f)
+            sphereEntity.apply {
+                moveBy(y = 0.1f, z = 0.025f)
+                components.set(InteractableComponent())
+                components.set(
+                    CollisionComponent(
+                        collisionShape = listOf(ShapeResource.createSphere(0.05f)),
+                        physicsMaterial = PhysicsMaterialResource(),
+                    )
+                )
+            }
+
+            val boxEntity = BoxEntity(0.1f)
+            boxEntity.apply {
+                this.moveBy(x = -0.1f, y = -0.1f, z = 0.1f)
+                components.set(InteractableComponent())
+                components.set(
+                    CollisionComponent(
+                        collisionShape = listOf(ShapeResource.createBox(Vector3(0.1f, 0.1f, 0.1f))),
+                        physicsMaterial = PhysicsMaterialResource(),
+                    )
+                )
+            }
+            val capsuleEntity = CapsuleEntity(height = 0.1f, radius = 0.05f)
+            capsuleEntity.apply {
+                this.moveBy(x = 0.1f, y = -0.1f, z = 0.15f)
+                components.set(InteractableComponent())
+                components.set(
+                    CollisionComponent(
+                        collisionShape =
+                            listOf(ShapeResource.createCapsule(height = 0.2f, radius = 0.05f)),
+                        physicsMaterial = PhysicsMaterialResource(),
+                    )
+                )
+            }
+            content.addEntity(sphereEntity)
+            content.addEntity(boxEntity)
+            content.addEntity(capsuleEntity)
+        }
+    }
+}
+
+@Composable
+fun SpatialDragSampleForUI() {
+    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        val context = LocalContext.current
+        // 定义 offset 的状态
+        var offset3D by remember { mutableStateOf(Offset3D.Zero) }
+        Box(
+            modifier =
+                Modifier.size(250.dp)
+                    // 通过 modifier 将 offset 应用至 2D UI
+                    .offset { IntOffset(x = offset3D.x.roundToInt(), y = offset3D.y.roundToInt()) }
+                    .zOffset { offset3D.z }
+                    .pointerInput(Unit) {
+                        // 检测手势交互情况
+                        detectSpatialDragGesture(context) { spatialDragValue ->
+                            // 更新 offset
+                            // dragAmount 以 px 为单位
+                            offset3D += spatialDragValue.dragAmount
+                        }
+                    }
+                    .background(Color.Red)
+        )
+    }
+}
+
+val context = LocalContext.current
+val converter = LocalPhysicalLengthConverter.current
+val density = LocalDensity.current
+var offset3D by remember { mutableStateOf(Offset3D.Zero) }
+var rotation by remember { mutableStateOf(Rotation3D.identity()) }
+SpatialView(
+    modifier =
+        Modifier.fillMaxSize().pointerInput(Unit) {
+            detectSpatialDragGesture(context = context, targetedToEntity = TargetEntity.any()) {
+                // dragAmount 以 px 为单位
+                offset3D += it.dragAmount
+                rotation = it.inputDevicePose.rawRotation
+            }
+        },
+    initial = { content, _ ->
+        val entity = Entity()
+        // Entity is not interactable by default. To make an entity interactable, you should
+        // both
+        // add a
+        // [InteractableComponent] and a [CollisionComponent].
+        entity.components.set(InteractableComponent())
+        entity.components.set(
+            CollisionComponent(
+                collisionShape = listOf(ShapeResource.createSphere(radius = 0.3f)),
+                physicsMaterial = PhysicsMaterialResource(),
+            )
+        )
+        content.addEntity(entity)
+    },
+    update = { content, _ ->
+        val convertQuat =
+        content.convertRotation(
+            rotation.toQuaternion(),
+            ViewCoordinateSpace.Global,
+            content.localSpatialCoordinateSpace,
+        )
+
+        content.entities
+            .first()
+            .components[TransformComponent::class.java]
+        ?.setQuaternion(convertQuat)
+        ?.setPosition(
+            Vector3(
+                x = convertPxToMeter(offset3D.x, density, converter),
+                y = convertPxToMeter(-offset3D.y, density, converter),
+                z = convertPxToMeter(offset3D.z, density, converter),
+            )
+        )
+*    },
+) 
+
+@Composable
+fun SpatialRotate2DViewDemo() {
+    val context = LocalContext.current
+    // 定义旋转状态
+    var rotate by remember { mutableStateOf(Rotation3D.identity()) }
+    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        Box(
+            modifier =
+                Modifier.align(Alignment.Center)
+                    // 将旋转应用于 2D 视图
+                    .rotate3D {
+                        rotate
+                    }
+                    .size(300.dp)
+                    .background(Color.Yellow)
+                    .pointerInput(Unit) {
+                        // 检测空间旋转手势
+                        detectSpatialRotateGesture(
+                            context,
+                            onRotateStart = { },
+                            onRotateEnd = { },
+                        ) {
+                            // 为 `rotate` 更新旋转状态
+                            rotate = rotate.rotateBy(it.rotation)
+                        }
+                    },
+            contentAlignment = Alignment.Center,
+        ) {
+            Text("rotate me, rotate = $$rotate")
+        }
+    }
+}
+
+@Composable
+fun SpatialRotateOn3DModelDemo() {
+    val context = LocalContext.current
+    // 定义旋转状态
+    var rotate by remember { mutableStateOf(Rotation3D.identity()) }
+    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        SpatialView(
+            modifier =
+                Modifier.size(500.dp)
+                    .pointerInput(Unit) {
+                        // 检测空间旋转手势
+                        detectSpatialRotateGesture(
+                            context,
+                            targetedToEntity = TargetEntity.any(),
+                            onRotateStart = { },
+                            onRotateEnd = { },
+                        ) {
+                            // 为 `rotate` 更新旋转状态
+                            rotate = rotate.rotateBy(it.rotation)
+                        }
+                    },
+            initial = { content, _ ->
+                val boxEntity = BoxEntity(0.1f)
+                boxEntity.setName("2")
+                boxEntity.components.set(InteractableComponent())
+                boxEntity.components.set(
+                    CollisionComponent(
+                        collisionShape = listOf(ShapeResource.createBox(Vector3(0.1f, 0.1f, 0.1f))),
+                        physicsMaterial = PhysicsMaterialResource(),
+                    )
+                )
+                content.addEntity(boxEntity)
+            },
+            update = { content, _ ->
+                // 将 `rotate` 的坐标系从 ViewCoordinateSpace 转换为 SpatialCoordinateSpace
+                val currentRotate =
+                    content.convertRotation(
+                        rotate.toQuaternion(),
+                        ViewCoordinateSpace.Global,
+                        content.localSpatialCoordinateSpace,
+                    )
+
+                // 将旋转应用于 3D entity
+                content.entities
+                    .first()
+                    .components[TransformComponent::class.java]
+                    ?.setQuaternion(currentRotate)
+            },
+        )
+    }
+}
+
+@Composable
+fun SpatialScaleSampleForUI() {
+    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        val context = LocalContext.current
+        // 定义 scale 状态
+        var scale by remember { mutableFloatStateOf(1f) }
+        Box(
+            modifier =
+                Modifier.size(250.dp)
+                     // 将 scale 应用到 2D UI
+                     .scale(scale)
+                     .background(Color.Red)
+                     .pointerInput(Unit) {
+                        // 监听手势的 scale 值
+                        detectSpatialScaleGesture(context) { 
+                            // 更新 scale 状态
+                            scale *= it.scaleValue 
+                        }
+                    }
+        )
+    }
+}
+
+*如果仅使用单手进行操作，SpatialTransformValue 中将只包含平移的变化量。
+
+@Composable
+fun SpatialTransformOn2DView() {
+    val context = LocalContext.current
+    // 1.define rotate、drag、scale state
+    var rotate by remember { mutableStateOf(Rotation3D.identity()) }
+    var drag by remember { mutableStateOf(Offset3D.Zero) }
+    var scale by remember { mutableFloatStateOf(1f) }
+    Box(modifier = Modifier.fillMaxSize()) {
+        Box(
+            modifier =
+                // 4.apply drag
+                Modifier.graphicsLayer {
+                    // dragAmount 以 px 为单位
+*                    translationX = dragAmount.x
+*                    translationY = dragAmount.y
+                }
+                    .pointerInput(Unit) {
+                      // 2. detect spatial transform gesture
+                        detectSpatialTransformGesture(
+                            context,
+                        ) { value ->
+                            //3.Update Scale、rotate、drag
+                            scale *= value.scaleValue
+                            rotate = rotate.rotateBy(value.rotation)
+                            // dragAmount 以 px 为单位
+                            drag += value.dragAmount
+                        }
+                    }
+                    // 4.apply scale and rotate
+                    .graphicsLayer {
+                        scaleX = scale
+                        scaleY = scale
+                        rotationX = rotate.toQuaternion().toEulerAngles().pitch
+                        rotationY = rotate.toQuaternion().toEulerAngles().yaw
+                        rotationZ = rotate.toQuaternion().toEulerAngles().roll
+                    }
+                    .size(300.dp)
+                    .background(Color.Yellow),
+            contentAlignment = Alignment.Center,
+        ) {
+            Text(text = "Transform 2D", style = PicoTheme.typography.titleLarge)
+        }
+    }
+}
+
+@Composable
+fun SpatialTransformOn3DDemo() {
+    val context = LocalContext.current
+    val density = LocalDensity.current
+    val converter = LocalPhysicalLengthConverter.current
+
+    // 1. define rotate、scale、drag state
+    var rotate by remember { mutableStateOf(Rotation3D.identity()) }
+    var dragAmount by remember { mutableStateOf(Offset3D.Zero) }
+    var scale by remember { mutableFloatStateOf(1f) }
+    
+    SpatialView(
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .pointerInput(Unit) {
+                    // 2. detect spatial transform gesture
+                    detectSpatialTransformGesture(
+                        context,
+                        targetedToEntity = TargetEntity.any()
+                    ) {
+                        // 3. update rotate、scale、drag state
+                        scale *= it.scaleValue
+                        rotate = rotate.rotateBy(it.rotation)
+                        // dragAmount 以 px 为单位
+                        dragAmount += it.dragAmount
+                    }
+                },
+        initial = { content, _ ->
+            val boxEntity = BoxEntity(0.1f)
+            boxEntity.components.set(InteractableComponent())
+            boxEntity.components.set(
+                CollisionComponent(
+                    collisionShape = listOf(ShapeResource.createBox(Vector3(0.1f, 0.1f, 0.1f))),
+                    physicsMaterial = PhysicsMaterialResource(),
+                )
+            )
+            content.addEntity(boxEntity)
+        },
+        update = { content, _ ->
+            // 4. apply rotate、scale、drag state to entity
+            val currentRotate =
+                content.convertRotation(
+                    rotate.toQuaternion(),
+                    ViewCoordinateSpace.Global,
+                    content.localSpatialCoordinateSpace,
+                )
+            content.entities
+                .first()
+                .components[TransformComponent::class.java]?.setScaleVector(Vector3(scale, scale, scale))
+                ?.setQuaternion(currentRotate)
+                ?.setPosition(
+                    // dragAmount 以 px 为单位，将其转换成以 meter 为单位的变量
+                    Vector3(
+                        x = convertPxToMeter(dragAmount.x, density, converter),
+                        y = convertPxToMeter(-dragAmount.y, density, converter),
+                        z = convertPxToMeter(dragAmount.z, density, converter)
+                    )
+                )
+        }
+    )
+}
+
+Modifier
+.pointerInput(Unit) {
+detectSpatialTapGesture(context = context, targetedToEntity = TargetEntity.any {it != baseBody}) {...}
+detectSpatialDragGesture(context = context, targetedToEntity = TargetEntity.any { it == baseBody }) {...}
+}
+
+Modifier
+.pointerInput(Unit) {
+detectSpatialTapGesture(context = context, targetedToEntity = TargetEntity.any {it != baseBody}) {...}
+}
+.pointerInput(baseBody) {
+detectSpatialDragGesture(context = context, targetedToEntity = TargetEntity.any { it == baseBody }) {...}
+}
+
+如果模型实体上已存在这些组件，这些组件不会被覆盖。
+
+targetedToEntity 参数被设置为 null或 TargetEntity.any() 分别代表：
+*null：不指定明确的目标实体。
+*TargetEntity.any()：将任意实体作为交互目标。
+
+SnackbarHost {
+    val context = LocalContext.current
+    val snackState = LocalSnackbarHostState.current
+    val scope = rememberCoroutineScope()
+    SpatialModelView(
+        source = source,
+        modifier =
+            Modifier.size(150.dp).background(Color.Yellow).pointerInput(Unit) {
+                detectSpatialTapGesture(context = context, targetedToEntity = null) {
+                    Log.i(TAG, "tap on model: $$it")
+                    it.targetEntity?.let { targetEntity ->
+                        scope.launch {
+                            snackState.show(message = "Entity $${targetEntity.id} is tapped")
+                        }
+                    }
+                }
+            },
+        resizability = Resizability.FitInside,
+    ) { state ->
+        when (state) {
+            is ModelLoadingState.Loading ->
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator()
+                }
+
+            is ModelLoadingState.Error ->
+                Text(text = "Load model failed: $${state.reason}", color = Color.Red)
+
+            is ModelLoadingState.Success -> Model(model = state.model)
+        }
+    }
+}

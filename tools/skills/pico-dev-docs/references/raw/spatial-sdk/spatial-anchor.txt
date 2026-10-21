@@ -1,0 +1,210 @@
+空间锚点
+========================================
+*空间锚点技术将虚拟环境中的位置与真实世界中的位置进行绑定，从而将虚拟内容 “锚定” 在指定的位置。放置空间锚点后，它的位置会被储存至设备的磁盘。当用户再次走到该位置时，系统将找回该锚点并返回给应用。
+*PICO Spatial SDK 支持的操作包括创建空间锚点、获取锚点信息、加载空间中已有的锚点、监听空间锚点事件和删除空间锚点。所有操作都通过 WorldTrackingManager 类实现。
+* 
+*基础概念
+*空间锚点相关的基础概念如下。
+*
+*使用限制
+*仅当应用处于 Full Space 状态时（即在 Stage 中），才可以使用空间锚点。Stage 的坐标系以用户脚底为原点，各坐标轴方向如下图所示。
+* 
+*前提条件
+*添加 build 依赖项（推荐使用版本目录文件 libs.versions.toml）。
+*在 libs.versions.toml 的 [libraries] 部分添加以下内容：
+* 
+*在模块的 build 脚本文件 build.gradle.kts 的 dependencies {} 部分添加以下内容：
+* 
+*获取空间锚点数据时，应用需处于 Full Space 状态。
+*创建空间锚点
+*调用 WorldTrackingManager.createAnchor 接口来创建空间锚点。你需要在创建锚点时指定所期望的位姿信息，也可以为创建的锚点指定名称，例如可以通过 ControllerTrackingProvider 获取到的手柄位姿数据来创建锚点。
+*需要注意的是，createAnchor() 是一个 suspend 函数，返回值是 WorldTrackingResult<WorldAnchor> 类型。你可以通过返回的结果，判断空间锚点是否创建成功。只有创建成功，才可以继续从这个结果中获取对应的空间锚点实例。建议在创建空间锚点后，保存它的 UUID，方便之后再次使用该锚点。
+*代码示例如下：
+ 
+*使用上述代码成功创建空间锚点时，可通过 createResult.data 获取对应的空间锚点实例；若创建失败，则输出错误码和错误信息。
+*在设计锚点的位置时，需要兼顾用户的交互体验。例如，应尽量将锚点与用户的距离控制在 3 米以内；当用户放置锚点后，提示其在 3 米范围内移动视角，以便系统更好地完成建图。
+在查找锚点时，应提醒用户在锚点附近多观察、多走动。锚点的找回范围取决于用户放置锚点后视角移动的范围，其半径最大不超过 5 米。若超过 5 米且周围没有其他锚点，则可能无法成功找回锚点。
+*获取空间锚点信息
+*获取空间锚点实例后，你可以通过该实例获取以下信息：
+*
+代码示例如下：
+ 
+*加载空间锚点
+* 
+空间锚点都会被保存在 PICO 设备的本地磁盘中，且每个应用最多保存 1024 个空间锚点。建议在空间锚点创建成功之后，保存它的 UUID，方便之后再次使用该锚点。
+*你可以使用 WorldTrackingManager.loadAnchor(uuids: Array<UUID> = arrayOf()) 加载空间锚点。传入之前保存的 UUID 数组后，将加载 UUID 所对应的锚点；若未传入 UUID 或传入一个空数组，则会默认加载应用中保存的所有锚点。
+*loadAnchor() 是一个 suspend 函数，返回值为 WorldTrackingResult<Array<WorldAnchor>> 类型。你可以通过返回的结果，判断空间锚点是否加载成功。只有加载成功后，才可以继续从结果中获取对应的空间锚点实例数组。
+*代码示例如下：
+ 
+*使用上述代码成功加载空间锚点时，可通过 loadResult.data 获取对应的空间锚点实例数组；若加载失败，则输出错误码和错误信息。
+*如果用户之前放置过锚点，但现在无法查询到该锚点的相关信息，你可以引导用户返回上次放置锚点的位置。如果用户不需要找回之前的锚点，或者想在其他地方放置新的锚点，你可以让用户重新放置交互物体或标定当前空间，然后在新地点体验应用。
+*订阅空间锚点事件
+*如果你想在空间锚点被创建、加载、删除，或其信息发生变化时，执行自定义回调，你可以使用空间锚点事件。PICO Spatial SDK 提供以下空间锚点事件：
+*
+* 
+*你可以使用 WorldTrackingManager.subscribeAnchorUpdate{} 订阅上述所有的空间锚点事件，并在其函数体中定义任意空间锚点事件被触发时所需执行的逻辑（如显示当前锚点的信息）。你也可以在函数体中为不同的事件定义各自需要执行的逻辑（比如锚点信息更新时，同步更新该锚点所对应虚拟物体的 Transform）。
+*代码示例如下：
+ 
+*当你不需要再使用空间锚点事件时，建议取消订阅，停止相关的信息服务，以节省性能开销。
+ 
+*删除空间锚点
+*当你不需要空间锚点时，可以将其删除，以释放其在本地磁盘中占用的空间。你可以使用 WorldTrackingManager.removeAnchor(uuid: UUID) 删除不再需要的空间锚点。removeAnchor() 是一个 suspend 函数，返回值为 WorldTrackingResult<WorldAnchor> 类型。你可以通过返回的结果，判断空间锚点是否删除成功。
+*代码示例如下：
+ 
+*使用上述代码成功删除锚点时，会输出相应的提示信息；若删除失败，则会输出错误码和错误信息。
+*API 参考
+*WorldAnchor 和 WorldTrackingManager 类提供空间锚点相关的函数，详细说明参阅 API 参考。根据你所处的地理位置选择合适的文档链接：
+*中国大陆：https://developer-cn.picoxr.com/spatial-api/index.html
+*非中国大陆：https://developer.picoxr.com/spatial-api/index.html
+
+
+
+
+名称
+
+说明
+
+UUID 
+
+通用唯一识别码，为锚点的唯一标识，在创建锚点时分配，可用于加载指定锚点。
+
+Stage
+
+场景承载容器，有独立的生命周期。打开后，空间将进入 Full Space 状态，被持有该 Stage 的应用独占。
+
+Full Space
+
+一种空间状态，表示空间被当前应用独占，与 Shared Space 互斥。
+
+WorldAnchor
+
+锚点实例，携带空间锚点信息。你可以从中获取到锚点的UUID，名称以及Transform 信息。
+
+[libraries]
+// ...
+spatial-sense = { group = "com.pico.spatial.sense", name = "sense" }
+
+dependencies {
+    // ...
+    implementation(libs.spatial.sense)
+}
+
+val createResult = WorldTrackingManager.createAnchor(Vector3(0F), EulerAngles(0F, 0F, 0F))
+when (createResult) {
+    is WorldTrackingResult.Success -> {
+        val worldAnchor = createResult.data
+    }
+    is WorldTrackingResult.Error -> {
+        println("Error: Code=$${createResult.errorCode}, Message=$${createResult.errorMessage}")
+    }
+}
+
+
+
+信息
+
+描述
+
+获取方式
+
+UUID
+
+保存 UUID 后，可以通过该信息管理对应的空间锚点。
+
+worldAnchor.anchorUUID
+
+名称
+
+如果在创建时未输入锚点名称，则使用默认名称 ""。
+
+worldAnchor.name
+
+Transform
+
+该锚点在当前坐标系下的位姿信息。
+
+worldAnchor.transform
+
+val createResult = WorldTrackingManager.createAnchor(Vector3(0F), EulerAngles(0F, 0F, 0F))
+when (createResult) {
+    is WorldTrackingResult.Success -> {
+        val worldAnchor = createResult.data!!
+        val uuid = worldAnchor.anchorUUID
+        val transform = worldAnchor.transform
+        val anchorName = worldAnchor.name
+    }
+    is WorldTrackingResult.Error -> {
+        println("Error: Code=$${createResult.errorCode}, Message=$${createResult.errorMessage}")
+    }
+}
+
+仅支持加载本应用所创建的空间锚点。
+
+val loadResult = WorldTrackingManager.loadAnchor() // 加载所有锚点
+when (loadResult) {
+    is WorldTrackingResult.Success -> {
+        println("Loaded anchors: $${loadResult.data?.map { it.name }}")
+    }
+    is WorldTrackingResult.Error -> {
+        println("Failed to load anchors: $${loadResult.errorMessage}")
+    }
+}
+
+
+
+空间锚点事件
+
+触发条件
+
+AnchorUpdate.Event.ADDED
+
+空间锚点被创建。
+
+AnchorUpdate.Event.UPDATED
+
+空间锚点信息更新。
+
+AnchorUpdate.Event.LOADED
+
+空间锚点被加载。
+
+AnchorUpdate.Event.REMOVED
+
+空间锚点被删除。
+
+当虚拟空间的坐标系发生变化（如用户重新进行了坐标标定），空间锚点的位置信息会被更新。此时，为了让虚拟场景中的物体仍然 “锚定” 在之前现实场景中的位置，你需要更新放置在这些空间锚点处的虚拟物体。因此，你需要关注锚点更新事件以处理应用中的自定义逻辑。
+
+val sub = WorldTrackingManager.subscribeAnchorUpdate{
+    val anchor = it.anchor
+    val message = "Anchor with UUID: $${anchor.anchorUUID} and name: $${anchor.name}, was "
+    when (it.event) {
+        AnchorUpdate.Event.ADDED -> {
+            println(message + "added.")
+            // 其他操作，例如在成功创建锚点时播放音效
+        }
+        AnchorUpdate.Event.LOADED -> {
+            println(message + "loaded.")
+            // 其他操作，例如在成功加载锚点时播放音效
+        }
+        AnchorUpdate.Event.REMOVED -> {
+            println(message + "removed.")
+            // 其他操作，例如在成功删除锚点时播放音效
+        }
+        AnchorUpdate.Event.UPDATED -> {
+            println(message + "updated.")
+            // 其他操作，例如使用锚点的 Transform 来更新模型        
+        }
+    }
+}
+
+sub.cancel()
+
+val removeResult = WorldTrackingManager.removeAnchor(savedUUID) // 先前保存的 UUID
+when (removeResult) {
+    is WorldTrackingResult.Success -> {
+        println("WorldAnchor removed successfully.")
+    }
+    is WorldTrackingResult.Error -> {
+        println("Error: Code=$${removeResult.errorCode}, Message=$${removeResult.errorMessage}")
+    }
+}

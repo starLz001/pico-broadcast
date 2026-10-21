@@ -1,0 +1,39 @@
+PICO Unity Integration SDK 介绍
+========================================
+PICO Unity Integration SDK 为 PICO 基于 Unity 引擎研发的软件开发工具包。SDK 封装了一系列功能，涉及渲染、输入&追踪、混合现实、平台服务等。
+*重要提示
+*自 3.1.0 版本起，PICO Unity Integration SDK 仅支持开发 64 位应用。
+*SDK 获取途径
+*PICO 开发者官网
+*PICO-Unity-Integration-SDK 仓库
+*PICO Integration 文件夹说明
+*在 Unity 编辑器内导入 SDK 后，Package 目录下将出现 PICO Integration 文件夹 (下图所示)，其中包含以下五个子文件夹：
+* 
+**
+
+
+
+
+*子文件夹
+
+*说明
+
+Assets
+
+包含可在应用开发中便捷使用的资产，包括手柄资产、手部资产、预制体和 Shader。
+
+Editor
+
+包含 SDK 主要功能脚本以及编辑器功能脚本，包括 PXR_BuildProcessor、PXR_MetaData、PXR_OverLayEditor 等。
+
+Platform
+
+包含平台服务相关资源，包括编辑器脚本、安卓和 Windows 插件、Sample 和平台服务脚本。
+
+Runtime
+
+包含 Runtime 相关文件和脚本。
+
+SpatialAudio
+
+包含空间音频相关资源，包括编辑器脚本、插件、预制体、Runtime 相关脚本和 Sample。

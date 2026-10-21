@@ -1,0 +1,55 @@
+通用使用步骤
+========================================
+此部分以 Overlay 类型的 Quad 层为例，介绍如何配置基本的合成层参数，并实现 World-Locked 和 Head-Locked 两种模式。
+*效果展示
+*World-Locked 模式
+*通常情况下，合成层为 World-Locked 模式。无论头戴位置如何移动，合成层都不会随着头戴移动，而是保持其在世界中的固定位置。
+* 
+*Head-Locked 模式
+*在 Head-Locked 模式中，合成层会随着头戴的移动而移动。若想达到此效果，需将合成层作为摄像机的的子节点。
+* 
+*配置 World-Locked 模式
+第一步，为场景添加 XR Origin 并为其挂载 PXR_Manager 脚本，然后将 XR Origin 下的摄像机设置为主摄像机。步骤如下：
+*在 Unity 编辑器中打开项目。
+*在 Hierarchy 窗口中，点击 + > XR > XR Origin (VR) 。
+*XR Origin 将被添加至场景中。XR Origin 下的 Main Camera 将默认成为场景内容捕捉摄像机。若未升级 XR Interaction Toolkit 至最新版本，则 XR Origin 的名称为 XR Rig。XR Interaction Toolkit 升级步骤可参考《快速开始》指南。
+*选中 XR Origin 节点下的 Main Camera。
+*在 Inspector 窗口中，将 Main Camera 的 Tag 设置为 MainCamera。一般已默认为该设置。
+* 
+*删除场景自带的 Main Camera。
+* 
+*选中 XR Origin。
+*Inspector 窗口展示 XR Origin 挂载的组件和脚本。
+*点击 Inspector 窗口底部的 Add Component 按钮。
+*搜索 PXR_Manager 脚本，然后双击添加。
+第二步，为场景添加一个 3D 对象并为其挂载 PXR_Composition Layer 脚本，该脚本用来配置合成层参数。步骤如下：
+*在上方菜单栏处，选择 GameObject > 3D Object。
+*创建一个 3D 对象，例如：Cube。
+*调整 3D 对象的位置，使其处于摄像机可见位置。
+*在 Hierarchy 窗口中，选中该 3D 对象。
+*Inspector 窗口中将展示该 3D 对象挂载的配置脚本和组件。
+*点击 Inspector 窗口底部的 Add Component 按钮。
+*搜索 PXR_Composition Layer 脚本，然后双击添加。脚本界面如下：
+* 
+第三步，配置合成层基础参数。步骤如下：
+*将 Type 设置为 Overlay。
+*将 Shape 设置为 Quad。
+*将 Depth 设置为 0。
+最后，选择纹理类型并按需配置参数。步骤：
+*将 Texture Type 设置为 Dynamic Texture 或 Static Texture。
+*PXR_Composition Layer 脚本界面转换如下：
+* 
+*在 Texture 参数处，选择左右眼透传的纹理。
+*至此，合成层基础配置完成。你可以在设备上运行该场景，将体验到“效果展示”中的效果。此外，可根据实际需求，进行以下配置：
+*(可选) 勾选 Texture Rects，然后配置 Source Rects 和 Destination Rects 相关参数。
+*(可选) 勾选 Layer Blend，然后设置 Source 层和 Destination 层的颜色值和透明度值。
+*(可选) 若想覆盖该层的全局颜色设置，可勾选 Override Color Scale，然后配置相关参数。
+*配置 Head-Locked 模式
+*添加 XR Origin 并为其挂载 PXR_Manager 脚本，然后将 XR Origin 下的摄像机设置为主摄像机。
+*在 Hierarchy 窗口中，展开 XR Origin （或 XR Rig）> Camera Offset。
+*右击 Main Camera，然后选择 3D Object，为摄像机节点创建一个子 3D 对象（例如：Cube）。
+* 
+*将 Cube 移动至摄像机可见位置。
+*选中 Cube。
+*在 Inspector 窗口中，点击底部的 Add Component 按钮，为 Cube 添加 PXR_Over Lay 脚本。
+*参考 World-Locked 模式，配置相关参数。

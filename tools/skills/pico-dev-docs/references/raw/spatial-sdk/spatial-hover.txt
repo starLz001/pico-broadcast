@@ -1,0 +1,227 @@
+空间悬停
+========================================
+PICO Spatial SDK 提供了自定义空间悬停效果的机制——SpatialHoverEffect。你可以向 PICO OS 6 提交一份 “描述配置”，让 PICO OS 6 在悬停事件发生时主动改变 UI 的表现，而无需告知客户端。整个过程在客户端进程之外完成，防止应用非法获取用户信息，具有良好的隐私保护特性，尤其适用于眼动交互。
+* 
+* 
+*你可以从两个维度来理解 SpatialHoverEffect：
+*效果类型：决定悬停时呈现什么样的视觉表现。包括开箱即用的默认效果，以及通过 CustomHover 自定义的效果。
+*作用范围：决定效果作用于哪些 View。默认作用于单个 View，也可以通过 SpatialHoverEffectGroup 将多个 View 组合为一组、实现联动。
+*默认效果
+*你可以直接使用系统自带的空间悬停效果。当 2D 内容被悬停时，会显示高亮层。下面的视频演示了默认效果。
+* 
+*你只需配置 Modifier.spatialHoverEffect 即可启用该效果，代码示例如下：
+ 
+*CustomHover
+如果默认的空间悬停效果无法满足需求，你可以自定义悬停效果，目前支持的能力如下：
+**
+下面的视频演示了自定义效果。
+ 
+*代码示例如下：
+ 
+*SpatialHoverEffectGroup
+*SpatialHoverEffectGroup 用于将多个 View 组合为一组，使组内的 View 共享相同的悬停效果。你为一个 View 设置 SpatialHoverEffectGroup 后，该 View 会将该 SpatialHoverEffectGroup 传递给自己的所有子 View。
+*下面的视频演示了 SpatialHoverEffectGroup 的控制效果。
+ 
+*为一组控件设置统一的悬停效果
+你可以通过 Modifier.spatialHoverEffectGroup 为一组 View 设置统一的悬停效果。
+ 
+*定义一个 View 在某个组内的行为
+你可以使用 SpatialHoverEffectGroup.Behavior 定义一个 View 在某个组内的行为。它控制以下行为：
+*触发（Trigger）：当该 View 自身进入悬停状态时，是否会触发其所在组的状态变化。
+*响应（Responder）：当所在组的状态发生变化时，该 View 是否会响应这次变化。
+Behavior 是一个以 mask: Int 表示的 value class，其中每一位代表一种能力（第 0 位表示触发，第 1 位表示响应）。PICO Spatial SDK 预定义了以下四种行为：
+*
+*将一个 View 绑定到组并指定其行为
+通过 SpatialHoverEffectGroup.behavior 将一个 View 绑定到组并指定其行为：
+ 
+将同一行内的两个 View（左侧 Anchor 固定为 TriggerAndResponder，右侧 Target 使用待演示的行为）绑定到同一个组，即可观察不同行为下「是否触发组状态」与「是否响应组状态」的差异：
+ 
+各行为的表现如下：
+*Standalone：悬停 Anchor 时 Target 不变化，悬停 Target 时 Anchor 也不变化，二者互不联动。
+*Trigger：悬停 Anchor 时 Target 不变化（Target 不响应组状态）；悬停 Target 时 Anchor 被激活（Target 可触发组状态）。
+*Responder：悬停 Anchor 时 Target 被激活（Target 会响应组状态）；悬停 Target 时 Anchor 不变化（Target 不触发组状态）。
+*TriggerAndResponder：悬停任意一方都会激活另一方，形成双向联动。
+*通过一个 View 在多个组之间转发状态
+当一个 View 同时属于多个 HoverGroup，且在这些组中均具备触发能力时，它会作为中继节点，将一个组收到的状态继续转发到其他组。
+以下示例中，Blue 同时绑定到 group1、group2、group3，在三个组中均为 TriggerAndResponder：
+ 
+在如下配置下：
+*Red 属于 Group1，行为为 TriggerAndResponder。
+*Green 属于 Group2，行为为 Trigger。
+*Black 属于 Group3，行为为 Responder。
+*Blue 同时属于 Group1、Group2、Group3，在三个组中均为 TriggerAndResponder。
+状态会沿组间链路传播：
+*悬停 Red：Red → Group1 → Blue → Group3 → Black。Red 触发 Group1，Blue 响应后继续触发 Group3，Black 作为 Group3 的 Responder 被激活。最终 Red、Blue、Black 均激活——注意 Black 是通过 Blue 串联触发的，而非被 Red 直接触发。
+*悬停 Green：Green → Group2 → Blue → Group3 → Black。Green 触发 Group2，Blue 被激活后继续转发到 Group3，Black 被激活。最终 Green、Blue、Black 均激活。
+*悬停 Black：Black 只有 Responder 能力，无法主动触发组状态，因此只有 Black 自身激活，Blue、Red、Green 均不变化。
+*悬停 Blue：Blue 在三个组中均可触发，因此 Red（响应 Group1）与 Black（响应 Group3）被激活，而 Green 仅有 Trigger 能力、不响应 Group2，故不变化。最终 Blue、Red、Black 激活，Green 保持未激活。
+
+
+
+*所有交互器皆可触发空间悬停效果。
+
+Box(
+    modifier =
+        Modifier
+            .size(100.dp)
+            .background(Color.Yellow)
+            .align(Alignment.Center)
+            // 默认效果等同于 `spatialHoverEffect(SpatialHoverStyle.Default)`
+            .spatialHoverEffect() 
+            // 或指定高亮样式，不受系统 Default 指向变化影响
+            .spatialHoverEffect(SpatialHoverStyle.Highlight) 
+) {...}
+
+
+
+能力
+
+描述
+
+animation
+
+与其他效果组合使用，用于定义空间悬停的动画效果，包括贝塞尔、动画持续时间、延迟播放时间。
+
+clipShape
+
+裁剪，包括沿 X/Y 轴裁剪、图形裁剪。
+*支持的形状：矩形、圆角矩形、圆形、锚点。
+
+opacity
+
+透明度控制。
+
+scaleEffect
+
+缩放，包括沿 X 轴水平缩放、沿 Y 轴垂直缩放。
+
+Box(
+    modifier =
+        Modifier.border(width = 1.dp, color = Color.Red)
+            .size(width = 200.dp, height = 60.dp)
+            .spatialHoverEffect {
+                val isActive = it.isActive
+                val size = it.size
+               
+                // 动画块：控制缩放和形状变化
+                // 激活时使用 200ms 补间动画，曲线为 EaseInElastic
+                // 激活延迟 100ms，取消激活无延迟
+                animation(
+                    tween(
+                        durationMillis = 200,
+                        delayMillis = if (isActive) 100 else 0,
+                        easing = EaseInElastic
+                    )
+                ) {
+                    // 缩放 view，默认以中心为基准，X/Y 轴同时等比缩放。
+                    scale(scale = if (isActive) 1.4f else 1f)
+                    // 也可以单独设置 X 轴或 Y 轴缩放，并指定不同的缩放中心点，例如 `scale(scaleX: Float, scaleY: Float, origin: TransformOrigin = TransformOrigin.Center)`
+                    clipShape(
+                        // 形状，必须是圆角矩形、矩形或圆
+                        shape = if (isActive) RectangleShape else CircleShape,
+                        // 裁剪区域大小，默认从左上角开始计算
+                        size =
+                            if (isActive) size
+                            else IntSize(width = size.height, height = size.height)                                    
+                    )
+                }
+
+                // 透明度，悬停时完全不透明，未悬停时半透明
+                alpha(if (isActive) 1f else 0.6f)
+            }
+            .background(Color.Blue),
+    contentAlignment = Alignment.Center,
+) {
+    Text("Clip & Scale & Alpha", color = Color.White)
+}
+
+Column {
+    // 使用 `SpatialHoverEffectGroup.obtain()` 生成全局唯一的 HoverGroup 对象
+    val group = remember { SpatialHoverEffectGroup.obtain() }
+    val isEnabled = remember { mutableStateOf(true) }
+
+    Box(
+        modifier = Modifier
+            // 隐式设置 HoverGroup，系统会自动分配 HoverGroup
+            .spatialHoverEffectGroup()
+            .mySpatialHoverEffect()
+    ) {...}
+
+    Box(
+        modifier = Modifier
+            // 显式设置 HoverGroup，并可以在运行时动态启用/禁用
+*            .spatialHoverEffectGroup(group = group, enable = isEnabled)
+            .mySpatialHoverEffect()
+    ) {
+        // 无论是隐式还是显式设置，调用 `Modifier.spatialHoverEffectGroup()` 为一个 view 设置 HoverGroup 后，它都会将该 HoverGroup 传递给自己的所有子 view
+        Button(
+            modifier = Modifier
+                .mySpatialHoverEffect(),
+            onClick = {
+                // 点击切换使能 HoverGroup
+*                isEnabled = !isEnabled
+            }
+        ) {...}
+    }
+}
+
+fun Modifier.mySpatialHoverEffect = ...
+
+
+
+*行为
+
+*掩码
+
+*描述
+
+*Standalone
+
+*0x00
+
+*既不触发也不响应组状态，仅在自身被悬停时激活，完全独立于组联动。
+
+*Trigger
+
+*0x01
+
+*仅触发组状态，但不响应组状态。可将状态发给组内其他成员，但自身不会因组状态而变化。
+
+*Responder
+
+*0x10
+
+*仅响应组状态，但不触发组状态。只能接收组状态，不能主动向外传播。
+
+*TriggerAndResponder
+
+*0x11
+
+*既触发又响应组状态，组内成员之间形成双向联动。
+
+// 生成全局唯一的组 ID
+val group = SpatialHoverEffectGroup.obtain()
+
+// 绑定到当前组，并将行为设置为 Trigger 模式
+Modifier.spatialHoverEffectGroup(
+    group.behavior(SpatialHoverEffectGroup.Behavior.Trigger)
+)
+
+val group = SpatialHoverEffectGroup.obtain()
+
+// Anchor：触发并响应
+Modifier.spatialHoverEffectGroup(
+    group.behavior(SpatialHoverEffectGroup.Behavior.TriggerAndResponder)
+)
+
+// Target：设置想要演示的行为
+Modifier.spatialHoverEffectGroup(
+    group.behavior(targetBehavior)
+)
+
+// 蓝色 Box 同时绑定到 3 个组，可响应来自三个组的状态，也可向三个组触发状态
+val blueGroupsModifier =
+    Modifier
+        .spatialHoverEffectGroup(group1.behavior(SpatialHoverEffectGroup.Behavior.TriggerAndResponder))
+        .spatialHoverEffectGroup(group2.behavior(SpatialHoverEffectGroup.Behavior.TriggerAndResponder))
+        .spatialHoverEffectGroup(group3.behavior(SpatialHoverEffectGroup.Behavior.TriggerAndResponder))

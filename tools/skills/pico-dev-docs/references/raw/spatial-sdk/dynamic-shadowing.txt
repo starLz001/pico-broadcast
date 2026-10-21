@@ -1,0 +1,20 @@
+动态投影
+========================================
+动态投影是一种能够随时间、用户动作或环境变化而实时更新投影的技术。它通过动态调整虚拟元素（如图像、阴影、光线或用户界面），使其实时贴合场景中的表面、物体或用户视角，从而增强虚实融合的沉浸感。
+地面投影是动态投影的一种常见应用，其核心是将虚拟物体的阴影或图像精准投射到场景中的地面或某一水平平面上，使虚拟物体看起来如同真实地放置于该平面上，强化视觉上的空间一致性与真实感。
+*添加地面投影
+*若要在场景内实现地面投影，你需要同时为物体和地面添加 GroundShadowComponent。GroundShadowComponent 可以动态地模拟出光源处于物体正上方时的阴影效果，产生的阴影效果永远在物体下方，如下图所示：
+* 
+*添加GroundShadowComponent 时，需要设置以下参数：
+*castsShadowEnabled：是否投射影子
+*receivesShadowEnabled：是否接收影子
+*代码示例如下：
+ 
+*同时实现动态光照和阴影
+*GroundShadowComponent 无法根据光源的位置变化来动态更新阴影。如需实现随着动态光源移动而变化的阴影，使用动态光源相关组件。详情参考《动态光照》。
+*API 参考
+GroundShadowComponent 类提供了动态投影相关的属性和函数，详情参阅 API 参考。
+
+
+floorEntity.components.set(GroundShadowComponent(castsShadowEnabled = false, receivesShadowEnabled = true))
+modelEntity.components.set(GroundShadowComponent(castsShadowEnabled = true, receivesShadowEnabled = false)) 

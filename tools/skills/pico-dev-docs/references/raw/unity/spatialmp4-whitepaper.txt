@@ -1,0 +1,625 @@
+SpatialMP4 白皮书
+========================================
+空间视频结合了立体RGB、深度和姿态数据，以实现沉浸式3D体验（例如，AR/VR、机器人、3D重建）。本文档介绍一种基于MP4的容器格式，用于有效地同步和存储这些数据流。
+*主要特点
+*多种数据轨道：除音视频轨道外，提供立体图像深度、位姿等轨道，便于业务侧应用。
+*同步：图像帧、深度图和姿势数据轨均配备了各自的时间戳基准，便于业务方据此做数据同步。
+*兼容性：支持传统的双目3D并排格式和MV-HEVC编码格式。
+*MP4容器扩展
+*立体声RGB轨道
+立体声RGB轨道用于保存来自左右RGB摄像机的视频流。此轨道是强制性的。
+*基本的
+*编解码器：AVC/HEVC/MV-HEVC
+*布局：多层（MV-HEVC）/并排（左/右或上下）
+*比特深度：8/10位
+*VideoExtendedUsage Box（vexu）
+这个盒子是强制送货的。
+此框由Apple提出，与Apple空间视频格式一致。我们主要关注这些新增的框。其他请参阅Apple白皮书：
+https://developer.apple.com/av-foundation/Stereo-Video-ISOBMFF-Extensions.pdf
+*
+*DisparityAdjustmentScaleBox（dads）
+*定义
+盒子类型： dads
+容器： cmfy
+强制：否
+数量：零或一
+*语法
+ 
+*语义
+*
+*IntrinsicCameraParametersBox（icam）
+此框是可选的，用于MR和ML开发人员场景。
+此框指定了将图像点的像素坐标与相机参考帧中的相应坐标联系起来的内在相机参数。ISO/IEC 14496-10附件H中给出了焦距和与相机光学引起的几何失真相关的参数的规范。有关详细信息，请参阅ISO/IEC 14496-15:2024：https://www.iso.org/standard/89118.html
+*语法
+ 
+*语义
+*
+ 
+*ExtrinsicCameraParametersBox
+此框是可选的，用于MR和ML开发人员场景。
+本条款规定了定义摄像机参考帧相对于已知世界参考帧的位置和方向的外部摄像机参数。ISO/IEC 14496-10附件H中给出了包括平移向量和旋转矩阵在内的外部摄像机参数的规范。有关详细信息，请参阅ISO/IEC 14496-15:2024：https://www.iso.org/standard/89118.html
+*语法
+ 
+*语义
+*
+*旋转矩阵（R）：表示相机坐标系相对于世界坐标系的旋转，矩阵元素通过指数和尾数与精度参数相结合来计算，以确保旋转姿态的准确表示。
+*平移向量（T）：表示摄像机坐标系原点在世界坐标系中的位置，分量由指数和尾数计算，并与旋转矩阵一起定义摄像机的外部参数。
+ 
+*水平视野盒（hfov）
+请参阅3.2.4水平视野框。此框是强制交付的。
+*深度跟踪
+深度轨道用于存储来自ToF传感器的深度图或来自左侧或右侧相机的估计深度。此轨道是可选的，用于MR和ML开发人员场景。
+*基本的
+*编解码器：视频/原始（解压缩）
+*格式：12/16bit单色
+*VideoRawSampleDescriptor（生c）
+*定义
+盒子类型： rawc
+容器： SampleTableBox （'stbl'）
+强制：是
+数量：正好一个
+定义了一个新的未压缩视觉样本类型“rawc”。它的层次级别在“stbl”容器框内。同时，定义了元数据框“hfov”和“vfox”来分别显示深度图的水平和垂直视图。定义了元数据框“dfmt”来显示深度图格式。
+*语法
+ 
+*深度格式框（dfmt）
+*定义
+盒子类型： dfmt
+容器： rawC
+强制：是
+数量：正好一个
+定义深度图格式的元数据框（"dfmt"），表示深度图视频流的规格，包括深度图的数据类型、值的有效范围、数据精度。
+*语法
+ 
+*语义
+dfmt框描述了深度轨迹的一些参数。
+*
+*水平视野盒（hfov）
+*定义
+盒子类型： hfov
+容器： VisualSampleEntry （例如，rawc）
+强制：否
+数量：零或一
+存储视频轨道（深度）的附加水平fov信息。此框必须位于ISOBMFF规范定义的非可选框之后和VisualSampleEntry定义末尾的可选框之前，例如CleanApertureBox和PixelAspectRatioBox。
+*语法
+ 
+*语义
+*hfov 是一个16位有符号整数，指定此视频轨道的水平fov（深度）。
+*
+*垂直视场框（vfov）
+*定义
+盒子类型： vfov
+容器： VisualSampleEntry （例如，rawc）
+强制：否
+数量：零或一
+存储视频轨道（深度）的附加垂直fov信息。此框必须位于ISOBMFF规范定义的非可选框之后和VisualSampleEntry定义末尾的可选框之前，例如CleanApertureBox和PixelAspectRatioBox。
+*语法
+ 
+*语义
+*vfov 是一个16位有符号整数，指定此视频轨道的垂直fov（深度）。
+*
+*姿势轨道（文本计时元数据）
+姿势跟踪用于保存来自6dof传感器的姿势信息。此轨道是可选的，用于MR和ML开发人员场景。
+*基本的
+*格式：基于文本
+*Framerate：与立体声视频轨道对齐
+定时元数据轨道：
+https://www.iso.org/obp/ui/es/#iso： std：iso-iec：14496：-12：ed-6：v 1：en
+参考 12.3元数据媒体
+*
+*TextMetaDataSampleEntry（mett）
+直接使用'mett'框。
+*定义
+盒子类型： mett
+容器：  stsd
+强制：是
+数量：正好一个
+*定时元数据样本描述包含定义如何解释定时元数据媒体样本的信息。此示例描述基于标准样本描述标头，如 Sample description atom ('stsd').
+*元数据样本描述是一种派生的样本描述格式，它描述了以原子表示的元数据值。它还可以包括其他不持有元数据值的原子。
+*零、一个或多个值可以在特定时间的元数据样本描述中携带。
+*语法
+ 
+*语义
+*
+
+
+
+*FourCC
+
+*FourCC
+
+*FourCC
+
+*FourCC
+
+*框语法元素
+
+*描述
+
+vexu
+
+
+
+
+
+
+
+VideoExtendedUsageBox
+
+
+
+
+
+eyes
+
+
+
+
+
+Video Stereo 
+
+
+
+
+
+
+
+stri
+
+
+
+StereoViewInformationBox
+
+1：左，2：右，3：都
+
+
+
+
+
+hero
+
+
+
+HeroStereoEyeDescriptionBox
+
+主视图ID，0：左为main，1：右为main。
+
+
+
+
+
+cams
+
+
+
+CamerasBox
+
+
+
+
+
+
+
+
+
+blin
+
+BaselineBox
+
+
+ipd：左眼相机光心到右眼相机光心的距离。单位（嗯）。例如2cm ipd：20000
+
+
+
+
+
+cmfy
+
+
+
+
+
+
+
+
+
+
+
+
+
+dadj
+
+
+DisparityAdjustmentBox
+
+
+视差调整必须在[-1,1]范围内。0.02（2%）的正调整值是常见的默认值。将一个数字乘以10000并将其转换为整数。例如，0.02调整：200。
+
+
+
+
+
+
+
+dads
+
+DisparityAdjustmentScaleBox
+
+PICO添加
+
+
+
+proj
+
+
+
+
+
+ProjectionBox
+
+投影描述
+
+
+
+
+
+prji
+
+
+
+ProjectionInformationBox
+
+projection_kind只能是'rect'
+
+
+
+pack
+
+
+
+
+
+
+
+
+
+
+
+
+
+pkin
+
+
+
+
+
+
+如果使用框架包装，view_packing_kind必须是'side'或'over'，但最好是'side'。
+
+aligned(8) class DisparityAdjustmentScale extends FullBox(‘dads’, 0, 0) {
+    unsigned float(32) scale;
+}
+
+
+
+*项
+
+*描述
+
+*scale
+
+*-识别图像的比例。类型：float32。
+
+  class IntrinsicCameraParametersBox extends FullBox ('icam', version=0, flags) {
+    unsigned int(6) reserved=0; 
+    unsigned int(10) ref_view_id;
+    unsigned int(32)prec_focal_length;
+    unsigned int(32)prec_principal_point;
+    unsigned int(32)prec_skew_factor;
+    unsigned int(8)exponent_focal_length_x;
+    signed   int(64)mantissa_focal_length_x;
+    unsigned int(8)exponent_focal_length_y;
+    signed   int(64)mantissa_focal_length_y; 
+    unsigned int(8)exponent_principal_point_x;
+    signed   int(64)mantissa_principal_point_x;
+    unsigned int(8)exponent_principal_point_y;
+    signed   int(64)mantissa_principal_point_y;
+  }
+
+
+
+*项
+
+*描述
+
+*ref_view_id
+
+view_id识别在本征相机参数框中显示本征相机参数的视图
+
+*prec_focal_length
+
+保留
+
+*prec_principal_point
+
+保留
+
+*prec_skew_factor
+
+由2prec_skew_factor给出的倾斜因子的最大允许截断误差的指数。prec_skew_factor的值应在0到31的范围内。
+
+*exponent_focal_length_x
+
+
+* 水平方向焦距的指数部分。exponent_focal_length_x的值应在0到62之间，包括在内。值63保留供ITUT|ISO/IEC将来使用。解码器应将值63视为指示未指定的焦距。
+*mantissa_focal_length_x指定第i个摄像机水平方向焦距的尾数部分。
+
+*mantissa_focal_length_x
+
+ 第i个相机在水平方向上焦距的尾数部分。
+
+*exponent_focal_length_y
+
+*焦距在垂直方向上的指数部分。exponent_focal_length_y的值应在0到62的范围内，包括在内。值63保留供ITUT|ISO/IEC将来使用。解码器应将值63视为指示未指定的焦距。
+
+*mantissa_focal_length_y
+
+垂直方向焦距的尾数部分。
+
+*exponent_principal_point_x
+
+水平方向主点的指数部分。
+
+*mantissa_principal_point_x
+
+ 水平方向主点的尾数部分。
+
+*exponent_principal_point_y
+
+* 垂直方向上主点的指数部分。
+
+*mantissa_principal_point_y
+
+*垂直方向主点的尾数部分
+
+class ExtrinsicCameraParametersBox extends FullBox ('ecam', version=0, flags) {
+    unsigned int(6) reserved=0;
+    unsigned int(10) ref_view_id;
+    unsigned int(8)prec_rotation_param;
+    unsigned int(8)prec_translation_param;
+    for (j=1; j<=3; j++) { /* row */
+        for (k=1; k<=3; k++) { /* column */
+              unsigned int(8)exponent_r[j][k];
+              signed   int(64)mantissa_r [j][k];
+        }
+        unsigned int(8)exponent_t[j];
+        signed   int(64)mantissa_t[j];
+    }
+}
+
+
+
+*项
+
+*描述
+
+*ref_view_id
+
+
+*-标识当前相机参数对应的视图ID（view_id），与IntrinsicCameraParametersBox中的ref_view_id一致，以确保内部和外部参数与相同的视图相关联。
+
+*prec_rotation_param
+
+*-保留
+
+*prec_translation_param
+
+*-保留
+
+*exponent_r[j][k]
+
+*-旋转矩阵第j行第k列中元素的指数部分（\（j， k\in\{1,2,3\}\)).
+
+*mantissa_r[j][k]
+
+*-旋转矩阵第j行和第k列中元素的尾数部分。
+
+*exponent_t[j]
+
+*-平移向量的第j个分量（\（x， y，z\））的指数部分。
+
+*mantissa_t[j]
+
+*-平移向量第j个分量的尾数部分。
+
+aligned(8) class VisualSampleEntry extends SampleEntry(‘rawc’, 0, 0) {
+  //skip common element from parent
+  ...
+        Box(dfmt); 
+        Box(hfov);
+        Box(vfov);
+}
+
+aligned(8) class DepthFormatBox  extends Box(‘dfmt’) {
+      int(32) data_type //int16, int8      
+      int(32) valid_range 
+      char(32) data_precision //mm,dm,cm
+}
+
+
+
+*项
+
+*描述
+
+*data_type
+
+
+*-深度数据类型，参考qucktime
+https://developer.apple.com/documentation/quicktime-file-format/well-known_types
+
+*valid_range
+
+*-定义深度数据的有效范围。范围：0-32，单位：位
+
+*data_precision
+
+*-指定空间数据的测量单位（米：“m”，分米：“dm”，毫米：“mm”）
+
+aligned(8) class HorizontalFieldOfView extends FullBox(‘hfov’, 0, 0) {
+    int(16) hfov;
+}
+
+
+
+*项
+
+*描述
+
+fhov
+
+视频轨道的水平fov（深度）（单位：微度），例如90度fov=90000微度
+
+aligned(8) class VerticalFieldOfView extends FullBox(‘hfov’, 0, 0) {
+    int(16) vfov;
+}
+
+
+
+*项
+
+*描述
+
+vhov
+
+视频轨道的垂直fov（深度）（单位：微度），例如90度fov=90000微度
+
+
+
+*框语法元素
+
+*元数据跟踪
+
+*tkhd.width/tkhd.height
+
+*0（非视觉）
+
+*hdlr.handler_type
+
+*'meta'
+
+*stsd.data_format
+
+*'mebx'/'mett'
+
+*Sample content
+
+*元数据键值对（例如{"face_detect"： true}）
+
+*cdsc reference
+
+*可选（与特定轨道或全局关联）
+
+class MetaDataSampleEntry(‘mett’) extends SampleEntry (‘mett’)
+{    
+} 
+class TextMetaDataSampleEntry() extends MetaDataSampleEntry (‘mett’) 
+{ 
+ string content_encoding; // optional  
+       string mime_format; 
+ BitRateBox (); // optional
+} 
+aligned(8) class SampleDescriptionBox (unsigned int(32) handler_type)  extends FullBox('stsd', 0, 0)
+{
+  int i ; 
+        unsigned int(32) entry_count; 
+  for (i = 1 ; i <= entry_count ; i++) {  
+  switch (handler_type) {  
+          case ‘soun’: // for audio tracks 
+    AudioSampleEntry(); 
+    break;  
+    case ‘vide’: // for video tracks 
+    VisualSampleEntry(); 
+    break; 
+    case ‘hint’: // Hint track 
+    HintSampleEntry(); 
+    break; 
+    case ‘meta’: // Metadata track 
+    MetadataSampleEntry(); 
+    break;  
+      } 
+      } 
+}
+
+
+
+项
+
+姓名
+
+类型
+
+描述
+
+mime_format
+
+"application/pose"
+
+string
+
+pos元数据轨迹矿井类型定义
+
+data
+
+x
+
+double
+
+*相对于开机位置沿x轴的位移距离，单位：米
+
+
+
+y
+
+double
+
+*相对于引导位置沿y轴的位移距离，单位：米
+
+
+
+z
+
+double
+
+*沿z轴相对于引导位置的位移距离，单位：米
+
+
+
+rx
+
+double
+
+*旋转角四元数x
+
+
+
+ry
+
+double
+
+*旋转角y的四元数
+
+
+
+rz
+
+double
+
+*旋转角z的四元数
+
+
+
+rw
+
+double
+
+*旋转角w的四元数

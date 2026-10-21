@@ -1,0 +1,219 @@
+视频透视
+========================================
+视频透视（Video Seethrough）技术可以打破 VR 头显提供的全封闭式虚拟环境。其通过头显上的摄像机实时采集周围环境的视图，然后通过图像处理算法将真实场景画面呈现在头显屏幕上，使用户可以直接在头显屏幕上浏览现实场景。最终，透视画面可以与应用内的虚拟场景融合，呈现混合现实效果。
+*视频透视画面由 PICO 系统直接处理并上屏展示，应用程序无法获取用户的任何物理环境信息。
+* 
+*基本概念
+*
+*效果展示
+*开启视频透视，可以将现实世界作为背景实时显示在 PICO 头显屏幕上，场景中的虚拟物体将覆盖在背景图上，形成穿透式 AR 场景。
+* 
+*原理详解
+混合现实画面合成中，应用不会直接将图像绘制到头戴屏幕上，而是先将图像绘制到一个渲染目标（Render Target）里，然后通过合成器与其他图层进行合成，最后将画面输出至屏幕上。图层绘制顺序由先往后为：透视层（即 VST 层）、Underlay 层、应用图层、Overlay 层。
+* 
+*
+*环境要求
+*PICO 设备型号：PICO 4 Ultra 系列（若要在 PICO 4 系列设备上使用该功能，需使用 3.1.0 及更早版本的 SDK）
+*PICO 设备系统版本：5.14.0 及以上
+*注意事项
+*需禁用场景内的所有后处理能力，否则透视无法生效。
+*若你在项目中使用了 Vulkan 和渲染管线（通用渲染管线或内置渲染管线），则需要禁用 HDR，否则视频透视无法生效。
+* 
+*对于 Unity 6，你还需要禁用 Main Camera 的 HDR Rendering，否则透视无法生效。
+* 
+*开启视频透视
+*手动配置
+*为场景添加 XR Origin 并挂载 PXR_Manager 脚本，具体步骤可参考《快速开始》指南。若已完成，可跳过此步骤。
+*在 PXR_Manager (Script) 面板上，勾选 Video Seethrough 选框。
+* 
+*选中场景中的主相机（通常为 Main Camera）。
+*在 Camera 面板处，为主相机进行以下设置：
+*将 Clear Flags 设置为 Solid Color。
+*设置完成后，相机渲染每一帧前，会在逐像素过程中清除每个像素的颜色值，然后将需要渲染的颜色值（即接下来设置的 Background 颜色值）写入。
+* 
+*在 Background 处，点击颜色条，打开 Color 窗口，将 R、 G、 B、 A 值都设置为 0，或直接将 Hexadecimal 设置为 000000。
+*场景的背景颜色已被设置为黑色，Alpha 通道已被设置为完全透明。
+* 
+*在代码编辑器中打开 PXR_Manager.cs 脚本文件或任意一个你创建的脚本文件，使用 Unity.XR.PXR 命名空间，然后使用 PXR_Manager.EnableVideoSeeThrough 变量为应用开启透视。开启后，应用生命周期内全局生效。
+* 
+*代码示例如下：
+* 
+*使用 PICO Building Blocks
+*你可以使用 PICO Building Blocks 来一键完成视频透视相关配置。详情参考《PICO Building Blocks》。
+*设置视频透视特效
+*通过设置视频透视特效，可以丰富透视画面的展示效果。
+*设置视频透视参数
+*在进合成服务前，可以对透视图像进行调色、特效等后处理，使画面呈现不同效果。目前支持修改图像的对比度、饱和度、亮度、色温四个参数。
+*方式一：手动调用接口
+*参考上文，完成视频透视相关配置。
+*调用以下接口，设置视频透视参数。
+**
+代码示例如下：
+ 
+*方式二：使用 PICO Building Blocks
+你可以使用 PICO Building Blocks 来一键设置视频透视参数。详情参考《PICO Building Blocks》。
+*设置颜色映射表（LUT）
+LUT 即颜色映射表，是用于对每一种颜色进行重新映射的一种技术。主要用于调整图像风格、添加滤镜等后处理效果。你可以通过 LUT 设置视频透视特效。
+导入的 LUT 纹理必须转换为 RGBA32 格式才能正确拿到对应的 RGBA 值。因此，你需要先转换 LUT 纹理的格式，然后调用接口设置 LUT。步骤如下：
+*将 LUT 纹理导入至你的 Unity 项目。
+* 
+*下图为兼容 PICO Unity Integration SDK 的中性 LUT 纹理，可按需使用。
+* 
+*在 Project 窗口中，双击该纹理。
+*在 Inspector 窗口中，完成以下设置：
+*展开 Advanced 设置列表，然后勾选 Read/Write 选框。
+*前往 Android settings 部分，勾选 Override For Android 选框，然后将 Format 参数设置为 RGBA 32 bit。
+* 
+*点击右下角的 Apply 按钮。
+*参考上文，完成视频透视相关配置。
+*调用 SetVideoSeeThroughLut 接口，设置颜色映射表（LUT）。完整代码示例如下：
+* 
+*API 参考
+若想了解接口的详细信息，包括入参和返回值说明等，参阅 API 参考。
+
+
+
+
+概念
+
+说明
+
+渲染目标
+
+渲染目标（Render Target）为一个表面，图形 API 可以在该表面上绘制内容。
+
+Overlay 层
+
+合成层的一种，呈现在应用图层前面。
+
+应用图层
+
+应用图层由 Unity 引擎绘制，图像分辨率通常小于屏幕的分辨率。
+
+Underlay 层
+
+合成层的一种，呈现在应用图层后面。
+
+合成服务
+
+合成服务是 SDK 的能力，可以将不同应用/服务生成的图像合为一层，然后提供给左右眼显示。
+
+
+
+图层类型
+
+说明
+
+透视层
+
+透视层位于合成后图像的最底层，也是最先绘制的一层。VST 层数据由 Runtime 生成，应用无法获取到 VST 层数据。
+
+Underlay 层
+
+Underlay 层由应用生成，位于合成后图像的倒数第二层。
+
+应用图层
+
+
+应用图层由 Unity 引擎绘制，图像分辨率通常小于屏幕的分辨率，因此会导致画面清晰度降低，尤其会导致 UI 元素的清晰度过低。你可以通过提升 eyebufferScale 的值来提升分辨率，从而解决 UI 元素清晰度过低的问题，但同时也会带来更大的性能消耗。对于尺寸固定的 UI 元素，可以通过使用 Underlay 或 Overlay 层来解决清晰度问题。
+为确保 Underlay 层的内容可以透过应用图层显示在屏幕上，需在应用图层上 Underlay 层对应的位置处开一个 “洞”，即根据 Underlay 层的内容，为应用图层对应位置的 Alpha 通道设置合适的透明度。
+
+Overlay 层
+
+Overlay 层由应用生成，为最后绘制的图层，位于所有图层的最顶层。因此，Overlay 层会遮挡住所有其他图层。Overlay 层的形状通常为圆形，或者为一个由 Unity 引擎生成的 Render Texture。应用会直接将 Overlay 层发送给合成器进行合成。合成过程中，合成器不会对 Overlay 层进行放大或拉伸处理，因此能保证图像的清晰度。
+
+开启或关闭视频透视后，透视效果的正式生效或失效需要花费一定时间。此时，若你需要获取视频透视功能当前的精确状态，则可以监听 VstDisplayStatusChanged 事件。
+
+// 开启透视
+PXR_Manager.EnableVideoSeeThrough = true;
+
+// 关闭透视
+PXR_Manager.EnableVideoSeeThrough = false;
+
+// 监听透视功能状态
+PXR_Manager.VstDisplayStatusChanged += VstDisplayStatusChanged;
+private void VstDisplayStatusChanged(PxrVstStatus status)
+{
+    switch (status)
+    {
+        case PxrVstStatus.Disabled: // 已关闭
+            break;
+        case PxrVstStatus.Enabling: // 开启中
+            break;
+        case PxrVstStatus.Enabled: // 已开启
+            break;
+        case PxrVstStatus.Disabling: // 关闭中
+            break;
+    }
+}
+
+
+
+接口
+
+说明
+
+EnableVideoSeeThroughEffect
+
+开启或关闭视频透视特效。
+
+SetVideoSeeThroughEffect
+
+设置视频透视特效相关参数，包括对比度、饱和度、亮度、色温。
+
+// 首先，开启视频透视
+PXR_Manager.EnableVideoSeeThrough = true
+
+// 监听透视功能状态
+PXR_Manager.VstDisplayStatusChanged += VstDisplayStatusChanged;
+private void VstDisplayStatusChanged(PxrVstStatus status)
+{
+    switch (status)
+    {
+        case PxrVstStatus.Disabled: // 已关闭
+            break;
+        case PxrVstStatus.Enabling: // 开启中
+            break;
+        case PxrVstStatus.Enabled: // 已开启
+            break;
+        case PxrVstStatus.Disabling: // 关闭中
+            break;
+    }
+}
+
+// 然后，启用视频透视特效
+PXR_MixedReality.EnableVideoSeeThroughEffect(true);
+
+// 最后，设置视频透视参数，包括对比度、饱和度、亮度、色温（你需要将示例中 value 和 duration 参数的值替换为所需的值）
+PXR_MixedReality.SetVideoSeeThroughEffect(PxrLayerEffect.Colortemp, 10, 0);
+PXR_MixedReality.SetVideoSeeThroughEffect(PxrLayerEffect.Brightness, 40, 10);
+PXR_MixedReality.SetVideoSeeThroughEffect(PxrLayerEffect.Saturation, -5, 0);
+PXR_MixedReality.SetVideoSeeThroughEffect(PxrLayerEffect.Contrast, 1, 5);
+
+LUT 纹理图的尺寸不得超过 512*512。
+
+// 首先，启用视频透视
+PXR_Manager.EnableVideoSeeThrough = true; 
+
+// 监听透视功能状态
+PXR_Manager.VstDisplayStatusChanged += VstDisplayStatusChanged;
+private void VstDisplayStatusChanged(PxrVstStatus status)
+{
+    switch (status)
+    {
+        case PxrVstStatus.Disabled: // 已关闭
+            break;
+        case PxrVstStatus.Enabling: // 开启中
+            break;
+        case PxrVstStatus.Enabled: // 已开启
+            break;
+        case PxrVstStatus.Disabling: // 关闭中
+            break;
+    }
+}
+
+// 然后，启用视频透视特效
+PXR_MixedReality.EnableVideoSeeThroughEffect(true);
+ 
+// 最后，设置颜色映射表（你需要传入 LUT 纹理实际的行数和列数）
+PXR_MixedReality.SetVideoSeeThroughLut(lutTex1, 8, 8);

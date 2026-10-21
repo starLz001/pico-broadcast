@@ -1,0 +1,7 @@
+如何移除安卓系统的虚拟按钮？
+========================================
+如果在项目打包后，出现安卓系统的虚拟按钮，你可以按照以下步骤进行移除：
+*在编辑器左上角，点击 编辑（Edit） > 项目设置（Project Settings），展开左侧 平台（Platform） > Android。
+*在 APK 打包（Android Packaging） 下，勾选 启用 KitKat 及以上设备的全屏沉浸（Enable FullScreent Immersive on KitKat and above devices）。
+* 
+

@@ -1,0 +1,12 @@
+通过手掌位姿驱动 Motion Controller
+========================================
+*本文档介绍 PICO Unreal OpenXR Plugin 提供的手掌位姿（Palm Pose）。
+*相关 OpenXR 扩展
+XR_EXT_palm_pose。扩展介绍和手掌位姿示例参考 OpenXR 官方文档。
+*环境要求
+*设备型号须为 PICO 4 Ultra 或 Project Swan（PICO OS 6）。
+*使用说明
+PICO Unreal OpenXR Plugin 支持手掌位姿相关功能，允许开发者将 Motion Controller 中的 Motion Source 指定为 Palm，此时手势追踪时的中心点将会偏移至 palm 的位置。
+*一个 PICO 手柄可以产生 Palm、Grip、Aim 三个位姿。通过手势交互，还可以产生 Pinch 和 Poke 两个位姿。所以当设备同时支持 XR_EXT_hand_interaction 和 XR_EXT_palm_pose 两个扩展时，一个手柄可以返回 5 个位姿。
+* 
+

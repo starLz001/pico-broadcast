@@ -1,0 +1,114 @@
+成就-接口列表
+========================================
+本文罗列成就服务涉及的接口，包括客户端接口和服务端接口，并提供接口功能说明。若想了解各个接口的入参和返回说明，请阅读 API 参考。 
+*客户端接口
+PICO SDK 的成就服务提供了 PICO 框架和 UE 框架两套客户端接口。其中，PICO 框架接口封装在 FPicoAchievementsInterface 类中，UE 框架封装在 FOnlineAchievementDescPico 类中。下文列出 PICO 框架和 UE 框架下成就服务模块下的所有接口。要了解更多关于 PICO 框架和 UE 框架信息，参考注意事项。 
+*PICO 框架接口
+推荐你使用 PICO 框架接口开发新应用。下表列出封装在 FPicoAchievementsInterface 类中的接口及其功能说明。
+*获取成就信息
+你可以获取成就的基础信息和解锁进度，相关接口如下：
+*
+*更新成就进度 
+你可以调用以下接口来更新成就完成进度： 
+*
+*UE 框架接口
+若你已使用 UE 接口开发了 VR 应用，你可使用 PICO 提供的 UE 框架使你的应用适配 PICO 设备。下表列出封装在 FOnlineAchievementDescPico 类中的接口及其功能说明。 
+*
+*服务端接口
+*创建或更新成就
+*获取成就基础信息
+*写入用户的成就进度
+*获取用户的成就进度
+*删除用户的成就进度
+
+
+
+C++ 接口
+
+蓝图接口
+
+功能
+
+GetAllDefinitions()
+
+*PicoGetAllDefinitions()
+
+获取所有成就的基础信息。
+
+GetAllProgress()
+
+*PicoGetAllProgress()
+
+获取玩家的所有成就解锁进度。
+
+GetDefinitionsByName()
+
+*PicoGetDefinitionsByName()
+
+获取指定成就的基础信息，包括成就类型、成就描述、是否解锁等。
+
+GetProgressByName()
+
+*PicoGetProgressByName()
+
+获取玩家的某个成就解锁进度。 
+
+
+
+C++ 接口
+
+蓝图接口
+
+说明
+
+AddCount() 
+
+*PicoAddCount()
+
+增加计数。仅可被计数类（Count）成就调用。 
+
+AddFields() 
+
+*PicoAddFields()
+
+完成某项任务，该任务的状态将不可变更。仅可被完成率类（Bitfield）成就调用。 
+
+Unlock() 
+
+PicoUnlock()
+
+解锁一项任意类型的成就。 
+
+
+
+C++ 接口
+
+描述
+
+WriteAchievements()
+
+
+更新成就进度数据。
+*对于简单类成就，则会解锁一个成就。
+*对于计数类成就，则会增加成就的计数。
+*对于完成率类成就，则会添加成就的字段。
+
+QueryAchievementDescriptions()
+
+获取成就描述，用于在游戏中展示成就。
+
+QueryAchievements()
+
+获取成就 ID 和进度。在使用此接口前，你需要先调用 QueryAchievementDescriptions 获取成就的描述信息。
+
+GetCachedAchievement()
+
+获取某玩家单个成就的数据。
+
+GetCachedAchievements()
+
+获取某玩家所有的成就数据。
+
+GetCachedAchievementDescription()
+
+获取某个成就的描述数据。

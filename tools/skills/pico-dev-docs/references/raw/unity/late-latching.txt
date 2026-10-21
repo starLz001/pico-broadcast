@@ -1,0 +1,50 @@
+延迟锁定
+========================================
+延迟锁定（Late Latching）是一种降低运动的光子延迟（motion-to-photon latency，MTP）的技术。运动的光子延迟是指从用户开始运动，一直到对应的图像发生变化、并通过头显映射到人眼上面的全部时间。在画面传输过程中，Late Latching 可以帮助应用消除 1 帧的头戴和手柄动作延迟。若你既需要保证画面渲染质量，又需要尽可能地降低画面延迟，则可以为应用开启 Late Latching。
+*环境要求
+*设备型号：PICO Neo3 系列、PICO 4 系列、PICO 4 Ultra 系列
+*PICO 设备系统版本：5.6.0 及以上
+*原理简述
+Late Latching 将获取动作输入的时间尽可能延后，即在渲染开始前的最后一刻给 GPU 提供头戴和手柄动作输入，从而尽可能减少 MTP 延迟。
+* 
+*功能优势
+Late latching 功能可为你的应用带来以下提升：
+*减少方向预测延迟，从而减少因方向扭曲而导致的黑影。
+*减少位置预测延迟，从而减轻近距离对象的晃动。
+*使手柄的运动更加精确。
+*开启 Late Latching
+*准备工作
+开启 Late Latching 前，请先完成以下任务：
+*开启多视图渲染。具体操作可参考此文档。
+*由于 Late Latching 仅支持 Vulkan 图形接口，你需前往 Edit > Project Settings > Player > Android Settings > Other Settings > Graphics API，添加 Vulkan 并将其置于顶部。
+* 
+*操作步骤
+按以下步骤为应用开启 Late Latching：
+*在 Unity 编辑器中，新建一个场景或打开已有场景。
+*在 Hierarchy 窗口中，为场景添加 XR Origin（或 XR Rig）。若已添加，可跳过此步骤。
+*选中 XR Origin。
+*在 Inspector 窗口中，点击底部的 Add Component 按钮，为 XR Origin 添加 PXR_Manager 脚本。
+*在 PXR_Manager (Script) 配置区域，勾选 Use Late Latching 选框。
+* 
+*勾选后，PXR_Late Latching (Script) 组件将被自动添加至 Main Camera 对象。
+* 
+*同时，Use Late Latching 选框下将出现 Late Latching Debug 选框。更多信息参考 “调试 Late Latching” 部分。
+*调试 Late Latching
+开启 Late Latching 调试模式后，系统会打印 Late Latching 相关信息或错误，帮助你验证 Late Latching 是否在正常运行。
+*环境要求
+*SDK 版本：2.2.0 及以上
+*Unity 编辑器版本：2021.3.19f 及以上，暂不支持 Unity 2022
+*重要提示
+Late Latching 调试模式仅支持 Development Build。
+*操作步骤
+*勾选 Late Latching Debug 选框，为应用开启 Late Latching 调试模式。
+* 
+*前往 File > Build Settings，然后勾选 Development Build 选框。
+*打包应用并在 PICO 设备上运行。
+*使用 adb logcat -s Unity 命令获取日志。
+*示例日志：
+* 
+*已知问题
+*若同时使用 Late Latching 和合成层（Overlay/Underlay），会导致合成层抖动。
+*推荐内容
+针对有低延时要求的应用，可以配合使用 Late Latching 和 Application SpaceWarp (应用空间扭曲)。 AppSW 技术允许应用以实际屏幕刷新率的一半刷新率来渲染画面。若想了解更多 AppSW 相关信息，可阅读此文档。

@@ -1,0 +1,59 @@
+与实体交互
+========================================
+在空间交互中，除了可以将 2D 组件指定为交互对象外，还支持将 3D 实体作为交互对象。通常情况下，可以在 PointerInputScope 的扩展方法中使用 targetedToEntity 参数，用于指定并匹配作为交互目标的实体。
+ 
+*通过 targetedToEntity 参数直接将某个实体及其子实体（若有）指定为交互对象。例如：
+* 
+*你还可以通过 targetedToEntity 参数将满足特定条件的实体设置为交互对象，例如名字以 "interactable" 开头的实体：
+* 
+
+作为交互对象的实体必须添加 InteractableComponent 组件，否则该实体将无法响应任何交互事件。
+*另外，实体的网格对象是不支持从后方（back）进行交互的。
+
+val entity = remember { Entity() }
+
+SpatialView(
+        modifier =
+            Modifier.fillMaxSize()
+                .pointerInput(Unit) {
+                    // 将任意实体设置为交互目标
+                    detectTapGestures(context = context, targetedToEntity = TargetEntity.hit(entity) {
+                        // 事件处理
+                        println("tap invoked!")
+                    }
+                }
+    ) { content, _ ->
+        // 给实体添加交互组件
+        entity.components.set(InteractableComponent())
+        entity.components.set(
+            CollisionComponent(
+                collisionShape = listOf(ShapeResource.createSphere(radius = 0.3f)),
+                physicsMaterial = PhysicsMaterialResource()
+            )
+        )
+        content.addEntity(entity)
+    }
+
+SpatialView(
+        modifier =
+            Modifier.fillMaxSize()
+                .pointerInput(Unit) {
+                    detectTapGestures(context = context, targetedToEntity = TargetEntity.any { it.getName() == "interactable" }) {
+                        // 事件处理
+                        println("tap invoked!")
+                    }
+                }
+    ) { content, _ ->
+        // 创建一个新的实体实例
+        val entity = Entity()
+        entity.setName("interactable")
+*        // 实体默认不可交互。要让实体可交互，需要同时添加 InteractableComponent 和 CollisionComponent
+        entity.components.set(InteractableComponent())
+        entity.components.set(
+            CollisionComponent(
+                collisionShape = listOf(ShapeResource.createSphere(radius = 0.3f)),
+                physicsMaterial = PhysicsMaterialResource()
+            )
+        )
+        content.addEntity(entity)
+    }

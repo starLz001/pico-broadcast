@@ -1,0 +1,205 @@
+核心概念：Tensor、Operator 和 Pipeline
+========================================
+本文介绍 SecureMR 的核心概念，包括 tensor、operator 和 pipeline。
+*概览
+*以下是关于 SecureMR 核心概念的简介。
+*
+想要实现某项功能的 SecureMR 应用程序通常会使用上述概念来创建所需的功能。
+*以 mnist 分类应用程序为例，我们可以将其功能拆解为以下简化的所需操作：
+*获取视频透视（vst）图像。
+*将该图像作为输入传递给 mnist 模型进行推理
+* 推理的输出是一个标签和置信度值
+*我们可以将输出传递给一个渲染文本命令，以文本形式渲染输出
+*所以，对于这种情况，我们将首先创建一个用于推理的 pipeline。在该 pipeline 中，我们将创建一个 RectifiedVstAccessOperator，它没有输入，但我们将设置以 vst 图像作为结果 tensor 输出。
+*然后，我们将在 pipeline 中创建一个 RunModelInferenceOperator，并配置使用我们提供的 mnist 二分类模型。对于该 operator，我们会提供上一步的 vst 图像 tensor 作为 operand（输入），并将该 operator 的输出设置为写入两个输出 tensor，一个用于推理预测的索引整数值 tensor，另一个用于推理预测的浮点置信度值 tensor。
+*最后，我们将在 pipeline 中创建两个 RenderTextOperator，其中一个将索引 tensor 作为输入并打印其值，另一个则在屏幕上打印置信度值 tensor。（这是为传达思路的简化描述）。
+*一旦应用程序创建了该 pipeline，就可以在应用程序的每个更新周期执行该 pipeline，它将会按预期运行。
+ 
+*Tensor
+*SecureMR 使用术语 tensor 来描述任意数据块。该术语在机器学习（ML）领域广泛使用，但在 SecureMR 中有更严格的定义。由于 SecureMR 设计为一个独立的 MR 服务，用于代理应用程序的算法，所以 tensor 的内容只会存储在 SecureMR 服务中。应用程序只会获得一个句柄，作为对该 tensor 的引用。
+*应用程序可以通过句柄来创建 tensor 并向其中写入数据。此外，应用程序可以在 SecureMR 服务代理的算法中使用 tensor。但应用程序不能使用其创建或写入数据的 tensor 句柄来检索 tensor 数据。
+*通常，一个 tensor 由四个属性定义，即形状、通道、数据类型和用途。以下是详细描述：
+*
+例如，一个形状为 [10, 3, 4] 的单通道 Float32 tensor：
+*如果其用途声明为 Matrix，那么在计算中它会被当作 10 个 3x4 的矩阵来处理。
+*如果其用途声明为 Scalar，那么它会被当作 120（=10×3×4）个独立的标量来处理，因此它不会用于矩阵运算，而仅用于逐元素计算。
+ 
+*再例如，一个形状为 [20,] 的 3 通道 Int32 tensor：
+*如果其用途声明为 Point3，它会被当作 20 个三维点坐标来处理，其中 3 个通道将分别描述点的 X、Y 和 Z 坐标。
+*如果其用途声明为 Color，它会被当作 20 种 RGB 颜色来处理，其中 3 个通道将分别对应 R、G、B 颜色分量。 
+还有用于非数据存储用途的特殊类型 tensor。目前我们支持的唯一特殊类型 tensor 是 GLTF tensor。和其他任何 tensor 一样，GLTF tensor 也是一个句柄，但它引用的是一个待渲染的 glTF 实例。GLTF tensor 没有形状、通道或数据类型，只有一个特殊的用途标志：Gltf。
+*SDK 提供以下用于管理 tensor 的方法：
+*CreateTensor
+*创建 Matrix、Point 等类型的 tensor：
+* 
+*创建 glTF tensor：
+* 
+*Destroy
+      销毁 tensor。仅支持销毁全局 tensor。
+* 
+*Reset
+*tensor 的数据可以重置或者更新，通过以下方法可以实现 tensor 的复用。
+* 
+*Operator
+*Operator 是用于实现开发者自定义算法的节点。它们接收一些 tensor（称为 operand），执行运算，并将结果输出到其他一些 tensor（称为 result）。因此，应用程序开发者可以轻松地使用 operator 和 tensor 来构建算法，并将其交给 SecureMR 服务器执行。
+*与 tensor 类似，operator 在 SecureMR 服务器端构建和执行；应用程序开发者可以操作的是 operator 的句柄。
+*开发者可以用 PyTorch、TensorFlow 或 ONNX 编写他们的算法（无论是否为机器学习算法），使用高通神经网络（QNN）SDK 将其转换为二进制算法包，然后将该包加载到 SecureMR operator 中。这些 operator 将在高通的 NPU 上执行。
+*为了简化开发，PICO 还提供了一些预定义的 CPU operator，用于预 / 后处理，例如矩阵代数运算、值赋值、排序和非极大值抑制（NMS）等。
+*混合现实 operator 也可用于在屏幕上显示算法结果。这些 MR operator 可以用于渲染 glTF tensor、显示文本、跟踪感兴趣的对象、修改 glTF 模型的材质或纹理，甚至为其添加动画效果。
+*operator 相关方法如下：
+*Create
+* 
+*SetOperand/ SetResult
+* 
+*关于不同类型的 operator 的详细使用说明，参考《使用不同类型的 operator》。
+*Pipeline
+*如果将 operator 视为算法节点，那么 tensor 就代表这些节点之间的连接边，促进节点间的数据流。从这个角度看，operator 和 tensor 构成了一个计算图。在 SecureMR 中，这样的计算图称为 pipeline。
+* 
+*一旦创建了一个 pipeline，开发者就可以在其中添加 operator 和 tensor。在开发者提交之前，pipeline 不会被执行。每次提交都会让 SecureMR 服务器调度运行整个 pipeline 一次，并返回一个“运行句柄”，作为此次调度执行的引用。
+在提交 pipeline 时，开发者可以指定两个调度提示：wait-for 和 condition。
+*开发者可以使用之前的运行句柄作为 wait-for 提示，以告知 SecureMR 服务器，本次执行应在该提示所引用的执行完成之后进行调度。
+*开发者可以使用 tensor 句柄作为 condition 提示，以表明本次执行将在该 tensor 的值为真（非零）的条件下进行。否则，本次执行将被取消。
+*全局 tensor
+*pipeline 将 tensor 和 operator 封装为其本地成员，这使得在 pipeline 之间共享数据面临挑战。全局 tensor 为这一问题提供了解决方案。
+*通常，为了在同一作用域内创建的 operator 之间实现数据流动，会在一个 pipeline 内定义一个 tensor，即“本地 tensor”。相反，全局 tensor 独立于任何 pipeline，从而允许其数据在各个 pipeline 之间共享。
+*此前关于数据类型、形状、通道、使用标志及其限制的所有讨论，同样适用于本地 tensor 和全局 tensor。唯一的区别在于其作用域：局限于单个 pipeline，或在所有 pipeline 之间共享。
+* 
+*占位符
+为确保线程安全，全局 tensor 不能直接绑定到 operator 上。它们必须通过一种称为占位符映射的机制来实现绑定。
+占位符是在 pipeline 中定义的虚拟本地 tensor，就好像它是一个普通的本地 tensor 一样。因此，它可以作为 operand 或 result 绑定到 operator 上。然而，顾名思义，占位符就像“指针”，它本身没有实际的内容或数据存储，只是持有对某个全局 tensor 的引用。
+当提交一个 pipeline 用于执行时，开发者可以将本地占位符映射到兼容的全局 tensor 上。这种映射仅在单次提交时有效，使开发者可以在不同的执行中使用同一 pipeline 处理不同的数据输入。
+*以下是使用占位符映射实现 pipeline 1 和 pipeline 2 之间数据共享的图例。pipeline 1 中的占位符 i 和 ii 被映射到全局 tensor (a) 和 (b)，并将 pipeline 的输出写入这些全局 tensor；而 pipeline 2 的占位符也映射到相同的全局 tensor，以读取最新值。
+ 
+*执行调度
+pipeline 执行的调度遵循以下原则：
+*同一 pipeline 不会同时进行多次执行。
+*如果一次执行涉及从某个全局 tensor 读取数据，该执行将等待，直到没有其他执行正在向同一全局 tensor 写入数据。
+*如果一次执行涉及向某个全局 tensor 写入数据，该执行将等待，直到没有其他执行正在对同一全局 tensor 进行写入或读取操作。
+*如果 wait-for 提示不为空，那么一次执行总会在该提示所指定的执行完成之后才发生。
+*如果 condition 提示不为空且指向一个全零 tensor，那么该执行将被取消。
+*SDK 不限制 pipeline 的执行频率，但存在排队机制。如果前一个提交的 pipeline 尚未执行完成，新提交的 pipeline 将被加入队列。你需要根据 pipeline 的执行耗时来控制执行频率。
+*相关方法
+*Create/Destroy
+* 
+*Execute / ExecuteAfter / ExecuteConditional
+* 
+*了解更多：关于 provider
+*Provider session 是应用与 SecureMR 服务端之间的会话句柄。每个应用只能拥有一个未被销毁的 Provider session。一旦该 session 被销毁，所有在其中创建的资源将被回收和释放。
+创建 provider 时传入的宽高表示希望使用的视频透视图像尺寸。过小的尺寸会降低效果，而过大的尺寸则可能影响性能。确保输入为正数即可，目前没有限制，默认尺寸为 1024x1024。建议将此尺寸设置为与使用的 AI 模型输入一致，以避免重新调整大小，从而提高运行效率。
+SDK 提供两个 provider 相关的方法，分别是 Create 和 Destroy，你可以在运行时随意搭配和调用。需注意的是，创建 provider 后，尺寸不可更改；如需设置新尺寸，必须先销毁当前 provider，然后重新创建。
+ 
+
+
+
+
+概念
+
+描述
+
+Tensor
+
+tensor 是任意数据块。tensor 的内容将仅存储在 SecureMR 服务中。应用程序只会获得一个句柄，作为对该 tensor 的引用。
+
+Operator
+
+Operator 是用于实现开发者自定义算法的节点。它们接收一些 tensor（称为 operand），执行运算，并将结果输出到其他一些 tensor（称为 result）。
+
+Pipeline
+
+如果将 operator 视为算法节点，那么 tensor 就代表这些节点之间的连接边，促进节点间的数据流。从这个角度看，operator 和 tensor 构成了一个计算图。在 SecureMR 中，这样的计算图称为 pipeline。
+
+
+
+属性名称
+
+描述
+
+形状
+
+一组无符号整数，定义 tensor 每个维度的大小。
+
+通道
+
+单个无符号整数，定义通道的数量。
+*遵循 OpenCV 的惯例，通道不会作为 tensor 形状中的维度。例如，形状为 [1024, 1024, 3] 的单通道 tensor 与形状为  [1024, 1024] 的三通道 tensor 是不同的，尽管两者总共都有 1024×1024×3 个元素。
+* 
+
+数据类型
+
+用于指定 tensor 中每个元素的数据类型。可接受的数据类型有： UInt8、Int8、UInt16、Int16、Int32、 Float32、Float64，与 OpenCV 的数据类型一致。
+
+用途
+
+用途是一个标志，用于声明在算法处理时如何解读 tensor 的内容。用途标志应为以下之一，每种标志对其形状、通道数或数据类型都有不同的限制：
+*Matrix，该 tensor 将视为矩阵的集合；自然，这样的 tensor 必须有至少两个维度。这是默认用途。
+*Scalar，该 tensor 将视为单值的集合；自然，通道数必须为 1。
+*Timestamp，该 tensor 将用于存储相机时间戳；通道数必须为 4，数据类型必须为 Int32，形状必须为 [1, ]。
+*Color，  该 tensor 将视为 RGB 或 RGBA 颜色的集合；对于 RGB 颜色，通道数必须为 3，而对于 RGBA 颜色，通道数必须为 4；数据类型必须为整数。
+*Point，该 tensor 将视为二维或三维点的集合；因此，其通道数必须为 2 或 3。
+*Slice，该 tensor 将用于描述对其他 tensor 的 python 风格的切片；要求通道数必须为 2 或 3，且数据类型必须为整数。一个 2 通道的切片将视为 (START, END)，而一个 3 通道的切片将视为 (START, END, SKIP)。
+*例如，一个内容为 (0, -1) 的 2 通道切片 tensor，等同于 python 中的如下代码：(0, -1) 。
+* 
+*一个内容为 (5, 10, 2) 的 3 通道切片 tensor，等同于 python 中的如下代码：
+* 
+
+**
+
+* 
+*10 个 3x4 矩阵，若用途 = Matrix
+
+* 
+*120(10x3x4) 标量，若用途 = Scalar
+
+float[] matrixData = { 1.0f, 2.0f, 3.0f, 4.0f };
+currentPipeline.CreateTensor<float,Matrix>(1,tensorShape0,matrixData);
+
+byte[] data = File.ReadAllBytes(filePath);
+var gltfTensor = secureMRProvider.CreateTensor<Gltf>(data);
+
+floatTensor.Destroy();
+
+float [] floatBuffer2 = [4.0f, 5.0f, 3.0f, 2.0f];
+floatTensor.Reset(floatBuffer2);
+
+// 创建 operator
+var xxxOperator= currentPipeline.CreateOperator<ArithmeticComposeOperator>();
+
+// 设置 operator 的输入
+xxxOperator.SetOperand("operand0", operand0);
+xxxOperator.SetOperand("operand1", operand1);
+
+// 设置 operator 的输出
+xxxOperator.SetResult("result", result);
+
+pipeline 中的 operator 将按照被添加到 pipeline 中的顺序依次执行。因为这种顺序执行的特性，它们称为 pipeline。
+
+*pipeline 执行的条件提示必须是全局 tensor。
+*目前，由于渲染资产的生命周期，glTF tensor 只能创建为全局 tensor。
+
+// 创建 pipeline
+var currentPipeline = secureMRProvider.CreatePipeline();
+// 销毁 pipeline
+currentPipeline.Destroy();
+
+// 创建 tensorMapping
+var tensorReference = currentPipeline.CreateTensorReference<float,Matrix>(2,new TensorShape(1,2));
+var globalTensor = secureMRProvider.CreateTensor<float,Matrix>(2,new TensorShape(1,2));
+var pipelineTensorMapping = currentPipeline.CreateTensorMapping();
+pipelineTensorMapping.Set(tensorReference, globalTensor);
+
+// tensorMapping 可以不传，此参数非必须
+// 执行一个 pipeline
+var runId = currentPipeline.Execute(pipelineTensorMapping);
+// 当前一个 pipeline 执行完成后，再执行一个新的 pipeline
+var runId2 = nextPipeline.ExecuteAfter(runId,pipelineTensorMapping2); 
+// 执行基于 condition tensor 状态的 conditional pipeline
+var runId3 = conditionalPipeline.ExecuteConditional(runId2,pipelineTensorMapping3);
+
+// 创建 provider
+var secureMRProvider = new Provider(1024, 1024);
+// 销毁 provider
+secureMRProvider.Destroy();
+
+arr[0:-1] # all from the first to the last
+
+arr[5:10:2] # elements at Index 5, 7, 9

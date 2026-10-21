@@ -1,0 +1,25 @@
+实现手柄射线和画布间的交互
+========================================
+PICO 应用中的所有 UI 元素须添加至画布（Canvas）上进行展示。此文档介绍如何在场景内创建一个画布，并实现手柄射线和画布之间的交互。
+*操作步骤
+*创建交互性 UI 的步骤如下：
+*在 Unity 编辑器中打开项目。
+*在 Hierarchy 窗口中，点击 + > XR > UI Canvas。
+*场景中新增 Canvas 对象。
+*选中 Canvas。
+*Inspector 窗口中显示配置 Canvas 对象挂载的脚本和组件。
+*在 Canvas 面板处，将 Render Mode 设置为 World Space。
+* 
+*在 Rect Transform 面板处，修改 Canvas 的位置和大小属性，确保其能够显示在相机范围内。
+* 
+*点击 Inspector 窗口底部的 Add Component 按钮，为 Canvas 对象添加 Tracked Device Graphic Raycaster 脚本并按需配置相关参数。
+* 
+*在 Hierarchy 窗口处，选中 XR Origin。
+*展开 XR Origin，然后选中 LeftHand Controller。
+*Inspector 窗口中显示左手控制器挂载的组件和脚本。
+*在 XR Ray Interactor 面板处，按实际情况修改 Max Raycast Distance 的值，确保该值大于相机到 UI 的实际距离。
+* 
+*按相同的步骤配置 RightHand Controller。
+*查看更多
+*更多 Canvas 相关信息，可参考 Unity 官网文档。
+

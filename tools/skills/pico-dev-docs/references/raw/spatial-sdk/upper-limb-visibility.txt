@@ -1,0 +1,70 @@
+上肢可见性
+========================================
+上肢可见性能力通过对用户手臂及其持有物体（如手柄）进行实时分割与呈现，使真实上肢能够在虚拟环境中被正确显示。
+*使用场景
+*在全沉浸或半沉浸环境中，上肢可见性通过透出真实手部和持有物，帮助用户更准确地感知操作位置，从而提升交互的精度与安全性。
+*在 MR 场景中，使用分割后的真实手部替代虚拟手模型，使真实世界与虚拟内容的融合更加自然，显著提升沉浸感与真实感。
+*使用限制
+仅支持在 Stage 中使用。
+*上肢渲染模式
+*UpperLimbRenderMode 提供的上肢渲染模式如下：
+*Default：默认模式，跟随系统设置；
+*Visible：显示真实上肢；
+*Hidden：隐藏真实上肢。
+*设置上肢的可见性
+*你可以通过 Stage DSL 或 openStage 接口设置 Stage 容器中上肢的可见性。
+*当两种方式同时被使用时，以 openStage 中显式指定的参数为最终生效值；未在 openStage 中设置的参数，则继续沿用 Stage DSL 中的设置，其生效规则与其他 Stage 参数保持一致。
+*通过 Stage DSL 配置
+*在定义 Stage 时，可通过 DSL 指定其初始配置，其中包括上肢渲染模式。
+* 
+*通过 openStage 修改配置
+*默认情况下，openStage 用于控制 Stage 是否可见，同时也支持在打开 Stage 时覆盖其部分参数配置。
+* 
+*动态修改上肢的可见性
+*在运行时，通过 setUpperLimbRenderMode() 函数动态修改上肢的可见性。
+* 
+*监听上肢的可见性 & 移除监听
+*你可以通过 addUpperLimbRenderModeChangeListener 函数来监听上肢的可见性配置，从而获取当前生效的配置。
+*不需要监听时，可通过 removeUpperLimbRenderModeChangeListener 函数移除监听。
+ 
+
+
+fun SpatialAppScope.Stage(
+    id: String,
+    immersion: Immersion = Immersion.Default,
+    brightness: Brightness = Brightness.Automatic,
+    upperLimbRenderMode: UpperLimbRenderMode = UpperLimbRenderMode.Default,
+    targetActivity: Class<out ComponentActivity> = SpatialStubActivity::class.java,
+    content: @Composable StageScope.() -> Unit,
+)
+
+openStage(
+    context,
+    UPPERLIMBSTAGEID,
+    upperLimbRenderMode = UpperLimbRenderMode.Default,
+)
+
+val local = LocalStageUpperLimbRenderModelManager.current
+local.setUpperLimbRenderMode(UpperLimbRenderMode.Hidden)
+
+var renderNodeMode by remember {
+    mutableStateOf<UpperLimbRenderMode?>(null)
+}
+
+DisposableEffect(Unit) {
+    //  创建上肢可见性模式变更的监听器，用于感知运行时上肢渲染模式的变化
+    val listener = object :
+        UpperLimbRenderModeChangeListener {
+        override fun onUpperLimbRenderModeChanged(upperLimbRenderMode: UpperLimbRenderMode) {
+            renderNodeMode = upperLimbRenderMode
+        }
+
+    }
+    // // 注册监听器，用于监听上肢可见性的变化
+    local.addUpperLimbRenderModeChangeListener(listener)
+
+    onDispose {
+        // 移除监听器
+        local.removeUpperLimbRenderModeChangeListener(listener)
+    }
+}

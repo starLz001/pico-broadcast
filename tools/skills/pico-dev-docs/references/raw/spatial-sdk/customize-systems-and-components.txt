@@ -1,0 +1,192 @@
+自定义系统和组件
+========================================
+*在 PICO Spatial SDK 中，你可以通过自定义组件来为实体存储和管理特定的状态或参数，然后再通过自定义系统来对特定组件的实体进行逐帧更新，从而实现复杂的交互或动画效果。
+*本文以 示例：创建沉浸式空间音频 为例，介绍如何基于 PICO Spatial SDK 的 ECS 架构来实现自定义系统和组件。
+*自定义组件
+ 
+为了实现自定义的飞行轨迹线，首先需要定义一个 FlyTrajectoryComponent。代码示例如下：
+ 
+上述代码实现了以下功能：
+*维护飞行动画参数：维护包括基准高度、振翅频率、小幅抖动等在内的参数。
+*更新 Transform：updateTransform() 方法结合系统传入的参数（如速度、半径、yawRate、climbRate）以及自身参数（如 altAmp、wingbeatFreq 等），计算个体的缓慢上下振荡，实现类似昆虫拍翅时的身体起伏。最终生成每一帧的 Transform，用于驱动实体运动。
+*模拟飞行运动：
+*水平运动：匀速绕圈；
+*垂直运动：慢速正弦起伏叠加快速翅膀抖动；
+*姿态：根据速度和转弯半径计算俯仰、偏航和侧倾。
+*如果希望自定义组件能够被克隆，你需要重写 clone() 方法，确保在克隆过程中正确复制组件的所有属性和状态。
+*自定义系统
+*自定义系统的作用是控制和更新带有 FlyTrajectoryComponent 的实体的飞行行为。
+*第一步：定义一个系统
+自定义一个系统，查找带有 FlyTrajectoryComponent 的实体，并进行 update 操作：
+ 
+*在上述代码中，系统负责每一帧的更新逻辑。在每帧的 update 回调中，它完成了以下操作：
+*维护全局时间：通过自身的 elapsedTime 记录累计时间，用于计算飞行轨迹的进度。
+*计算高度变化：利用系统层面的指令参数 altAmp 和 altFreq，生成随时间缓慢变化的高度趋势（climbRate），模拟小鸟大幅度的爬升和下降行为。
+*筛选目标实体：定义查询条件，将目标锁定为拥有 FlyTrajectoryComponent 的实体。
+*更新实体的变换（Transform）：对筛选出的实体，仅在其 FlyTrajectoryComponent 处于激活状态时，计算并更新其 Transform，实现动态飞行效果。
+这样，系统与组件协作，使实体能够按照预设轨迹在场景中连续运动。
+*第二步：注册该系统
+*在定义一个系统后，必须先将其注册，才能在每一帧接收到底层的 update 回调并执行更新逻辑。为了避免系统在不需要时持续空转、浪费计算资源，建议根据实际需求进行注册。
+ 
+*系统的注册是一种静态行为，本质上是在每个 Scene 的内存中绑定一个系统实例。当系统执行查询时，会沿着 “场景 > WindowContainer/Stage > SpatialView > 实体” 这个层级路径逐级定位，因此查找范围通常限定在当前的空间容器内。
+需要注意的是，如果同时注册多个系统，程序会按照注册顺序串行执行它们的逻辑。例如，以下代码会依次注册并执行 FirstSystem、SecondSystem 和 ThirdSystem。如果你的应用的逻辑对系统的执行顺序有依赖，则必须在注册阶段明确管理系统的顺序，以确保逻辑被正确执行。
+ 
+*第三步：注销该系统
+不需要使用该系统后，建议及时将其注销，以节省资源。例如，可以通过 DisposableEffect 在合适的生命周期中注销自定义系统（本示例在 onDispose 中注销系统）。
+ 
+*API 参考
+*关于 Component 类、System 类、registerSystem接口和unregisterSystem 接口的详细说明，参阅 API 参考。根据你所处的地理位置选择合适的文档链接：
+*中国大陆：https://developer-cn.picoxr.com/spatial-api/index.html
+*非中国大陆：https://developer.picoxr.com/spatial-api/index.html
+
+
+在 Spatial Editor 中创建自定义组件时，仅支持自定义 String、Int、Bool 和 Float 类型的数据；而通过 PICO Spatial SDK 以代码方式创建组件时，则不受此类型限制。
+
+class FlyTrajectoryComponent(var isEnabled: Boolean = false) : Component() {
+    var elapsedTime = 0.0f
+
+    // 起始位置和初始相位
+    private val centerX = 0f
+    private val centerZ = 0f
+    private val baseAltitude = 2.5f
+    private var phaseShift = -(PI_FLOAT / 2) // start at +Z axis
+
+    // 翅膀振动状态
+    private val altAmp = 1f // 垂直振幅
+    private val altFreq = 0.2f // 垂直振动频率 (Hz)
+    private var wingPhase = 0.0f
+    private val wingbeatFreq = 5.0f // 振翅频率 (Hz)
+    private val bobAmp = 0.02f // 2cm 垂直抖动
+    private val gravity = 9.81f
+
+    fun updateTransform(
+        dt: Float,
+        speed: Float,
+        radius: Float,
+        yawRate: Float,
+        climbRate: Float
+    ): Transform {
+        // 沿圆周的参数角 (φ)
+        val phi = (yawRate * elapsedTime + phaseShift)
+
+        // 圆周上的位置，以原点为中心
+        val posX = centerX + radius * cos(phi)
+        val posZ = centerZ + radius * sin(phi)
+        wingPhase = (wingPhase + wingbeatFreq * 2f * PI_FLOAT * dt) % (2f * PI_FLOAT)
+        val posY =
+            baseAltitude +
+                altAmp * sin(2f * PI_FLOAT * altFreq * elapsedTime) +
+                bobAmp * sin(wingPhase)
+        val position = Vector3(posX, posY, posZ)
+
+        // 旋转计算
+        val pitch = atan2(climbRate, speed).toDegrees()
+        val roll = atan2(speed * yawRate, gravity).toDegrees() // 对于圆周运动，r·ω = v² / r
+        val forward =
+            Vector3(-radius * yawRate * sin(phi), climbRate, radius * yawRate * cos(phi))
+                .normalize()
+        val yaw = atan2(forward.x, forward.z).toDegrees()
+        val rotation = EulerAngles(pitch, yaw, roll)
+
+        return Transform(position, rotation, Vector3(1f))
+    }
+}
+
+private const val PI_FLOAT = PI.toFloat()
+
+private fun Float.toDegrees() = this * 180f / PI_FLOAT
+
+class FlyTrajectorySystem : System() {
+    private var elapsedTime = 0f
+
+    override fun update(context: SceneUpdateContext) {
+        val dt = context.deltaTime
+        elapsedTime += dt
+
+        // 控制指令
+        val speed = 1f // 速度（米/秒）
+        val radius = 3.5f // 期望圆周半径（米）
+        val yawRate = speed / radius // 偏航速率 (弧度/秒) = v / r
+
+        val altAmp = 0.3f // 高度振幅（米）
+        val altFreq = 0.1f // 高度振动频率（赫兹）
+        val climbRate =
+            altAmp * (2f * PI_FLOAT * altFreq) * cos(2f * PI_FLOAT * altFreq * elapsedTime)
+
+        val condition =
+            EntityQueryCondition.hasComponent(FlyTrajectoryComponent::class.java)
+                .and(EntityQueryCondition.hasComponent(ObjectAudioComponent::class.java))
+        val filteredEntities = context.scene.queryEntity(condition)
+        filteredEntities.forEach { entity ->
+            val comp = entity.components[FlyTrajectoryComponent::class.java]!!
+            if (comp.isEnabled) {
+                comp.elapsedTime = elapsedTime
+                val newTransform = comp.updateTransform(dt, speed, radius, yawRate, climbRate)
+                entity.components[TransformComponent::class.java]!!.apply {
+                    position = newTransform.position
+                    eulerAngles = newTransform.rotation
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun ImmersiveScene() {
+    val lifecycleOwner = LocalLifecycleOwner.current
+    val spatialNavigator = LocalSpatialNavigator.current
+
+    DisposableEffect(lifecycleOwner) {
+        registerSystem<FlyTrajectorySystem>()
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_PAUSE) {
+                spatialNavigator.closeWindowContainer(id = WINDOW_ID, tag = WINDOW_TAG)
+            }
+            if (event == Lifecycle.Event.ON_RESUME) {
+                spatialNavigator.openWindowContainer(id = WINDOW_ID, tag = WINDOW_TAG)
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            unregisterSystem<FlyTrajectorySystem>()
+            lifecycleOwner.lifecycle.removeObserver(observer)
+        }
+    }
+    SpatialView(initial = { content, _ -> content.addEntity(Environment.await()) })
+}
+
+DisposableEffect(key1 = Unit) {
+    registerSystem<FirstSystem>()
+    registerSystem<SecondSystem>()
+    registerSystem<ThirdSystem>()
+    onDispose {
+        unregisterSystem<FirstSystem>()
+        unregisterSystem<SecondSystem>()
+        unregisterSystem<ThirdSystem>()
+    }
+}
+
+@Composable
+fun ImmersiveScene() {
+    val lifecycleOwner = LocalLifecycleOwner.current
+    val spatialNavigator = LocalSpatialNavigator.current
+
+    DisposableEffect(lifecycleOwner) {
+        registerSystem<FlyTrajectorySystem>()
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_PAUSE) {
+                spatialNavigator.closeWindowContainer(id = WINDOW_ID, tag = WINDOW_TAG)
+            }
+            if (event == Lifecycle.Event.ON_RESUME) {
+                spatialNavigator.openWindowContainer(id = WINDOW_ID, tag = WINDOW_TAG)
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            // 注销该系统
+            unregisterSystem<FlyTrajectorySystem>()
+            lifecycleOwner.lifecycle.removeObserver(observer)
+        }
+    }
+    SpatialView(initial = { content, _ -> content.addEntity(Environment.await()) })
+}

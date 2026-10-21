@@ -1,0 +1,39 @@
+画面淡入淡出
+========================================
+画面淡入淡出是应用的基础体验之一。在切换关卡、场景加载、游戏状态变化（例如：游戏结束）等场景下，你可以通过画面淡入淡出的方式来提醒用户。
+你可以通过 PICO Unity Integration SDK 提供的 PXR_Manager 和 PXR_Screen Fade 脚本为场景设置渐变效果。
+*效果展示
+该示例中，淡入淡出参数为：
+*Fade Time：5 秒
+*Fade Color：黑色
+*Render Queue：5000
+ 
+*配置步骤
+*在 Unity 编辑器中打开项目。
+*在 Hierarchy 窗口处，点击 + > XR > XR Origin (VR)。
+*XR Origin 对象被添加至场景。
+*XR Origin 对象中默认包含 Main Camera。
+* 
+*删除场景中默认自带的 Main Camera。
+* 
+*选中 XR Origin。
+*Inspector 窗口展示 XR Origin 挂载的组件和脚本。
+*点击 Inspector 窗口底部的 Add Component 按钮。
+*搜索 PXR_Manager 脚本，然后双击添加。
+*PXR_Manager 脚本的界面如下图所示：
+* 
+*勾选 Open Screen Fade。
+*你将被引导至 Main Camera 关联的 Inspector 窗口。PXR_Screen Fade 脚本已被自动挂载至 Main Camera。脚本界面如下：
+* 
+*配置画面淡入淡出相关参数。参数说明如下：
+**
+
+
+
+
+参数
+说明
+Gradient Time
+淡入淡出效果持续时间。默认为 5 秒。
+Fade Color
+淡入淡出颜色。默认为黑色。

@@ -1,0 +1,602 @@
+快速上手 SpatialML
+========================================
+*本文介绍如何使用 PICO Spatial SDK 向 SpatialML 部署自定义算法并把算法输出驱动的场景渲染到 SpatialML 空间容器，从而实现沉浸式的 MR 交互体验。
+*下图展示了 SpatialML 的使用流程：
+*创建一个 SpatialML 实例，并在 SpatialML 实例中创建一个 SpatialML Session。
+*在 SpatialML Session 中创建 Global Tensor。
+*在 SpatialML Session 中创建 SpatialML Pipeline，然后在 SpatialML Pipeline 中创建 Local Tensor 和 Placeholder、部署自定义算法及进行运算操作。
+*提交执行 Pipeline。
+*把算法输出驱动的场景内容渲染到 SpatialML 空间容器或从 SpatialML 中读取算法输出。
+* 
+*前提条件
+*添加 build 依赖项（推荐使用版本目录文件 libs.versions.toml）。
+*在 libs.versions.toml 的 [libraries] 部分添加以下内容：
+* 
+*在模块的 build 脚本文件 build.gradle.kts 的 dependencies {} 部分添加以下内容：
+* 
+*操作步骤
+参考以下步骤使用 PICO Spatial SDK 快速上手 SpatialML。
+*步骤一：创建 SpatialML 实例和 SpatialML Session
+调用 SpatialMLInstance.create() 函数来创建一个 SpatialML 实例。你必须向该函数传入一个 Android Application Context。每个 App 仅限创建一个 SpatialMLInstance 对象。
+调用 SpatialMLInstance.createSession()函数创建一个 SpatialML Session。你必须等待 SpatialMLInstance 对象的 ready 属性返回 True 后才能创建 SpatialMLSession 对象。因此，建议你在 Kotlin Coroutine Job 中异步完成 SpatialMLSession 对象的创建。
+* 
+以下代码演示了如何创建 SpatialMLInstance 对象 和 SpatialMLSession 对象。
+ 
+*步骤二：在  SpatialML Session 中声明 Global Tensor
+*获得SpatialMLSession对象后，你可以调用 newGlobalTensor() 函数创建 Global Tensor。Global Tensor 用于在不同的 Pipeline 之间传递和共享数据。
+*以下代码展示了如何创建一个 1024x2048 的 3 通道 UINT8 类型的多维 Global Tensor。
+* 
+ 
+*以下代码将创建一个 ColorArray Tensor（一种Structured Tensor），其中包含 2 个 R32G32B32 格式的颜色值。
+ 
+*创建 Tensor 后，你可以通过 tensorResource 属性向其写入数据。由于 SpatialML 使用 SharedMemory 对象在应用和 SpatialML 之间传递数据，因此在写入数据时，你必须使用 ByteOrder.nativeOrder() 函数来确保字节顺序正确。
+*例如，以下代码演示了如何将一个 V 值为 1.0 的 HSV 色彩图写入一个 1024x2048 的多维 Tensor中。
+ 
+*步骤三：创建 SpatialML Pipeline
+调用 SpatialMLSession.newPipeline() 函数创建一个 SpatialML Pipeline（即 Pipeline 对象）。接下来，你可以：
+*在 Pipeline 对象中调用 newLocalTensor() 函数创建 Local Tensor，或调用 newPlaceholder() 函数创建Placeholder。详情参阅  。
+*在 Pipeline 对象中进行运算操作。详情参阅  。
+*在 Pipeline 对象中进行切片和赋值操作。详情参阅  。
+*在 Pipeline 对象中部署机器学习模型。详情参阅  。
+*在 Pipeline 中创建Tensor 
+*SpatialML 允许你在 Pipeline 对象中直接将 Global Tensor 作为任意一种操作的输入或输出。若你希望同一个 Pipeline 对象在执行时复用不同数据，建议你使用 Placeholder。你可以将操作的输入或输出声明为 Placeholder，并在每次提交时用不同的 Global Tensor 替换 Placeholder。例如，将当前相机图像映射到一个 Placeholder，循环提交执行 Pipeline 对象，每次替换为不同帧，即可保存连续图像并用于轨迹分析、卡尔曼滤波等算法。
+*下面的代码展示了如何调用 newLocalTensor() 函数创建 Local Tensor。
+* 
+下面的代码展示了如何调用 newPlaceholder() 函数创建 Placeholder。
+* 
+你也可以直接调用 newPlaceholderLike() 创建一个与指定的 Global Tensor 完全相同的 Placeholder。
+ 
+*在 Pipeline 对象中，你可将常见的 Kotlin 结构体直接用作 Local Tensor。例如，以下代码就将一个 Point 对象转换为了一个 Local Tensor：
+ 
+*在 Pipeline 中进行运算操作
+*SpatialML 在 Pipeline 中提供了丰富的运算操作，包括预处理与后处理、XR 数据获取、位操作、逻辑（布尔）操作和执行 JavaScript 脚本。
+*以 arithmetic() 函数为例，你可以用它在 Pipeline 中添加一个线性代数计算步骤。
+* 
+ 
+*在 Pipeline 中进行切片和赋值操作
+你可以使用类似 Python 的切片操作，从一个 Local Tensor 中提取指定片段，并将其赋值给另一个 Local Tensor。
+下面的代码创建了一个 256x256 的三通道 Tensor 和三个 128x128 的单通道 Tensor （分别用作 R、G、B 值），并执行以下操作：
+*将 R 值 Tensor 复制到目标三通道 Tensor 左上角 128x128 区域的 R 通道。
+*将 G 值 Tensor 复制到目标三通道 Tensor 右上角 128x128 区域的 G 通道。
+*将 B 值 Tensor 复制到目标三通道 Tensor 下半部分区域的 B 通道，并通过 step 参数，在水平方向上每隔一个像素进行赋值。
+切片语法的通用格式如下： tensor[A1..B1 step C1, A2..B2 step C2, /*...*/, An..Bn step Cn][Ac..Bc step Cc]
+该语法包含两部分：
+*维度切片 (第一对 [])：你必须为 Tensor 的每个维度都提供一个 Kotlin IntProgression 表达式（例如 0..127），其数量必须与 Tensor 的维度数相同。
+*通道切片 (第二对 [])：此部分可选，只包含一个 Kotlin IntProgression 表达式，用于指定要操作的通道。
+ 
+*除了使用 Kotlin IntProgression 表达式，你还可以使用一种特殊的 Slice  Tensor 作为切片索引。这种 Tensor 必须通过 com.pico.spatial.ml.securemr.Tensor.SliceInitInfo 创建。
+*根据切片目标的不同，Slice  Tensor 的 size 属性有以下要求：
+*维度切片（第一对 []）：size 必须与目标 Tensor 的维度数相同。例如，在下方的代码示例中，updateColorRegion 的 size 被设为 2，以匹配二维目标 Tensor  rgbTexture。
+*通道切片（第二对 []）：size 必须为 1。
+*在创建 Slice  Tensor 时，你需要指定其通道数（2 或 3），这决定了其内部数据的格式和切片行为：
+*通道数为 2（默认）：数据格式为 [begin1, end1, begin2, end2, ...]，等同于 Kotlin 语法中的 begin1..<end1, begin2..<end2, ...。
+*通道数为 3：数据格式为 [begin1, end1, s1, begin2, end2, s2, ...]，等同于 Kotlin 语法中的 begin1..<end1 step s1, begin2..<end2 step s2, ...。
+ 
+* 在 Pipeline 中部署机器学习模型并利用 Qualcomm NPU 加速模型推理
+参考以下代码，调用 runModelInference 函数在 Pipeline 对象中部署自定义机器学习模型，并可以利用机器的 GPU、NPU 硬件加速模型推理。
+ 
+ 
+*在 Pipeline 中通过 JavaScript 添加自定义运算
+*对于 Pipeline 尚不支持的运算，你可以使用 runJavaScript() 函数添加自定义的运算步骤。此函数允许你通过编写 JavaScript 代码来定义特定的数据处理逻辑。
+* 
+*以下代码示例展示了如何在 Pipeline 中调用 runJavaScript() 函数来添加自定义运算。此示例中的脚本会将两个输入 Tensor 的元素逐个相加，然后将每个和与 compare 数组中对应位置的数值进行比较。如果和更大，则在输出 Tensor 的相应位置写入 +1，否则写入 -1。
+在代码中，第 2-4 行声明了 input1、input2 和 output 变量，但并未初始化。在提交 Pipeline 时（第 22-24 行），tensorData1 和 tensorData2 通过 into 关键字将数据传入 input1 和 input2；同时，output 变量通过 outFrom 关键字映射到 tensorData3，当脚本运行结束后，其结果会自动写回 tensorData3。
+ 
+*如何声明 JavaScript 变量并将其映射到 Tensor
+*你可以在 JavaScript 代码中声明变量，并将其映射到 Tensor，从而在脚本中操作 Tensor 数据。
+*使用以下格式声明一个变量，注意末尾的分号是必需的：
+*var <VAR_NAME>;
+ 
+*Tensor 与 JavaScript Array 变量之间支持三种映射模式，用于控制数据流向：
+*into（单向输入）：在 JavaScript 执行前，系统会将 Tensor 的数据复制到 JavaScript 数组中。JavaScript 执行后，数组的任何更改 不会 写回 Tensor。
+*outFrom（单向输出）：在 JavaScript 执行前，系统会将 JavaScript 数组初始化为全零。JavaScript 执行后，系统会将数组中的数据写回 Tensor。
+*intoAndOutFrom（双向读写）：此模式结合了 into 和 outFrom 的行为。JavaScript 执行前，Tensor 数据会被复制到数组中；执行结束后，数组中的结果会再写回 Tensor。
+ 
+*步骤四：提交执行 Pipeline
+*参考以下代码，调用 Pipeline.submit() 函数提交执行 Pipeline。Pipeline.submit() 函数会返回一个 Task 对象，代表了此次 Pipeline 对象的提交任务。
+ 
+* 
+*当你提交 Pipeline 后，SpatialML 会从其内部线程池分配一个线程来执行你定义的操作。在以下情况下，你提交的 Pipeline 可能会被延迟执行：
+*资源冲突：Pipeline 需要写入的Global Tensor正被另一个运行中的 Pipeline 占用。
+*任务依赖：你在提交时指定了需要等待的前置任务，但该任务尚未完成。
+*实例冲突：该 Pipeline 的上一个实例仍在执行中。
+*线程池已满：SpatialML 线程池中没有可用的空闲线程。
+*步骤五：把算法输出驱动的场景渲染到 SpatialML 空间容器
+*参考以下步骤把算法输出驱动的场景渲染到 SpatialML 空间容器。关于更多渲染操作，详情参阅  。
+ 
+*向 SpatialML 空间容器加载场景。
+*SceneGraph Tensor（场景张量）是一种特殊的 Structured Tensor，用于表示 SpatialML 容器中的完整场景。你可以通过以下两种方式创建 SceneGraph Tensor：
+*从 .glTF 类型的文件创建。
+*直接从应用的内存 buffer 创建。
+*以下代码示例展示了如何在 SpatialML Session 中调用 newSceneFromGLTFSuspend() 函数从 .glTF 文件创建一个SceneGraph Tensor。
+* 
+*创建并提交执行一个 Pipeline，同时调用 updateSceneGraphProperty() 函数设置 SceneGraph Tensor 的缩放比例和可见性。
+*在代码示例中为场景的缩放参数创建了一个 3x1 的 FLOAT32 多维Tensor（三维列向量），但只提供了一个 Float 值 0.03 来初始化它。
+*这是因为 SpatialML 采用了一种类似 Numpy 的广播（Broadcast）机制：当目标 Tensor 的大小是输入 Buffer 大小的整数倍时，系统会自动重复 Buffer 中的数据来填满整个 Tensor 。因此，虽然本例中的 Tensor 需要三个 FLOAT32 值，但系统会将输入的单个 0.03 值复制三次，最终将 Tensor 更新为 [0.03, 0.03, 0.03]。
+* 
+*（可选）步骤六：从 SpatialML 中读取算法输出
+*你可以不创建关联的 SpatialML 空间容器，而是直接从 SpatialML 框架中读取算法输出，然后在应用的空间容器或 Stage 中进行渲染。
+*你可以通过以下方式从 SpatialML 中读取算法输出。
+*通过拷贝的方式读取算法输出：你可以从任意非 SceneGraph Tensor 的 Global Tensor 中读取它的当前值，从而在你的应用中使用 SpatialML 中的算法输出。但是请注意，你需要获取相机或空间数据权限后才能读取结果。
+*将算法输出读取为动态贴图并在材质中使用：如果你创建了 Dynamic-texture tensor（动态贴图张量），那么除了在 SpatialML 空间容器中将该 Tensor 用作场景中的材质贴图，你还可以将该 Tensor 以 TextureResource 的形式加载到应用中。这样，你就可以在你的应用的场景中，也可以使用来自 SpatialML 算法的输出作为材质贴图。
+*但是，我们推荐你使用  SpatialML 空间容器。SpatialML 空间容器具有以下几点优势：
+*性能更优，延迟更低：SpatialML 空间容器 直接在 SpatialML 运行时框架内部运行，可以有效降低渲染延迟、提升效率，并避免因数据在应用和 SpatialML 框架之间传输而产生的内存开销。
+*无需特定权限即可渲染：如果你的应用未获得用户的相机或空间数据授权，将无法读取算法的输出数据。但由于 SpatialML 空间容器在 SpatialML 框架内隔离运行，你仍然可以用它来向用户呈现 MR 效果。
+*在 Shared space 中使用空间定位数据：SpatialML 空间容器让你无需将应用设为 Full space 模式，即可渲染需要空间定位数据能力的 MR 效果。
+* 
+*SpatialML 空间容器支持的其他渲染操作
+*在SpatialML容器中根据运算结果更新场景
+*在 Pipeline 中，你可以使用 Tensor 数据更新场景的以下属性：
+*实体（Entity）相对于父物体的位置、旋转、缩放和变换矩阵。
+*实体在头显世界坐标系下的锚点。
+*实体的材质属性，例如颜色、法线、金属度和粗糙度。
+例如，以下代码创建了一个 Pipeline。每次运行时，场景中的 helmet 实体都沿Y轴向上移动 0.03 米。
+* 
+*在 SpatialML 容器中使用动态贴图并实时更新贴图内容
+*创建多维 Global Tensor 时，你可以将其指定为 Dynamic-texture tensor。这种 Tensor 可用作 SpatialML 容器中场景的材质贴图，例如颜色、法线、金属度和粗糙度贴图。
+Dynamic-texture tensor 的主要优势在于：当其数据发生变化时，使用该 Tensor 作为贴图的材质也会自动同步更新。
+*在 SpatialML Session 中创建类型为 Dynamic-texture tensor 的 Global Tensor。
+* 
+*创建并立即提交一个只执行一次的 Pipeline，将 Dynamic-texture tensor 绑定到场景物体的材质上。由于 Dynamic-texture tensor 是全局的，你需要先在 Pipeline 中为其创建一个Placeholder。
+*在下方的代码中，第 10 行通过 "/helmet/rust" 路径定位到 helmet 节点的 rust 子节点，第 11 行则指定将该节点的 PBR 材质（索引为 2）的颜色贴图作为更新目标。当这个一次性的 Pipeline（第 16-19 行）提交执行后，一个持久的绑定关系便建立起来。此后，你对 dynamicTexture  Tensor 的任何更新，都会自动同步到该材质贴图上，无需再次调用 updateSceneGraphProperty() 函数。
+* 
+*在 Spatial ML 容器中渲染文字
+*你可以将任何非 SceneGraph Tensor 中的数据渲染为文字，并显示在 SpatialML 容器的场景中。以下代码展示了具体实现方法：
+* 
+*Tensor 中的内容将以如下方式被渲染为文字：
+*如果一个 SCALAR_ARRAY Tensor 的数据类型为 UINT8 或 INT8，SpatialML 会将其内容解析为 UTF-8 编码的字符串。因此，当你执行以下 Pipeline 时，将会看到 Hello World。
+* 
+*对于所有其他类型的 Tensor ，其内部数据将被逐个渲染为数值字符串。例如，在执行以下 Pipeline 时，尽管 Tensor 的数据与前一个示例同样来自 Hello World 的 UTF-8 编码，但由于数据类型不同，你将看到一串代表各字节数值的数字，而不是文本字符串：72 101 108 108 111 32 119 111 114 108 100。
+* 
+*API 参考
+关于 SpatialML 相关的以下 Package，详情参阅 API 参考。
+*com.pico.spatial.ml.securemr Package
+*com.pico.spatial.ml.readback Package
+根据你所处的地理位置选择合适的 API 参考文档链接：
+*中国大陆：https://developer-cn.picoxr.com/spatial-api/index.html
+*非中国大陆：https://developer.picoxr.com/spatial-api/index.html
+
+[libraries]
+// ...
+spatial-ml-securemr = { group = "com.pico.spatial.ml", name = "securemr" }
+spatial-ml-readback = { group = "com.pico.spatial.ml", name = "readback" }
+
+dependencies {
+    // ...
+    implementation(libs.spatial.ml.securemr)
+    implementation(libs.spatial.ml.readback)
+}
+
+当调用 SpatialMLInstance.createSession() 函数时，你可以：
+*通过 imageWidth 和 imageHeight 参数指定在此 Session 中使用的双目相机的单眼分辨率。相机分辨率在同一个 Session 中不能改变。尽管你可以在 App 中为多个 Session 设置不同的相机分辨率，但为了优化性能，我们建议你统一使用相同的分辨率。这样做可以降低每个 Session 获取双目相机图像时的延迟。
+*通过 containerWidth、containerHeight 和 containerDepth 参数指定 SpatialML 空间容器的尺寸。
+
+fun CoroutineScope.initializeSpatialML(appContext: Context) = async {
+    val session =
+        SpatialMLInstance.create(appContext)
+            .also {
+                while (!it.ready) {
+                    delay(100)
+                }
+                Log.i("SpatialML", "SpatialMLInstance ready")
+            }
+            .createSession(InitInfo(
+                1024, 1024, // camera resolution
+                1200, 1200, 600 // SpatialML container size
+            ))!!
+}
+
+创建多维 Tensor 时，你只需要指定 MultiDimensionalInitInfo 中的以下参数：
+*dataType：Tensor 的数据类型。
+*dimensions：Tensor 的维度。
+*channel： Tensor 的通道数。
+通道（Channel）不应被视为Tensor的一个维度，而应看作是其数据类型的一部分。
+*例如，以下代码中的 textureR8G8B8 Tensor 包含 1024x2048 个元素，其中每个元素都由 3 个 UINT8 值组成。这种设计是为了与 OpenCV 保持一致。在 SpatialML 中，对多通道多维 Tensor 的线性代数运算，其行为与 OpenCV 中对多通道 cv::Mat 的操作完全相同。这样，你就可以更轻松地迁移已有的 OpenCV 预处理或后处理代码。
+
+fun CoroutineScope.initializeSpatialML(appContext: Context) = async {
+    val session = ...
+    val textureR8G8B8 = session!!.newGlobalTensor(MultiDimensionalInitInfo(
+        DataType.UINT8, // data type of the tensor
+        intArrayOf(1024, 2048), // dimensions of the tensor
+        3 // channel of the tensor
+    ))
+}
+
+session!!.newGlobalTensor(ColorArrayInitInfo(ColorType.R32G32B32_FLOAT, 2))
+
+fun CoroutineScope.initializeSpatialML(appContext: Context) = async {
+    val session = ...
+    val textureR8G8B8 =
+        session
+            .newGlobalTensor(
+                MultiDimensionalInitInfo(
+                    DataType.UINT8,
+                    intArrayOf(1024, 2048),
+                    3,
+                )
+            )
+            .apply {
+                SharedMemory.create(
+                        "initlization_demo_ball_color",
+                        1024 * 2048 * 3,
+                    )
+                    .use { mem ->
+                        val buf = mem.mapReadWrite()
+                        buf.order(ByteOrder.nativeOrder())
+                        for (s in 0..<1024) {
+                            for (h in 0..<2048) {
+                                val color =
+                                    Color.hsv(
+                                        h.toFloat() / 1024 * 360,
+                                        s.toFloat() / 2048,
+                                        1.0f,
+                                    )
+                                buf.put((color.red * 255).toInt().toByte())
+                                buf.put((color.green * 255).toInt().toByte())
+                                buf.put((color.blue * 255).toInt().toByte())
+                            }
+                        }
+                        SharedMemory.unmap(buf)
+                        tensorResource = mem
+                    }
+            }
+}
+
+session.newPipeline().run {
+    val localTensor4x3 = newLocalTensor(
+        MultiDimensionalInitInfo(DataType.FLOAT32, intArrayOf(4, 3)
+*    )
+}
+
+session.newPipeline().run {
+    val localTensor4x3 = newPlaceholder(
+        MultiDimensionalInitInfo(DataType.FLOAT32, intArrayOf(4, 3)
+*    )
+}
+
+val originalR8G8B8 = session.newGlobalTensor(
+        MultiDimensionalInitInfo(
+            DataType.UINT8,
+            intArrayOf(512, 512),
+            3,
+        )
+    )
+session.newPipeline().run {
+*    val localTensorR8G8B8 = newPlaceholderLike(originalR8G8B8)
+    // equiv to
+    val localTensorR8G8B8_equiv = newPlaceholder(
+        MultiDimensionalInitInfo(
+            DataType.UINT8,
+            intArrayOf(512, 512),
+            3,
+        )
+    )
+}
+
+session.newPipeline().run {
+    val point2 = newLocalTensor(Point(100, 200))
+}
+
+*下方的示例代码仅将该线性代数运算添加到 Pipeline 对象中，并不会立即执行。该运算将在你提交 Pipeline 对象后才开始计算。
+*arithmetic() 函数要求其输入和输出的 Tensor 都必须是维度为 2 的多维 Tensor（即数学上的“矩阵”）。同样，Pipeline 对象中的其他运算操作也对输入或输出的 Tensor 有特定要求，你可以查阅具体的 API 文档来了解详情。
+
+session.newPipeline().apply {
+    val testData0 = newLocalTensor(...)
+    val testData1 = newLocalTensor(...)
+    val testData2 = newLocalTensor(...)
+    val testData3 = newLocalTensor(...)
+    
+    // testData0 = testData0 * (tensor1 + tensor2) ^ 4 - tan(tensor3.T)
+    arithmetic(result = testData0) {
+        val sum = testData1 + testData2
+        val product = testData0 * sum ^ 4
+        product - tan(testData3.T())
+    }
+}
+
+session.newPipeline().apply {
+    val rgbTexture = newLocalTensor(
+*            MultiDimensionalInitInfo(DataType.UINT8, intArrayOf(256, 256)), 3
+        ) // 3 channel 
+    val newColorRed =
+        newLocalTensor(
+            MultiDimensionalInitInfo(DataType.UINT8, intArrayOf(128, 128))
+        )
+    val newColorGreen =
+        newLocalTensor(
+            MultiDimensionalInitInfo(DataType.UINT8, intArrayOf(128, 128))
+        )
+    val newColorBlue =
+        newLocalTensor(
+            MultiDimensionalInitInfo(DataType.UINT8, intArrayOf(128, 128))
+        )
+        
+    copy(
+        newColorRed,
+        rgbTexture[0..127, 0..127][0..0],
+    )
+    copy(
+*        newColorGreen[updateColorRegion],
+        rgbTexture[0..127, 128..255][1..1],
+    )
+    copy(
+*        newColorBlue[updateColorRegion],
+        rgbTexture[127..255 step 1, 0..255 step 2][2..2],
+    )
+}
+
+session.newPipeline().apply {
+    val updateColorRegion = newLocalTensor(SliceInitInfo(DataType.INT32, 2))
+    
+    val rgbTexture = newLocalTensor(
+            MultiDimensionalInitInfo(DataType.UINT8, intArrayOf(256, 256)), 3
+        ) // 3 channel 
+    val newColorRed =
+        newLocalTensor(
+            MultiDimensionalInitInfo(DataType.UINT8, intArrayOf(128, 128))
+        )
+    val newColorGreen =
+        newLocalTensor(
+            MultiDimensionalInitInfo(DataType.UINT8, intArrayOf(128, 128))
+        )
+    val newColorBlue =
+        newLocalTensor(
+            MultiDimensionalInitInfo(DataType.UINT8, intArrayOf(128, 128))
+        )
+        
+    copy(
+        newColorRed,
+        rgbTexture[updateColorRegion][0..0],
+    )
+    copy(
+        newColorGreen[updateColorRegion],
+        rgbTexture[updateColorRegion][1..1],
+    )
+    copy(
+        newColorBlue[updateColorRegion],
+        rgbTexture[updateColorRegion][2..2],
+    )
+}
+
+调用 runModelInference 函数时，你需要将输入和输出 Tensor 与机器学习模型中的节点进行关联。你需要使用 Pipeline.ModelNodeEncoding(nodeName, tensor) 来指定这种映射关系。其中，nodeName 参数是你希望在机器学习模型运行前写入数据、或在运行后读取结果的节点 ID 或标识符。
+
+session!!.newPipeline().apply {
+    // ...
+    runModelInference(
+        "my-face-detection-model", // model name
+        Pipeline.ModelInferenceType.LITE_RT_NPU,
+*        modelBinary, // model binary loaded to memory buffer
+        arrayOf(
+            Pipeline.ModelNodeEncoding("node0", tensorInput0),
+            Pipeline.ModelNodeEncoding("node1", tensorInput1),
+*        ), // tensors input to nodes in the model
+        arrayOf(
+*            Pipeline.ModelNodeEncoding("node556", tensorOutput)
+        ), // tensor output extracted from the nodes in the model
+    )
+    // ...
+}
+
+由于 Pipeline 在隔离的后台沙箱进程中执行，你在 runJavaScript() 中使用的代码不能访问外部库，也不允许使用 std 库执行任何 I/O、网络或文件系统操作。
+
+val JAVA_SCRIPT = """
+        var input1; 
+        var input2;
+        var output;
+        // don't initialize the variables above: they will be initialized by mapped Tensors
+        const compare = [3, 3, 3, 5, 5, 7];
+        if (input1.length == input2.length &&
+            input2.length == output.length &&
+            output.length == compare.length) {
+            for (var idx = 0; idx < compare.length; idx++) {
+                if (input1[idx] + input2[idx] > compare[idx]) {
+                    output[idx] = 1;
+                } else {
+                    output[idx] = -1;
+                }
+            }
+        }
+        """.trimIndent()
+
+session.newPipeline().apply {
+    // ...
+    runJavaScript(JAVA_SCRIPT, listOf(
+        tensorData1 into "input1" // map Tensor tensorData1 to var input1
+        tensorData2 into "input2" // map Tensor tensorData2 to var input2
+        tensorData3 outFrom "output" // // map Tensor tensorData3 to var output
+    )
+}
+
+你只需声明变量，无需在 JavaScript 代码中为其赋值。当 Pipeline 执行时，系统会根据其映射的 Tensor 自动初始化这些变量。自动初始化的规则如下：
+*变量类型：该变量会自动初始化为一个 JavaScript Array 对象。
+*元素类型：
+*如果 Tensor 的数据类型为整数（如 UINT8、UINT16、INT32 等），则 Array 的元素为 32 位整数。
+*如果 Tensor 的数据类型为浮点数（如 FLOAT32、FLOAT64），则 Array 的元素为 64 位 IEEE 754 浮点数（Number）。
+*不支持映射其他数据类型的 Tensor。
+*数组维度：该 Array 始终是一个一维数组，其长度等于所映射 Tensor 展平（flatten）后元素的总数。
+
+每一个在 JavaScript 中声明且用于映射的变量，都必须通过上述三种模式之一与一个 Tensor 进行绑定。
+
+*在提交时，你可以指定以下参数：
+*parameters：一个 Kotlin Map，用于将 Placeholder 映射到 Global Tensor。Pipeline 执行时，会用这个 Map 中指定的 Global Tensor 替换对应的 Placeholder。
+*condition：一个可选的 Global Tensor，用作执行条件。如果该参数指向一个值为零的 Global Tensor，Pipeline 将被跳过。在所有其他情况下（例如，参数为 null 或 Tensor 值非零），Pipeline 都会正常执行。
+*waitFor：指定一个前置 Task 对象。当前的 Pipeline 会等待该 Task 执行完成后，才开始执行。将waitFor设置为同一 Pipeline 的前序提交将被忽略，因为同一 Pipeline 的多次提交不会并发执行，而将总是按照提交的顺序逐一执行。这是为了避免在 Pipeline 内部造成竞争而设计的。
+
+val pipeline = session!!.newPipeline()
+// ...
+val task = pipeline.submit(
+    mapOf(
+        placeholder1 to globalTensor1,
+        placeholder2 to globalTensor2,
+        // ...
+    ),
+    condition = globalTensor0, 
+    waitFor = preTask,
+)
+
+*你的应用的空间状态不能是 Full Space。如果你的应用的空间状态为 Full Space，SpatialML 空间容器将被隐藏，无法与应用的 Stage 容器同时显示。
+*创建 SpatialML Session 时，你必须为其空间容器指定大于 0 的宽度和高度。否则，SpatialML 将不会为该 Session 创建空间容器。
+
+fun CoroutineScope.initializeDemoFramework(appContext: Context) = async {
+    val session = ...
+    val sceneGraph = session.newSceneFromGLTFSuspend("SpatialML/tv.gltf")
+}
+
+val initTask =
+    session.newPipeline().run {
+        val sceneGraphPlaceholder = newPlaceholderLike(sceneGraph)
+
+        // scale the entire scene graph to 0.03 along all 3 dimensions
+        updateSceneGraphProperty(
+            sceneGraphPlaceholder,
+            "/", // scenegraph's root node -> scaling the entire scenegraph
+            Transform.Scale,
+            newLocalTensor(MultiDimensionalInitInfo(DataType.FLOAT32, intArrayOf(3, 1))).apply {
+                SharedMemory.create("3x1_scalar_static", Float.SIZE_BYTES).use { mem ->
+                    val buf = mem.mapReadWrite()
+                    buf.order(ByteOrder.nativeOrder())
+                    buf.putFloat(0.03)
+                    SharedMemory.unmap(buf)
+                    tensorResource = mem
+                }
+            },
+        )
+        
+        // switch the scenegraph visibility to TRUE (1)
+        switchSceneVisibility(sceneGraphPlaceholder, newLocalTensor(1))
+*        submit(mapOf(sceneGraphPlaceholder to sceneGraph), null, null)
+    }
+
+*空间定位数据允许你将虚拟物体（如信息标签）固定在真实世界的特定位置。例如，你可以部署一个食物识别算法，并通过空间定位数据将食物名称和热量标签固定在识别出的食物上。通常，只有在 Full space 模式下运行的 Stage 应用才能使用空间定位数据。SpatialML 空间容器则没有此限制，让你可以在享受 Shared space  多窗口体验的同时，通过容器在精确位置显示需要锚定的 MR 内容。
+
+val moveUpPipeline = session.newPipeline().apply {
+    val sceneGraphLocal = newPlaceholderLike(sceneGraph)
+
+    val position = newLocalTensor(
+        Tensor.MultiDimensionalInitInfo(Tensor.DataType.FLOAT32, intArrayOf(3, 1))
+    ).apply {
+        SharedMemory.create("3x1_position_init", Float.SIZE_BYTES).use { mem ->
+            val buf = mem.mapReadWrite()
+            buf.order(ByteOrder.nativeOrder())
+            buf.putFloat(0.0f)
+            SharedMemory.unmap(buf)
+            tensorResource = mem
+        }
+    }
+
+    val positionDelta = newLocalTensor(
+        Tensor.MultiDimensionalInitInfo(Tensor.DataType.FLOAT32, intArrayOf(3, 1))
+    ).apply {
+        SharedMemory.create("3x1_position_delta", 3 * Float.SIZE_BYTES).use { mem ->
+            val buf = mem.mapReadWrite()
+            buf.order(ByteOrder.nativeOrder())
+            buf.putFloat(0.0f)
+            buf.putFloat(0.03f)
+            buf.putFloat(0.0f)
+            SharedMemory.unmap(buf)
+            tensorResource = mem
+        }
+    }
+
+    // position = poistion + positionDelta
+    arithmetic("{0} + {1}", arrayOf(position, positionDelta), position)
+
+    updateSceneGraphProperty(
+        sceneGraphLocal,
+        "/helmet",
+        SceneGraphProperty.Transform.Position,
+        position,
+    )
+}
+
+val dynamicTexture =
+    session
+        .newGlobalTensor(
+            Tensor.MultiDimensionalInitInfo(
+                Tensor.DataType.UINT8,
+                intArrayOf(256, 256),
+                3,
+                dynamicTexture = true,
+            )
+        )
+
+val initRun =
+    session.newPipeline().run {
+        val sceneGraphLocal = newPlaceholderLike(sceneGraph)
+        val textureLocal = newPlaceholderLike(dynamicTexture)
+        // switch scenegraph to visible (1)
+        switchSceneVisibility(sceneGraphLocal, newLocalTensor(1))
+
+        updateSceneGraphProperty(
+            sceneGraphLocal,
+            "/helmet/rust",
+            SceneGraphProperty.PBRMaterials[2].BaseColorTexture,
+            textureLocal,
+        )
+        Log.i("SSMRTest", "Pipeline0::Add to pipeline: updateSceneGraphProperty")
+        submit(
+            mapOf(sceneGraphLocal to sceneGraph, textureLocal to dynamicTexture),
+            null,
+            null,
+        )
+    }
+
+session.newPipeline().run {
+    val sceneGraphLocal = newPlaceholderLike(sceneGraph)
+    val text = newLocalTensor(...)
+    
+    // text color to be BLUE
+    updateSceneGraphProperty(
+        sceneGraphLocal,
+        "/textbox",
+        SceneGraphProperty.Text.Color,
+        newLocalTensor(Color.valueOf(Color.BLUE)),
+    )
+    
+    // text alignment to be center
+    updateSceneGraphTextVerticalAlignment(
+        sceneGraphLocal,
+        "/textbox",
+        Pipeline.TextVerticalAlignment.CENTER,
+    )
+    updateSceneGraphTextHorizontalAlignment(
+        sceneGraphLocal,
+        "/textbox",
+        Pipeline.TextHorizontalAlignment.CENTER,
+    )
+    
+    // set text content
+    updateSceneGraphProperty(
+        sceneGraphLocal,
+        "/textbox",
+        SceneGraphProperty.Text.Content,
+*        text,
+    )
+}
+
+val helloWorldBytes = "Hello World".toByteArray(Charsets.UTF_8)
+
+val text = newLocalTensor(ScalarInitInfo(DataType.UINT8, helloWorldBytes.size)).apply {
+    SharedMemory.create("hello_world_buffer_mem", helloWorldBytes.size).use { mem ->
+        val buf = mem.mapReadWrite()
+        buf.order(ByteOrder.nativeOrder())
+        buf.put(helloWorldBytes)
+        SharedMemory.unmap(buf)
+        tensorResource = mem
+    }
+}
+
+val helloWorldBytes = "Hello World".toByteArray(Charsets.UTF_8)
+// datatype: UINT8 -> INT32
+val text = newLocalTensor(ScalarInitInfo(DataType.INT32, helloWorldBytes.size)).apply {
+    SharedMemory.create("hello_world_buffer_mem", helloWorldBytes.size * Int.SIZE_BYTES).use { mem ->
+        val buf = mem.mapReadWrite()
+        buf.order(ByteOrder.nativeOrder())
+        for (charIdx in 0..<helloWorldBytes.size) {
+            buf.putInt(helloWorldBytes[charIdx].toInt())
+        }
+*        buf.put(helloWorldBytes)
+        SharedMemory.unmap(buf)
+        tensorResource = mem
+    }
+}

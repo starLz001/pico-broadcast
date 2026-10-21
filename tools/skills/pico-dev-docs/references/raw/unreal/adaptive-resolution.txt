@@ -1,0 +1,86 @@
+自适应分辨率
+========================================
+自适应分辨率可以让你的应用根据 GPU 负载自动调整屏幕的渲染分辨率。当 GPU 负载较低时，应用可以通过提高屏幕分辨率来提升画面质量；当 GPU 负载较高时，应用也可以通过自动降低分辨率来保持帧率稳定，减少延迟。本文档介绍如何为应用开启自适应分辨率、设置分辨率调节范围和功耗等级。
+*环境要求
+*虚幻引擎版本：UE4.27 和 UE5 版本的 PICO 分支（暂不支持 UE5.5）
+*SDK 版本：使用 UE PICO 分支，无需再导入 PICO SDK
+*PICO 设备型号：PICO Neo3 或 PICO 4 系列
+*PICO 设备系统版本：5.8.0 或以上
+*功能原理
+自适应分辨率通过动态调节渲染视口实现，使应用能够在固定大小的渲染缓冲区，即眼部纹理上，动态调整渲染视口大小。渲染视口越大，用于渲染的眼部纹理就越多，画面越清晰。
+ 
+*启用自适应分辨率
+要在你的应用中使用自适应分辨率，参考以下步骤。
+*第一步：在 DefaultEngine.ini 文件中设置控制台变量
+将以下控制台变量添加到你的项目的 Config/DefaultEngine.ini 文件中。这些设置是启用自适应分辨率功能的前提。
+ 
+设置的说明如下：
+*
+*第二步：在 UE 编辑器中启用自适应分辨率
+*在 UE 编辑器的左上角，单击 编辑 > 项目设置 > 插件 > PICOXR Settings。
+*在  Adaptive Resolution 选项卡下，勾选 Enable Adaptive Resolution。
+*进一步设置分辨率调节范围和功耗等级：
+**
+ 
+你也可以使用蓝图节点，使用虚幻引擎方法，启用动态分辨率。详情参考虚幻引擎文档动态分辨率。建议你选择在 UE 编辑器中设置自适应分辨率参数，因为在编辑器操作可防止你同时启用 FFR、ETFR 和自适应分辨率。现阶段，你无法同时启用自适应分辨率和 FFR、ETFR。
+* 
+现在你的应用已启用了自适应分辨率功能。每当渲染视口分辨率变更时，你的应用将不会重新分配眼部缓冲区。
+*可选：自定义自适应分辨率
+在启用自适应分辨率功能后，控制台变量 vr.PixelDensity 可以用于控制屏幕分辨率。vr.PixelDensity=0 的设置允许 SDK 根据 GPU 负载控制屏幕分辨率。如果你希望自定义自适应分辨率的算法，你可自定义 vr.PixelDensity 参数的值控制屏幕的分辨率。
+* 
+ 
+以下蓝图示例使用了正弦波函数，使渲染视口的分辨率随着时间推移不断变化：
+* 
+
+
+[/Script/Engine.RendererSettings]
+(...)
+r.SceneRenderTargetResizeMethod=2
+r.SceneRenderTargetResizeMethodForceOverride=1
+r.DynamicRes.OperationMode=1
+vr.PixelDensity=0
+
+
+
+设置
+
+描述
+
+r.SceneRenderTargetResizeMethod=2 和 r.SceneRenderTargetResizeMethodForceOverride=1
+
+防止渲染视口分辨率更改时，重新分配眼部缓冲区。
+
+r.DynamicRes.OperationMode=1
+
+根据游戏用户设置，确定是否启用自适应分辨率。
+
+vr.PixelDensity=0
+
+允许 SDK 根据 GPU 负载控制屏幕分辨率。
+
+
+
+字段
+
+描述
+
+Adaptive Resolution Power Setting
+
+有三种模式：
+*High Quality：高画质模式，着重于高分辨率
+*Balanced：平衡模式，平衡画质与功耗
+*Battery Saving：省电模式，着重于减少功耗
+
+Min Pixel Density
+
+设置最小像素密度，以定义自适应分辨率范围。可设置的最小像素密度为 0.7。
+
+Max Pixel Density
+
+设置最大像素密度，以定义自适应分辨率范围。可设置的最大像素密度为 1.26。
+
+提示
+默认分辨率为 1504x1504 像素。自适应分辨率 = 1504 × 像素密度。例如，1504 × 0.7 约为 1100 像素，1504 × 1.26 约为 1900 像素。
+
+注意
+你需要根据以上步骤启用自适应分辨率之后，再自定义自适应分辨率。否则，每次调整像素密度时，你的应用都会重新分配眼睛缓冲区。

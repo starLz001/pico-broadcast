@@ -1,0 +1,12 @@
+应用内过渡画面
+========================================
+在应用启动并加载完成后，你可以自定义应用内过渡画面（Game Splash Screen）在切换关卡使用，用于突出应用或公司品牌效果或掩饰过渡，提升用户体验。PICO OpenXR Plugin 支持调用虚幻引擎接口实现应用内启动画面。
+*环境要求
+*PICO 设备：PICO Neo3、PICO 4、PICO 4 Pro、PICO 4 Enterprise、PICO G3、PICO 4 Ultra 或 Project Swan（PICO OS 6）
+*前提条件
+你已在引擎中安装并启用了 PICO Unreal OpenXR 插件。详情参考 PICO Unreal OpenXR 快速开始。
+*使用示例
+*Set Loading Screen接口的 Scale 和 Offset 参数单位均为米。以下蓝图接口调用示例实现了在用户正前方一米高，0.5 米远的位置，显示了一个边长为一米的启动画面。了解更多，参考虚幻引擎官方文档 OpenXR加载界面。
+* 
+*相关建议
+虽然 Enable Auto Loading Splash Screen 接口仍然可用，但在应用切换关卡时，建议你手动管理启动画面的显示与隐藏。

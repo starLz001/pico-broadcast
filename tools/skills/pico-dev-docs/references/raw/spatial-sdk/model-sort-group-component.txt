@@ -1,0 +1,106 @@
+实体渲染顺序
+========================================
+*在默认情况下，实体的渲染顺序根据其与相机的距离决定，但规则因实体是否透明而异：
+*不透明实体：通常从近到远进行绘制（距离相机越近，越先绘制）。
+*半透明实体：为了正确实现混合效果，会从远到近进行绘制（距离相机越远，越先绘制）。
+*如果你想要改变实体的渲染绘制顺序，可以使用 DrawOrderGroupComponent。
+*例如，在复杂的 3D 场景中，当多个 半透明 实体发生重叠或需要明确前景与背景的遮挡关系时，可能会出现深度排序冲突（Z-fighting），导致渲染效果不符合预期。你可以通过 DrawOrderGroupComponent精确控制实体的渲染顺序，从而解决这个问题。
+*绘制排序组与渲染优先级
+*DrawOrderGroupComponent 组件包含两个核心属性：
+*drawOrderGroup：绘制排序组。所有具有相同 DrawOrderGroup 对象的实体都属于一个绘制排序组。
+*order：渲染优先级，用于定义实体在其所属绘制排序组内的渲染优先级。order 属性的值越小，渲染优先级越高，实体会被越晚绘制，从而显示在更前面。
+*在同一个绘制排序组内，系统会优先依据 order 属性的值来决定渲染优先级，这个渲染优先级会覆盖实体默认的物理深度排序。
+ 
+*前提条件
+*若要使用DrawOrderGroupComponent 组件，你需要确保场景中至少存在两个实体，且：
+*这些实体已经挂载了ModelComponent组件或者ParticleComponent组件。
+*这些实体的材质必须是半透明的。
+*示例代码
+*下面的示例代码中，绿球的 order = 1 小于红色平面的 order = 2，因此绿球的渲染优先级更高，它会被绘制在红色平面之上，无视两者实际的远近关系。尽管红色平面在物理上更靠近相机，但绿球会渲染在红色平面的前面。
+* 
+ 
+在下面的示例代码中，由于红色平面的 order = 1 小于绿球的 order = 2，因此红色平面拥有更高的渲染优先级，会被绘制在绿球的前面。
+* 
+ 
+*注意事项
+*使用 ModelComponent 时，请确保实体的材质为 半透明，并且开启了深度检测（material.setDepthTest(true)）和深度写入（material.setDepthWrite(true)）。这两个选项默认开启。
+*在同一个 DrawOrderGroup 对象中，每个实体的 order 值必须唯一，不可重复。
+*DrawOrderGroup 不支持嵌套，所以你需要把要排序的内容分别单独挂载并设置排序。如果出现了嵌套情况，DrawOrderGroupComponent 将不生效。
+*同一个 DrawOrderGroup 对象中的实体会被视为与相机具有相同距离。默认情况下，该距离取决于组内 order 值最小的实体在世界空间中的位置与相机之间的距离，与模型资源的包围盒无关。
+*对于包含镂空透明区域的半透明实体（例如树叶和草），由于半透明实体不写入深度，视角变化时实体之间的前后遮挡关系容易出现错乱。DrawOrderGroupComponent 只能控制整体绘制顺序，无法解决这类实体局部区域的复杂遮挡问题。因此，在这种情况下，建议你为实体的材质启用遮罩混合模式（Masked Blending Mode），而不是使用 DrawOrderGroupComponent。
+*API 参考
+*DrawOrderGroupComponent 类提供了绘制排序组和渲染顺序相关的属性和函数，详情参阅 API 参考。根据你所处的地理位置选择合适的文档链接：
+*中国大陆：https://developer-cn.picoxr.com/spatial-api/index.html
+*非中国大陆：https://developer.picoxr.com/spatial-api/index.html
+
+
+// 创建一个 DrawOrderGroup 对象
+val drawOrderGroup = DrawOrderGroup.create()
+// 把 ball 实体归入 DrawOrderGroup 对象对应的绘制排序组，并把实体的渲染优先级设置为 1
+ball.components.set(DrawOrderGroupComponent(drawOrderGroup, 1))
+// 把 plane 实体归入 DrawOrderGroup 对象对应的绘制排序组，并把实体的渲染优先级设置为 2
+plane.components.set(DrawOrderGroupComponent(drawOrderGroup, 2))
+
+fun DrawOrderGroupDemo() {
+    val rootEntity by remember { mutableStateOf(Entity()) }
+    // set green ball
+    val mesh = MeshResource.createSphere(0.05f)
+    val material = PhysicallyBasedMaterial.create().apply { setBaseColor(Color4.GREEN) }
+    val ball by remember { mutableStateOf(ModelEntity(mesh = mesh, material = material)) }
+    // set red plane
+    val meshPlane = MeshResource.createBox(Vector3(0.2f, 0.08f, 0.001f), 0f)
+    val materialPlane = PhysicallyBasedMaterial.create().apply { setBaseColor(Color4.RED) }
+    val plane by remember { mutableStateOf(ModelEntity(mesh = meshPlane, material = materialPlane)) }
+    // set position, plane in front of ball
+    ball.components.get<TransformComponent>()!!.setPosition(Vector3(0F, 0F, -0.02F))
+    plane.components.get<TransformComponent>()!!.setPosition(Vector3(0F, 0F, 0F))
+    // set opacity
+    ball.components.set(OpacityControllerComponent(0.5f))
+    plane.components.set(OpacityControllerComponent(0.5f))
+    // set drawOrderGroup
+    val drawOrderGroup = DrawOrderGroup.create()
+    ball.components.set(DrawOrderGroupComponent(drawOrderGroup, 1))
+    plane.components.set(DrawOrderGroupComponent(drawOrderGroup, 2))
+    Column {
+        SpatialView(
+            modifier = Modifier.fillMaxSize(),
+            initial = { content, _ ->
+                content.addEntity(rootEntity)
+                rootEntity.addChild(ball)
+                rootEntity.addChild(plane)
+            },
+        )
+    }
+}
+
+fun DrawOrderGroupDemo() {
+    val rootEntity by remember { mutableStateOf(Entity()) }
+    // set green ball
+    val mesh = MeshResource.createSphere(0.05f)
+    val material = PhysicallyBasedMaterial.create().apply { setBaseColor(Color4.GREEN) }
+    val ball by remember { mutableStateOf(ModelEntity(mesh = mesh, material = material)) }
+    // set red plane
+    val meshPlane = MeshResource.createBox(Vector3(0.2f, 0.08f, 0.001f), 0f)
+    val materialPlane = PhysicallyBasedMaterial.create().apply { setBaseColor(Color4.RED) }
+    val plane by remember { mutableStateOf(ModelEntity(mesh = meshPlane, material = materialPlane)) }
+    // set position, plane in front of ball
+    ball.components.get<TransformComponent>()!!.setPosition(Vector3(0F, 0F, -0.02F))
+    plane.components.get<TransformComponent>()!!.setPosition(Vector3(0F, 0F, 0F))
+    // set opacity
+    ball.components.set(OpacityControllerComponent(0.5f))
+    plane.components.set(OpacityControllerComponent(0.5f))
+    // set drawOrderGroup
+    val drawOrderGroup = DrawOrderGroup.create()
+    ball.components.set(DrawOrderGroupComponent(drawOrderGroup, 2))
+    plane.components.set(DrawOrderGroupComponent(drawOrderGroup, 1))
+    Column {
+        SpatialView(
+            modifier = Modifier.fillMaxSize(),
+            initial = { content, _ ->
+                content.addEntity(rootEntity)
+                rootEntity.addChild(ball)
+                rootEntity.addChild(plane)
+            },
+        )
+    }
+}

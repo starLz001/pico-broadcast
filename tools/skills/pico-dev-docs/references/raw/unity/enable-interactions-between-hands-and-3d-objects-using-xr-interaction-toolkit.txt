@@ -1,0 +1,39 @@
+使用 XR Interaction Toolkit 实现手和 3D 物体交互
+========================================
+XR Interaction Toolkit 插件提供了手势交互的示例工程（Hands Interaction Demo）。本文介绍如何在你的 Unity 项目中适配该示例工程提供的交互方式，从而实现手和 3D 物体之间的交互。
+*效果展示
+用手抓取物体，调整物体位置和大小等。
+* 
+*环境要求
+*PICO 设备型号：PICO Neo3 和 PICO 4 系列
+*PICO 设备系统版本：5.12.0 及以上
+*XR Interaction Toolkit 版本：2.3.0 - 2.6.2 或 3.x（你可以前往 Window > Package Manager > Unity Registry 下载或升级该插件）
+*操作步骤
+*第一步：安装 XR Hands 套件并导入 Hand Visualizer 示例
+Hands Interaction Demo 需要基于 Unity 官方的 XR Hands 套件和 Hand Visualizer 示例来使用。
+*在 Unity 编辑器内打开一个项目或新建一个项目。
+*前往 Window > Package Manager。
+*在 Package Manager 窗口中，参考 Unity 的官方文档安装 XR Hands 套件。
+*导入 XR Hands 套件提供的 Hand Visualizer 示例。
+* 
+*第二步：导入 XR Interaction Toolkit 的示例工程
+在 Package Manager 窗口中，导入 XR Interaction Toolkit 插件提供的 Starter Assets 和 Hands Interaction Demo 示例工程。
+* 
+*第三步：设置默认输入动作
+*在 Unity 编辑器中，选择 PICO > PICO Building Blocks > PICO Hand > XRI Hand Interaction 即可一键设置默认输入动作。
+ 
+*第四步：打开 HandsDemoScene 场景
+在 Project 窗口中，打开 /Assets/Samples/XR Interaction Toolkit/{版本号}/Hands Interaction Demo/Runtime 目录下的 HandsDemoScene 场景。
+* 
+*第五步：为应用和 PICO 设备开启手势追踪功能
+*在 Hierarchy 窗口中，点击 + > XR > XR Origin (VR)，为场景添加 XR Origin 对象。
+*选中 XR Origin 对象。
+*在 Inspector 窗口中，点击底部的 Add Component 按钮，为 XR Origin 对象添加 PXR_Manager (Script) 组件。
+*勾选 PXR_Manager (Script) 面板上的 Hand Tracking 选框。
+*已为应用开启手势追踪功能。
+* 
+*参考此文档，为你的 PICO 设备开启手势追踪。
+*问题排查
+*打包后，抓取模型无法跟随手部旋转而旋转，并一直保持初次抓取的状态
+*若遇到此问题，请将项目中的 XR Interaction Toolkit 升级至 2.x 中的最新版本，或直接将 SDK 升级至 3.1.0 及以上版本。
+

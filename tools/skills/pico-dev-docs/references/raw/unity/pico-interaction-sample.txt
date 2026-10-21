@@ -1,0 +1,47 @@
+交互示例
+========================================
+InteractionSample 展示了 PICO Unity Integration SDK 的交互相关功能，包括手柄交互、手势交互、触觉反馈、键盘输入和动态运动。
+*开发环境
+*SDK 版本：3.0.0
+*PICO 设备型号：PICO Neo 3 系列、PICO 4 系列、PICO 4 Ultra 系列
+*PICO 设备系统版本：5.11.0
+*Unity 版本：2022.3.29f1
+*XR Interaction Tookit：3.0
+*XR Hands: 1.4.1
+*APK 文件
+以下为示例的 APK 文件，你可以直接将其安装至 PICO 设备进行体验。
+ 
+*GitHub 仓库
+你可以前往 PICO 开发者 GitHub 上的 GitHub - Pico-Developer/InteractionSample-Unity 仓库，克隆示例项目。该项目包括源代码脚本、艺术资产和其他资源。
+*体验流程
+*使用 USB 数据线连接电脑和 PICO 设备。
+*安装示例的 APK 文件至你的 PICO 设备。你可以使用以下 ADB 命令进行安装：
+* 
+*在头戴中启动示例。 
+*示例启动后，你将看到以下场景。
+* 
+*点击手柄上的 X/A 键打开场景菜单（Scene Menu），然后选择想要体验的场景。
+* 
+*场景说明
+*InteractionSample 提供六个场景，展示 PICO Unity Integration SDK 提供的不同交互能力。
+*手柄与头显追踪（ControllerAndHeadsetTracking）
+ControllerAndHeadsetTracking 为默认场景。该场景展示了 XR 场景中手柄与头显追踪的基础配置方法。你可以通过移动左手柄的摇杆在场景内移动，或通过转动右手柄的摇杆在场景内转向。
+* 
+*手柄运动示例（Locomotion）
+Locomotion 场景展示了在限定区域内传送的配置方法和传送到指定点位的配置方法。在该场景中，你可以体验 XR 场景中的两种主要的基础移动方式：使用左手柄的摇杆在场景内进行平滑移动，使用右摇杆进行传送移动。
+* 
+*触觉反馈（Haptics）
+Haptics 场景提供两种手柄触觉反馈模式：Buffered Haptics 和 Unbuffered Haptics。你可以通过手柄触发物体的触觉反馈效果，也可以通过抓取方式触发。抓取物体后，你还可以通过 Trigger 键与其互动。
+* 
+*手势追踪 (HTCustomGestures)
+HTCustomGestures 展示手势追踪的相关功能。该场景以动态图表的形式提供了双手各手指的详细追踪参数。你可以体验各种手指姿态（Shapes）产生的参数变化，包括屈曲（Flexion）、弯曲（Curl）、外展（Abduction），也可以尝试自定义所需的手势。
+* 
+*手势交互（HTInteractions）
+在 HTInteractions 场景中，你可以按下 Reset Ducks 按钮，然后将射线指向场景内的小黄鸭进行抓取并将它们放入箱子中。你可以通过左手抓握的方式开启、关闭或切换菜单。
+* 
+*键盘交互 (UnitySpatialKeyboard)
+UnitySpatialKeyboard 场景中提供了空间键盘与全局键盘示例，你可以在该场景中体验不同键盘与不同输入框间的交互结果。
+* 
+
+
+adb install {APK 文件路径.apk}

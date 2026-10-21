@@ -1,0 +1,28 @@
+已知问题
+========================================
+以下为 PICO Unity OpenXR SDK 各版本的通用已知问题。若想了解各个版本独有的已知问题，参考更新说明。
+*同时使用 Vulkan 和 URP 时，会导致渲染问题。
+*解决方法：
+*禁用 HDR。
+* 
+*在应用中按下手柄 Home 键访问快捷菜单时，有概率出现场景跟随头戴移动的问题。此为 Unity 新输入系统的问题。
+*解决方法：
+*选中 XR Rig 下的 Main Camera。
+*在 Inspector 窗口中，点击右上角的三个点图标，然后选择 Remove Component，删除 Tracked Pose Driver (Input System) 脚本。该脚本由新的 Unity 输入系统提供。
+* 
+*点击 Inspector 窗口底部的 Add Component 按钮。
+*添加 Tracked Pose Driver 组件。该组件由旧的 Unity 输入系统提供。
+* 
+*使用合成层（Overlay 或 Underlay）时，若同时使用 OpenGLES 和 MultiView，并添加了 XR Interaction Toolkit 官方提供的示例 Starter Assets 和 Hands Interaction Demo，在 5.9.2 以上的设备系统版本中可能会出现崩溃。目前解决方案是改变以上描述的任何条件，例如将 OpenGLES 改为 Valkun，或将 MultiView 改为 MultiPass，或删除 Starter Assets 和 Hands Interaction Demo 示例中的任何一个。
+*若项目中的 Unity OpenXR Plugin 为 1.10.0 版本，使用 eyeTextureResolutionScale 接口会导致应用闪退。将 Unity OpenXR Plugin 升级至 1.11.0 版本可解决该问题。
+*在 Unity 2021 和 2022 版本中，使用注视点渲染会导致帧率降低。
+*下采样功能仅支持在 1.8.2 版本的 Unity OpenXR Plugin 上使用，升级版本后会导致该功能失效。
+*若同时使用 Late Latching 和 Overlay/Underlay 层，会导致 Overlay/Underlay 层显示异常。
+*在 PICO 设备系统版本 5.13.0 中，手指捏合后触发的射线无法与 UI 交互，该问题将在后续版本中解决。
+*在 PICO 设备上，使用 Unity XR Composition Layers Plugin 提供的 Android Surface 显示的图像会出现上下镜像的情况。
+*当使用 Unity XR Composition Layers Plugin 显示 Alpha 值为 0 的图片时，合成层的渲染会出现异常。Overlay 和 Underlay 类型的合成层都存在该问题。
+*合成层不支持同时使用多视图渲染（Multi-veiw）和立方体贴图（Cubemap）。
+*透视（Passthrough）功能在 Unity OpenXR Plugin 1.16.x 及以上版本中会失效，在此前版本中不存在该问题。
+*当前的简要解决方式：在工程中导入 Unity 官方的 XR Composition Layers，并在使用 PICO Passthrough 功能的前提下，在场景中添加一个 Composition Layers 组件，即可正常显示 VST 效果。
+* 
+

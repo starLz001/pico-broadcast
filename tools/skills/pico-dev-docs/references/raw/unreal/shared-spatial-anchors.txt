@@ -1,0 +1,57 @@
+共享空间锚点
+========================================
+在同一物理空间内，不同用户体验同一款应用时，共享空间锚点（Shared Spatial Anchors）功能可以让用户共享场景内容。
+当普通空间锚点上传至 PICO 云端后，该锚点将变为 “共享空间锚点”。锚点创建者可以将锚点的 UUID 分享给应用内的指定用户。其他用户在获知共享空间锚点的 UUID 后，便可以下载并使用该锚点。
+*环境要求
+*PICO 设备型号：PICO 4 Ultra 系列（若要在 PICO 4 系列设备上使用该功能，需使用 3.1.0 及更早版本的 SDK）
+*PICO 设备系统版本：5.11.0 及以上
+*特殊说明 
+仅当用户登录 PICO 设备后，才可以正常使用共享空间锚点功能。
+*前提条件
+*共享空间锚点功能依赖于 AppID，请在测试共享空间锚点之前，通过 OnlineSubsystemPico 平台服务插件完成 AppID 的填写，详情参考：配置平台服务 | PICO 开发者平台。此外，请调用GetLoggedInUser 或 GetAccessToken 接口获取用户的账户信息，以触发用户登录提示。
+*已为应用开启视频透视能力。详细说明请参考《视频透视》。
+*已为应用开启空间锚点能力。详细说明请参考《空间锚点》。
+*接入流程概览
+ 
+*以下为共享空间锚点功能的接入流程概览：
+*在 Unreal 编辑器内为应用开启共享空间锚点功能；
+*使用虚幻引擎的联机系统或者 PICO SDK 提供的房间&匹配系统创建多人共享锚点的环境。用户后续可以在多人联机环境中分享空间锚点的 UUID；
+*调用 PXR_CreateSpatialAnchorAsync 接口，在当前房间内创建锚点，更多空间锚点的使用说明参考空间锚点部分；
+*调用 PXR_PersistSpatialAnchorAsync 接口，并指定 PersistLocation 为 PersistLocation_Shared，将空间锚点上传至 PICO 云端；
+*用户收到其他用户分享空间锚点的 UUID 后，调用 PXR_LoadSpatialAnchorAsync 接口，并且指定 PersistLocation 为PersistLocation_Shared，加载共享空间锚点；
+*调用 PXR_SpawnActorFromLoadResult 接口，根据锚点加载结果生成指定类型的 Actor。
+*为 Unreal 项目启用共享空间锚点服务 
+参考以下步骤在 UE 编辑器中为你的项目启用共享锚点服务：
+*在 UE 编辑器中创建一个项目或打开已有项目。 
+*在编辑器左上角，点击 编辑（Edit） > 项目设置（Project Settings） > 插件（Plugins） > PICOXR Settings。 
+*移动到 Mixed Reality 选项卡下，确认此时已经勾选 Enable Video Seethrough 和 Enable Spatial Anchor 选项，然后勾选 Enable Shared Spatial Anchor 选项。
+* 
+*你已为应用开启共享空间锚点服务。
+*管理共享空间锚点
+共享空间锚点和空间锚点的差异主要体现在锚点的持久化、去持久化以及加载部分，差异详见以下内容。其余相关功能可以参考管理空间锚点。
+*持久化锚点
+通过异步接口 PXR_PersistSpatialAnchorAsync ，开发者可以在 BoundActor 中选择需要持久化的锚点当前所绑定的 Actor，并在 PersistLocation 选项中勾选 PersistLocation_Shared，即可将该锚点分享到云端。
+* 
+*去持久化锚点
+通过异步接口 PXR_UnpersistSpatialAnchorAsync，开发者可以在 PersistLocation 选项中勾选 PersistLocation_Local 从而将空间锚点从本地存储中删除。但去持久化锚点功能暂不支持删除共享空间锚点，即无法删除 PersistLocation_Shared 位置中的锚点。
+* 
+*加载锚点
+通过异步接口 PXR_LoadSpatialAnchorAsync，开发者可以在 PersistLocation 中勾选 PersistLocation_Shared，并在 UUIDFilter 中添加要加载锚点的 UUID，加载指定的锚点。
+ 
+* 
+*分享锚点
+*通过异步接口 PXR_UploadSpatialAnchor_Async ，开发者可以分享本地锚点到云端，并通过 Progress Event 接收锚点的上传进度。
+* 
+ 
+*下载锚点
+*其他开发者得知共享空间锚点的 UUID 后，可以通过异步接口 PXR_DownloadSharedSpatialAnchor 从云端下载锚点到本地，并通过 Progress Event 获取锚点的下载进度。
+* 
+ 
+
+
+提示
+加载共享空间锚点时必须指定 UUID，否则会加载失败。
+
+”分享锚点“与”持久化锚点“的主要区别在于：”分享锚点“可以获取上传进度，”持久化锚点“无法获取上传进度。
+
+”下载锚点“与”加载锚点“的主要区别在于：”下载锚点“可以从云端下载单个共享空间锚点到本地，并获取下载进度；”加载锚点“可以从云端批量下载共享空间锚点到本地，但无法获取下载进度。

@@ -1,0 +1,86 @@
+使用 AmbientAudioComponent
+========================================
+Ambient Audio 能够感知声源与听众之间的相对朝向，但不包含混响效果，也不考虑声源与听众之间的距离。
+*AmbientAudioComponent 可被理解为一个以听者为中心的 “音频天空盒”，通过感知声源的相对朝向动态调整音频输出。
+*特点
+*音量恒定：无论听者如何移动，音量不会随听者位置的变化而改变；
+*朝向限定：只有在声源朝向区域内，听者才能听到声音，超出范围则完全静音。
+*使用场景
+在虚拟环境中，Ambient Audio 适用于营造方向感和氛围，而非空间距离感。典型使用场景如下：
+*将非剧情相关的声音，如背景音乐或环境氛围声，配置为 Ambient Audio，以避免因听者视角变化而影响听感。
+*表现方向感明显但无需距离衰减的声音，例如风声、水流声或远处机械运作声。
+通过 Ambient Audio，你可以在不增加复杂空间化计算的前提下，增强场景的沉浸感，提供更加自然、连贯的听觉体验。
+*空间音频流程
+*关于空间音频的通用使用流程，参考《空间音频概览》中的 “空间音频使用流程” 小节。
+*使用 Ambient Audio
+*以下代码演示了如何使用 Ambient Audio，包括创建实体，加载音频文件，并通过播放器控制器对该音频进行播放、暂停和停止的操作。
+* 
+*选择听感计算方式
+AmbientAudioComponent 支持通过 AmbientOrientationMode 配置两种不同的听感计算方式，以适配不同的空间音频场景（如 MR 窗口锚定或 VR 背景音）。
+**
+你可以在构造 AmbientAudioComponent 时直接指定计算模式：
+* 
+另外，你也可以通过 ambientOrientationMode 属性在运行时动态读写当前计算模式：
+ 
+*API 参考
+*AmbientAudioComponent 类提供 Ambient Audio 相关的属性和函数。详细说明参阅 API 参考。根据你所处的地理位置选择合适的文档链接：
+*中国大陆：https://developer-cn.picoxr.com/spatial-api/index.html
+*非中国大陆：https://developer.picoxr.com/spatial-api/index.html
+
+
+// 创建 Entity 实例
+val entity = Entity()
+
+// 加载音频文件
+val audioResource =
+    AudioResource.load(
+        "your_custom_name",
+        "asset://your_ambient_audio_file.wav",
+        LoadType.FROM_ASSETS
+    )
+
+// 将 AmbientAudioComponent 添加至 Entity
+val ambientAudioComponent = AmbientAudioComponent(volume = 1.0f)
+entity.components.set(ambientAudioComponent)
+
+// 获取音频播放器控制器
+// 方式一：
+val audioPlayerController = entity.prepareAudio(audioResource)
+// 方式二：
+*val audioPlayerController = entity.playAudio(audioResource)
+
+// 控制音频播放，包括开始播放、暂停播放、停止播放
+audioPlayerController.play()
+audioPlayerController.pause()
+audioPlayerController.stop()
+
+
+
+模式
+
+描述
+
+POSITION_AND_ORIENTATION 
+
+计算声音时同时考虑实体的空间绝对位置与听者的相对朝向。该模式具有明显的动态视差（Parallax）效果，声音来源方位会随用户在物理空间中的平移而发生相对变化。
+*推荐用于 MR 场景。例如当应用窗口或发声实体锚定在真实空间中且不随头部移动时，此模式能确保声音始终从窗口的物理方向传来。
+
+ORIENTATION_ONLY
+
+仅考虑声源的基础方向，不涉及用户位置平移产生的听感视差。在3DoF 音效层面表现稳定，声音相对方位不会因为用户的脚步移动而改变。
+*推荐用于 VR 场景。主要用于纯背景音乐、VR 模式观影、180/360 全景视频等不需要关心听者在空间中绝对位置的场景。
+
+// 使用默认模式（仅方向参与，ORIENTATION_ONLY），适用于纯背景音或 VR 观影 
+val ambientAudio = AmbientAudioComponent(volume = 1.0f) 
+ 
+// 初始化为位置参与模式，适用于 MR 锚定场景 
+val mrAmbientAudio = AmbientAudioComponent( 
+ volume = 1.0f,  
+ ambientOrientationMode = AmbientOrientationMode.POSITION_AND_ORIENTATION 
+)
+
+// 切换计算模式为位置参与 
+ambientAudio.ambientOrientationMode = AmbientOrientationMode.POSITION_AND_ORIENTATION 
+ 
+// 读取当前计算模式 
+val currentMode = ambientAudio.ambientOrientationMode

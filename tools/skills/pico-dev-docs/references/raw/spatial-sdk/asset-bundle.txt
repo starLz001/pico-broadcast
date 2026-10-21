@@ -1,0 +1,200 @@
+AssetBundle
+========================================
+AssetBundle 可以将一个 Spatial Editor 工程中的资源（例如模型，材质，音频文件等）打包为一个对应的 .bundle 文件。同时，一个 Spatial Editor 工程可以包含多个场景，一个场景中可以包含多种资源。这些场景在编译时都会被打包至一个 AssetBundle 中。你可以将多种资源打包到一个 AssetBundle 文件中，并根据场景而非资源类型进行组织，以便于在运行时根据场景需要，加载不同的资源。此外，通过组合不同的资源至一个 AssetBundle 中，再根据需要进行加载，可以减少启动场景时需要加载的文件数量，从而减少加载场景所需的时间。
+*加载 AssetBundle 
+可以通过 AssetBundle.load 静态函数加载 .bundle 文件，得到 AssetBundle 实例，然后通过该实例加载和释放存储在其中的资源。强烈建议持有该实例并在使用后显式调用 releaseResource() 将其释放；若不持有该实例，则会在使用后通过垃圾回收自动释放（速度较慢）。
+ 
+*使用 AssetBundle 加载资源
+Spatial Editor 中编辑的 3D 场景都被存储为 USDA 格式的文件，该文件与 PICO Spatial SDK 的加载逻辑存在以下对应关系：
+*一个 USDA 文件对应一个场景；
+*通过 AssetBundle.load 加载 .bundle 文件时，场景内容将被解析为单个 entity 对象，并作为函数返回值返回。
+*加载场景
+通过 bundle.loadModel()，你可以加载在 Spatial Editor 中创建的场景（即 .usda 文件）。加载成功后，该函数会返回一个 Entity（假设名为 scene），它是该场景层级结构的父节点，代表了整个场景的根节点。 如果在场景的 Hierarchy 视窗中，有一个顶层节点名为 Root，你需要通过 scene.getChildren().get(0) 或 scene.findEntity("Root") （scene 之下仅有该节点名为 “Root”）方法来获取该 Root 节点，进而操作场景中的具体元素。 
+需要注意的是，你只能加载 Spatial Editor 中的 /Scenes 目录下的场景，且 bundle.loadModel() 中传入的是 .usda 文件相对于 /Scenes 目录的路径。
+例如：
+*场景位于 /Scenes/SceneName.usda 时，传入的路径为 "SceneName"；
+*场景位于 /Scenes/Sub/SceneName.usda 时，传入的路径为 "Sub/SceneName"；
+*场景位于 /Scenes/Sub/Sub/SceneName.usda 时，传入的路径为 "Sub/Sub/SceneName"。
+ 
+所以，加载上图中选中的场景时，可以使用如下代码：
+ 
+*使用建议：预加载场景
+AssetBundle 支持预加载。对于大型的场景文件，在正式加载前，你可以先调用 bundle.preloadModel() 函数来预加载场景。这样，在正式加载场景时，可以更快速地把场景呈现出来。preloadModel 函数会把场景预加载到内存中。使用该函数时，需要传入的 name 参数的值为 Spatial Editor 工程中的待加载场景的名称（即 USDA 文件的名称）。
+ 
+*使用建议：使用异步方法加载复杂模型
+如果使用同步方法 bundle.loadModel()加载复杂模型，可能会导致应用无响应（ANR）。为避免此问题，建议你改用异步方法 bundle.loadModelSuspend()。
+ 
+*加载场景中的 Entity
+*当通过 bundle.loadModel() 获取场景 entity 之后（假设名为 scene），在 Hierarchy 视窗中显示的层级结构即为 scene 之下各个 Entity 的层级关系，在加载场景中的 Entity 时，可依据此层级结构准确加载对应位置的 Entity。 如果你的目标 entity 在整个树结构体系中有唯一的名字 “name”，你也可以通过 scene.findEntity("name") 的方式来加载特定的 entity 节点。
+*比如，若在 Spatial Editor 的 Hierarchy 视窗中，某场景有如下图（左）的层级结构，那么加载该场景后，返回的 Entity（假设名为 "scene"）的层级结构如下图（右）所示。
+* 
+如果需要获得特定的节点，你需要通过 scene.findEntity("name")来获取对应名称的 entity 节点，若场景中存在该名称的唯一节点，则可准确加载到目标 entity。 若场景中存在多个同名节点，scene.findEntity("name") 将返回第一个匹配到的节点，可能无法满足获取特定节点的需求，此时可考虑通过遍历层级树的方式（使用 scene.getChildren()）来精准定位目标节点。 
+*加载场景中的基础材质
+在 Spatial Editor 中，你可以为单个场景创建若干材质，PICO Spatial SDK 支持将材质加载为对应的材质实例。加载前，需要指定材质所在的路径，例如：
+*"SceneName/Root/Material"
+*"SubFolder/SceneName/Root/Material"（/Scenes 目录下存在子目录 /SubFolder）
+*"SubFolder/SubSubFolder/SceneName/Root/Material"（/Scenes 目录下存在子目录 /SubFolder/SubSubFolder）
+* 
+如上图所示，当需要加载场景 Hi.usda 文件中的材质时，可以使用如下代码：
+*加载名称为 unlitMaterial 的 UnlitMaterial：
+* 
+*加载名称为 pbrMaterial 的 PhysicallyBasedMaterial：
+* 
+*加载名称为 shaderGraphMaterial 的 ShaderGraphMaterial：
+* 
+*加载 ShaderGraphMaterial
+*对于 ShaderGraphMaterial，除了使用 bundle.loadMaterial() 函数进行加载外，还可以使用静态函数 ShaderGraphMaterial.loadFromAssetBundle 进行加载。
+ 
+*加载音频资源
+*你可以使用以下两种方式加载 Default.usda 场景中，位于 /Root/MyAudios/objectAudioFile 目录下的音频文件：
+*加载 AssetBundle 实例后，通过 assetBundle.loadAudioResource(path: String) 加载音频资源；
+*通过静态函数 AudioResource.load(bundle: AssetBundle, path: String) 加载音频资源。
+ 
+*释放场景中的资源
+从 AssetBundle 中加载场景中的资源后，AssetBundle 会缓存这些资源，以便在下次加载时可以更快地获取对应的资源。当确认不再需要使用一些资源时，可以使用 bundle.releaseResource() 释放它们。
+ 
+*释放场景
+当确认不再需要使用已加载或者已预加载过的场景时，需要在使用它们后进行释放：
+ 
+*释放 AssetBundle 实例
+当确认不再需要使用 AssetBundle 实例，且不再需要使用 AssetBundle 实例所缓存的任何资源时，可以调用 close() 函数释放 AssetBundle 实例以及该实例管理的所有资源的缓存数据。
+ 
+ 
+*AssetBundle 缓存管理
+对于同一路径的场景或资源，无论加载多少次，都会仅占用一份内存。
+*彻底释放模型占用的内存：把场景加载为模型时，会返回模型的 Entity 实例。因此，必须显式调用 entity.destroy() 来释放模型 entity 及其关联的资源。最后，通过场景所属的 AssetBundle 实例，显式调用 assetBundle.release(sceneName)，彻底释放模型的底层数据。
+*彻底释放资源占用的内存：加载资源后，会返回 Resource实例，你可以通过 resource.close() 直接释放该资源；也可通过调用 entity.destroy() 来销毁该资源所属的 Entity 实例，从而间接释放该资源。最后，通过资源所属的 AssetBundle 实例，显式调用 assetBundle.releaseResource(pathToResource)，彻底释放资源的底层数据。 
+代码示例如下：
+*彻底释放模型占用的内存：
+* 
+*彻底释放资源占用的内存：
+* 
+*API 参考
+AssetBundle 类提供 AssetBundle 相关的函数，详情参阅 API 参考。根据你所处的地理位置选择合适的文档链接：
+*中国大陆：https://developer-cn.picoxr.com/spatial-api/index.html
+*非中国大陆：https://developer.picoxr.com/spatial-api/index.html
+
+
+val bundle = AssetBundle.load("asset://path/to/bundle/YourCustomBundleName.bundle")
+
+// 先加载 AssetBundle
+val bundle = AssetBundle.load("asset://path/to/bundle/YourCustomBundleName.bundle")
+// 然后加载场景
+val rootEntity = bundle.loadModel("Hi")
+
+val bundle = AssetBundle.load("asset://path/to/bundle/YourCustomBundleName.bundle")
+bundle.preloadModel("SceneName")
+
+ val rootEntity = 
+     withContext(Dispatchers.IO) { 
+         AssetBundle.load("asset://Bundle/ComponentTests.bundle").use { bundle -> 
+         bundle.loadModelSuspend("ComplexModel") 
+     } 
+ }
+
+**
+
+ 
+
+ 
+
+val bundle = AssetBundle.load("asset://path/to/bundle/YourCustomBundleName.bundle")
+val material = bundle.loadMaterial("Hi/Root/MyMaterials/unlitMaterial")
+// 可以转为 UnlitMaterial 类型
+material as UnlitMaterial
+// 之后可以进行 UnlitMaterial 的相关操作，如对其属性进行修改，或将其设置给其他带有 ModelComponent 的 entity
+
+val bundle = AssetBundle.load("asset://path/to/bundle/YourCustomBundleName.bundle")
+val material = bundle.loadMaterial("Hi/Root/MyMaterials/pbrMaterial")
+// 可以转为 PhysicallyBasedMaterial 类型
+material as PhysicallyBasedMaterial
+// 之后可以进行 PhysicallyBasedMaterial 的相关操作，如对其属性进行修改，或将其设置给其他带有 ModelComponent 的 entity
+
+val bundle = AssetBundle.load("asset://path/to/bundle/YourCustomBundleName.bundle")
+val material = bundle.loadMaterial("Hi/Root/MyMaterials/shaderGraphMaterial")
+// 可以转为 ShaderGraphMaterial 类型
+material as ShaderGraphMaterial
+// 之后可以进行 ShaderGraphMaterial 的相关操作，如对其属性进行修改，或将其设置给其他带有 ModelComponent 的 entity
+
+val bundle = AssetBundle.load("asset://path/to/bundle/YourCustomBundleName.bundle")
+
+val material = ShaderGraphMaterial.loadFromAssetBundle(bundle, "Hi/Root/MyMaterials/shaderGraphMaterial")
+
+val bundle = AssetBundle.load("asset://path/to/bundle/YourCustomBundleName.bundle")
+
+// 使用 AssetBundle 
+val audioA = bundle.loadAudioResource("Default/Root/MyAudios/objectAudioFile")
+// 使用静态函数加载
+val audioB = AudioResource.load(bundle, "Default/Root/MyAudios/objectAudioFile")
+
+val bundle = AssetBundle.load("asset://path/to/bundle/YourCustomBundleName.bundle")
+val shaderGraphMaterial = bundle.loadMaterial("Hi/Root/MyMaterials/shaderGraphMaterial")
+val pbrMaterial = bundle.loadMaterial("Hi/Root/MyMaterials/pbrMaterial")
+val unlitMaterial = bundle.loadMaterial("Hi/Root/MyMaterials/unlitMaterial")
+// 释放各类材质
+bundle.releaseResource("Hi/Root/MyMaterials/shaderGraphMaterial")
+bundle.releaseResource("Hi/Root/MyMaterials/pbrMaterial")
+bundle.releaseResource("Hi/Root/MyMaterials/unlitMaterial")
+
+val bundle = AssetBundle.load("asset://path/to/bundle/YourCustomBundleName.bundle")
+// 预加载场景
+bundle.preloadModel("Hi")
+// 加载场景
+val rootEntity = bundle.loadModel("Hi")
+// 释放已加载或者已预加载过的场景
+bundle.releaseModel("Hi")
+
+*val bundle = AssetBundle.load("asset://path/to/bundle/YourCustomBundleName.bundle").load("asset://Bundle/SpatialPackContent.bundle")
+// 使用资源
+...
+// 释放 AssetBundle 实例
+bundle.close()
+
+为避免模型加载失败或应用崩溃，务必在所有 Entity.loadSuspend() 调用完成后，再调用 bundle.close()。
+
+val bundle = AssetBundle.load("asset://path/to/bundle/YourCustomBundleName.bundle")
+// 多次将 Hi.usda 场景加载为模型，返回不同的 entity 实例，但只占用一份内存
+val entityA = bundle.loadModel("Hi")
+val entityB = bundle.loadModel("Hi")
+val entityC = bundle.loadModel("Hi")
+val entityD = bundle.loadModel("Hi")
+
+// 销毁所有加载的模型，并通过 AssetBundle 实例释放资源
+entityA.destroy()
+entityB.destroy()
+entityC.destroy()
+entityD.destroy()
+bundle.releaseModel("Hi")
+
+val bundle = AssetBundle.load("asset://path/to/bundle/YourCustomBundleName.bundle")
+
+*val mesh = MeshResource.createPlane(3F, 4F, 5F)
+val shaderGraphMaterialA = bundle.loadMaterial("Hi/Root/MyMaterials/shaderGraphMaterial")
+val shaderGraphMaterialB = bundle.loadMaterial("Hi/Root/MyMaterials/shaderGraphMaterial")
+
+val entity = ModelEntity(mesh, shaderGraphMaterialA)
+
+// 销毁 entity 时，其持有的 shaderGraphMaterialA 会被自动释放
+entity.destroy()
+
+// 对于未被 entity 持有的 shaderGraphMaterialB，需要显式调用 close() 释放
+shaderGraphMaterialB.close()
+
+// 最后通过 AssetBundle 实例彻底释放资源
+bundle.releaseResource("Hi/Root/MyMaterials/shaderGraphMaterial")
+
+scene
+└── Root
+    ├── Sphere
+    │   └── SphereMaterial
+    ├── Capsule
+    │   ├── CapsuleMaterial
+    │   └── Plane
+    │       └── PlaneMaterial
+    └── Cone
+        ├── ConeMaterial
+        └── Cube
+            ├── CubeMaterial
+            └── Cylinder
+                └── CylinderMaterial
+

@@ -1,0 +1,179 @@
+3D é«æ¯æ³¼æº
+========================================
+3D 高斯泼溅（3D Gaussian Splatting, 3DGS）是一种 3D 重建与渲染技术。它通过使用大量高斯分布来表示 3D 场景，能够实现高质量的实时渲染效果，尤其适合展示复杂的场景和精细的物体。
+*基础概念
+*
+*应用场景
+3DGS 功能可帮助你在 PICO 设备上高效渲染高质量的 3DGS 模型，适用于以下场景：
+*高精度模型展示：适用于需要高保真展示的场景，如文物、艺术品、工业零件等。
+*真实感场景渲染：对室内外环境或数字孪生等场景进行实时渲染。
+*混合现实应用：将高真实感的 3D 内容叠加到现实世界中。
+*内容创作工具：支持你导入并查看自己创建的 3DGS 模型。
+*大体积模型加载：加载文件体积较大的模型时，可以优先使用 AssetFileDescriptor 入口，减少 JVM 堆内存占用。
+*自定义数据源：当模型数据来自网络下载、解密流程或自定义资源容器时，可以先准备 Direct ByteBuffer，再通过内存加载接口创建 GaussianSplattingResource。
+*示例代码
+*把 3DGS 模型加载到实体
+下面的代码演示了 3DGS 模型的加载流程。
+*在 Dispatchers.IO 线程中通过 GaussianSplattingResource(path, loadType) 创建资源对象，传入资源路径和 LoadType.FROM_ASSETS，表示从应用资源目录加载 3DGS 模型文件。
+*资源加载完成后，先检查当前 Entity 是否仍然有效。如果对象已经销毁，就立即调用 close() 释放资源，避免内存泄漏。
+*在主线程创建 GaussianSplattingComponent()，将资源赋值给 gaussianSplattingResource 属性，再把组件挂载到实体上，实体就具备了 3DGS 渲染能力。
+*通过 TransformComponent 设置模型的位置和缩放。
+示例里的 destroy() 也补充了资源回收逻辑，确保实体销毁时同步释放 3DGS 资源。
+ 
+*在已有实体上替换 3DGS 模型
+这段代码演示了如何在已有实体上替换 3DGS 模型。
+*在 Dispatchers.IO 线程中创建新的 GaussianSplattingResource，避免阻塞主线程。
+*切回主线程更新 GaussianSplattingComponent。由于 GaussianSplattingComponent 标记为 @MainThread，对 gaussianSplattingResource 属性的修改必须在主线程执行。
+*通过 component?.gaussianSplattingResource = newResource 绑定新资源后，实体会切换为新模型。
+示例里也处理了实体失效的情况：如果切换时 entity 已被销毁，就主动调用 newResource.close() 释放刚加载的资源。旧资源不需要手动释放，替换 gaussianSplattingResource 时会自动回收。
+ 
+*通过 AssetFileDescriptor 加载 3DGS 模型
+如果 3DGS 模型体积较大，可以使用 Entity.load(afd: AssetFileDescriptor, format: ModelFormat) 或 Entity.loadSuspend(afd: AssetFileDescriptor, format: ModelFormat) 加载。这个入口会直接读取文件描述符指向的数据，避免在加载阶段把完整文件拷贝到 JVM 堆内存。
+ 
+*从内存加载 3DGS 模型
+如果 3DGS 数据已经在内存中，可以调用 GaussianSplattingResource.loadFromMemory(data: ByteBuffer, hint: String) 创建资源。data 必须是 Direct ByteBuffer，hint 支持 "ply"、"spz"、"spz4" 和 "sog"。
+ 
+loadFromMemory 会读取 data 当前 position 到 limit 之间的数据，调用过程中不会修改 buffer 的 position、limit 或 mark。调用返回前，buffer 需要保持有效。
+*注意事项
+为了避免性能问题和资源泄漏，你需要在使用 3DGS 功能时遵循以下建议：
+*资源管理
+*3DGS 资源会占用大量内存。当你不再需要时，请及时调用 close() 方法释放资源。
+*避免同时加载过多的 3DGS 资源。建议同一时间最多加载 1-2 个复杂模型。
+*当 Entity 被销毁时，确保其关联的 GaussianSplattingResource 也被一同释放，以防止内存泄漏。
+*线程安全
+*由于 GaussianSplattingResource 的加载是耗时操作，建议你在 IO 线程中执行，以避免阻塞主线程。
+*所有对 GaussianSplattingComponent 的操作都必须在主线程中完成。
+*在异步加载资源后，务必检查 Entity 的有效性。这样做可以避免在 Entity 已被销毁的情况下进行操作，从而防止内存泄漏。
+*模型格式与加载限制
+*使用 Entity.load(afd, format) 或 Entity.loadSuspend(afd, format) 时，format 必须和实际内容一致。SDK 不能从 AssetFileDescriptor 自动推断文件格式。
+*通过 AssetManager.openFd(path) 读取 APK 内资源时，资源必须以未压缩形式打包。建议在 androidResources.noCompress 中加入 .ply、.spz、spz4、.sog 和 .usdz。
+*AssetFileDescriptor 必须有已知且大于 0 的 declaredLength。不支持未知长度的流式 AFD；这类数据源可以改用 InputStream，或先复制到应用缓存文件后再加载。
+*不要把同一个 AssetFileDescriptor 同时交给多个加载任务使用。
+*调用 GaussianSplattingResource.loadFromMemory(data, hint) 时，data 必须是 Direct ByteBuffer，且 data.remaining() 需要大于 0。GaussianSplattingResource.loadFromMemory(data, hint) 是阻塞方法，加载大体积模型时应放在后台线程或协程中执行，避免主线程卡顿甚至触发 ANR（Application Not Responding，应用无响应）。
+*API 参考
+GaussianSplattingComponent 类和 GaussianSplattingResource 类提供了 3DGS 相关的属性和函数，详情参阅 API 参考。根据你所处的地理位置选择合适的文档链接：
+*中国大陆：https://developer-cn.picoxr.com/spatial-api/index.html
+*非中国大陆：https://developer.picoxr.com/spatial-api/index.html
+
+
+
+*概念
+
+*说明
+
+3GDS 模型文件
+
+存储 3DGS 数据的文件。PICO Spatial SDK 支持加载以下类型的 3DGS 模型文件：
+*PLY：原始未压缩格式，通用但文件最大。
+*SPZ：Niantic 的压缩格式，约为 PLY 的 1/10 大小，画质基本无损。
+*SPZ4：SPZ 的第 4 代，压缩更快、加载更快，支持超大场景 (数千万点)。
+*SOG：PlayCanvas 的压缩格式，把高斯数据编码成图片，比 PLY 小约 15–20 倍。
+
+GaussianSplattingComponent
+
+PICO Spatial SDK 中的 ECS 组件，用于实现 3DGS 渲染，并负责管理 3DGS 资源与渲染配置。该组件只有无参构造函数，资源需要通过 gaussianSplattingResource 属性绑定。
+*你可以通过 enablePerformanceMode 属性配置性能模式。enablePerformanceMode 默认为 true。开启后使用更快的渲染路径，可降低每帧渲染开销并帮助复杂场景维持目标帧率，但在快速移动相机或对象等情况下可能出现轻微的视觉差异。设置为 false 后使用标准渲染路径，可获得更高的视觉保真度，但会增加每帧的 GPU 开销。
+
+GaussianSplattingResource
+
+用于加载和管理 3DGS 模型文件的资源类，也支持通过 Direct ByteBuffer 从内存加载资源。
+
+import com.pico.spatial.core.ecs.Entity
+import com.pico.spatial.core.ecs.GaussianSplattingComponent
+import com.pico.spatial.core.ecs.LoadType
+import com.pico.spatial.core.ecs.TransformComponent
+import com.pico.spatial.core.ecs.resource.GaussianSplattingResource
+import com.pico.spatial.core.math.Vector3
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+
+// 创建一个包含 3DGS 组件的 Entity
+class GaussianSplattingEntity(private val assetPath: String) : Entity() {
+    init {
+        CoroutineScope(Dispatchers.Main).launch { 
+            setupGaussianSplatting() 
+        }
+    }
+
+    private suspend fun setupGaussianSplatting() {
+        // 1. 加载 3DGS 资源（在IO线程执行）
+        val gsResource = withContext(Dispatchers.IO) {
+            GaussianSplattingResource(assetPath, LoadType.FROM_ASSETS)
+        }
+        
+        // 检查 Entity 是否有效（防止在加载完成前 Entity 被销毁）
+        if (!valid) {
+            gsResource.close()
+            return
+        }
+        
+        // 2. 创建并配置 GaussianSplattingComponent
+        val gsComponent = GaussianSplattingComponent()
+        gsComponent.gaussianSplattingResource = gsResource
+        
+        // 3. 将组件添加到 Entity
+        components[GaussianSplattingComponent::class.java] = gsComponent
+        
+        // 4. 配置 Transform 组件设置位置和缩放
+        components[TransformComponent::class.java]?.apply {
+            setPosition(Vector3(0f, 0f, -2f)) // 放置在前方2米位置
+            setScaleVector(Vector3(1f)) // 保持原始大小
+        }
+    }
+
+    // 销毁时释放资源
+    override fun destroy(destroyChildren: Boolean) {
+        components[GaussianSplattingComponent::class.java]?.gaussianSplattingResource?.close()
+        super.destroy(destroyChildren)
+    }
+}
+
+// 切换模型的方法
+fun switchGaussianSplattingModel(entity: Entity, newAssetPath: String) {
+    CoroutineScope(Dispatchers.IO).launch {
+        val component = entity.components[GaussianSplattingComponent::class.java]
+        
+        // 加载新资源
+        val newResource = GaussianSplattingResource(newAssetPath, LoadType.FROM_ASSETS)
+        
+        // 在主线程更新组件
+        withContext(Dispatchers.Main) {
+            if (entity.valid) {
+                component?.gaussianSplattingResource = newResource
+            } else {
+                newResource.close()
+            }
+        }
+    }
+}
+
+// 1. 从Assets打开文件描述符
+val afd = context.assets.openFd("demomodels/painted_bedroom.spz")
+// 2. 使用mmap方式加载实体
+val gaussianEntity = afd.use { 
+    Entity.load(it, ModelFormat.SPZ) 
+}
+// 3. 通过ComponentSet设置变换组件（符合ECS架构规范）
+gaussianEntity.components.get<TransformComponent>()?.apply {
+    setPosition(Vector3(0f, 0f, -1f))
+    setScale(0.5f)
+}
+// 4. 添加到场景
+scene.addEntity(gaussianEntity)
+
+// 1. 准备直接ByteBuffer（示例为从文件读取，实际可来自网络/解密等）
+val bytes = inputStream.readBytes()
+val directBuffer = ByteBuffer.allocateDirect(bytes.size).apply {
+    put(bytes)
+    flip()
+}
+// 2. 从内存加载高斯泼溅资源
+val splatResource = GaussianSplattingResource.loadFromMemory(directBuffer, "ply")
+// 3. 创建实体并挂载资源组件（符合ECS架构规范）
+val splatEntity = Entity()
+val splatComponent = GaussianSplattingComponent(splatResource)
+splatEntity.components.set(splatComponent)
+// 4. 添加到场景
+scene.addEntity(splatEntity)

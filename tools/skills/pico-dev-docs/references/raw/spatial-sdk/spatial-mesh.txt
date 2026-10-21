@@ -1,0 +1,211 @@
+空间网格
+========================================
+空间网格功能使应用能够识别真实空间中的真实物体，并将它们转化为虚拟的网格数据。你可以将这些网格数据转化成空间应用中的模型数据。
+*核心概念
+*空间网格
+空间网格是对于空间中真实物体的信息的捕捉和重建。应用开始网格扫描后，将在用户看过的地方逐步生成三角网格。空间网格数据中还包含网格包围盒、语义等信息。
+* 
+空间网格主要用于在混合现实体验中提供应用对现实环境的理解。将物理世界重构为空间网格后，可以更好地实现虚拟物体与现实物体之间的交互。例如，撞向现实墙面的虚拟小球能够被弹回。此外，结合深度感知技术，可以实现虚拟物体和现实物体之间的遮挡关系。
+你可以通过 PICO Spatial SDK 实时获取空间网格的顶点、索引、语义等信息，并且可以根据应用的需求设置不同的细节层次（Level of Detail，LOD）来获取不同粗细程度的网格。此外，你也可以使用 SDK 内置的网格绘制组件实现网格的可视化显示。
+*网格锚点
+*网格锚点（Mesh Anchor）是在扫描物体后，由系统生成的锚点。网格锚点包含 UUID 和网格模型的相关数据，用以描述在空间中识别到的网格模型。
+* 
+*MeshTrackingManager
+*MeshTrackingManager 负责管理和驱动网格锚点数据，在注册了 AnchorUpdate 事件的回调中返回网格锚点数据。
+*语义
+*网格锚点是逐顶点语义的，因此一个网格锚点可能同时包含多个语义。例如，一个网格锚点可能覆盖墙体、地板和门等多个实际物体的连接区域。
+*
+*使用建议
+建议针对应用场景合理使用空间网格功能，以降低系统开销。应用如果需要使用一个空间的完整网格信息，建议首先引导用户看向空间各处，使得该空间能够被完全扫描。生成相应的空间网格数据后，再让用户继续体验应用的其余内容。
+如果在创建空间网格后不需要实时更新网格信息，建议存储当前网格数据并继续使用，同时关闭空间网格 Provider，以节省资源开销。此外，可以考虑使用较低的 LOD 来减少网格数量。
+*前置条件
+*应用的空间状态为 Full Space。
+*代码示例
+*以下代码实现了对网格锚点的动态管理：通过监听锚点的新增、更新和移除事件，系统自动创建、更新或销毁锚点所对应的虚拟模型 entity，并将它们的 transform 与现实空间中的锚点保持同步。
+ 
+*通过调用 start 函数来开启网格锚点数据更新。
+* 
+ 
+*API 参考
+*MeshTrackingManager 和 MeshAnchor 类中提供了空间网格相关的属性和函数。详细说明参阅 API 参考。根据你所处的地理位置选择合适的文档链接：
+*中国大陆：https://developer-cn.picoxr.com/spatial-api/index.html
+*非中国大陆：https://developer.picoxr.com/spatial-api/index.html
+
+***
+
+ 
+
+ 
+
+ 
+
+*不支持手动创建网格锚点。
+
+
+
+语义数据类型
+
+描述
+
+UNKNOWN
+
+无法识别的未知类型
+
+FLOOR
+
+地板
+
+CEILING
+
+天花板
+
+WALL
+
+墙体
+
+DOOR
+
+门
+
+WINDOW
+
+窗户
+
+OPENING
+
+开放区域
+
+TABLE
+
+桌子
+
+SOFA
+
+沙发
+
+CHAIR
+
+椅子
+
+HUMAN
+
+人类
+
+BEAM
+
+房梁
+
+COLUMN
+
+柱子
+
+CURTAIN
+
+窗帘
+
+CABINET
+
+柜子
+
+BED
+
+床
+
+PLANT
+
+植物
+
+SCREEN
+
+屏幕
+
+VIRTUAL_WALL
+
+虚拟墙
+
+REFRIGERATOR
+
+冰箱
+
+WASHING_MACHINE
+
+洗衣机
+
+AIR_CONDITIONER
+
+空调
+
+LAMP
+
+灯具
+
+WALL_ART
+
+墙面装饰
+
+STAIRWAY
+
+楼梯
+
+MeshTrackingManager.subscribeAnchorUpdate {
+    if (it.event == AnchorUpdate.Event.ADDED) {
+        // 在收到 Add 事件后，将网格锚点的的 UUID 转化成 MeshResource
+        val mesh = MeshResource.loadFromMeshAnchor(it.anchor.anchorUUID)
+        val material =
+            UnlitMaterial.create().apply {
+                setBaseColor(Color4.BLACK)
+                setPolygonFillMode(PolygonFillMode.LINE)
+            }
+        // 构造 ModelEntity
+        val entity = ModelEntity(mesh, material)
+        // 根据 SpatialView 的 Root Entity 节点转换坐标系
+        val position =
+            MRSampleHelper.entity!!.convertPositionFrom(it.anchor.transform.position, null)
+        val rotation =
+            MRSampleHelper.entity!!.convertRotationFrom(
+                it.anchor.transform.rotation.toQuat(),
+                null
+            )
+        entity.components[TransformComponent::class.java]?.apply {
+            setPosition(position)
+            setQuaternion(rotation)
+        }
+        // 在 Root 节点上添加新创建的 Entity
+        MRSampleHelper.entity?.addChild(entity)
+        // 通过 UUID 管理新的 Entity
+        MRSampleHelper.entityMap[it.anchor.anchorUUID] = entity
+    }
+    if (it.event == AnchorUpdate.Event.REMOVED) {
+        // 当收到网格锚点被移除的事件时，销毁该网格锚点的 UUID 所对应的 Entity
+        if (MRSampleHelper.entityMap.containsKey(it.anchor.anchorUUID)) {
+            MRSampleHelper.entityMap[it.anchor.anchorUUID]?.destroy()
+            MRSampleHelper.entityMap.remove(it.anchor.anchorUUID)
+        }
+    }
+    if (it.event == AnchorUpdate.Event.UPDATED) {
+        // 当收到网格锚点的更新事件时，找到该网格锚点的 UUID 所对应的 Entity 并更新模型的坐标数据
+        if (MRSampleHelper.entityMap.containsKey(it.anchor.anchorUUID)) {
+            val entity = MRSampleHelper.entityMap[it.anchor.anchorUUID]
+            val mesh = MeshResource.loadFromMeshAnchor(it.anchor.anchorUUID)
+            entity?.components?.get(ModelComponent::class.java)?.mesh = mesh
+            val position =
+                MRSampleHelper.entity!!.convertPositionFrom(
+                    it.anchor.transform.position,
+                    null
+                )
+            val rotation =
+                MRSampleHelper.entity!!.convertRotationFrom(
+                    it.anchor.transform.rotation.toQuat(),
+                    null
+                )
+            entity?.components?.get(TransformComponent::class.java)?.apply {
+                setPosition(position)
+                setQuaternion(rotation)
+            }
+        }
+    }
+}
+
+*需要订阅网格锚点的 AnchorUpdate 事件，start 函数才会推送更新的数据。
+
+MeshTrackingManager.start()

@@ -1,0 +1,632 @@
+添加碰撞和外部作用
+========================================
+在空间应用中，力和碰撞主要用来模拟物理世界的互动和运动规律，使虚拟环境更真实、互动更自然。
+*关于碰撞和刚体
+*在许多游戏引擎和物理系统中（包括 PICO Spatial SDK），物体只有在具备碰撞组件后，才能受到力的作用或参与物理交互。碰撞组件（通常称为碰撞体 Collider）定义了物体被物理引擎识别的体积或表面，即碰撞形状。碰撞形状决定了物体在空间中的物理边界，诸如冲量、重力和碰撞力等都会作用在这些物理边界上。
+如果物体没有碰撞形状，物理引擎无法准确识别其在空间中的位置和体积，自然也就无法对其施加力或进行碰撞检测。需要注意的是，物体用于渲染的视觉模型与用于物理模拟的碰撞形状通常是不同的，两者可能存在较大差异。
+力的产生和传递（如推动、反弹）依赖于物体之间碰撞体的相交或接触点检测。这些接触点是基于碰撞体计算的，而非基于物体的视觉外观或变换信息。即使是像重力这样均匀施加的力，也会依据碰撞形状来确定具体施力的位置和分布。
+在实际应用中，刚体组件通常与碰撞体配合使用。刚体负责定义物体的物理属性和动态行为，比如质量、速度以及对力的响应；而碰撞器则提供物理边界，供引擎用于碰撞检测和物理响应。如果缺少碰撞器，刚体就没有明确的物理边界，物理引擎无法确定交互发生的位置和方式，可能会忽略该物体的碰撞检测和受力计算。
+这种刚体与碰撞器体的分离设计，也有助于性能优化。物理引擎在进行宽相位碰撞检测和约束求解时，会跳过没有碰撞体的物体，避免进行不必要的计算，从而提升整体效率。这在包含成千上万个物体的大型或复杂场景中尤为重要。
+*设置碰撞组件：CollisionComponent
+*碰撞组件（CollisionComponent）通过指定物体的形状、材质、响应行为、过滤规则以及碰撞报告的详细程度，实现物体的物理交互能力。
+*快速添加 CollisionComponent
+*如果当前实体或其子节点包含可用于生成碰撞体的模型网格数据，且尚未挂载 CollisionComponent，可以调用 Entity.createCollisionShapes(recursive = true) 为符合条件的实体创建盒形 CollisionComponent。该方法会跳过已经挂载 CollisionComponent 的实体，不覆盖已有物理组件。
+* 
+*碰撞检测精度
+*CollisionComponent 的碰撞检测精度为 0.001 米（即 1 毫米）。
+*属性说明
+*CollisionComponent 包含以下属性：
+**
+*重要提示
+*为实体添加 CollisionComponent 后，该实体将参与碰撞检测，但仅会作为静态物理对象存在。这意味着它可以阻挡其他实体，但自身不会因为被施加力或速度而移动。除非手动更新其变换（Transform），否则它始终保持固定不动。
+这种行为是符合预期的。静态碰撞体不会受到物理模拟中的力的影响。它们适用于地面、墙壁或任何应保持静止但仍需与动态物体发生交互的物体。
+*代码示例
+*以下代码示例演示了如何创建一个平面并为其添加 CollisionComponent：
+ 
+现在我们已经将平面设置为一个“静态平台”，接下来让我们参考 “设置刚体组件” 部分，在场景中添加一个动态球体，使其可以与平台发生碰撞。
+*设置刚体组件：RigidBodyComponent
+*刚体组件（RigidBodyComponent）赋予实体基于其配置的物理行为。
+*属性说明
+*RigidBodyComponent 组件包含以下属性：
+*
+*代码示例
+*以下代码在上述静态平面的基础上，又额外创建了一个动态球体，并让其受重力影响可以自由下落，从而模拟小球自由落体后与平面之间的碰撞：
+ 
+ 
+*请注意，在为静态平面和动态球体设置 CollisionComponent 时，务必将二者的 collisionResponseMode 都设置为 CollisionResponseMode.COLLIDER_FULL。该模式对于所有需要发生物理碰撞并产生碰撞效果（如反弹或阻止移动）的物体都是必需的。此外，为了让小球的运动收到力的影响（重力以及静止平面的阻挡），请将其 rigidBodyMode 设置为 RigidBodyMode.DYNAMIC
+* 
+*此外，刚体的四种碰撞检测模式在精度和性能上有区别，且各有其特定的适用场景：
+*
+*在选择碰撞检测模式时，需进行权衡：
+*更高精度的模式（如 CONTINUOUS）可以防止穿透，但会消耗更多 CPU 资源。
+*DISCRETE 模式对于大多数静态或非关键物体来说已经足够。
+*CONTINUOUS_SPECULATIVE 模式可通过预测机制减少多人游戏中的延迟影响。
+*
+*添加力/力矩：PhysicsForceComponent
+PhysicsForceComponent 通过为实体添加一个持续且恒定的力或力矩来使其产生加速度，使速度随时间逐渐累积。这与瞬时冲量有本质区别，因为冲量会导致速度发生瞬间突变。要停止 PhysicsForceComponent 产生的恒定作用，必须手动移除该组件 。
+*前提条件
+*基于力的移动仅适用于动态刚体。因此，若要对实体施加力或力矩，该实体必须同时拥有 CollisionComponent（用于定义碰撞形状）和 RigidBodyComponent（用于定义质量、惯性等物理属性），且 rigidBodyMode 必须设置为 DYNAMIC 。静态 STATIC 和运动学 KINEMATIC 刚体的运动不受物理引擎的动力学方程控制，因此对它们施加力不会产生任何效果 。
+*重要提示
+*PhysicsForceComponent 中设置的力或力矩通常是基于物体的局部坐标系，而非世界坐标系 。这意味着力的方向会随物体的旋转而改变。例如，为一个球体设置一个向前的恒定力，当球体滚动时，其局部坐标系也随之旋转，导致力的世界方向不断改变，球体可能会来回滚动。如果想让物体沿某一方向一直绕轴加速旋转，应施加恒定力矩而非力 。
+*在施加力或力矩时，需要考虑到物体的质量和转动惯量。相同的力作用在不同质量或形状的物体上，产生的加速度不同。此外，应避免设置过大的力或力矩，这可能导致数值计算不稳定、产生非物理的剧烈运动或穿透现象 。
+*属性说明
+*PhysicsForceComponent 组件包含以下属性：
+**
+*代码示例
+*以下代码展示了如何为之前创建的球体施加持续的力矩，从而使其加速旋转。
+ 
+ 
+*添加速度：PhysicsVelocityComponent
+*PhysicsVelocityComponent 用于处理瞬时运动变化，例如受到踢击、爆炸冲击或武器后坐力时。该组件通过直接设置线性速度和角速度来模拟瞬时冲量的效果。与持续施加力的组件不同，此组件的作用是一次性且瞬时的，它不会在后续帧中持续改变物体的运动状态。这意味着它非常适合用来实现那些瞬间生效、无需持续作用的效果，或为物体提供一个初始的爆发性运动。
+*重要提示
+直接修改速度会绕过力的积分过程，因此无论刚体模式是 DYNAMIC 还是 KINEMATIC，只要该实体拥有 RigidBodyComponent，PhysicsVelocityComponent 通常都能生效。
+*属性说明
+*PhysicsVelocityComponent 组件包含以下属性：
+*
+*代码示例
+*以下代码展示了如何为之前创建的球体施加向右的初始速度（模拟初始下落时的冲量作用），从而使其在水平方向向右运动。
+ 
+ 
+*使用碰撞事件：CollisionEvents
+*你可以通过有效的场景（例如 entity.scene）或 SpatialViewContent（SpatialView 的 content）来订阅碰撞事件。在这两种情况下，你需要定义一个回调函数，当事件被触发时执行该函数。当不再需要接收这些事件时，只需在订阅对象上调用 cancel() 方法即可停止监听并释放资源。
+*注意事项
+*如果两个物体的 CollisionResponseMode 都设置为 TRIGGER_LITE，则不会触发碰撞事件。
+*碰撞事件的默认汇报范围
+*默认情况下，CollisionEvents 仅在碰撞的两个物体中至少有一个是动态刚体 (RigidBodyMode.DYNAMIC) 时才会触发。因此，如果碰撞双方都是 KINEMATIC 或 STATIC 类型（注意：未添加 RigidBodyComponent 的物体相当于 STATIC），则不会触发事件。此时，kinematicCollisionReportMode 默认为 NONE。
+这项默认策略是为优化性能而设计的。由于 KINEMATIC 物体通常由你的业务代码直接驱动，且 CollisionEvents.Update 会在物体接触期间每帧都触发，若默认开启所有汇报，会显著增加事件处理的开销。
+如果你希望 KINEMATIC 物体也能触发碰撞事件（例如，让两个 KINEMATIC 物体一触碰就触发回调而无需呈现物理效果），可以在它们的父节点上添加 PhysicsWorldComponent，并设置 kinematicCollisionReportMode 属性。你需要确保参与碰撞的物体共享同一个物理世界。例如：
+ 
+*更多关于 PhysicsWorldComponent  的介绍，请参考《设置物理世界的参数》。
+*相关的类
+*CollisionEvents 相关的类的说明如下：
+**
+ 
+*代码示例
+*以下代码演示了如何利用 CollisionEvents.Enter ，在每次碰撞开始时将球体的颜色更改为一个随机的颜色，同时展示了如何在运行时订阅该事件以及在不需要时取消订阅。
+ 
+ 
+*了解更多
+*关于如何使用 PICO Spatial SDK 的事件系统，参考《事件系统》。
+*API 参考
+CollisionComponent、RigidBodyComponent、PhysicsForceComponent、PhysicsVelocityComponent 和 CollisionEvents 类提供了碰撞和力相关的属性、函数和事件，详情参阅 API 参考。根据你所处的地理位置选择合适的文档链接：
+*中国大陆：https://developer-cn.picoxr.com/spatial-api/index.html
+*非中国大陆：https://developer.picoxr.com/spatial-api/index.html
+
+
+// 为当前实体及其子节点中符合条件的实体生成碰撞体
+val count = modelRoot.createCollisionShapes(recursive = true)
+
+// 只处理当前实体
+val singleCount = modelRoot.createCollisionShapes(recursive = false)
+
+
+
+属性
+
+描述
+
+collisionShape
+
+用于碰撞检测的几何形状。它接受一组 ShapeResource 实例，这些实例可以是简单的基本体，如盒子、球体和胶囊体，也可以是更复杂的形状，如凸多边形网格和静态网格。根据碰撞形状与视觉模型间所需的匹配程度，开发者可以使用合适的实例，从而平衡性能与精度。
+*因为 collisionShape  接受一组 ShapeResource 实例，你还可以将多个基本形状组合起来，构成一个复合碰撞体。与使用单一的凸多边形网格或静态网格相比，这种方法的性能更佳，同时其精度也足以满足多数场景的需求。
+* 
+
+collisionResponseMode
+
+控制系统如何处理检测到的碰撞。不同模式对应不同层级的碰撞数据和效果，包括：
+*TRIGGER_LITE：提供接触点，不包含其他详细碰撞数据，也不产生碰撞效果，适用于基于事件的交互。
+*TRIGGER_FULL：提供详细的数据，包括接触点、法线向量和穿透深度，但仍不施加力或冲量，适合诊断或非物理的游戏逻辑。
+*COLLIDER_FULL：不仅提供完整的接触数据，还允许物理引擎施加响应（例如冲量），产生碰撞效果。
+
+collisionFilter
+
+允许你精细控制哪些物体之间可以发生碰撞。每个物体可以被分配到一个或多个碰撞组，其碰撞掩码则决定了它可以与哪些组的物体发生交互。该机制通过限制仅相关物体对之间可以交互，避免了不必要的计算，从而提升性能。包括两类过滤器：
+*COLLISION_FILTER_DEFAULT：与默认分组中的物体发生碰撞。
+*COLLISION_FILTER_ALL：与所有物体发生碰撞。
+
+physicsMaterial
+
+物体与其他物体接触时的表现。它包括静摩擦力（用于控制物体启动运动时的阻力）、动摩擦力（用于抵抗运动中的滑动）以及恢复系数（用于定义物体碰撞后的弹性程度）等属性。这些参数共同作用，模拟出真实的接触后的行为。
+
+collisionInfoDetailLevel
+
+碰撞事件消息的详细程度（即事件中包含的数据量）。
+*BRIEF ：系统仅报告高级摘要信息，如平均接触位置、总累计冲量和最大穿透深度，适用于对性能要求较高的场景。
+*DETAILED：不仅包含高级摘要信息，还提供每个接触点的详细数据，包括位置、法线、冲量和穿透深度，适合需要精细碰撞数据以实现精准响应或调试的场景。
+
+@Composable
+fun StaticPlaneExample() {
+    SpatialView(
+        modifier = Modifier.fillMaxSize(),
+        initial = { content, _ -> content.addEntity(setUpStaticPlane()) }
+    )
+}
+
+fun setUpStaticPlane(): Entity {
+    val planeSize = Vector3(1.2f, 0.07f, 0.7f)
+    val planePos = Vector3(0f, -0.3f, 0.35f)
+    // 创建平面实例
+    val staticPlane = createPlaneEntity(planeSize, planePos)
+    // 设置碰撞组件
+    addCollisionComponent(staticPlane, ShapeResource.createBox(size = planeSize))
+    return staticPlane
+}
+
+fun createPlaneEntity(planeSize: Vector3, planePos: Vector3): Entity {
+    // 创建一个网格
+    val mesh = MeshResource.createBox(size = planeSize, cornerRadius = 0.02f)
+    // 创建一个材质
+    val material =
+        PhysicallyBasedMaterial.create(BlendingMode.OPAQUE).apply {
+            setBaseColor(Color4.fromLinearHex("0x65697cff"))
+        }
+    // 创建一个平面实体
+    val plane = ModelEntity(mesh, material).apply { setName("plane") }
+    // 调整平面的位置
+    plane.components[TransformComponent::class.java]!!.position = planePos
+    return plane
+}
+
+fun addCollisionComponent(entity: Entity, shapeResource: ShapeResource) {
+    entity.components.set(
+        CollisionComponent(
+            collisionShape = listOf(shapeResource),
+            physicsMaterial =
+                PhysicsMaterialResource(
+                    staticFriction = 0.6f,
+                    dynamicFriction = 0.6f,
+                    restitution = 0.8f,
+                ),
+            collisionResponseMode = CollisionResponseMode.COLLIDER_FULL,
+            collisionFilter = CollisionFilter.COLLISION_FILTER_DEFAULT,
+            collisionInfoDetailLevel = CollisionInfoDetailLevel.BRIEF
+        )
+    )
+}
+
+
+
+属性
+
+描述
+
+isAffectedByGravity
+
+物体是否应受到重力影响。
+
+isTranslationLocked
+
+是否锁定物理刚体在三个轴向上的位移，以限制不必要的运动。
+
+isRotationLocked
+
+是否锁定物理刚体在三个轴向上的旋转，以限制不必要的运动。
+
+rigidBodyMode
+
+物体的运动方式：
+* 设置为 DYNAMIC 时，实体将由物理引擎驱动，对力和碰撞进行响应；
+* 设置为 KINEMATIC 时，实体的移动由用户直接控制，不受力的影响。
+*提示：如果未设置 RigidBodyComponent，则物体的运动方式默认为 STATIC。
+
+massProperties
+
+定义质量相关的属性，包括物体的质量、质心、惯性以及惯性方向。这些属性决定了物体如何响应外力和力矩。
+
+linearDamping
+
+物理刚体的线性阻尼，表示在模拟线性运动过程中所受的阻力。线性阻尼会随着时间推移和减缓线性运动。
+
+angularDamping
+
+物理刚体的角阻尼，表示在模拟旋转运动过程中所受到的阻力。角阻尼用于平滑角速度，减缓旋转。
+
+collisionDetectionMode
+
+物理刚体的连续碰撞检测模式，用于控制快速移动物体的碰撞检测方式，以平衡精度和性能。包括：
+*DISCRETE（默认）：无连续碰撞检测。
+*CONTINUOUS：仅检测与静态物体的连续碰撞。
+*CONTINUOUS_DYNAMIC：检测与静态和动态物体的连续碰撞。
+*CONTINUOUS_SPECULATIVE：预测式碰撞检测，检测与静态和动态物体的碰撞。
+
+@Composable
+fun SpherePlaneCollisionExample() {
+    SpatialView(
+        modifier = Modifier.fillMaxSize(),
+        initial = { content, _ ->
+            content.addEntity(setUpStaticPlane())
+            content.addEntity(setUpDynamicSphere())
+        }
+    )
+}
+
+fun setUpStaticPlane(): Entity {
+    // 同上
+    // ...
+}
+
+fun createPlaneEntity(planeSize: Vector3, planePos: Vector3): Entity {
+    // 同上
+    // ...
+}
+
+fun addCollisionComponent(entity: Entity, shapeResource: ShapeResource) {
+    // 同上
+    // ...
+}
+
+fun setUpDynamicSphere(): Entity {
+    val sphereRadius = 0.06f
+    val spherePos = Vector3(0f, 1.2f, 0.3f)
+    // 创建球体实体
+    val dynamicSphere = createSphereEntity(sphereRadius, spherePos)
+    // 设置碰撞组件
+    addCollisionComponent(dynamicSphere, ShapeResource.createSphere(radius = sphereRadius))
+    // 设置刚体组件
+    addRigidBodyComponent(dynamicSphere)
+    return dynamicSphere
+}
+
+fun createSphereEntity(sphereRadius: Float, spherePos: Vector3): Entity {
+    // 创建一个网格
+    val mesh = MeshResource.createSphere(radius = sphereRadius)
+    // 创建一个材质
+    val material =
+        PhysicallyBasedMaterial.create(BlendingMode.OPAQUE).apply {
+            setBaseColor(Color4.fromLinearHex("0xa9bbd3ff"))
+        }
+    // 创建一个球体实体
+    val sphere = ModelEntity(mesh, material).apply { setName("sphere") }
+    // 调整球体的位置
+    sphere.components[TransformComponent::class.java]!!.position = spherePos
+    return sphere
+}
+
+// 添加刚体组件
+fun addRigidBodyComponent(entity: Entity) {
+    entity.components.set(
+        RigidBodyComponent().apply {
+            massProperties =
+                MassProperties(
+                    mass = 1f,
+                    centerOfMass = Vector3.ZERO,
+                    inertia = Vector3(0.1f),
+                    orientationOfInertia = Quat.identity()
+                )
+            rigidBodyMode = RigidBodyMode.DYNAMIC
+            isAffectedByGravity = true
+            collisionDetectionMode = CollisionDetectionMode.CONTINUOUS
+        }
+    )
+}
+
+**
+
+当平面和球体都使用 COLLIDER_FULL 模式，会实现正确的物理交互。
+ 
+
+当平面和球体有一者未使用 COLLIDER_FULL 模式，会导致碰撞效果被忽略。
+ 
+
+
+
+*碰撞检测模式
+
+*精度
+
+*性能
+
+*适用场景
+
+DISCRETE
+
+低（基于帧的检测）
+
+最快
+
+静态物体和简单碰撞。
+
+CONTINUOUS
+
+中（帧间射线检测）
+
+适中
+
+重要的动态物体。
+
+CONTINUOUS_DYNAMIC
+
+高（全范围扫描测试）
+
+开销大
+
+高速移动的重要物体。
+
+CONTINUOUS_SPECULATIVE
+
+预测
+
+适中
+
+物理一致性需求（例如网络同步）。
+
+
+
+模式
+
+示意图
+
+DISCRETE
+
+ 
+
+CONTINUOUS
+
+ 
+
+CONTINUOUS_DYNAMIC
+
+ 
+
+CONTINUOUS_SPECULATIVE
+
+ 
+
+
+
+属性
+
+描述
+
+*force
+
+*物理刚体在局部坐标系下所受的力。
+
+*torque
+
+*物理刚体在局部坐标系下所受的力矩。
+
+@Composable
+fun ApplyConstantTorqueExample() {
+    SpatialView(
+        modifier = Modifier.fillMaxSize(),
+        initial = { content, _ ->
+            content.addEntity(setUpStaticPlane())
+            setUpDynamicSphere().apply {
+                content.addEntity(this)
+                addConstantTorque(this)
+            }
+        }
+    )
+}
+// 用于创建实例并设置碰撞和刚体的代码，同上
+fun setUpStaticPlane(): Entity {...}
+fun createPlaneEntity(planeSize: Vector3, planePos: Vector3): Entity {...}
+fun setUpDynamicSphere(): Entity {...}
+fun createSphereEntity(sphereRadius: Float, spherePos: Vector3): Entity {...}
+fun addCollisionComponent(entity: Entity, shapeResource: ShapeResource) {...}
+fun addRigidBodyComponent(entity: Entity) {...}
+
+// 施加一个恒定的力矩，力矩的方向沿 -Z 轴，效果是让物体沿着 +X 轴加速滚动。
+fun addConstantTorque(entity: Entity) {
+    entity.components.set(
+        PhysicsForceComponent(force = Vector3(0f, 0f, 0f), torque = Vector3(0f, 0f, -0.5f))
+    )
+}
+
+
+
+属性
+
+描述
+
+*linearVelocity
+
+物理刚体的线性速度。
+
+*angularVelocity
+
+*物理刚体的角速度。
+
+@Composable
+fun ApplyInstantVelocityExample() {
+    SpatialView(
+        modifier = Modifier.fillMaxSize(),
+        initial = { content, _ ->
+            content.addEntity(setUpStaticPlane())
+            setUpDynamicSphere().apply {
+                content.addEntity(this)
+                addInstantVelocity(this)
+            }
+        }
+    )
+}
+
+// 用于创建实例并设置碰撞和刚体的代码，同上
+fun setUpStaticPlane(): Entity {...}
+fun createPlaneEntity(planeSize: Vector3, planePos: Vector3): Entity {...}
+fun setUpDynamicSphere(): Entity {...}
+fun createSphereEntity(sphereRadius: Float, spherePos: Vector3): Entity {...}
+fun addCollisionComponent(entity: Entity, shapeResource: ShapeResource) {...}
+fun addRigidBodyComponent(entity: Entity) {...}
+
+// 施加一个瞬时的初速度（初始冲量），速度的方向沿 +X 轴
+fun addInstantVelocity(entity: Entity) {
+    entity.components.set(
+        PhysicsVelocityComponent(
+            linearVelocity = Vector3(0.9f, 0f, 0f),
+            angularVelocity = Vector3(0f, 0f, 0f)
+        )
+    )
+}
+
+val physicsRoot = Entity().apply {
+    components.set(
+        PhysicsWorldComponent().apply {
+            // 两个 kinematic 物体互撞能触发回调：用 WITH_KINEMATIC_ONLY
+            // kinematic 物体撞静态物体能触发回调：用 WITH_STATIC_ONLY
+            // 和 kinematic 物体以及静态物体碰撞都能触发回调：用 ALL
+            kinematicCollisionReportMode = KinematicCollisionReportMode.WITH_KINEMATIC_ONLY
+        }
+    )
+}
+
+val a = Entity().apply {
+    components.set(CollisionComponent(/* ... */).apply {
+        // 只要事件，不要物理碰撞效果：用 TRIGGER_* 
+        collisionResponseMode = CollisionResponseMode.TRIGGER_LITE
+    })
+    components.set(RigidBodyComponent().apply { rigidBodyMode = RigidBodyMode.KINEMATIC })
+}
+
+val b = Entity().apply {
+    components.set(CollisionComponent(/* ... */).apply {
+        collisionResponseMode = CollisionResponseMode.TRIGGER_LITE
+    })
+    components.set(RigidBodyComponent().apply { rigidBodyMode = RigidBodyMode.KINEMATIC })
+}
+
+physicsRoot.addChild(a)
+physicsRoot.addChild(b)
+
+// 订阅 CollisionEvents.Enter / Update / Exit
+// 建议只在需要持续接触回调时才用 Update
+
+
+
+*类
+
+*描述
+
+成员
+
+*描述
+
+*CollisionEvents.Enter
+
+*当两个物体发生碰撞时触发的事件。
+
+*entityA
+
+参与碰撞的第一个实体。
+
+
+
+
+
+*entityB
+
+参与碰撞的第二个实体。
+
+
+
+
+
+*position
+
+一个位置，用来表示估算的接触点。默认值为 Vector3(0.0f, 0.0f, 0.0f)。
+
+
+
+
+
+*impulse
+
+该碰撞对中的总冲量，通过将向每个接触点施加的所有单个冲量相加得到。默认值为 Vector3(0.0f, 0.0f, 0.0f)。
+
+
+
+
+
+*penetrationDistance
+
+两个碰撞的实体在场景的坐标空间中的估算重叠距离。默认值为 0.0F。
+
+
+
+
+
+*contacts
+
+碰撞的接触点列表，仅在 collisionInfoDetailLevel 被设置为 DETAILED 时存在。
+
+*CollisionEvents.Update
+
+*当两个物体持续接触时，每一帧都会触发的事件。
+
+*同 CollisionEvents.Enter
+
+/
+
+*CollisionEvents.Exit
+
+*当两个之前接触的物体分离时触发的事件。
+
+*仅有 entityA 和 entityB
+
+*/
+
+*/
+
+
+
+*collisionEventInfo
+
+用于存储碰撞事件消息。
+
+如果你只关心碰撞的开始和结束，优先使用 CollisionEvents.Enter 和 CollisionEvents.Exit。避免在 CollisionEvents.Update 中执行复杂逻辑，因为它会在物体接触的每一帧都触发，带来较大的性能开销。此外，将 collisionInfoDetailLevel 设置为 BRIEF 可以减少事件报告的数据量，从而降低性能开销。
+*CollisionEvents.Update 会在每一帧为每个接触点都触发一次回调。当你同时使用 COLLIDER_FULL 模式和 DETAILED 详细等级，且场景中存在大量接触对时，高频的事件回调可能会成为主线程的性能瓶颈。因此，建议根据你的业务需求选择合适的精度，在非必要时应采用较低精度的设置以优化性能。
+
+@Composable
+fun CollisionEventsEnterExample() {
+    var subscription: Cancellable? = null
+    DisposableEffect(Unit) { onDispose { subscription?.cancel() } }
+    SpatialView(
+        modifier = Modifier.fillMaxSize(),
+        initial = { content, _ ->
+            content.addEntity(setUpStaticPlane())
+            content.addEntity(setUpDynamicSphere())
+            subscription = content.subscribeCollisionEvents(CollisionEvents.Enter::class.java)
+        }
+    )
+}
+// 用于创建实例并设置碰撞和刚体的代码，同上
+fun setUpStaticPlane(): Entity {...}
+fun createPlaneEntity(planeSize: Vector3, planePos: Vector3): Entity {...}
+fun setUpDynamicSphere(): Entity {...}
+fun createSphereEntity(sphereRadius: Float, spherePos: Vector3): Entity {...}
+fun addCollisionComponent(entity: Entity, shapeResource: ShapeResource) {...}
+fun addRigidBodyComponent(entity: Entity) {...}
+
+// 订阅碰撞事件
+fun <T : Event> SpatialViewContent.subscribeCollisionEvents(event: Class<T>): Cancellable? {
+    return when (event) {
+        CollisionEvents.Enter::class.java -> {
+            this.subscribe(event) { collision ->
+                val entityA =
+                    collision.entityA
+                        ?: throw IllegalStateException("One entity in collision is null")
+                val entityB =
+                    collision.entityB
+                        ?: throw IllegalStateException("The other entity in collision is null")
+                // 碰撞发生时，改变球体的颜色
+                if (entityA.getName().contains("sphere")) {
+                    val material =
+                        entityA.components[ModelComponent::class.java]!!.materials[0]
+                            as PhysicallyBasedMaterial
+                    material.setBaseColor(
+                        Color4(Random.nextFloat(), Random.nextFloat(), Random.nextFloat(), 1f)
+                    )
+                }
+            }
+        }
+        // 按需添加更多事件类型
+        // ...
+        else -> {
+            null
+        }
+    }
+}
+
+*当你通过 RigidBodyComponent 将实体的 rigidBodyMode 设置为 DYNAMIC 时，实体的 collisionShape 只能是凸多边形网格（Convex Mesh）或基本体。静态网格（Static Mesh）仅适用于 rigidBodyMode 为 STATIC 的实体。如果你为 rigidBodyMode=DYNAMIC 的实体配置了静态网格，该实体的 rigidBodyMode 将在没有提示的情况下自动降级为 KINEMATIC。
+*使用网格碰撞体（通过 createConvexMesh 或 createStaticMesh 创建）会产生“烘焙”（cooking）开销。首次创建网格碰撞体时，系统需要进行凸多边形分解或 BVH（Bounding Volume Hierarchy，层次包围盒）构建（即“烘焙”）。如果网格面数过高，这一同步过程可能导致明显卡顿。场景中若包含大量或高面数的网格碰撞体，也会拖慢后续的碰撞检测和查询速度。因此，建议你严格控制网格碰撞体的面数和数量。

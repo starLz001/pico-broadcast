@@ -1,0 +1,175 @@
+全身动捕
+========================================
+*全身动捕是一种动作捕捉技术，用于收集用户的身体位置和动作信息，并将其转换为可再现的姿态数据。全身动捕技术能够支持用户在 XR 场景中做出跑、踢、踩、躺、扭腰等动作，丰富用户的动作体验。
+PICO 的全身动捕功能需要结合 PICO 体感追踪器进行使用。PICO 体感追踪器可以获取用户身体位置和动作信息。全身动捕相关的接口会将这些信息转换为多个人体节点的姿态数据，并将其设置给虚拟场景中的实体，实现真实人体与虚拟人体之间的运动的同步。
+*推荐阅读
+*建议阅读《DataProvider 使用说明》一文，了解如何使用 DataProvider 获取追踪数据、判断数据的可用性以及 DataProvider 的状态。
+*使用限制
+*仅当应用的模式为 Full Space 时，才可以获取全身动捕数据。
+*只有将 PICO 体感追踪器的追踪模式切换至全身动捕后，才可以使用相关接口获取数据。
+*全身动捕模式与独立追踪模式互斥，在开启独立追踪模式后，无法输出全身动捕数据。
+*接入全身动捕功能
+*开发流程
+完整开发流程如下：
+ 
+*获取 BodyTrackingProvider 实例。
+* 
+* 
+*调用 start() 启动 BodyTrackingProvider，根据需求触发 PICO 体感追踪器校准，并在不再需要时调用 stop()。
+* 
+*使用 dataFlow 获取全身各骨骼节点数据。
+* 
+* 
+*读取全身各骨骼节点的位姿数据，转换数据的坐标系，然后将结果设置给实体。
+* 
+*完整代码示例
+*以下代码展示如何获取人体各关节的实时追踪数据，并逐一更新场景中对应骨骼实体的位姿，从而在虚拟场景中同步人体动作。
+* 
+*监听全身动捕校准状态
+*你可以通过添加监听来获取用户的 PICO 体感追踪器的校准状态。
+ 
+PICO 体感追踪器有三种校准状态，分别是：
+*INVALID：目前尚未校准
+*VALID：目前已经校准完毕，追踪数据精确、可用。
+*LIMITED：目前已经校准完毕，但当前追踪状态不佳，比如有 PICO 体感追踪器被衣物遮挡。追踪数据可被使用，但不一定精确。
+*人体关节点参考
+全身动捕功能支持追踪下图中的 24 个人体关节点。
+ 
+*以下为相关概念说明：
+*
+*API 参考
+*BodyTrackingProvider 类提供全身动捕相关的接口。详细说明参阅 API 参考。根据你所处的地理位置选择合适的文档链接：
+*中国大陆：https://developer-cn.picoxr.com/spatial-api/index.html
+*非中国大陆：https://developer.picoxr.com/spatial-api/index.html
+
+
+@Composable
+fun BodyTrackingSample() {
+    val bodyTrackingProvider = remember { BodyTrackingProvider }
+    // ...
+}
+
+BodyTrackingProvider 实例为单例，整个进程共享同一个实例。
+
+@Composable
+fun BodyTrackingSample() {
+    // ...
+    DisposableEffect(bodyTrackingProvider) {
+        bodyTrackingProvider.start(Builder().apply { needCalibration = true }.build())
+    
+        onDispose {
+            bodyTrackingProvider.stop()
+        }
+    }
+    // ...
+}
+
+你可以根据具体场景选择不同的获取方式。此处，在 Composable 函数中，可以使用 dataFlow 获取数据；在 ECS 中，可以通过 latestData 获取最新数据。
+
+@Composable
+fun BodyTrackingSample() {
+    // ...
+    val bodyTrackingData by
+        bodyTrackingProvider.dataFlow.collectAsState(
+            initial = BodyTrackingData(BodyPose(emptyList()), 0L)
+        )
+    // ...
+}
+
+@Composable
+fun BodyTrackingSample() {
+    // ...
+    SpatialView(
+        update = { _, _ ->
+            val jointEntities = rootEntity.getChildren()
+            // 实际使用中，可以只找到对应骨骼节点的实体
+            bodyTrackingData.bodyPose.bodyJoints.forEachIndexed { index, bodyJoint ->
+                jointEntities[index].apply {
+                    components[TransformComponent::class.java]?.apply {
+                        val position = rootEntity.convertPositionFrom(bodyJoint.position, null)
+                        val rotation = rootEntity.convertRotationFrom(bodyJoint.rotation, null)
+                        setPosition(position)
+                        setQuaternion(rotation)
+                    }
+                }
+            }
+        }
+    ) { content, _ ->
+        // 初始化你的实体
+    }
+    // ...
+}
+
+@Composable
+fun BodyTrackingSample() {
+    // 获取 BodyTrackingProvider
+    val bodyTrackingProvider = remember { BodyTrackingProvider }
+
+    // 从 dataFlow 中获得实时追踪数据
+    val bodyTrackingData by
+        bodyTrackingProvider.dataFlow.collectAsState(
+            initial = BodyTrackingData(BodyPose(emptyList()), 0L)
+        )
+
+    // 在 Composable 生命周期内使用追踪数据
+    DisposableEffect(bodyTrackingProvider) {
+        // 启动追踪时指定需要校准（needCalibration = true）
+        bodyTrackingProvider.start(Builder().apply { needCalibration = true }.build())
+        onDispose {
+            bodyTrackingProvider.stop()
+        }
+    }
+    
+    // 创建场景中的根节点
+    val rootEntity: Entity = remember { Entity() }
+
+    SpatialView(
+        update = { _, _ ->
+            val jointEntities = rootEntity.getChildren()
+
+
+            // 遍历各个关节
+            // 实际使用中，可以根据需要只找到对应骨骼节点的实体进行更新
+            bodyTrackingData.bodyPose.bodyJoints.forEachIndexed { index, bodyJoint ->                
+                jointEntities[index].apply {
+                    components[TransformComponent::class.java]?.apply {
+                        // 将追踪数据的数据转换到根节点坐标系下，并设置给对应关节节点
+                        val position = rootEntity.convertPositionFrom(bodyJoint.position, null)
+                        val rotation = rootEntity.convertRotationFrom(bodyJoint.rotation, null)
+                        setPosition(position)
+                        setQuaternion(rotation)
+                    }
+                }
+            }
+        }
+    ) { content, _ ->
+        // 在这里初始化你的实体，创建各个骨骼节点并挂载到 rootEntity
+    }
+}
+
+val bodyTrackingStateListener = TrackingStateListener { 
+    // 处理校准状态变化
+     Log.i("BodyTracking", "Body tracking is now$${it.status}")
+}
+bodyTrackingProvider.addTrackingStateListener(bodyTrackingStateListener)
+
+
+
+概念
+
+说明
+
+坐标系
+
+均为和头戴设备数据相同的世界坐标系。
+
+根关节节点
+
+0 (Pelvis)
+
+骨骼
+
+位于两个节点之间的一段刚体，其姿态存储在靠近根节点一侧的父节点结构内。比如：小腿骨骼的姿态角度，会存储在关节点 Knee 结构中。
+更多例子：
+*4 号节点 (LEFT_KNEE)：存放了左膝盖关节的位置信息，以及左小腿骨骼的姿态。
+*7 号节点 (LEFT_ANKLE)：存放了左脚踝关节的位置信息，以及左脚面骨骼的姿态。

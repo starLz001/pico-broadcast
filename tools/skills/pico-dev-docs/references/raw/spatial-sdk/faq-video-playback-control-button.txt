@@ -1,0 +1,327 @@
+怎么添加播放控制控件？
+========================================
+*问题描述
+如何在视频播放的 UI 中添加播放、暂停、进度条等播放控制控件？
+*原因分析
+VideoComponent 与 VideoPlayerComponent 仅承担"视频帧 → Mesh 渲染"的职责，并不暴露 play() / pause() / seekTo() 等播放控制 API；播放控制能力由播放器（CypressMediaPlayer 或第三方 MediaPlayer / ExoPlayer）提供，UI 层只负责回调到对应播放器实例。
+*因此实现播放控制的关键在于两个独立选择：
+*由哪种播放器提供控制 API（与所选渲染组件存在固定对应关系）。
+*由哪种 UI 形态承载按钮（窗口外悬浮的 Toolbar 或窗口内叠加的 Compose 按钮）。
+*解决方案
+视频面板本身仅负责渲染，播放控制（play / pause / seekTo / 音量等）由播放器提供：
+*使用 VideoPlayerComponent：搭配 SDK 内置 CypressMediaPlayer，通过 player.play() / pause() / seekTo(Long) 等方法进行播放控制。
+*使用 VideoComponent：搭配第三方播放器（如 MediaPlayer、ExoPlayer），通过对应播放器自身 API 进行控制。
+UI 摆放可选两种方式：
+*方式一（推荐）：使用 SpatialUI 的 Toolbar 组件，自动悬浮于窗口底部，不占用窗口内部布局空间，符合 PICO 设计规范。
+*方式二：在 SpatialView 同层叠加 Compose 按钮（注意可能被 3D 视频面板遮挡，参见「播放控制按钮被视频面板遮挡怎么解决」）。
+*方式一：使用 Toolbar 组件（推荐）
+*使用 VideoPlayerComponent + CypressMediaPlayer
+ 
+*使用 VideoComponent + MediaPlayer
+ 
+*方式二：在 Compose 布局中叠加按钮
+*使用 VideoPlayerComponent + CypressMediaPlayer
+ 
+*使用 VideoComponent + MediaPlayer
+ 
+*更多信息
+*常用播放控制 API 对照表
+*
+*播放控制架构与组件的对应关系
+* 
+播放控制 UI 的承载方式与"渲染组件 ↔ 播放器"的对应关系如下：
+*Toolbar 的特点：作为 Spatial UI 的 Augment 组件，自动悬浮于窗口底部，不占用窗口内部布局空间，符合 PICO 设计规范；如对 UI 自由度要求更高可改用 方式二：在 Compose 布局中叠加按钮。
+*职责划分：播放控制逻辑由播放器提供，UI 仅承担回调；VideoComponent 与 VideoPlayerComponent 均不暴露播放控制 API。
+*渲染组件与播放器的对应关系：
+*VideoPlayerComponent ↔ CypressMediaPlayer
+*VideoComponent ↔ 第三方播放器（MediaPlayer、ExoPlayer 等）
+
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.Slider
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.unit.dp
+import com.pico.spatial.core.ecs.video.CypressMediaPlayer
+import com.pico.spatial.ui.design.windows.Toolbar
+
+@Composable
+fun VideoWithToolbar(player: CypressMediaPlayer) {
+    var isPlaying by remember { mutableStateOf(false) }
+    var progress  by remember { mutableFloatStateOf(0f) }
+
+    // 视频面板（参考「视频没有填满整个窗口」中 VideoPlayerComponent 的实现）
+    VideoFillWindowContent(player)
+
+    Toolbar {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.padding(horizontal = 16.dp)
+        ) {
+            IconButton(onClick = {
+                if (isPlaying) player.pause() else player.play()
+                isPlaying = !isPlaying
+            }) {
+                Icon(
+                    painter = painterResource(
+                        id = if (isPlaying) R.drawable.pause else R.drawable.play
+                    ),
+                    contentDescription = if (isPlaying) "Pause" else "Play"
+                )
+            }
+
+            Slider(
+                value = progress,
+                onValueChange = { progress = it },
+                onValueChangeFinished = {
+                    val duration = player.getDuration()  // ms, Long
+                    player.seekTo((progress * duration).toLong())
+                },
+                modifier = Modifier.weight(1f)
+            )
+        }
+    }
+}
+
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.Slider
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.unit.dp
+import android.media.MediaPlayer
+import com.pico.spatial.ui.design.windows.Toolbar
+
+@Composable
+fun VideoWithToolbar(mediaPlayer: MediaPlayer) {
+    var isPlaying by remember { mutableStateOf(false) }
+    var progress  by remember { mutableFloatStateOf(0f) }
+
+    // 视频面板（参考「视频没有填满整个窗口」中 VideoComponent 的实现）
+    VideoFillWindowContent(mediaPlayer)
+
+    Toolbar {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.padding(horizontal = 16.dp)
+        ) {
+            IconButton(onClick = {
+                if (isPlaying) mediaPlayer.pause() else mediaPlayer.start()
+                isPlaying = !isPlaying
+            }) {
+                Icon(
+                    painter = painterResource(
+                        id = if (isPlaying) R.drawable.pause else R.drawable.play
+                    ),
+                    contentDescription = if (isPlaying) "Pause" else "Play"
+                )
+            }
+
+            Slider(
+                value = progress,
+                onValueChange = { progress = it },
+                onValueChangeFinished = {
+                    val duration = mediaPlayer.duration  // ms, Int
+                    mediaPlayer.seekTo((progress * duration).toInt())
+                },
+                modifier = Modifier.weight(1f)
+            )
+        }
+    }
+}
+
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Button
+import androidx.compose.material3.Slider
+import androidx.compose.material3.Text
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
+import com.pico.spatial.core.ecs.video.CypressMediaPlayer
+
+@Composable
+fun VideoWithOverlayControls(player: CypressMediaPlayer) {
+    var isPlaying by remember { mutableStateOf(false) }
+    var progress  by remember { mutableFloatStateOf(0f) }
+
+    Box(modifier = Modifier.fillMaxSize()) {
+        VideoFillWindowContent(player)
+
+        Row(
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Button(onClick = {
+                if (isPlaying) player.pause() else player.play()
+                isPlaying = !isPlaying
+            }) {
+                Text(if (isPlaying) "Pause" else "Play")
+            }
+
+            Slider(
+                value = progress,
+                onValueChange = { progress = it },
+                onValueChangeFinished = {
+                    player.seekTo((progress * player.getDuration()).toLong())
+                },
+                modifier = Modifier.weight(1f).padding(start = 8.dp)
+            )
+        }
+    }
+}
+
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Button
+import androidx.compose.material3.Slider
+import androidx.compose.material3.Text
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
+import android.media.MediaPlayer
+
+@Composable
+fun VideoWithOverlayControls(mediaPlayer: MediaPlayer) {
+    var isPlaying by remember { mutableStateOf(false) }
+    var progress  by remember { mutableFloatStateOf(0f) }
+
+    Box(modifier = Modifier.fillMaxSize()) {
+        VideoFillWindowContent(mediaPlayer)
+
+        Row(
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Button(onClick = {
+                if (isPlaying) mediaPlayer.pause() else mediaPlayer.start()
+                isPlaying = !isPlaying
+            }) {
+                Text(if (isPlaying) "Pause" else "Play")
+            }
+
+            Slider(
+                value = progress,
+                onValueChange = { progress = it },
+                onValueChangeFinished = {
+                    mediaPlayer.seekTo((progress * mediaPlayer.duration).toInt())
+                },
+                modifier = Modifier.weight(1f).padding(start = 8.dp)
+            )
+        }
+    }
+}
+
+
+
+*能力
+
+*第三方播放器（MediaPlayer，配合 VideoComponent）
+
+*SDK 内置（CypressMediaPlayer，配合 VideoPlayerComponent）
+
+*播放
+
+*start()
+
+*play() / resume()
+
+*暂停
+
+*pause()
+
+*pause()
+
+*停止
+
+*stop()
+
+*stop()
+
+*跳转
+
+*seekTo(positionMs: Int)
+
+*seekTo(time: Long)
+
+*是否在播放
+
+*isPlaying
+
+*isPlaying()
+
+*当前位置
+
+*currentPosition（ms，Int）
+
+*getCurrentPosition()（ms，Long）
+
+*总时长
+
+*duration（ms，Int）
+
+*getDuration()（ms，Long）
+
+*设置音量
+
+*setVolume(left, right)
+
+*setVolume(volume: Float)（0~1）
+
+*循环
+
+*isLooping = true
+
+*setLoop(loop: Boolean)
+
+*倍速
+
+*playbackParams.speed = ...
+
+*setPlaybackSpeed(speed: Float)（0.5~4.0）
+
+*视频宽高
+
+*videoWidth / videoHeight
+
+*getVideoWidth() / getVideoHeight()
+
+*播放控制按钮叠加于视频面板上时可能出现 3D/2D 遮挡，解决方法参见 播放控制按钮被视频面板遮挡，怎么解决？。

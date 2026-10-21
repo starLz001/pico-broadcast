@@ -1,0 +1,644 @@
+声明 WindowContainer
+========================================
+使用 WindowContainer 前，你需要声明它并设置它的属性。
+*默认 WindowContainer 和非默认 WindowContainer 有不同的声明方式：
+*默认的 WindowContainer 通过 AndroidManifest.xml进行声明。
+*非默认的 WindowContainer 必须在 mainApp 的 DSL 中进行声明，也可以根据需要同时在 AndroidManifest.xml 中进行声明。
+* 
+*声明默认的 WindowContainer
+*你需要为应用指定一个默认的空间容器。在应用启动时，默认的空间容器会首先被打开，展示应用的首个界面。
+* 
+*通过以下步骤将一个 WindowContainer 声明为默认的空间容器。
+*在 mainApp 中声明默认 WindowContainer
+*在 mainApp 的 SpatialAppScope 作用域内，调用 DefaultWindowContainer 函数来定义默认窗口的内容。
+* 
+*在 AndroidManifest.xml 中设置属性
+*在 AndroidManifest.xml 文件中，通过 <meta-data> 标签为默认的 WindowContainer 配置属性。这些属性定义了WindowContainer 的基础行为和外观。
+* 
+* 
+*属性列表
+*你可以为默认 WindowContainer 设置以下属性：
+*
+*声明非默认的 WindowContainer
+*你可以使用以下方法声明非默认的 WindowContainer 并设置它的属性。
+*在 mainApp 中使用 DSL 声明非默认的 WindowContainer 并设置它的属性。
+*在AndroidManifest.xml 文件中声明非默认的 WindowContainer 并设置它的属性。
+* 
+*使用静态 DSL 和 AndroidManifest.xml 声明非默认 WindowContainer
+*下面的示例代码同时使用静态 DSL 和 AndroidManifest.xml 文件声明非默认 WindowContainer。在静态 DSL 和 AndroidManifest.xml 中，WindowContainer 的 ID 都是 WindowContainerDSLStaticProp。
+ 
+ 
+* 
+*使用动态 DSL 和 AndroidManifest.xml 声明非默认 WindowContainer
+*下面的示例代码同时使用动态 DSL 和 AndroidManifest.xml 声明非默认 WindowContainer。在动态 DSL 和 AndroidManifest.xml 中，WindowContainer 的 ID 都是 WindowContainerDSLDynamicProp。
+ 
+ 
+* 
+*属性列表
+*你可以为非默认 WindowContainer 设置以下属性：
+**
+*WindowContainer 属性设置说明
+*属性生效优先级
+*属性配置遵循以下从高到低的优先级顺序：
+*使用动态 DSL 或静态 DSL 声明的属性。
+*在 AndroidManifest.xml 文件中配置的属性。
+当不同来源设置了相同的属性时，高优先级的配置会覆盖低优先级的配置。系统会合并所有来源的属性。
+ 
+如果某个属性未被赋值，则会采用以下系统默认值。
+ 
+*属性设置示例
+*下文将以 DSL 为例，对各个属性进行详细说明。
+*形态
+*你可以通过 form 属性来设置 WindowContainer 的形态。
+ 
+*尺寸
+*你可以设置 WindowContainer 的尺寸，包括长、宽、深度和长度单位。其中，深度设置仅对 Volumetric 窗口有效，Planar 窗口的深度固定为 640 dp。
+*设置尺寸
+*WindowContainer 的最终尺寸由两部分共同决定：其自身的 defaultSize 属性，以及其 content 参数所接收的 Composable 通过 Modifier.windowConstraints 所定义的内容尺寸范围。
+*WindowContainer 的默认尺寸需通过 defaultSize 来设置。代码示例如下：
+* 
+*此外，通过配合使用 WindowContainer 的 resizeType 属性与其 content 参数所接收的 Composable 的 Modifier.windowConstraints，你可以进一步约束该 WindowContainer 的尺寸。
+* 
+*不同的 resizeType 会影响 WindowContainer 在响应 Modifier.windowConstraints 时采用的策略。ContentMinSize 仅考虑最小尺寸约束（min）；ContentSize 同时考虑最小尺寸约束（min）和最大尺寸约束（max）。
+*代码示例如下：
+* 
+*Modifier.windowConstraints 与 resizeType 的协同规则：
+*当你同时在 AndroidManifest.xml 中设置 pico.spatial.windowcontainer.resizetype 并在代码中使用 Modifier.windowConstraints 时，resizetype 的值会决定 windowConstraints 的行为：
+*当 resizetype 值为 1 时：系统仅采纳 windowConstraints 设定的最小尺寸，其最大尺寸限制将被忽略。
+*当 resizetype 值为 2 时：windowConstraints 设定的最小和最大尺寸限制均会生效。
+*因此，若要使 windowConstraints 的最大尺寸限制生效，你必须将 pico.spatial.windowcontainer.resizetype 的值设置为 2。
+* 
+*控制缩放比例
+*通过 ContainerResizeRestriction 参数，你可以控制 WindowContainer 在调整大小过程中是保持固定比例，还是允许自由缩放。UniformResizable 表示固定比例；NonUniformResizable 表示自由缩放。
+*代码示例如下：
+* 
+*缩放
+*等比缩放
+*你可以通过  WindowContainer 的 defaultResizeRestriction 属性来控制其是否进行等比缩放。
+* 
+*需要注意的是，Volumetric 窗口的缩放始终为等比缩放。因此，该属性仅对 Planar 窗口生效，且默认情况下为非等比缩放。
+*随用户的视距自动缩放
+*你可以通过  WindowContainer 的 worldScale 属性来控制其是否随用户的视距而自动缩放。
+* 
+*标题栏
+*你可以通过 WindowContainer 的 defaultCaptionBarType 属性来控制其标题栏（Caption Bar）的显示和隐藏。
+ 
+*此外，每次点击 WindowContainer 时，标题栏都会重新显示。
+*打开时的位置
+*你可以通过 placement 属性控制 WindowContainer 打开时相对于锚点窗口的位置（上、下、左、右）以及偏移量，如下图所示。新 WindowContainer 的朝向会遵循系统定义，并自动旋转至与用户头部垂直的角度，以保证内容易于观看。
+* 
+以下是代码示例。在该示例中，如果存在锚点窗口，则新的 WindowContainer 打开时会显示在其右侧，并根据 useSystemDefaultOffset 决定是否使用默认偏移量。
+ 
+*底板
+*对于 Volumetric 窗口，可以通过设置 defaultVolumeBasePanelType 属性来决定是否显示其底板。
+* 
+* 
+*对齐模式
+*对于 Volumetric 窗口，你可以通过设置 volumeAlignment 属性来决定其对齐模式，从而控制终端用户在上下拖动操作过程中容器的姿态调整策略。
+*对齐模式分为 Gravity 和 Tilted 两种：
+*Gravity：重力模式。Volumetric 窗口总是垂直于地面。
+*Tilted：倾斜模式：Volumetric 窗口向用户方向倾斜。
+*
+代码示例如下：
+ 
+*视点变换
+*视点用于描述用户在水平方向上相对于 Volumetric 窗口的四个方位，并隐含角度信息。你可以通过 listener 来获取用户相对当前 Volumetric 窗口的方位，从而执行后续操作，例如根据用户的方位动态调整窗口内的内容或旋转 3D 模型。
+* 
+代码示例：
+ 
+*注意事项
+*如果你的应用的入口界面未通过 “DefaultWindowContainer + SpatialUI” 来声明，则无需在 SpatialAppScope 中添加 DefaultWindowContainer，也无需在 AndroidManifest.xml 文件中为默认的空间容器设置属性。
+*如果你的应用包含多个 Activity，但你不希望为每个 Activity 单独配置 WindowContainer 和相关属性，它们仍可正常启动，并自动归入名为 PICO_SYSTEM_DEFAULT_WINDOWCONTAINER 的 WindowContainer 中。请注意PICO_SYSTEM_DEFAULT_WINDOWCONTAINER 是 PICO Spatial SDK 保留的仅用于上述场景的专用名称，因此你不能将其用作自定义 WindowContainer 的名称。
+
+声明非默认的 WindowContainer 并不会使其在应用启动时自动打开。
+*应用启动时仅会自动打开默认空间容器；非默认的 WindowContainer 需要你在代码中显式调用 openWindowContainer() 才会打开。详情参阅《打开或关闭 WindowContainer》。
+
+*你只能为应用声明一个默认空间容器。
+*若需要将一个 Stage 设置为默认的空间容器，详情参阅《声明 Stage》。
+
+fun mainApp(scope: SpatialAppScope) = with(scope) {
+    DefaultWindowContainer {
+        MainPageContent() // 默认 WindowContainer 的内容，为一个 Composable 函数
+    }
+ }
+ 
+ @Composable
+ fun MainPageContent() {
+     // ...
+ }
+
+默认 WindowContainer 不支持配置其打开时所在的位置。
+
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <application
+        android:name=".platform.SpatialApplication"
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        android:fullBackupContent="@xml/backup_rules"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.SpatialApp"
+        tools:targetApi="31">
+
+        <activity
+            android:name=".platform.LaunchActivity"
+            android:exported="true"
+            android:theme="@style/Theme.SpatialApp">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+            <!-- 必选：WindowContainer 的唯一 ID -->
+            <meta-data
+                android:name="pico.spatial.windowcontainer.id"
+                android:value="your_window_container_name" />
+            <!-- 可选：设置形态 (Planar/Volumetric) -->
+            <meta-data
+                android:name="pico.spatial.windowcontainer.style"
+                android:value="1" />
+            <!-- 可选：设置默认尺寸 -->
+            <meta-data android:name="pico.spatial.windowcontainer.defaultsize" android:value="1280x720" />
+             <!-- 可选：开启毛玻璃背景效果 -->
+            <meta-data
+                android:name="pico.spatial.windowcontainer.materialbackground"
+                android:value="1" />
+            <!-- 其他 meta-data 的配置... -->
+
+        </activity>
+    </application>
+
+</manifest>
+
+
+
+*属性
+
+*描述
+
+pico.spatial.windowcontainer.id
+
+任意唯一的字符串，表示 WindowContainer 的名字。
+
+pico.spatial.windowcontainer.style 
+
+WindowContainer 的形态：
+*"0"（默认）：系统自动设置，当前的系统默认设置为 "1"
+*"1"：Planar
+*"2"：Volumetric
+
+pico.spatial.windowcontainer.defaultsize 
+
+WindowContainer 的默认尺寸，格式为 widthxheightxdepth，单位默认为 dp。其中 depth 为可选，且仅对 Volumetric 窗口有效。Planar 窗口的 depth 固定为 640 dp。
+*Planar 窗口的默认尺寸为 1280x720x640 dp。
+*Volumetric 窗口的默认尺寸为 960x960x960 dp。
+
+pico.spatial.windowcontainer.defaultsize.unit
+
+defaultSize 属性的单位：
+*“dp”（默认）：尺寸单位采用 dp
+*“meters”：尺寸单位采用 meters
+
+pico.spatial.windowcontainer.resizetype 
+
+WindowContainer 的最终尺寸由两部分共同决定：其自身的 defaultSize 属性，以及其 content 参数所接收的 Composable 通过 Modifier.windowConstraints 所定义的内容尺寸范围。
+*WindowContainer 的尺寸变化类型如下：
+*“0”（默认）：系统自动设置，当前的系统默认设置为 “1”。
+*“1”：只约束最小尺寸。WindowContainer 不能小于其内容的最小尺寸。
+*“2”：同时约束最大和最小尺寸。WindowContainer 不能小于其内容的最小尺寸，也不能大于其内容的最大尺寸。
+
+pico.spatial.windowcontainer.resizerestriction
+
+WindowContainer 的缩放方式：
+*“0”（默认）：灵活缩放 
+*“1”：等比例缩放
+
+pico.spatial.windowcontainer.worldscaletype
+
+
+WindowContainer 是否随用户的视距而自动缩放：
+*“0”（默认）：系统自动设置，当前的系统默认设置为 “1”。
+*“1”：窗口会根据与用户的距离自动调整尺寸，从而在视觉上保持固定大小。
+*“2”：窗口实际大小固定为默认设置，不会随与用户间距离的变化而变化。
+
+pico.spatial.windowcontainer.captionbar
+
+
+WindowContainer 的标题的显示/隐藏方式：
+*“0”（默认）：始终显示
+*“1”：若不点击标题栏（即移开 pointer），则 3 秒后自动隐藏
+
+pico.spatial.windowcontainer.materialbackground 
+
+是否为 WindowContainer 的背景板开启毛玻璃效果：
+*“0”：关闭
+*“1”（默认）：开启
+
+pico.spatial.windowcontainer.volumealignment 
+
+Volumetric 窗口的对齐模式：
+*“0”（默认）：重力模式， Volumetric 窗口的侧面方向与重力方向一致，底面与地面平行。
+*“1”：倾斜模式，Volumetric 窗口朝用户倾斜，正面正对用户。
+
+pico.spatial.windowcontainer.volumebasepanel
+
+Volumetric 窗口的底板是否显示/隐藏：
+*“0”（默认）：交互时显示底板
+*“1”：始终不显示底板
+
+*如果你在 AndroidManifest.xml 文件中声明了非默认的 WindowContainer，则必须同时在 DSL 中使用相同的容器 ID 对其进行声明。否则，该 WindowContainer 将无法加载任何 Composable 内容。
+*当你通过不同方法（例如 DSL 和 AndroidManifest.xml）为同一个属性设置了不同的值时，系统会根据一个既定的优先级顺序来决定最终哪个值会生效。详情参阅《 》。
+
+*静态 DSL 指将 WindowContainer 的属性直接作为 WindowContainer() 函数的命名参数传入。
+
+WindowContainer(
+    "WindowContainerDSLStaticProp",
+    form = Form.Volumetric,
+    resizeType = ContainerResizeType.ContentMinSize,
+    defaultSize = WindowContainerSize(width = 800.dp, height = 600.dp),
+    defaultResizeRestriction = ContainerResizeRestriction.NonUniformResizable,
+) {
+    SampleBase("WindowContainerDSLStaticProp") { WindowContainerDSLStaticProp() }
+}
+
+<activity
+    android:name=".containers.StaticDSLWindowContainerActivity"
+    android:configChanges="screenLayout|screenSize|smallestScreenSize|orientation"
+    android:exported="true">
+
+    <!-- WindowContainer's name -->
+    <meta-data
+        android:name="pico.spatial.windowcontainer.id"
+        android:value="WindowContainerDSLStaticProp" />
+    <meta-data
+        android:name="pico.spatial.windowcontainer.resizetype"
+        android:value="2" />
+    <!-- WindowContainer's style -->
+    <meta-data
+        android:name="pico.spatial.windowcontainer.style"
+        android:value="1" />
+    <!-- Default size of the WindowContainer-->
+    <meta-data
+        android:name="pico.spatial.windowcontainer.defaultsize"
+        android:value="500x500" />
+    <!-- WindowContainer's resize restriction -->
+    <meta-data
+        android:name="pico.spatial.windowcontainer.resizerestriction"
+        android:value="1" />
+    <!-- WindowContainer's volume alignment -->
+    <meta-data
+        android:name="pico.spatial.windowcontainer.volumealignment"
+        android:value="0" />
+    <!-- WindowContainer's volume base panel -->
+    <meta-data
+        android:name="pico.spatial.windowcontainer.volumebasepanel"
+        android:value="1" />
+    <!-- WindowContainer's caption bar -->
+    <meta-data
+        android:name="pico.spatial.windowcontainer.captionbar"
+        android:value="1" />
+
+    <meta-data
+        android:name="pico.spatial.windowcontainer.materialbackground"
+        android:value="1" />
+
+</activity>
+
+动态 DSL 指通过一个专属的 properties = { ... } Lambda 闭包块来集中赋值和管理 WindowContainer 属性。
+
+WindowContainer(
+    "WindowContainerDSLDynamicProp",
+    form = Form.Volumetric,
+    properties = {
+        defaultSize = WindowContainerSize(width = 300.dp, height = 310.dp)
+        resizeType = ContainerResizeType.ContentMinSize 
+        volumeAlignment = VolumeAlignment.Tilted 
+        defaultResizeRestriction = ContainerResizeRestriction.UniformResizable 
+        enableMaterialBackground = true
+        targetActivity = StaticDSLWindowContainerActivity::class.java
+    },
+) {
+    SampleBase("WindowContainerDSLDynamicProp") { WindowContainerDSLDynamicProp() }
+}
+
+<activity
+    android:name=".containers.DynamicDSLWindowContainerActivity"
+    android:configChanges="screenLayout|screenSize|smallestScreenSize|orientation"
+    android:exported="true">
+
+    <!-- WindowContainer's name -->
+    <meta-data
+        android:name="pico.spatial.windowcontainer.id"
+        android:value="WindowContainerDSLDynamicProp" />
+    <meta-data
+        android:name="pico.spatial.windowcontainer.resizetype"
+        android:value="2" />
+    <!-- WindowContainer's style -->
+    <meta-data
+        android:name="pico.spatial.windowcontainer.style"
+        android:value="1" />
+    <!-- Default size of the WindowContainer-->
+    <meta-data
+        android:name="pico.spatial.windowcontainer.defaultsize"
+        android:value="500x500" />
+    <!-- WindowContainer's resize restriction -->
+    <meta-data
+        android:name="pico.spatial.windowcontainer.resizerestriction"
+        android:value="1" />
+    <!-- WindowContainer's volume alignment -->
+    <meta-data
+        android:name="pico.spatial.windowcontainer.volumealignment"
+        android:value="0" />
+    <!-- WindowContainer's volume base panel -->
+    <meta-data
+        android:name="pico.spatial.windowcontainer.volumebasepanel"
+        android:value="1" />
+
+    <meta-data
+        android:name="pico.spatial.windowcontainer.materialbackground"
+*        android:value="0" />
+
+</activity>
+
+
+
+DSL 属性
+
+AndroidManifest.xml 属性
+
+描述
+
+id 
+
+pico.spatial.windowcontainer.id
+
+任意唯一的字符串，表示 WindowContainer 的名字。
+
+form  
+ 
+
+pico.spatial.windowcontainer.style
+
+WindowContainer 的形态：
+*Form.Automatic（默认）：系统自动设置，当前的系统默认设置为 Form.Planar
+*Form.Planar
+*Form.Volumetric
+
+resizeType 
+ 
+
+pico.spatial.windowcontainer.resizetype 
+
+WindowContainer 的最终尺寸由两部分共同决定：其自身的 defaultSize 属性，以及其 content 参数所接收的 Composable 通过 Modifier.windowConstraints 所定义的内容尺寸范围。
+*WindowContainer 的尺寸变化类型如下：
+*ContainerResizeType.Automatic（默认）：系统自动设置，当前的系统默认设置为 ContainerResizeType.ContentMinSize。
+*ContainerResizeType.ContentMinSize：只约束最小尺寸。WindowContainer 不能小于其内容的最小尺寸。
+*ContainerResizeType.ContentSize：同时约束最大和最小尺寸。WindowContainer 不能小于其内容的最小尺寸，也不能大于其内容的最大尺寸。
+
+defaultResizeRestriction 
+
+pico.spatial.windowcontainer.resizerestriction
+
+WindowContainer 的缩放方式：
+*ContainerResizeRestriction.NonUniformResizable（默认）：灵活缩放 
+*ContainerResizeRestriction.UniformResizable：等比例缩放
+
+worldScale 
+
+pico.spatial.windowcontainer.worldscaletype
+
+WindowContainer 是否随用户的视距而自动缩放：
+*WorldScale.Automatic（默认）：系统自动设置，当前的系统默认设置为 WorldScale.Dynamic。
+*WorldScale.Dynamic：窗口会根据与用户的距离自动调整尺寸，从而在视觉上保持固定大小。
+*WorldScale.Fixed：窗口实际大小固定为默认设置，不会随与用户间距离的变化而变化。
+
+defaultSize 
+
+pico.spatial.windowcontainer.defaultsize 
+
+WindowContainer 的默认尺寸，格式为 WindowContainerSize(width, height, depth)。尺寸的单位由传入的数据类型决定：
+*若数据类型为 Dp，则单位为 dp；
+*若数据类型为 Float，则单位为 meters。
+*需要注意的是，depth 为可选参数，且仅对 Form.Volumetric 窗口有效。Planar 窗口的 depth 固定为 640 dp。
+*窗口尺寸的默认值如下：
+*Form.Planar 窗口的默认尺寸为 1280x720x640 dp。
+*Form.Volumetric 窗口的默认尺寸为 1280x1280x1280 dp。
+
+defaultCaptionBarType 
+
+pico.spatial.windowcontainer.captionbar
+
+WindowContainer 的标题栏的显示/隐藏方式：
+*CaptionBarType.Default（默认）：始终显示
+*CaptionBarType.AutomaticHide：若不点击标题栏（即移开 pointer），则 3 秒后自动隐藏
+
+enableMaterialBackground 
+
+pico.spatial.windowcontainer.materialbackground 
+
+是否为 WindowContainer 的背景板开启毛玻璃效果：
+*true（默认）：开启
+*false：关闭
+
+volumeAlignment 
+
+
+pico.spatial.windowcontainer.volumealignment 
+
+Volumetric 窗口的对齐模式：
+*VolumeAlignment.Gravity（默认）：重力模式， Volumetric 窗口的侧面方向与重力方向一致，底面与地面平行。
+*VolumeAlignment.Tilted：倾斜模式，Volumetric 窗口朝用户倾斜，正面正对用户。
+* 
+
+defaultVolumeBasePanelType 
+
+
+pico.spatial.windowcontainer.volumebasepanel
+
+Volumetric 窗口的底板是否显示/隐藏：
+*VolumeBasePanelType.Default（默认）：交互时显示底板
+*VolumeBasePanelType.None：始终不显示底板
+* 
+
+// 打开容器时动态生效的属性通过propertiesDSL注册
+WindowContainer(
+    id = "Sample",
+    form = Form.Volumetric,
+    properties = {
+        defaultSize = WindowContainerSize(width = 300.dp, height = 310.dp)
+        resizeType = WindowContainerPropertiesManager.resizeType
+    },
+) {
+    Sample()
+}
+// 注册静态属性的容器
+WindowContainer(
+    "Sample",
+    form = Form.Planar,
+    defaultSize = WindowContainerSize(width = 1600.dp, height = 1600.dp),
+    enableMaterialBackground = false,
+) {
+    Sample()
+}
+
+defaultSize = null, 
+resizeType = ContainerResizeType.Automatic,
+defaultResizeRestriction = ContainerResizeRestriction.NonUniformResizable,
+form = Form.Planar,
+volumeAlignment = VolumeAlignment.Gravity,
+defaultVolumeBasePanelType = VolumeBasePanelType.Default,
+defaultCaptionBarType = CaptionBarType.Default,
+worldScale = WorldScale.Automatic,
+
+WindowContainer(
+    ...
+    form = Form.Volumetric,
+    ...
+) {...}
+
+WindowContainer(
+    id = "xxxx",
+    // 通过 defaultSize 指定默认尺寸，单位可以为 “米” 或 “dp”
+*    // `depth` 参数仅对 Voluemtric 有效
+    defaultSize = WindowContainerSize(width = 1.2f, height = 0.6f, depth = 0.1f, unit = LengthUnit.Meters),
+    defaultSize = WindowContainerSize(width = 1500.dp, height = 750.dp, depth = 100.dp),
+    form = Form.Planar,
+) {
+    ...
+}
+
+Modifier.windowConstraints 不仅对容器尺寸施加约束，同时也会约束其子内容的尺寸，这一点与 Modifier.sizeIn() 的效果相同。
+
+// 容器大小被限制为 500x700x300 dp
+WindowContainer(id = "ResizeSample", resizeType = ContainerResizeType.ContentSize) {
+    Box(
+        modifier = Modifier.windowConstraints(width = 500.dp, height = 700.dp, depth = 300.dp)
+    ) {...}
+}
+
+<meta-data
+    android:name="pico.spatial.windowcontainer.resizetype"
+    android:value="2" />
+
+// 在尺寸调整过程中，WindowContainer 的尺寸不能小于 500x500x500 dp
+WindowContainer(
+    id = "ResizeSample",
+    resizeType = ContainerResizeType.ContentMinSize,
+    defaultResizeRestriction = ContainerResizeRestriction.UniformResizable // 根据实际需求，你可以将 UniformResizable 替换成 NonUniformResizable
+) {
+    Box(
+        modifier =
+            
+            Modifier.windowConstraints(minWidth = 500.dp, minHeight = 500.dp, minDepth = 500.dp)
+    ) {}
+}
+
+WindowContainer(
+    ...
+*    defaultResizeRestriction = ContainerResizeRestriction.UniformResizable, // 等比缩放
+    ...
+) {...}
+
+WindowContainer(
+    ...
+    // 窗口会根据与用户的距离自动调整尺寸，从而在视觉上保持固定大小。
+    worldScale = WorldScale.Dynamic, 
+    ...
+) {...}
+
+WindowContainer(
+    ...
+*    defaultCaptionBarType = defaultCaptionBarType.Default, // 一直显示
+    ...
+) {...}
+
+WindowContainer(
+    id = "xxxx",
+    form = Form.Planar,
+    placement = {
+       // 通过条件选出锚点窗口
+       containers.firstOrNull { it.state.isFocused }?.let { 
+           Placement.placement(
+               it,
+               Placement.Orientation.Right,
+               if (useSystemDefaultOffset) Dp.Unspecified else offsetState.dp
+           )
+       } ?: Placement.none()
+    }
+)
+
+WindowContainer(
+    ...
+*    defaultVolumeBasePanelType = DefaultVolumeBasePanelType.Default, // 交互时显示底板
+    ...
+) {...}
+
+
+
+*Gravity
+
+*Tilted
+
+* 
+
+* 
+
+WindowContainer(
+    ...
+    volumeAlignment = VolumeAlignment.Gravity,
+    ...
+) {...}
+
+@Composable
+fun VolumeViewPointSample() {
+    // 获取当前的 ViewPoint 管理器
+    val viewpointManager = LocalVolumeViewPointManager.current
+    // 使用 Compose 的状态绑定当前 ViewPoint
+    val currentViewPoint by viewpointManager.viewpoint
+    // 监听 ViewPoint 变化的生命周期绑定
+    DisposableEffect(viewpointManager) {
+        val listener =
+            object : VolumeViewPointListener {
+                override fun onViewpointChanged(viewpoint: ViewPoint) {
+                    // 当视角发生变化时回调，可在此执行自定义逻辑（如 UI 更新、通知提示等）
+                }
+            }
+        viewpointManager.addViewPointListener(listener)
+        onDispose { viewpointManager.removeViewPointListener(listener) }
+    }
+
+    // SpatialView 渲染容器
+    SpatialView(
+        modifier = Modifier.fillMaxSize(),
+        initial = { content, attachments ->
+            val entity =
+                withContext(Dispatchers.IO) { Entity.loadFrom(Source.assets("alarm.usdz")) }
+            entity.setName("alarm")
+            content.addEntity(entity)
+        },
+        // 每帧或数据更新时调用，用于动态更新实体状态
+        update = { content, attachments ->
+            content.entities
+                .firstOrNull { it.enabled && it.getName() == "alarm" }
+                ?.let {
+                    // 获取并更新 TransformComponent 来控制 entity 的旋转
+                    it.components[TransformComponent::class.java]?.apply {
+                        val eulerAngles = eulerAngles
+                        this.setEulerAngles(
+                            EulerAngles(
+                                roll = eulerAngles.roll,
+                                pitch = eulerAngles.pitch,
+                                yaw = currentViewPoint.orientation.degree
+                            )
+                        )
+                    }
+                }
+        }
+    )
+}
+
+该属性仅适用于 Volumetric 窗口。
+
+该属性仅适用于 Volumetric 窗口。

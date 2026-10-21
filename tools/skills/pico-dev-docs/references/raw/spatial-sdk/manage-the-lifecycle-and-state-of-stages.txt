@@ -1,0 +1,189 @@
+管理 Stage 的生命周期和状态
+========================================
+你可以管理 Stage 的生命周期和状态，从而更好地控制空间应用的内容显示、用户交互和资源使用。
+*管理 Stage 的生命周期
+*你可以使用 androidx.lifecycle 来监听 Stage 的生命周期。Stage 的生命周期和 androidx.lifecycle 有如下对应关系：
+*
+*通常情况下，Stage 生命周期中各个环节的事件触发情况如下。
+ 
+*以下代码示例展示了如何在 Composable 方法中监听该 Composable 所在的 Stage 的生命周期。
+ 
+*管理 Stage 的状态
+*Stage 的状态定义如下：
+**
+*你可以通过以下代码获取 Stage 的状态：
+ 
+*你可以通过监听 Stage 的状态变化，在特定状态下执行特定操作。和 Stage 的状态相关的 SpatialContainerStateEvent 事件如下：
+**
+*一般而言，若 Stage 为默认空间容器，且在打开 Stage 时，没有同步打开 WindowContainer，则 Stage 的状态可能会有如下情况：
+ 
+*以下代码展示如何在 Composable 方法中监听该 Composable 所在的 Stage 的状态变化。
+ 
+*API 参考
+*关于 Lifecycle.Event 的相关接口及说明，参阅 Android 官方文档。
+*关于 SpatialContainerStateEvent 的相关接口及说明，参阅 API 参考。根据你所处的地理位置选择合适的文档链接：
+*中国大陆：https://developer-cn.picoxr.com/spatial-api/index.html
+*非中国大陆：https://developer.picoxr.com/spatial-api/index.html
+
+
+
+
+Lifecycle.Event
+
+Stage 的生命周期
+
+ON_CREATE
+
+表示 Stage 已被创建，但对用户还不可见。
+*该事件会在 Stage 首次打开时首先被触发，如果需要再次触发该事件，需要关闭 Stage 后再重新打开。
+
+ON_START
+
+表示 Stage 已启动并对用户可见，但未进入前台交互状态。
+*该事件会在 Stage 打开时，紧跟着 ON_CREATE 事件被触发。或者在应用退回后台之后又重新打开时被触发。
+
+*ON_RESUME
+
+表示 Stage 进入前台交互状态。
+*该事件会在 Stage 打开时，紧跟着 ON_START 事件被触发。常用于需要用户交互的操作，如启动相机预览、开始位置更新、恢复音视频播放等。
+
+ON_PAUSE
+
+表示 Stage 退回后台，此时不可见。
+*该事件会在用户按下 Home 键并且确认“返回主界面”后，首先被触发，紧接着 ON_STOP 事件会被触发。
+
+ON_STOP
+
+表示 Stage 已经停止运行逻辑。
+*该事件紧跟着 ON_PAUSE 事件，在 Stage 关闭的前一帧触发，常用于释放一些资源，如注销监听、停止仅在界面可见时需要运行的任务等。
+
+ON_DESTROY
+
+表示 Stage 即将被销毁。
+*当用户长按菜单栏图标选择关闭应用，或 closeStage 函数被调用时，会直接触发该事件。
+
+若 Stage 为默认空间容器：
+[启动应用]
+ON_CREATE → ON_START → ON_RESUME
+
+[用户按下 Home 键，确定返回主界面后，将 Stage 置于后台]
+ON_PAUSE → ON_STOP
+
+[用户点击应用图标重新打开 Stage]
+ON_START → ON_RESUME
+
+[用户通过长按菜单栏图标，然后选择关闭应用]
+ON_DESTROY
+---------------------------------------------------------------------------------------------
+若 WindowContainer 为默认空间容器，在打开 WindowContainer 时同步打开了一个 Stage：
+[启动应用]
+ON_CREATE → ON_START → ON_RESUME
+
+[用户按下手柄上的 Home 键，将 Stage 置于后台]
+ON_PAUSE → ON_STOP
+
+[用户通过菜单栏重新打开 Stage]
+ON_START → ON_RESUME
+
+[用户通过菜单栏关闭 Stage；或 Stage 通过其他方式被关闭，如 closeStage 函数]
+ON_DESTROY
+
+@Composable
+fun LifecycleExample() {
+    val lifecycleOwner = LocalLifecycleOwner.current
+    DisposableEffect(key1 = Unit) {
+        val observer = LifecycleEventObserver { _, event ->
+            Log.i("LifecycleExample", "onLifecycleEvent: $$event")
+            if (event == Lifecycle.Event.ON_CREATE) {
+                // 执行自定义逻辑
+            } else if (event == Lifecycle.Event.ON_START) {
+                // 执行自定义逻辑
+            } else if (event == Lifecycle.Event.ON_RESUME) {
+                // 执行自定义逻辑
+            } else if (event == Lifecycle.Event.ON_PAUSE) {
+                // 执行自定义逻辑
+            } else if (event == Lifecycle.Event.ON_STOP) {
+                // 执行自定义逻辑
+            } else if (event == Lifecycle.Event.ON_DESTROY) {
+                // 执行自定义逻辑
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
+    Box(modifier = Modifier.fillMaxSize().background(Color.White),contentAlignment = Alignment.Center) {
+        Text(text = "LifecycleExample", fontSize = 72.sp)
+    }
+}
+
+
+
+属性
+
+类型
+
+描述
+
+isFocused
+
+State<Boolean>
+
+当前 Stage 是否获得焦点。
+
+@Composable
+fun GetContainerStateExample() {
+    val isFocus by LocalSpatialContainerStateManager.current.isFocused
+    Column {
+        Text(text = "isFocus = $$isFocus")
+    }
+}
+
+
+
+事件
+
+描述
+
+ON_FOCUSED
+
+Stage 获得焦点时触发。Stage 打开时会自动获得焦点，因此也会立即触发此事件。
+
+ON_UNFOCUSED
+
+Stage 失去焦点时触发。
+
+[启动应用]
+ON_FOCUSED
+
+[用户按下手柄上的 Home 按键，退出 Stage 并弹出 Launcher]
+ON_UNFOCUSED
+
+[用户点击应用图标重新打开 Stage]
+ON_FOCUSED
+
+@Composable
+fun ObserveContainerStateExample() {
+    val stateOwner = LocalSpatialContainerStateOwner.current
+    DisposableEffect(key1 = Unit) {
+        val observer: SpatialContainerStateObserver = object : SpatialContainerStateObserver {
+            override fun onStateChanged(
+                source: SpatialContainerStateOwner,
+                event: SpatialContainerStateEvent
+            ) {
+                Log.d("SpatialContainerState", "onStateChange: $$event")
+                if (event == SpatialContainerStateEvent.ON_FOCUSED) {
+                    // 当容器获得焦点时，执行自定义逻辑
+                } else if (event == SpatialContainerStateEvent.ON_UNFOCUSED) {
+                    // 当容器失去焦点时，执行自定义逻辑
+                }
+            }
+        }
+        stateOwner.stateObservable.addObserver(observer)
+        onDispose {
+            stateOwner.stateObservable.removeObserver(observer)
+        }
+    }
+    Box(modifier = Modifier.fillMaxSize().background(Color.White),contentAlignment = Alignment.Center) {
+        Text(text = "ObserveContainerStateExample", fontSize = 72.sp)
+    }
+}

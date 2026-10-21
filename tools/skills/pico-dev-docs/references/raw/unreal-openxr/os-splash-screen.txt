@@ -1,0 +1,18 @@
+系统启动画面
+========================================
+在用户点击一款 PICO 应用的图标后，PICO 系统需要一段时间进行初始化，加载你的应用。该画面即为系统启动画面。PICO Unreal OpenXR 支持添加自定义图片作为加载应用时的画面，提示用户应用在正常加载。
+*本文档介绍如何在虚幻引擎中设置系统启动画面。
+*环境要求
+*PICO 设备：PICO Neo3、PICO 4、PICO 4 Pro、PICO 4 Enterprise、PICO G3、PICO 4 Ultra 或 Project Swan（PICO OS 6）
+*前提条件
+你已在引擎中安装并启用了 PICO Unreal OpenXR 插件。详情参考 PICO Unreal OpenXR 快速开始。
+*操作步骤 
+你可以通过在 UE 编辑器中添加 OS Splash Screen，例如你的应用图标图片，作为系统启动画面，优化用户的等待体验。具体步骤如下： 
+*在 UE 编辑器中打开项目。
+*在上方工具栏，点击 Edit > Project Settings > Plugins > PICO OpenXR。
+*移动到 Mobile 选项卡下，勾选 Is OS Splash Used 选项。启用系统启动画面。
+*在 OS Splash Screen 选项添加自定义图片的路径。图片的格式需为 PNG 格式，大小不可超过 1024px * 1024px，推荐宽高比例为 16：9、4：3 和 1：1。
+* 
+*添加图片后，该图片会被命名为 pico_splash.png 拷贝至工程目录下，允许被 Git 管理。打包应用时，该图片会被打包至 APK 文件中。
+* 
+

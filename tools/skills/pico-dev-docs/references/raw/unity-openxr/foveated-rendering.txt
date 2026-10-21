@@ -1,0 +1,85 @@
+注视点渲染
+========================================
+在人类的视觉系统中，人眼视力分为中心视力和周边视力两部分。中心视力提供精确和细节的视觉内容，周边视力提供广角视野范围的画面。两者的视敏度差别催生了 VR 领域常用的注视点渲染（Foveation Rendering）技术。 
+注视点渲染通过为视野中心提供无损分辨率，同时降低周边视野（人眼焦点区域之外）分辨率的方式来大幅降低计算复杂度，优化 VR 场景渲染效果。 
+*环境要求
+*静态注视点渲染
+*PICO 设备型号：PICO Neo3 系列、PICO 4 系列、PICO 4 Ultra 系列
+*PICO 设备系统版本：5.8.0 及以上
+*眼动追踪注视点渲染
+*PICO 设备型号：搭载眼动追踪摄像头的 PICO 设备，包括 PICO Neo3 Pro Eye、PICO 4 Pro 和 PICO 4 Enterprise
+*PICO 设备系统版本：5.8.0 及以上
+*注视点渲染模式
+SDK 提供两种模式的注视点渲染：静态注视点渲染、眼动追踪注视点渲染。说明如下：
+*
+与 FFR 相比，ETFR 可以追踪用户当前真实的注视点位置，在眼球周围区域分辨率的降低上可以比 FFR 的浮动更大。FFR 由于无法捕捉到用户的注视点位置，只能假设用户大概率注视着屏幕中央，在分辨率的降低方面比 ETFR 更加保守。因此，使用 ETFR 可以为应用降低更多的 GPU 消耗。
+*注视点渲染等级
+PICO 提供三个注视点渲染等级：Low（低级）、Medium（中级）、High（高级）。三个等级对分辨率的影响如下图所示：
+* 
+*关于下采样 
+*下采样是一种渲染优化技术，需与静态注视点渲染配合使用。开启后，眼部纹理将采用下采样的布局方式，消除 FFR 产生的视野边缘低分辨率区域的视觉伪影，提高应用性能。用户在移动时，设备的画面过渡也将更平滑流畅，从而减少眩晕感。
+* 
+*重要提示
+*目前，静态注视点渲染支持 OpenGL 和 Vulkan，眼动追踪注视点渲染仅支持 OpenGL。
+*对于 OpenGL 来说，若想使用注视点渲染，需将 Render Mode (渲染模式) 设置为 Multi-pass。你可以前往 Edit > Project Settings > XR Plug-in Management > OpenXR > Render Mode 进行设置。
+* 
+*启用注视点渲染
+*前往 Edit > Project Settings > XR Plug-in Management > OpenXR。
+*在 OpenXR Feature Groups 区域，勾选 OpenXR Foveation 选框。
+* 
+*点击 PICO Support 选框右侧的设置按钮。
+*你将看到 PICO Support 窗口。
+* 
+*勾选 Foveation Enable 选框。
+*选择 Foveation Rendering Mode (注视点渲染模式)。选项如下：
+*Fixed Foveated Rendering：静态注视点渲染
+*Eye Tracked Foveated Rendering：眼动追踪注视点渲染
+*选择 Foveation Level (注视点渲染等级)。选项如下：
+*Off：关闭
+*Low：低级
+*Medium：中级
+*High：高级
+*(推荐) 勾选 Subsampling 选框，开启下采样。
+*已知问题
+*在 Unity 2021 和 2022 版本中，使用注视点渲染会导致帧率降低。
+*下采样功能仅支持在 1.8.2 版本的 Unity OpenXR Plugin 上使用，升级版本后会导致该功能失效。
+*API 参考
+*supportsFoveationEyeTracked
+ 
+判断当前设备是否支持眼动追踪注视点渲染。
+返回值
+*true：支持
+*false：不支持
+*foveatedRenderingLevel
+ 
+获取或设置当前应用的注视点渲染等级。
+ 
+
+
+
+模式
+
+说明
+
+静态注视点渲染
+
+在静态注视点渲染（Fixed Foveated Rendering, FFR）中，视野焦点被固定于视口中心位置，分辨率由中心向周围递减。
+
+眼动追踪注视点渲染
+
+眼动追踪注视点渲染（Eye Tracked Foveated Rendering, ETFR）根据眼球的注视方向，以全分辨率渲染眼球注视区域的图像，以更低分辨率渲染边缘区域图像。随着眼球的移动，全分辨率渲染区域也会相应地变化。使用 ETFR 可降低应用运行时设备的 GPU 负载。
+
+下采样功能仅支持 Vulkan 图形接口。
+
+public static bool supportsFoveationEyeTracked
+
+public static FoveatedRenderingLevel foveatedRenderingLevel
+
+// FoveatedRenderingLevel 枚举
+public enum FoveatedRenderingLevel
+{
+    Off = 0,
+    Low = 1,
+    Medium = 2,
+    High = 3
+}

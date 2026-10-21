@@ -1,0 +1,96 @@
+空间缩放
+========================================
+空间缩放功能用于在三维方向上对 WindowContainer 与 Stage 内的 SpatialModelView 和 SpatialView 进行缩放。SpatialModelView 和 SpatialView 中包含的 2D 与 3D 内容也将同步按比例缩放。
+*重要提示
+*空间缩放仅影响物体的最终渲染效果，不影响物体实际占用的空间。
+*在 PICO 空间应用中，2D 物体携带深度信息。通过控制 2D 物体在 Z 轴上的缩放系数，可以控制内容在空间中的远近。
+*相关接口
+你可以通过 scale3d() 接口来实现空间缩放功能：
+ 
+*锚点说明
+*anchor 参数用于设置本次缩放的锚点。锚点是一个 3D 坐标。当对内容进行缩放时，锚点的位置会被固定，其余部分将参照该锚点并按所设置的系数缩放。若不设置 anchor 参数，则默认将当前的视图的中心点作为锚点，对应归一化坐标 (0.5, 0.5, 0.5)。若锚点位于被缩放物体之外，则缩放物体时，该物体上的每一点与锚点间的距离也会乘以缩放系数。
+*效果展示：
+*锚点在物体内（包括边线和顶点）
+ 
+*锚点在物体外
+ 
+*代码示例
+示例一：分别指定 SpatialView 在 X、Y 和 Z 轴上的缩放系数：
+ 
+*示例二：使用统一的缩放系数来缩放 SpatialView：
+ 
+*示例三：通过 Lambda 定义 scale3D 参数，分别指定 SpatialView 在 X、Y 和 Z 轴上的缩放系数：
+ 
+*
+
+
+// 接口一：缩放内容，可分别指定 X、Y 或 Z 轴上的缩放系数
+Modifier.scale3D(x:Float, y:Float, z:Float, anchor:NormalizedPoint3D)
+
+// 接口二：使用统一的缩放系数来缩放内容
+Modifier.scale3D(scale:Float , anchor:NormalizedPoint3D)
+
+***
+
+*原始物体：
+* 
+
+*锚点位于中心，缩放系数为 0.5：
+* 
+
+*锚点位于左上角，缩放系数为 0.5：
+* 
+
+***
+
+*原始物体：
+* 
+
+*锚点在外面，缩放系数为 0.5：
+* 
+
+*锚点在外面，缩放系数为 0.5：
+* 
+
+SpatialView(
+    modifier = Modifier
+        .scale3D(
+            x = 0.5f,
+            y = 0.5f,
+            z = 0.5f, 
+            anchor = NormalizedPoint3D.Center),
+    initial = { content, attachments ->
+       ....
+    },
+    attachments = {
+       ....
+    }
+) 
+
+SpatialView(
+    modifier = Modifier.scale3D(scale = 0.5f, pivot = NormalizedPoint3D.Center),
+    initial = { content, attachments ->
+       ....
+    },
+    attachments = {
+       ....
+    }
+)
+
+SpatialView(
+    modifier =
+        Modifier.scale3D {
+            Scale3D(
+                scaleX = 0.5f,
+                scaleY = 0.5f,
+                scaleZ = 0.5f,
+                pivot = NormalizedPoint3D.Center,
+            )
+        },
+    initial = { content, attachments ->
+       .....
+    },
+    attachments = {
+       .....
+    },
+)

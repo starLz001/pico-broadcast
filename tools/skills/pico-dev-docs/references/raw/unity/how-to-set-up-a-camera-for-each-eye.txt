@@ -1,0 +1,46 @@
+添加左右眼相机并分别显示内容
+========================================
+本页介绍如何为 XR Rig（或 XR Origin） 添加左右眼相机并分别显示内容。
+开发者需完成四个主要操作：设置主相机，添加左右眼相机，关联物体和 Layer，关联 Layer 和左右眼相机。
+*第一步：设置主相机
+按以下步骤设置主相机：
+*在 Unity 编辑器中打开项目。
+*选中 XR Rig。
+*右侧 Inspector 面板中显示 XR Rig 设置框。
+*在 Camera Game Object 字段处，选择主相机对象（例如： Main Camera ）。
+* 
+* 
+*点击主相机对象（例如： Main Camera ）。
+*右侧 Inspector 面板显示 Tracked Pose Driver 设置框。
+*在 Camera 设置面板处，将 Target Eye 设置为 None (Main Display)。
+* 
+*(可选) 按需配置相关参数。
+* 
+*第二步：添加左右眼相机
+按以下步骤在主相机节点下添加左右眼相机。
+*在 Main Camera 对象下创建两个子相机，并根据实际情况命名子相机（例如： LeftCamera 和 RightCamera ）。
+* 
+*点击左右眼相机。
+*右侧 Inspector 面板中显示 Camera 设置框。
+*将左眼相机的 Target Eye 设置为 Left。
+*点击右眼相机。
+*右侧 Inspector 面板中显示 Camera 设置框。
+*将右眼相机的 Target Eye 设置为 Right。
+*第三步：关联物体和 Layer
+在关联物体和左右眼相机前，需将物体与 Layer 进行关联。步骤如下：
+*选择目标物体（以 Cube 为例）。
+*在 Inspector 面板的 Layer 字段处，为 Cube 选择一个或多个 Layer。
+*物体将与所选 Layer 关联。若无目标 Layer，可点击 Add Layer 进行添加，例如：添加 LeftCamera Layer 和 RigtCamera Layer。
+* 
+*第四步：关联 Layer 和左右眼相机
+按以下步骤关联 Layer 和左右眼相机。关联后，左右眼相机将分别显示所选 Layer 关联的物体。
+*点击左眼相机。
+*在 Culling Mask 字段处，为左眼相机选择 Layer。
+* 
+*点击右眼相机。
+*在 Culling Mask 字段处，为右眼相机选择 Layer。
+* 
+
+
+*通常来说，该字段已默认选择主相机对象。
+*主相机对象名称由开发者自定义。

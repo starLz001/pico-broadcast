@@ -1,0 +1,209 @@
+Vibrant Style
+========================================
+Vibrant Style 是 SpatialUI 提供的动态混色方案，会根据背景色与亮度实时调整元素的明暗，适用于需要在复杂背景上保持可读性和视觉一致性的界面。
+* 
+*应用级开关
+你可以通过 meta-data com.pico.spatial.ui.isVibrant 来统一开启/关闭整个应用内的 Vibrant 效果。
+*true：开启 Vibrant 效果。SDK 默认已为应用开启 Vibrant 效果。
+*false：关闭 Vibrant 效果。应用将回退至标准 Android 2D 渲染模式， 你需要自行适配 UI 样式以确保显示效果。
+*设置该 meta-data 后，需重启应用以使其生效。
+ 
+*使用纯 Vibrant 模式
+*在纯 Vibrant 模式下，系统会根据 Vibrant 效果的等级动态调整文本等元素的明暗，以实现视觉对比。
+*Vibrant 效果的等级
+纯 Vibrant 模式提供以下等级的 Vibrant 效果：darkest、ultradark、darker、semidark、dark、neutral、light、semilight、ultralight。
+*示意图如下：
+* 
+*使用方式
+SpatialUI 提供了一个特殊颜色值 Color.Vibrant，搭配 Modifier.vibrantEffect 使用即可启用纯 Vibrant 模式。例如：
+ 
+最终渲染效果如下：
+* 
+你也可以使用纯 Vibrant 模式来绘制文本。需注意的是，Text 组件的 vibrant 参数优先级高于 Modifier.vibrantEffect。
+ 
+*使用限制
+*纯 Vibrant 模式的使用限制如下：
+*仅支持绘制单色场景，例如单色背景、文字。
+*不支持绘制图片。
+*不支持渐变色。
+*当关闭纯 Vibrant 模式并回退至 Android 2D 渲染时，Color.Vibrant 会呈现为黑色，请勿在非 Vibrant 模式下使用此色值。
+*混合 Vibrant 效果与颜色
+*启用 Vibrant 模式后，常规颜色可以与不同等级的 Vibrant 效果混合。
+*混合规则
+*下表提供了 “纯 Vibrant 模式” 与 “Vibrant 效果与纯色混合” 两种情况下的渲染效果对比示例：
+*
+*使用方式
+*在 Modifier.vibrantEffect()中，设置 Vibrant 效果的等级，然后在 Modifier.background() 中设置背景的颜色。代码示例如下：
+* 
+*Vibrant 效果的可传递性
+*传递 Vibrant 效果
+*在 Compose 中，RenderNode 以树的结构组织。当某个节点启用了 Vibrant 效果后，其所有子节点默认会继承该 Vibrant 效果，直到被新的效果替换或被显式终止。
+ 
+*替换 Vibrant 效果
+*在渲染链路上，可以通过再次设置 Modifier.vibrantEffect() 来替换之前的 Vibrant 效果。后续节点将使用最新的 Vibrant 效果进行绘制。
+ 
+*终止 Vibrant 效果的传递
+*若你想在背景中使用 Vibrant 效果，而子节点用纯色绘制。此时，可在合适的节点调用 Modifier.vibrantEffect(Vibrant.None)  来终止 Vibrant 效果的传递。
+*例如，直接为后续所有子节点终止传递父节点的 Vibrant 效果。
+ 
+例如，为部分子元素终止传递父节点的 Vibrant 效果，同时为部分子元素开启新的、不同于父节点的 Vibrant 效果。
+ 
+*示意图
+*以下示意图展示了 Vibrant 效果是如何被传递、替换、以及终止的。
+ 
+*查看当前节点是否有 Vibrant 效果
+*SpatialUI 提供了两种方式来判断当前节点是否有 Vibrant 效果：
+*显式设置：若你直接调用了 Modifier.vibrantEffect()，则该节点必已启用 Vibrant 效果。
+*传递性检测：父节点的 Vibrant 效果可被传递至子节点。你可以通过 observeCurrentVibrantEffect 方法实时观察当前节点的 Vibrant 效果状态。
+* 
+*API 参考
+*Vibrant 类提供了 Vibrant Style 相关的函数和枚举。详情参阅 API 参考。
+
+
+Vibrant Style 需额外占用一层 buffer，渲染开销较高。无强辨识度需求时，建议优先使用 Alpha 等开销更低的方案平替。
+
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <application
+        ...>
+        <activity 
+            ... >
+        </activity>
+        <meta-data
+            android:name="com.pico.spatial.ui.isVibrant"
+*            android:value="false" />
+    </application>
+</manifest>
+
+Box( 
+    modifier = Modifier.size(100.dp)
+        .vibrantEffect(Vibrant.Neutral)
+        .background(Color.Vibrant)
+)
+
+// Text 参数的 Vibrant 优先级高于 Modifier.vibrantEffect
+Text("Hello", color = Color.Vibrant, vibrant = Vibrant.Neutral)
+// 或者
+Text("Hello", color = Color.Vibrant, modifier = Modifier.vibrantEffect(Vibrant.Neutral))
+
+
+
+*Vibrant
+
+*颜色
+
+*渲染效果
+
+无
+
+
+Color.Vibrant ：
+* 
+
+纯 Vibrant 效果，背景为纯黑色。
+* 
+
+有，例如 Vibrant.Light：
+ 
+
+Color.Vibrant：
+* 
+
+等级为 Light 的纯 Vibrant 效果。以实际呈现为准。
+ 
+
+无
+
+常规色值，例如 Color.red：
+* 
+
+常规红色。
+* 
+
+有，例如 Vibrant.Light：
+* 
+
+常规色值，例如 Color.red：
+* 
+
+Vibrant.Light 与 Color.red 混合。以实际呈现为准。
+* 
+
+Box( 
+    modifier = Modifier.size(100.dp)
+        .vibrantEffect(Vibrant.Light)
+        .background(Color.Red)
+)
+
+Box(
+    modifier = Modifier
+        .background(Color.Green) // 纯绿色背景，无 Vibrant 效果
+        .vibrantEffect(Vibrant.Light) // 开启 Vibrant 效果
+        .border(1.dp, Color.Vibrant)  // 纯 Vibrant Border
+        .drawBehind {
+            drawXXX()  // 在 Vibrant 模式下绘制
+        }
+) {
+    Box(
+        modifier = Modifier
+            .background(Color.Blue) // 混合 Light 等级的 Vibrant 效果和 Blue 颜色，Vibrant.Light 继承自父节点
+    )
+    Text("Hello", color = Color.Vibrant) // 文字：纯 Light 等级的 Vibrant 效果, Vibrant.Light 继承自父节点
+}
+
+Box(
+    modifier = Modifier
+        .vibrantEffect(Vibrant.Light)
+        .background(Color.Vibrant)  // 为背景设置 Light 等级的 Vibrant 效果
+        .vibrantEffect(Vibrant.Dark)
+        .border(1.dp,Color.Red)  // 为边界设置 Dark 等级的 Vibrant 效果
+) {
+    Text("Hello", color = Color.Vibrant) // Text 拥有 Dark 等级的 Vibrant 效果，继承自父节点的最后一个 vibrantEffect
+}
+
+Box(
+    modifier = Modifier
+        .vibrantEffect(Vibrant.Light)  // 为背景设置 Vibrant 效果
+        .background(Color.Vibrant)    
+        .vibrantEffect(Vibrant.None)  // 终止 Vibrant 效果，后续子节点不会在 Vibrant 模式下被绘制 
+) {
+    Text("Hello", color = Color.Red) // 由于父节点终止了 Vibrant 效果，因此使用纯色来绘制 Text
+}
+
+Column(
+    modifier = Modifier
+        .vibrantEffect(Vibrant.Light)  // 为背景启用了 Vibrant 效果
+        .background(Color.Vibrant)   
+) {
+    // 在当前节点终止 Vibrant 效果，此文本将完全由 Android 2D 绘制
+    Text("Hello", color = Color.Red, modifier = Modifier.vibrantEffect(Vibrant.None))
+    // 由于为父节点开启了 Vibrant 效果，此文本拥有 Light 等级的 Vibrant 效果，且该效果与红色混合
+    Text("Hello", color = Color.Red)  
+    // 也可以使用新的 Vibrant 绘制效果子节点，例如为 Text 启用 Dark 等级的 Vibrant 效果
+    Text("Hello", color = Color.Red, vibrant = Vibrant.Dark)
+  
+}
+
+@Composable
+fun ObserveVibrantSample() {
+    Column(
+        modifier =
+            Modifier.size(200.dp)
+                // 启用 Dark 等级的 Vibrant 效果
+                .vibrantEffect(Vibrant.Dark)
+    ) {
+        Column(modifier = Modifier.background(Color.Red)) {
+            var currentVibrant by remember { mutableStateOf<Vibrant?>(null) }
+            Box(
+                modifier =
+                    Modifier
+                        // 监听 Vibrant 效果的状态
+                        .observeCurrentVibrantEffect { currentVibrant = it },
+            )
+            Text(
+                "current vibrant is: $$currentVibrant",
+                color = Color.Yellow,
+            )
+        }
+    }
+}

@@ -1,0 +1,575 @@
+PC 端调试工具
+========================================
+*功能描述
+PC 端调试工具简化了 PICO 平台服务的调试流程。通过使用该工具，你可以直接在 PC 上调试大部分 PICO 平台服务，而无需反复构建 APK 文件并安装到设备上进行调试。目前支持调试以下服务:
+*账号&好友
+*语言聊天
+*社交互动
+*多人游戏
+*应用内购（IAP）
+*环境要求
+Windows 操作系统。
+*注意事项
+若需在短时内进行多次调试，为保证上一次调试所创建的进程完全退出，请确保在关闭调试界面至少 5 秒后再次点击 运行 按钮开启。
+* 
+*准备工作
+使用 PC 端调试工具前，你需要完成前期配置工作，并配置 PC 调试模式。
+*导入 PICO Unreal Integration SDK
+首先，你需要在 Unreal 编辑器中创建项目，然后在项目中导入 PICO Unreal Integration SDK。详细步骤参考准备工作。
+*获取 Access Token
+然后，你需前往 PICO 开发者平台获取 Access Token。步骤如下：
+*登录 PICO 开发者平台。
+*点击目标应用卡片，进入其 概览 页。
+*在左侧导航栏中，点击 API 测试。
+*你将进入 API 页面。
+* 
+*从 授权管理 列表中选取所需权限：
+*若需要调试 “账号&好友” 服务或 “社交互动” 服务，选择 你的好友关系，寻找与你共同使用此应用的好友，发现彼此 和 你的头像、昵称。
+*若需要调试 “多人游戏” 服务或 “应用内购” 服务，选择 你的头像、昵称。
+*点击 获取Access Token。
+*你将看到一个展示 Access Token 的窗口，如下图所示：
+* 
+*点击 复制，复制生成的 Access Token。
+*配置 PC 调试模式
+配置 PC 调试模式，步骤如下：
+*打开 Unreal 编辑器。
+*在编辑器左上角，点击 编辑 > 项目设置 > 插件 > OnlinePico Settings。
+*在 Windows Debug > AccessToken 中，填写获取的 Access Token。
+* 
+*在左侧导航栏处，点击 平台 > Android。
+*在 APK 打包 选卡下，填写以下信息：
+*安卓包名称：产品的官方名称（与 PICO 商店使用的名称相同），包含公司名称和项目名称两部分，以英文句号连接，且独一无二。
+*保存版本：用于在 PICO 商店中显示的版本号。
+*版本显示名称：向终端用户显示的可视版本。
+* 
+*完成 SDK 初始化。
+*重新启动项目，点击 窗口 > 开发者工具 > 输出日志 即可打印日志。
+*日志中显示 PICO Platform SDK initialize success! 即表示初始化成功。
+* 
+*在 Plugins > OnlineSubsystemPico > WindowsDebug 路径下，你可以查看自动生成的输出日志 output.log 和 PicoWindowConfig.json 配置文件。
+* 
+*PicoWindow Config.json 文件包含初始化所需信息（该文件不建议手动修改），内容如下：
+* 
+*字段说明如下：
+**
+*调试平台服务
+完成配置后，你可以通过 PlatformSample 调试平台服务。此处以 “账号&好友” 服务为例，具体调试步骤如下：
+*前往 PICO GitHub，获取 PlatformSample 压缩包。
+*解压后，打开对应引擎版本的 PlatformSample 文件夹。
+*在 Unreal 编辑器中打开 UIInteractionDemo.unproject 文件。
+*点击编辑器左下角 内容浏览器 目录下的 Newworld 地图。
+*点击编辑器右上角的 运行 按钮。
+运行界面如图：
+ 
+*参考 账号&好友 说明文档，调试服务。
+*接口支持
+ 
+各个服务中，PC 调试工具支持的关键接口如下：
+*账号&好友
+*
+*语音聊天
+*
+*社交互动
+*
+*多人游戏
+你可以调用房间&匹配、排行榜和成就的服务接口，接口信息如下：
+房间&匹配
+*
+排行榜
+*
+成就
+*
+挑战
+*
+*应用内购（IAP）
+ 
+*
+*查看调试日志
+你可以查看调试日志。日志所在目录为：/{项目文件夹}/Saved/Logs。
+
+
+{
+        "general":
+        {
+                "region": "cn"
+        },
+        "account":
+        {
+                "access_token": "XX"
+        },
+        "package":
+        {
+                "package_name": "X",
+                "package_version_name": "1.0",
+                "package_version_code": 1
+        }
+}
+
+
+
+字段
+
+说明
+
+region
+
+地区：
+*cn：国内
+*i18n：海外
+
+access_token
+
+从开发者管理平台获取的Access Token。
+
+package_name
+
+包名。
+
+package_version_code
+
+包版本号。
+
+package_version_name
+
+包版本名。
+
+*目前所有通知（Notification）相关功能皆不可用。
+*此部分罗列 PC 调试工具支持的关键接口。对于某个支持的接口，其对应的字段设置接口和操作接口基本全部可用。若想了解更多接口信息，可参考API 文档。
+
+
+
+接口
+
+说明
+
+GetLoginUser
+
+可用
+
+GetUserInfo
+
+可用
+
+LaunchFriendRequestFlow
+
+可用
+
+GetUserFriends
+
+可用
+
+GetNextUserPage
+
+可用
+
+GetLoggedInUserAndRoom
+
+可用
+
+GetNextUserAndRoomArrayPage
+
+可用
+
+
+
+接口
+
+说明
+
+PicoRtcJoinRoom()
+
+可用
+
+RtcLeaveRoom()
+
+可用
+
+RtcPublishRoom()
+
+可用
+
+RtcUnPublishRoom()
+
+可用
+
+RtcDestroyRoom()
+
+可用
+
+PicoGetRtcEngineInit()
+
+可用
+
+RtcStartAudioCapture()
+
+可用
+
+RtcStopAudioCapture()
+
+可用
+
+RtcSetAudioScenario()
+
+可用
+
+RtcSetEarMonitorMode()
+
+可用
+
+RtcSetEarMonitorVolume()
+
+可用
+
+RtcSetCaptureVolume()
+
+可用
+
+RtcSetPlaybackVolume()
+
+可用
+
+RtcMuteLocalAudio()
+
+可用
+
+RtcUpdateToken()
+
+可用
+
+PicoRtcGetToken()
+
+可用
+
+RtcRoomPauseAllSubscribedStream()
+
+可用
+
+RtcRoomResumeAllSubscribedStream()
+
+可用
+
+RtcSetAudioPlaybackDevice()
+
+可用
+
+RtcEnableAudioPropertiesReport()
+
+可用
+
+RtcRoomPublishStream()
+
+可用
+
+RtcRoomSetRemoteAudioPlaybackVolume()
+
+可用
+
+RtcRoomSubscribeStream()
+
+可用
+
+RtcRoomUnPublishStream()
+
+可用
+
+RtcRoomUnsubscribeStream()
+
+可用
+
+RtcSendRoomBinaryMessage()
+
+可用
+
+RtcSendRoomMessage()
+
+可用
+
+RtcSendStreamSyncInfo()
+
+可用
+
+RtcSendUserBinaryMessage()
+
+可用
+
+RtcSendUserMessage()
+
+可用
+
+
+
+接口
+
+说明
+
+GetLaunchDetails
+
+返回配置文件里的值
+
+LogDeeplinkResult
+
+可用
+
+LaunchOtherApp
+
+无效
+
+LaunchOtherAppByPresence
+
+无效
+
+ReadInvitableUser
+
+可用
+
+PresenceSendInvites
+
+可用
+
+PresenceSendInvites
+
+可用
+
+PresenceGetDestinations
+
+可用
+
+PresenceClear
+
+可用
+
+PresenceSet
+
+可用
+
+PresenceSetDestination
+
+可用
+
+PresenceSetSetIsJoinable
+
+可用
+
+PresenceSetLobbySession
+
+可用
+
+PresenceSetMatchSession
+
+可用
+
+PresenceSetExtra
+
+可用
+
+
+
+接口
+
+说明
+
+CreateSession
+
+可用
+
+FindSessionById
+
+可用
+
+FindFriendSession
+
+可用
+
+FindSessions
+
+可用
+
+FindSessions
+
+可用
+
+SendSessionInviteToFriends
+
+可用
+
+JoinSession
+
+可用
+
+DestroySession
+
+可用
+
+UpdateSession
+
+可用
+
+FindSessions
+
+可用
+
+CancelMatchmaking
+
+可用
+
+CreateSession
+
+可用
+
+StartMatchmaking
+
+可用
+
+Initialize
+
+可用
+
+Uninitialize
+
+可用
+
+
+
+接口
+
+说明
+
+ReadLeaderboards
+
+可用
+
+ReadLeaderboardsForFriends
+
+可用
+
+WriteLeaderboards
+
+可用
+
+Get
+
+可用
+
+GetEntries
+
+可用
+
+GetEntriesAfterRank
+
+可用
+
+GetEntriesByIds
+
+可用
+
+WriteEntry
+
+可用
+
+WriteEntryWithSupplementaryMetric
+
+可用
+
+
+
+接口
+
+说明
+
+AddCount
+
+可用
+
+AddFields
+
+可用
+
+GetAllDefinitions
+
+可用
+
+GetAllProgress
+
+可用
+
+GetDefinitionsByName
+
+可用
+
+GetProgressByName
+
+可用
+
+Unlock
+
+可用
+
+
+
+接口
+
+说明
+
+Invite
+
+可用
+
+Get
+
+可用
+
+GetEntries
+
+可用
+
+GetEntriesAfterRank
+
+可用
+
+GetEntriesByIds
+
+可用
+
+GetList
+
+可用
+
+Join
+
+可用
+
+Leave
+
+可用
+
+IAP 服务测试需依赖支付弹窗，目前还无法通过 PC 端调试工具实现。因此，以下接口皆为模拟接口，通过接口产生的数据皆为非真实数据。
+
+
+
+接口
+
+说明
+
+ConsumePurchase
+
+可用
+
+GetNextProductListPage
+
+可用
+
+GetNextPurchaseListPage
+
+可用
+
+GetProductsBySKU
+
+可用
+
+GetViewerPurchases
+
+可用
+
+LaunchCheckoutFlow
+
+可用
